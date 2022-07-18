@@ -21,4 +21,3 @@ fetch('https://registry.npmjs.com/-/v1/search?text=moonlink.js')
 			}
 		}
 	})
-require('./bot.js')
