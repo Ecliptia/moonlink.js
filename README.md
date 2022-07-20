@@ -1,4 +1,7 @@
 # 🎶 MoonLink.js
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4f5d3bd6872941958eab39971c0c0d99)](https://app.codacy.com/gh/1Lucas1apk/moonlink.js?utm_source=github.com&utm_medium=referral&utm_content=1Lucas1apk/moonlink.js&utm_campaign=Badge_Grade_Settings)
+
 <img src='https://media.discordapp.net/attachments/960186492653813862/978653257180254258/IMG_20220523_203520.png'></img>
 
 > MoonLink.js is a simple package for lavalink client, perfect for you to create your discord bot with songs, and very simple and easy to use
