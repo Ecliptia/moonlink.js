@@ -13,7 +13,7 @@
     "scripts": {
         "start": "index.js",
         "lint": "eslint ."
-    }
+    },
     "homepage": "moonlinkjs.tk",
     "bugs": {
         "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
