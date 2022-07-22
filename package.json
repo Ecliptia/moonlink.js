@@ -33,5 +33,8 @@
     "dependencies": {
         "simpl.db": "latest",
         "ws": "latest"
+    },
+    "devDependecies": {
+        "eslint": "latest"
     }
 }
