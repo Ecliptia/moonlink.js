@@ -143,7 +143,7 @@ class MoonPlayer {
 		if (!queue) {
 			throw new TypeError(`[ Moonlink.Js ] queue is empty!`)
 		} else if (queue[0]) {
-			if (player[this.infos.guildId].loop == 2) {
+			if (player[this.infos.guildId].loop === 2) {
 				db.push(`queue.${this.infos.guildId}`, queue.shift())
 				utils.track.editCurrent(queue[0])
 			}
