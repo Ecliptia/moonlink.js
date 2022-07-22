@@ -190,6 +190,7 @@ class MoonlinkManager extends EventEmitter {
 	}
 	get players() {
 		let map = utils.map
+                let { MoonPlayer } = require('../structures/MoonLinkPlayer.js')
 		let get = function (guild) {
 			if (typeof guild !== 'number' && typeof guild !== 'string') {
 				throw new TypeError('[ MOONLINK ] guild id support only numbers in string!')
@@ -262,8 +263,7 @@ class MoonlinkManager extends EventEmitter {
 					, paused: false
 					, loop: false
 				}
-           let { MoonPlayer } = require('../structures/MoonLinkPlayer.js')
-			return (new MoonPlayer(player[info.guildId]))
+          		return (new MoonPlayer(player[info.guildId]))
        }
 		return {
 			get
