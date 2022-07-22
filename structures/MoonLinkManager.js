@@ -115,6 +115,8 @@ class MoonlinkManager extends EventEmitter {
 		if (!query) throw new Error('[ MoonLink.Js ]: The query option is mandatory')
 		if (typeof query !== 'string') throw new Error('[ MoonLink.Js ]: (search) The query option must be in the form string')
 		let db = utils.db
+          
+                let { MoonTrack } = require('../structures/MoonLinkTrack.js')
 		if (!query.startsWith('https://') && !query.startsWith('http://')) {
 			query = `ytsearch:${query}`;
 		}
@@ -123,14 +125,14 @@ class MoonlinkManager extends EventEmitter {
 			.node, 'loadtracks', params)
 		this.emit('debug', '[ MoonLink.Js ]: searching songs')
 		if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-			return {
+			let notTracks {
 				loadType: res.loadType
 				, playlistInfo: {}
 				, tracks: []
 			}
+                        return notTracks
 		} else {
-			let { MoonTrack } = require('../structures/MoonLinkTrack.js')
-			const tracks = res.tracks.map(x => new MoonTrack(x));
+                       const tracks = res.tracks.map(x => new MoonTrack(x));
 			if (res.loadType === 'PLAYLIST_LOADED') {
 				res.playlistInfo.duration = tracks.reduce((acc, cur) => acc + cur.duration, 0);
 			}
