@@ -91,14 +91,25 @@ class MoonPlayer {
 		if (player[this.infos.guildId].pause) {
 			throw new TypeError(`[MOONLINK]: Player already is paused.`)
 		}
+      if(!u) {
 		player[this.infos.guildId] = {
 			...player[this.infos.guildId]
 			, paused: u
 			, playing: false
 			, connected: true
 		}
-		let a = request({ op: 'pause', guildId: this.infos.guildId, pause: u })
-	}
+		request({ op: 'pause', guildId: this.infos.guildId, pause: u })
+	
+    } else {
+        player[this.infos.guildId] = {
+			...player[this.infos.guildId]
+			, paused: u
+			, playing: true
+			, connected: true
+		}
+		request({ op: 'pause', guildId: this.infos.guildId, pause: u })
+    }
+    }
 	volume(porcent) {
 		if (typeof porcent !== 'string' && typeof porcent !== 'number') {
 			throw new TypeError(`[ MOONLINK ]: a porcentage of volume needs to be a number!`)
