@@ -1,13 +1,11 @@
 "use strict";
-global.fetch = (...args) => import('node-fetch')
-	.then(({ default: fetch }) => fetch(...args));
 let { utils } = require('../structures/MoonLinkUtils.js')
 let { listeners } = require('../structures/MoonLinkListeners.js')
 let { EventEmitter } = require('events')
 let WebSocket = require('ws')
 let db = utils.db
 let map = utils.map
-var retryTime = 30e3
+var retryTime = 300000
 var retryAmount = 5
 var reconnectAtattempts = 1
 class MoonlinkManager extends EventEmitter {
@@ -43,7 +41,7 @@ class MoonlinkManager extends EventEmitter {
 			let host = no.host || 'localhost'
 			let port = `${':' + no.port || ':' + 443 }`
 			let debug = this.options.debug || false
-			if (this.connected[`${host}${port}`] == true) return;
+			if (this.connected[`${host}${port}`]) return;
 			this.ws = new WebSocket(`ws${secure}://${host}${port}`, undefined, {
 				headers: {
 					Authorization: password
@@ -148,12 +146,12 @@ class MoonlinkManager extends EventEmitter {
 		return req
 	}
 	request(node, endpoint, params) {
-		return fetch(`http://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, {
+		return utils.makeRequest(`http://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, 'GET' ,{
 				headers: {
 					Authorization: node.password
 				}
 			})
-			.then(res => res.json())
+			
 	}
 	updateVoiceState(packet) {
 		var map = utils.map
@@ -213,11 +211,11 @@ class MoonlinkManager extends EventEmitter {
 			if (!players[t.guildId]) {
 				players[t.guildId] = {
 					guildId: t.guildId
-					, voiceChannel: t.voiceChannel
-					, textChannel: t.textChannel
+					, voiceChannel: t.voiceChannel || null
+					, textChannel: t.textChannel || null
 					, playing: false
 					, paused: false
-					, loop: undefined
+					, loop: false
 				}
 				map.set('players', players)
 			}
@@ -232,10 +230,47 @@ class MoonlinkManager extends EventEmitter {
 				return players
 			}
 		}
+       let has = function(guild) {
+          let player = map.get('players') || []
+         if(typeof guild !== 'string' && isNaN(guild)) {
+             throw new TypeError(`[ MoonLinkJs ]: ${guild} a number string was expected`) 
+         }
+      if(player[guild]) player = true
+      else player = false
+      return player
+       }
+       let edit = function(info) {
+         let player = map.get('players') || []
+          if(!info) {
+              throw new TypeError(`[ MoonlinkJs ]: enter a term to edit your player.`)
+          }
+         if(!player[info.guildId]) { throw new TypeError(`[ MoonLinkJs ]: cannot edit a player on guild ${info.guildId}.`)}
+        if (typeof info.guildId !== 'number' && typeof info.guildId !== 'string') {
+				throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
+			}
+			if (typeof info.voiceChannel !== 'number' && typeof info.voiceChannel !== 'string') {
+				throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
+			}
+			if (typeof info.textChannel !== 'number' && typeof info.textChannel !== 'string') {
+				throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
+			}
+          player[info.guildId] = {
+					guildId: info.guildId
+					, voiceChannel: info.voiceChannel
+					, textChannel: info.textChannel
+					, playing: false
+					, paused: false
+					, loop: false
+				}
+           let { MoonPlayer } = require('../structures/MoonLinkPlayer.js')
+			return (new MoonPlayer(player[info.guildId]))
+       }
 		return {
 			get
 			, create
 			, all
+            , has
+            , edit
 		}
 	}
 }

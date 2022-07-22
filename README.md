@@ -27,7 +27,7 @@ let client = new Client({
 })
 let { MoonlinkManager }= require('moonlink.js')
 client.MoonLink = new MoonlinkManager([{
-   host: 'localhost', //String (optional)
+   host: 'localhost', //String (required)
    password: 'password', //String (optional)
    port: 443 //Number (optional)
 }], { shards: 1}, (guildId, sPayload) => {
@@ -45,7 +45,7 @@ let client = new Client({
 })
 import { MoonlinkManager } from 'moonlink.js'
 client.MoonLink = new MoonlinkManager([{
-   host: 'localhost', //String (optional)
+   host: 'localhost', //String (required)
    password: 'password', //String (optional)
    port: 443 //Number (optional)
 }], { shards: 1}, (guildId, sPayload) => {

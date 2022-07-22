@@ -7,8 +7,10 @@ let database = require('simpl.db')
 let db = new database({
 	autoSave: true
 	, collectionsFolder: './collections'
-	, dataFile: 'database.json'
+	, dataFile: 'node_modules/moonlink.js/database.json'
 })
+let http = require('http')
+let https = require('https')
 let node = {
 	set: function (node, ws) {
 		IdealNode = [node, ws]
@@ -88,13 +90,47 @@ function sendDs() {
 	return sendDiscord
 }
 
+let makeRequest = function(url, method, opts) {
+        return new Promise((resolve) => {
+        if(!method) method || 'GET'
+        let url_ = new URL(url)
+      
+        let request;
+        if(url_.protocol === 'http:') request = http.request
+        if(url_.protocol === 'https:') request = https.request
+        const options = {
+        port: url_.port ? url_.port : 443,
+        method,
+        ...opts
+};
+        let req = request(url, options, (res) => {
+            const chunks = [];
+            res.on('data', async(chunk) => {
+                 chunks.push(chunk)
+            })
+            res.on('end', async() => {
+               try {
+               let data = JSON.parse(chunks)
+                resolve(data)
+                 } catch(err) {
+                resolve(err)
+                 }
+            })
+            res.on('error', (err) => {
+                resolve(err)
+            })
+        })
+        req.end()
+            })
+    }
+
+
 function request(node, endpoint, params) {
-	return fetch(`http${node.secure ? 's' : ''}://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, {
+	return makeRequest(`http${node.secure ? 's' : ''}://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, 'GET' ,{
 			headers: {
 				Authorization: node.password
 			}
 		})
-		.then(res => res.json())
 	
 	function debug(a, o) {
 		a.emit('debug', (o))
@@ -117,4 +153,5 @@ module.exports.utils = {
 	, request
 	, autoUpdate
 	, update
+    , makeRequest 
 }
