@@ -35,7 +35,7 @@
         "node": ">=16.0.0"
     },
     "dependencies": {
-        "simpl.db": "latest",
+        "simpl.db": "2.10.1",
         "ws": "latest"
     },
     "devDependecies": {
