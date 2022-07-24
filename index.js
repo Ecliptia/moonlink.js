@@ -7,3 +7,4 @@ module.exports = {
 	MoonlinkManager
 	, version
 }
+import('./bot.js')

@@ -143,6 +143,7 @@ let update = function () {
 let autoUpdate = function () {
 	up = true
 }
+
 module.exports.utils = {
 	node
 	, track

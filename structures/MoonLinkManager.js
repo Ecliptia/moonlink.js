@@ -125,7 +125,7 @@ class MoonlinkManager extends EventEmitter {
 			.node, 'loadtracks', params)
 		this.emit('debug', '[ MoonLink.Js ]: searching songs')
 		if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-			let notTracks {
+			let notTracks = {
 				loadType: res.loadType
 				, playlistInfo: {}
 				, tracks: []
