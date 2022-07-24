@@ -3,6 +3,7 @@ const event = require('events')
 const eventos = new event()
 let { utils } = require('../structures/MoonLinkUtils.js')
 let { MoonQueue } = require('../structures/MoonLinkQueue.js')
+let { MoonFilters } = require('../structures/MoonLinkFilters')
 var request = function (x) {
 	utils.node.get()
 		.ws.send(JSON.stringify(x))
@@ -17,6 +18,7 @@ class MoonPlayer {
 		this.connected = this.infos.connected || null
 		this.current = utils.track.current()
 		this.queue = new MoonQueue({ guildId: infos.guildId })
+        this.filters = new MoonFilters({ guildId: infos.guildId })
 	}
 	connect(setDeaf, setMute) {
 		let sendDs = utils.sendDs()
@@ -120,8 +122,11 @@ class MoonPlayer {
 		if (!map.get('players')[this.infos.guildId]) {
 			throw new TypeError("[MOONLINK]: I can't stop a song when there's no player")
 		}
+        utils.db.delete('queue.' + this.infos.guildId)
 		request({ op: 'stop', guildId: this.infos.guildId })
 		player[this.infos.guildId] = { ...player[this.infos.guildId], playing: false, connected: true }
+        
+        return true
 	}
 	destroy() {
 		let sendDs = utils.sendDs()

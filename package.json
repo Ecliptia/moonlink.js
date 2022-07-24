@@ -1,6 +1,6 @@
 {
     "name": "moonlink.js",
-    "version": "1.0.1",
+    "version": "1.0.5",
     "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
     "keywords": [
         "discord",
@@ -35,7 +35,7 @@
         "node": ">=16.0.0"
     },
     "dependencies": {
-        "simpl.db": "2.10.1",
+        "simpl.db": "latest",
         "ws": "latest"
     },
     "devDependecies": {

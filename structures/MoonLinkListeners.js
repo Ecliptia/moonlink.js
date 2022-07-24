@@ -69,11 +69,13 @@ let listeners = {
 					}
 				}
 				if (!queue) {
-					emit.emit('debug', '[ MoonLink.Js ]: The queue is empt')
+					emit.emit('debug', '[ MoonLink.Js ]: The queue is empty')
 					utils.track.editCurrent(null)
 					players[data.guildId] = {
 						...players[data.guildId]
 						, playing: false
+                        , loop: undefined
+                        , textChannel: undefined 
 					}
 					map.set('players', players)
 					db.delete(`queue.${data.guildId}`)
@@ -93,6 +95,8 @@ let listeners = {
 					players[data.guildId] = {
 						...players[data.guildId]
 						, playing: false
+                        , loop: undefined
+                        , textChannel: undefined 
 					}
 					map.set('players', players)
 					db.delete(`queue.${data.guildId}`)
