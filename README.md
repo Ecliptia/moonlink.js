@@ -3,6 +3,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=1Lucas1apk/moonlink.js&amp;utm_campaign=Badge_Grade)
 <a href="https://www.npmjs.com/package/moonlink.js"><img src="https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF" alt="Downloads" /></a> 
 <a href="https://www.npmjs.com/package/moonlink.js"><img src="https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF&label=version" alt="Version" /></a>
+[![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js)
 > MoonLink.js is a simple package for lavalink client, perfect for you to create your discord bot with songs, and very simple and easy to use
 ## 📦 How to install
 ##### NpmJs
