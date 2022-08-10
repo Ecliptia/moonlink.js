@@ -1,5 +1,5 @@
 # Moonlink.js Docs 
-Welcome to moonlink.js documentation on github, let's clear your doubts in an easy way?
+Welcome to moonlink.js documentation on github, let's clear your doubts in an easy way
 ## Does moonlink support CommonJs?
 Yes it has support for CommonJs and ECMAScript 
 ```js
