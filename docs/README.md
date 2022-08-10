@@ -31,3 +31,4 @@ client.moon.init(client.user.id)
 Or unintentionally you used a different ID from your bot, making the package not work correctly
 
 ## Links to example commands or events 
+[Teaching how to use the package and how to create a bot](https://github.com/1Lucas1apk/moonlink.js/blob/master/docs/starting.md#learning-to-use-moonlinkjs)
