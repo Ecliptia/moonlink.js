@@ -37,3 +37,61 @@ Installing using yarn
 ```js
 yarn add moonlink.js
 ```
+
+### Start login node
+
+#### index.js:
+Let's connect the lavalink node.
+```js
+let Discord = require('discord.js')
+let client = new Discord.Client(/*config*/)
+client.login('Create an application, and create a bot and put the token here')
+let { MoonlinkManager } = require('moonlink.js')
+
+client.moon = new MoonLinkManager([{
+   host: 'example.com',
+   password: 'mommy long legs',
+   port: 1234
+}], [{ /*Second node...*/ }], (sPayload, guild) => {
+   let guild = client.guilds.cache.get(guild)
+    if(!guild) return;
+    guild.send(sPayload)
+})
+```
+#### ready.js 
+Identifying the client, and run.
+
+Events folder:
+```js
+module.exports = {
+    name: 'ready',
+    run: async(client, message) => {
+   client.moon.init(client.id) 
+   console.log(client.user.tag + ' is online!')
+}
+}
+```
+index.js:
+```js
+client.on('ready', (client, message) {
+   client.moon.init(client.id) 
+   console.log(client.user.tag + ' is online!')
+})
+```
+
+## raw.js
+Events folder: 
+Sending the discord data json to lavalink.
+```js
+module.exports = {
+   name:'raw',
+   run: async(client, data) => {
+  client.moon.updateVoiceState(data) 
+}
+```
+
+index.js:
+```js
+client.on('ready', (client, data) {
+   client.moon.updateVoiceState(data)
+})```
