@@ -1,5 +1,13 @@
 # Moonlink.js Docs 
 Welcome to moonlink.js documentation on github, let's clear your doubts in an easy way?
+## Does moonlink support CommonJs?
+Yes it has support for CommonJs and ECMAScript 
+```js
+const { MoonlinkManager } = require('moonlink.js')
+```
+```js
+import { MoonlinkManager } from 'moonlink.js'
+```
 ## My player is not switching... What to do?
 One of the brief reasons is that you didn't put an updateVoiceState event, an example below ↓
 ```js
