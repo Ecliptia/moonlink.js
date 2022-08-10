@@ -8,7 +8,7 @@ const { MoonlinkManager } = require('moonlink.js')
 ```js
 import { MoonlinkManager } from 'moonlink.js'
 ```
-## My player is not switching... What to do?
+## My bot doesn't want to play, what do I do?
 One of the brief reasons is that you didn't put an updateVoiceState event, an example below ↓
 ```js
 import Discord from 'discord.js'
@@ -21,7 +21,7 @@ client.on('raw', (data) => {
 });
 
 ```
-Or you accidentally misplaced the bot ID, such as using a different bot ID when initializing the package
+Or you accidentally misplaced the bot ID causing the system not to find the information needed to make it ring a voice channel:
 ```js
 //🚫
 client.moon.init('10000000000000')
