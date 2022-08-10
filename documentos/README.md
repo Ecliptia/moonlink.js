@@ -28,5 +28,6 @@ client.moon.init('10000000000000')
 //✅
 client.moon.init(client.user.id)
 ```
-Or if the player doesn't play, look for support to solve your problem or if it's a bug in the package itself, create an issue so we can fix it!
+Or unintentionally you used a different ID from your bot, making the package not work correctly
 
+## Links to example commands or events 
