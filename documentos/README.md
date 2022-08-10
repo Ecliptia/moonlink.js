@@ -12,7 +12,7 @@ import { MoonlinkManager } from 'moonlink.js'
 One of the brief reasons is that you didn't put an updateVoiceState event, an example below ↓
 ```js
 import Discord from 'discord.js'
-let client = New Discord.Client(/*config*/)
+let client = new Discord.Client(/*config*/)
 import { MoonlinkManager } from 'moonlink.js'
 client.moon = new MoonlinkManager(/*config*/)
 
