@@ -79,7 +79,7 @@ client.on('ready', (client, message) {
 })
 ```
 
-## raw.js
+#### raw.js
 Events folder: 
 Sending the discord data json to lavalink.
 ```js
@@ -94,4 +94,5 @@ index.js:
 ```js
 client.on('ready', (client, data) {
    client.moon.updateVoiceState(data)
-})```
+})
+```
