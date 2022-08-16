@@ -6,7 +6,7 @@ if(command === 'play') {
 if(message.member.voice.channel) return msg.reply(`join a voice channel!`)
 // Checking user is in voice channel.
 let musicTerm = args.join(' ')
-if(!musicTerm) musicTerm = 'how to learn to write?"
+if(!musicTerm) musicTerm = 'how to learn to write?'
 // Enter a term of play.
 let player = client.moon.players.create({
    textChannel: msg.channel.id,
