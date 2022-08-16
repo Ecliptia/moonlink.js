@@ -25,4 +25,6 @@ msg.reply(`playing Ꮚ˘ ꈊ ˘ Ꮚ`)
 ```
 }
 
-Keep seeing more functions... [pause](https://github.com/1Lucas1apk/moonlink.js/edit/master/docs/pause.md) thanks for viewning this docs ;)
+
+
+#### Keep seeing more functions... [pause](https://github.com/1Lucas1apk/moonlink.js/edit/master/docs/pause.md) thanks for viewning this docs ;)
