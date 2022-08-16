@@ -1,4 +1,4 @@
-### Pause command
+# Pause command
 Let's make a command to make the player pause.
 ```js
 if(command === 'pause') {
@@ -13,4 +13,4 @@ msg.reply(`paused music`)
 }
 // Done! Your player's pause on your execute your command bot, 
 ```
-#### keeping more functions... [resume](https://github.com/1Lucas1apk/moonlink.js/edit/master/docs/pause.md) thank for viewning this docs ;)
+#### keeping more functions... [resume](https://github.com/1Lucas1apk/moonlink.js/edit/master/docs/pause.md) thanks for viewning this docs ;)
