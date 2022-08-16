@@ -23,3 +23,6 @@ if(!player.infos.playing) player.play()
 // Done! Enjoy your bot playing a song on your server's voice channel, if bugs or errors please report. 
 msg.reply(`playing Ꮚ˘ ꈊ ˘ Ꮚ`)
 ```
+}
+
+Keep seeing more functions... [pause](https://github.com/1Lucas1apk/moonlink.js/edit/master/docs/pause.md) thanks for viewning this docs ;)
