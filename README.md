@@ -1,30 +1,36 @@
-# 🎶 MoonLink.js
-[![NPM](https://nodei.co/npm/moonlink.js.png)]([https://nodei.co/npm/moonlink.js?stars=true])
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=1Lucas1apk/moonlink.js&amp;utm_campaign=Badge_Grade)
-<a href="https://www.npmjs.com/package/moonlink.js"><img src="https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF" alt="Downloads" /></a> 
-<a href="https://www.npmjs.com/package/moonlink.js"><img src="https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF&label=version" alt="Version" /></a>
-[![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js)
-![vulnabilites](https://img.shields.io/snyk/vulnerabilities/npm/moonlink.js)
-![node](https://img.shields.io/node/v/moonlink.js)
+# MoonLink.js
+
+[![NPM](https://nodei.co/npm/moonlink.js.png)](\[https:/nodei.co/npm/moonlink.js) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm\_source=github.com\&utm\_medium=referral\&utm\_content=1Lucas1apk/moonlink.js\&utm\_campaign=Badge\_Grade) [![Downloads](https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF)](https://www.npmjs.com/package/moonlink.js) [![Version](https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF\&label=version)](https://www.npmjs.com/package/moonlink.js) [![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js) ![vulnabilites](https://img.shields.io/snyk/vulnerabilities/npm/moonlink.js) ![node](https://img.shields.io/node/v/moonlink.js)
+
 > MoonLink.js is a simple package for lavalink client, perfect for you to create your discord bot with songs, and very simple and easy to use
+
 ## 📦 How to install
-##### NpmJs
+
+**NpmJs**
+
 ```js
 npm install moonlink.js
 ```
-##### Yarn
+
+**Yarn**
+
 ```js
 yarn add moonlink.js
 ```
+
 ## 🎲 Requirements
-> Requirements are, have a node above version `1.16 >==`
-support packages
-- [x] discord.js
-- [x] eris
+
+> Requirements are, have a node above version `1.16 >==` support packages
+
+* [x] discord.js
+* [x] eris
 
 ## 📚 How to use
+
 > After you have installed the package, you first have to connect the nodes, as in the example below
-##### CommonJs
+
+**CommonJs**
+
 ```js
 let { Client } = require('discord.js')
 let client = new Client({
@@ -42,7 +48,9 @@ client.MoonLink = new MoonlinkManager([{
    }
 })
 ```
-##### ECMAScript
+
+**ECMAScript**
+
 ```js
 import { Client } from 'discord.js'
 let client = new Client({
@@ -60,20 +68,27 @@ client.MoonLink = new MoonlinkManager([{
    }
 })
 ```
-## 🐌 start the client 
-> After we have connected the nodes, let's initialize the client 
+
+## 🐌 start the client
+
+> After we have connected the nodes, let's initialize the client
+
 ```js
 client.MoonLink.init(client.user.id)
 ```
-`client.user.id` is mandatory for the package to work correctly 
-## 📖 documentation 
-> Enter the documentation site to understand more about the package, there are many more examples 
-[MoonLink Docs](https://moonlinkjs.tk)
-## 🎨 Suport 
-> You can get support on our discord server 
-[MoonLink - Suport](https://discord.gg/Gv8uxApUUY)
-## 🎓 Contributors 
+
+`client.user.id` is mandatory for the package to work correctly
+
+## 📖 documentation
+
+> Enter the documentation site to understand more about the package, there are many more examples [MoonLink Docs](https://moonlinkjs.tk)
+
+## 🎨 Suport
+
+> You can get support on our discord server [MoonLink - Suport](https://discord.gg/Gv8uxApUUY)
+
+## 🎓 Contributors
+
 > 1Lucas1.apk
 
 > MotoG.js
-
