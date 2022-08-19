@@ -27,7 +27,8 @@ client.moon = new MoonlinkManager[{
 })
 client.login(/*token*/)
 client.on('ready', () => client.moon.init(cliente.user.id))
-```js
+```
+
 ### 🍩 EcmaScript
 ```js
 import { Client } from 'discord.js'
@@ -46,4 +47,4 @@ client.moon = new MoonlinkManager[{
 })
 client.login(/*token*/)
 client.on('ready', () => client.moon.init(cliente.user.id))
-```js
+```
