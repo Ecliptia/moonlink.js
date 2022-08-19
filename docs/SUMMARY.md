@@ -2,6 +2,6 @@
 
 * [🎲 Introdução](README.md)
 
-## 📦 Guide
+## Group 1
 
-* [⌨️ Starting](guide/starting.md)
+* [🎼 starting](group-1/starting.md)
