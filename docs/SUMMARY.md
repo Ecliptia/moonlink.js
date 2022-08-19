@@ -12,4 +12,6 @@
 
 ***
 
-* [🪢 suport](https://discord.gg/Gv8uxApUUY)
+* [🤖 Server Suport](https://discord.gg/Gv8uxApUUY)
+* [🍫 Package](https://npmjs.com/package/moonlink.js)
+* [🎓 Github (repo)](https://github.com/1Lucas1apk/moonlink.js)
