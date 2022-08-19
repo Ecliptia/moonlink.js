@@ -9,7 +9,7 @@
 ## 🧸 docs
 
 * [🍭 MoonlinkManager](docs/moonlinkmanager/README.md)
-  * [node](docs/moonlinkmanager/README.md)
+  * [Constructor](docs/moonlinkmanager#-node/README.md)
 
 ***
 
