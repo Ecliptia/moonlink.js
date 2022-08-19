@@ -8,7 +8,8 @@
 
 ## 🧸 docs
 
-* [🍭 MoonlinkManager](docs/moonlinkmanager.md)
+* [🍭 MoonlinkManager](docs/moonlinkmanager/README.md)
+  * [node](docs/moonlinkmanager/README.md)
 
 ***
 
