@@ -48,5 +48,3 @@ client.moon = new MoonlinkManager[{
 client.login(/*token*/)
 client.on('ready', () => client.moon.init(cliente.user.id))
 ```
-
-see more functions.... [MoonLinkManager](/MoonLinkManager)
