@@ -1,7 +1,9 @@
 # 🍭 MoonlinkManager
-> all MoonlinkManager types and functions class functions
+
+
 
 ### Initialize a node:
+> all MoonlinkManager types and functions class functions
 ```javascript
 import { Client } from 'discord.js'
 import { MoonlinkManager } from 'moonlink.js'
@@ -21,6 +23,7 @@ client.login(/*token*/)
 ```
 
 ### Collect events:
+> This will collect the events that moonlink emits.
 ```javascript
 client.moon.on('nodeCreate', (node) => {
      console.log(node.host + ' has been connected')
@@ -28,6 +31,7 @@ client.moon.on('nodeCreate', (node) => {
 ```
 
 ### starting client:
+> You will start MoonLink with the client.
 ```javascript
 client.on('ready', (client) => {
    console.log(client.user.tag + ' was Initialized 
