@@ -2,6 +2,6 @@
 
 * [🎲 Introdução](README.md)
 
-## 📚 Guide
+## Guide
 
 * [🎼 starting](guide/starting.md)
