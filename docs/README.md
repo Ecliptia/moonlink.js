@@ -11,9 +11,39 @@ pnpm install moonlink.js
 > An example of how to add nodes and start them
 ### 🍭 CommonJs
 ```js
-Código 
+let { Client } = require('discord.js')
+let { MoonlinkManager } = require('moonlink.js')
+let client = new Client(/*options*/)
+client.moon = new MoonlinkManager[{ 
+       host: 'localhost', //String (Requires)
+       port: 443, //Number | String (Optional)
+       secure: false, //Boolean (Optional)
+       password: '' //String (Optional)
+}, /*second node {} */], { 
+       shards: 1, // Number (Required)
+       clientName: 'moonlink' // String (Optional)
+}, (guild, sPayload) => { 
+        client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload)) 
+})
+client.login(/*token*/)
+client.on('ready', () => client.moon.init(cliente.user.id))
 ```
 ### 🍩 EcmaScript
 ```js
-Código
+import { Client } from 'discord.js'
+import { MoonlinkManager } from 'moonlink.js'
+let client = new Client(/*options*/)
+client.moon = new MoonlinkManager[{ 
+       host: 'localhost', //String (Requires)
+       port: 443, //Number | String (Optional)
+       secure: false, //Boolean (Optional)
+       password: '' //String (Optional)
+}, /*second node {} */], { 
+       shards: 1, // Number (Required)
+       clientName: 'moonlink' // String (Optional)
+}, (guild, sPayload) => { 
+        client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload)) 
+})
+client.login(/*token*/)
+client.on('ready', () => client.moon.init(cliente.user.id))
 ```
