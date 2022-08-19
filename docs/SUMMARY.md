@@ -1,4 +1,7 @@
 # Table of contents
 
 * [🎲 Introdução](README.md)
-* [📚 Documentation](docs.md)
+* [📦 Guide](Guide.md)
+  * [⌨️ starting](Starting.md)
+* [📚 Documentation](Docs.md)
+  * [🎺 MoonlinkManager](MoonlinkManager.md)
