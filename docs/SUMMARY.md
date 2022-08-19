@@ -4,7 +4,7 @@
 
 ## 📚 Guide
 
-* [🎼 starting](guide/starting.md)
+* [🍧 starting](guide/starting.md)
 
 ## 🧸 docs
 
