@@ -1,3 +1,3 @@
 # Table of contents
 
-* [📚 Introdução](README.md)
+* [🎲 Introdução](README.md)
