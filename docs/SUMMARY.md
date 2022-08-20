@@ -11,7 +11,7 @@
   * [🍇 search](docs/moonlinkmanager/search.md)
   * [🧩 decodeTrack](docs/moonlinkmanager/decodetrack.md)
   * [🧪 updateVoiceState](docs/moonlinkmanager/updatevoicestate.md)
-  * [🎏 players](docs/moonlinkmanager/players.md)
+  * [🪗 players](docs/moonlinkmanager/players.md)
   * [🛹 nodes](docs/moonlinkmanager/nodes.md)
 
 ***
