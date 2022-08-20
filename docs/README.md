@@ -47,7 +47,7 @@ client.on('ready', () => client.moon.init(cliente.user.id))
 import { Client } from 'discord.js'
 import { MoonlinkManager } from 'moonlink.js'
 let client = new Client(/*options*/)
-client.moon = new MoonlinkManager[{ 
+client.moon = new MoonlinkManager([{ 
        host: 'localhost', //String (Requires)
        port: 443, //Number | String (Optional)
        secure: false, //Boolean (Optional)
