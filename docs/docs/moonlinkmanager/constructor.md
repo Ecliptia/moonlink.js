@@ -1,4 +1,4 @@
-# 🎯 Constructor
+T# 🎯 Constructor
 > MoonlinkManager is a class, and its constructor has three objects (nodes, options, sPayload)
 ## 🌋 Nodes, What is it and what is it for?
 > The nodes option is an array with information about your lavalink to make the connection, Her options are
@@ -28,4 +28,18 @@ if(guild) { // The package will send the requested guild
    guild.shard.send(sPayload) //This will require discord to connect the bot to the voice channel
   }
 }
+```
+## 🎒 End result will look like this
+```javascript
+New MoonlinkManager({[{
+host: 'localhost',
+port: 443,
+password: 'moon',
+secure: false
+}]}, { clientName: 'moon-bot', shards: 1 }, (guildId, sPayload) => {
+let guild = client.guilds.cache.get(guildId)
+if(guild) { 
+   guild.shard.send(sPayload) 
+  }
+})
 ```
