@@ -1,4 +1,4 @@
-T# 🎯 Constructor
+# 🎯 Constructor
 > MoonlinkManager is a class, and its constructor has three objects (nodes, options, sPayload)
 ## 🌋 Nodes, What is it and what is it for?
 > The nodes option is an array with information about your lavalink to make the connection, Her options are
@@ -31,7 +31,7 @@ if(guild) { // The package will send the requested guild
 ```
 ## 🎒 End result will look like this
 ```javascript
-New MoonlinkManager({[{
+new MoonlinkManager({[{
 host: 'localhost',
 port: 443,
 password: 'moon',
