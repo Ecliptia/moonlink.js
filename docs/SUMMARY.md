@@ -1,11 +1,7 @@
 # Table of contents
 
 * [🎲 Introdução](README.md)
-
-## 📚 Guide
-
-* [🍧 starting](guide/starting.md)
-
+* [🍯 Getting started](started.md)
 ## 🧸 docs
 
 * [🍭 MoonlinkManager](docs/moonlinkmanager/README.md)
