@@ -3,12 +3,12 @@
 ## 🌋 Nodes, What is it and what is it for?
 > The nodes option is an array with information about your lavalink to make the connection, Her options are
 ```javascript
-{[{
+[{
 host: String,
 port: Number | String, //optional
 password: String, //optional
 secure: Boolean //optional
-}], [/*another node*/]}
+}, {/* other nodes */}]
 ```
 ## 📍 Options
 > The options are additional options that you can use, like in lavalink login you want to put the name of your bot logged in instead of the package name
@@ -31,12 +31,12 @@ if(guild) { // The package will send the requested guild
 ```
 ## 🎒 End result will look like this
 ```javascript
-new MoonlinkManager({[{
+new MoonlinkManager([{
 host: 'localhost',
 port: 443,
 password: 'moon',
 secure: false
-}]}, { clientName: 'moon-bot', shards: 1 }, (guildId, sPayload) => {
+}], { clientName: 'moon-bot', shards: 1 }, (guildId, sPayload) => {
 let guild = client.guilds.cache.get(guildId)
 if(guild) { 
    guild.shard.send(sPayload) 
