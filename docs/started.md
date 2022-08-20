@@ -1,8 +1,5 @@
-# 🍯 Getting started
-
+## 🍪 Getting started
 > An example of a bot made with the discord.js library
-
-{% code title="" %}
 ```javascript
 const { Client } = require('discord.js') //importing discord.js library
 const { MoonlinkManager } = require('moonlink.js') // importing moonlink.js package 
@@ -69,6 +66,4 @@ client.on('messageCreate', async(message) => {
     });
 client.login('TOKEN') 
 ```
-{% endcode %}
-
 > This code will be updated in all new moonlink.js updates
