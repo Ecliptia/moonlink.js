@@ -12,8 +12,17 @@ await <client>.<moon>.search('background music')
 
 ```javascript
 promise {
-  loadTrack: '',
+  loadType: '',
   playlistInfo: { Object },
   tracks: [ Object ]
 }
+```
+
+loadType: 
+```javascript
+SEARCH_RESULT // That's when search results are found
+TRACK_LOADED // When a track is loaded
+PLAYLIST_LOADED // That's when it's a playlist
+LOAD_FAILED // When search is loading but fails 
+NO_MATCHES // When nothing is found
 ```
