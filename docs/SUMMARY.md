@@ -8,9 +8,7 @@
 
 * [🍭 MoonlinkManager](docs/moonlinkmanager/README.md)
   * [🎯 constructor](docs/moonlinkmanager/constructor.md)
-  * [🏆 sendWs](docs/moonlinkmanager/sendws.md)
   * [✨ search](docs/moonlinkmanager/search.md)
-  * [🧩 decodeTrack](docs/moonlinkmanager/decodetrack.md)
   * [🦎 updateVoiceState](docs/moonlinkmanager/updatevoicestate.md)
   * [🪗 players](docs/moonlinkmanager/players.md)
   * [⚜ nodes](docs/moonlinkmanager/nodes.md)
