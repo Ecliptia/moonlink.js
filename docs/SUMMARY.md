@@ -3,6 +3,7 @@
 * [🎲 Introdução](README.md)
 * [🍯 Getting started](started/README.md)
   * [🏞 example commands](started/example-commands.md)
+* [🧁 Changes](changes.md)
 
 ## 🧸 docs
 
