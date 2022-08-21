@@ -26,3 +26,21 @@ PLAYLIST_LOADED // That's when it's a playlist
 LOAD_FAILED // When search is loading but fails 
 NO_MATCHES // When nothing is found
 ```
+tracks:
+```javascript
+[
+    {
+      track: String,
+      identifier: String,
+      isSeekable: Boolean,
+      author: String,
+      length: Number,
+      isStream: Boolean,
+      position: Number,
+      title: String,
+      uri: String,
+      sourceName: String 
+    },
+    ...
+]
+```
