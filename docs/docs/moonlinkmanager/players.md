@@ -1,6 +1,6 @@
 # 🪗 players
 
-> Players is a class that has four functions (create, get, edit, has)
+> Players is a class that has four functions (create, get, all, edit, has)
 
 ## ☄️ create
 
@@ -16,4 +16,5 @@ setMute: Boolean
 })
 ```
 
-> When a new player is created it will call the MoonlinkPlayer class
+> When a new player is created it will call the [MoonlinkPlayer](https://moonlink.js.org/docs/moonlinkplayer) class
+
