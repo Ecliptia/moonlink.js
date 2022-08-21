@@ -1,7 +1,8 @@
 # Table of contents
 
 * [🎲 Introdução](README.md)
-* [🍯 Getting started](started.md)
+* [🍯 Getting started](started/README.md)
+  * [🏞 example commands](started/example-commands.md)
 
 ## 🧸 docs
 
@@ -20,7 +21,17 @@
   * [🗽 pause](docs/moonlinkplayer/pause.md)
   * [🎙 resume](docs/moonlinkplayer/resume.md)
   * [🤩 volume](docs/moonlinkplayer/volume.md)
-  * [🐛 Page 1](docs/moonlinkplayer/page-1.md)
+  * [🐛 seek](docs/moonlinkplayer/page-1.md)
+  * [🎭 disconnect](docs/moonlinkplayer/disconnect.md)
+  * [💸 stop](docs/moonlinkplayer/stop-1.md)
+  * [🎡 destroy](docs/moonlinkplayer/destroy.md)
+* [🧬 MoonlinkQueue](docs/moonlinkqueue/README.md)
+  * [Page 1](docs/moonlinkqueue/page-1.md)
+* [🥳 MoonlinkFilters](docs/moonlinkfilters/README.md)
+  * [Page 2](docs/moonlinkfilters/page-2.md)
+* [🔰 MoonlinkListeners](docs/moonlinklisteners/README.md)
+  * [Page 3](docs/moonlinklisteners/page-3.md)
+* [😚 MoonlinkUtils](docs/moonlinkutils.md)
 
 ***
 
