@@ -2,7 +2,7 @@
 
 > Players is a class that has four functions (create, get, all, edit, has)
 
-## ☄️ create
+## ⛰️ create
 
 > The create function will create a new player in the package map
 
@@ -41,3 +41,28 @@ MoonPlayer {
   }
 }
 ```
+## 🍪 get
+> this is to get information from the player or use the functions of this play
+way to use:
+```javascript
+let player = <cliente>.<moon>.players.get('/* Server ID */')
+```
+> this will return the same information as create and also called the MoonlinkPlayer class 
+
+> If the player does not exist, it will return undefined 
+## 🍫 all
+> This will return all players from the package database 
+```javascript
+Object
+```
+
+## 🍩 has
+
+> Check if a server player exists
+way to use:
+```javascript
+<client>.<moon>.players.has(' /* Server ID */ ')
+```
+This can return: false or true
+
+## 📍 edit
