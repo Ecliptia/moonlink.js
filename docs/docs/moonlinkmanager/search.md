@@ -26,6 +26,15 @@ PLAYLIST_LOADED // That's when it's a playlist
 LOAD_FAILED // When search is loading but fails 
 NO_MATCHES // When nothing is found
 ```
+playlistInfo:
+
+```javascript
+{ 
+name: String,
+selectedTrack: Number
+}
+```
+
 tracks:
 ```javascript
 [
@@ -44,3 +53,4 @@ tracks:
     ...
 ]
 ```
+> for more information https://github.com/freyacodes/Lavalink/blob/master/IMPLEMENTATION.md
