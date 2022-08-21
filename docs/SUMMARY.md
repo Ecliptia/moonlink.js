@@ -26,6 +26,8 @@
   * [🎡 destroy](docs/moonlinkplayer/destroy.md)
 * [🎼 MoonlinkQueue](docs/moonlinkqueue/README.md)
   * [🧤 add](docs/moonlinkqueue/page-1.md)
+  * [🌄 first](docs/moonlinkqueue/first.md)
+  * [🪁 Page 1](docs/moonlinkqueue/page-1-1.md)
 * [🥳 MoonlinkFilters](docs/moonlinkfilters/README.md)
   * [Page 2](docs/moonlinkfilters/page-2.md)
 * [🔰 MoonlinkListeners](docs/moonlinklisteners/README.md)
