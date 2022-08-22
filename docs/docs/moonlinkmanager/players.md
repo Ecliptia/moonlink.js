@@ -69,14 +69,16 @@ This can return: false or true
 
 > it will edit player information for example textChannel, voiceChannel, guildId, etc.
 way to use:
-```js
+```javascript
+
 <client>.<moon>.players.edit({
 guildId: String,
 textChannel: String,
 voiceChannel: String,
 setDeaf: Boolean,
 setMute: Boolean
-})```
+})
+```
 
 > he will return
 ```javascript
