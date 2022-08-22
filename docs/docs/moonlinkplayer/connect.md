@@ -9,7 +9,6 @@ let player = <client>.<moon>.players.get('GUILD_ID');
 if(!<player>.connected) <player>.connect(); or if(!<player>.connected) <player>.connect({ selfDean: boolean, selfMute: boolean })
 ```
 
-> Will return
 
-> **Note**
-> Cu
+> **Warning**
+> If unable to send a request the guild will return an error
