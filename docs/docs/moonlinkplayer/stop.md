@@ -8,6 +8,3 @@ way to use:
 let player = <client>.<moon>.players.get('GUILD_ID')
 player.stop()
 ```
-
-> **Danger** 
->Realzin pode dar o rabo se você executar essa função 😱
