@@ -6,5 +6,5 @@ way to use:
 ```javascript
 
 let player = <client>.<moon>.players.get('GUILD_ID');
-if(!<player>.connected) <player>.connect();
+if(!<player>.connected) <player>.connect(); or if(!<player>.connected) <player>.connect({ selfDean: boolean, selfMute: boolean })
 ```
