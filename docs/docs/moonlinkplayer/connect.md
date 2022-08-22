@@ -8,3 +8,8 @@ way to use:
 let player = <client>.<moon>.players.get('GUILD_ID');
 if(!<player>.connected) <player>.connect(); or if(!<player>.connected) <player>.connect({ selfDean: boolean, selfMute: boolean })
 ```
+
+> Will return
+
+> **Note**
+> Cu
