@@ -1,6 +1,7 @@
 # 🍨 connect
 
 > This function will connect the discord bot on voice channel.
+
 way to use:
 
 ```javascript
