@@ -13,3 +13,6 @@ player.queue.add(res.tracks[0])
 if(!player.playing) player.play()
 <message>.reply(`added track to queue.`)
 ```
+
+> **Warn** 
+> if the bot does not connect to voice channel, will return an error in Lavalink.
