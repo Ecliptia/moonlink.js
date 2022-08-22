@@ -66,3 +66,38 @@ way to use:
 This can return: false or true
 
 ## 📍 edit
+
+> it will edit player information for example textChannel, voiceChannel, guildId, etc.
+way to use:
+```js
+<client>.<moon>.players.edit({
+guildId: String,
+textChannel: String,
+voiceChannel: String,
+setDeaf: Boolean,
+setMute: Boolean
+})```
+
+> he will return
+```javascript
+
+MoonPlayer {
+  infos: {
+    guildId: String, // All these objects have to return in string, if they come in another type, errors can occur
+    voiceChannel: String,
+    textChannel: String,
+    playing: Boolean | null,
+    paused: Boolean | null,
+    loop: Boolean | null,
+    connected: Boolean | null
+  },
+  playing: Boolean | null,
+  connected: Boolean| null,
+  current: Boolean | null,
+  queue: MoonQueue { guildId: String /* This will be auto */ },
+  filters: MoonFilters {
+    guildId: String,
+    status: { Object }
+  }
+}
+```
