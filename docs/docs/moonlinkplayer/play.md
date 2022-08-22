@@ -1,6 +1,7 @@
 # 🍄 play
 
 > This function will be make your discord bot play an music in voice 
+
 way to use:
 ```javascript
 
