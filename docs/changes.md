@@ -6,3 +6,14 @@ description: >-
 
 # 🧁 Changes
 
+### 1.0.11 --> 1.0.15
+Queue bug fixed
+
+Player information fixed
+
+added nodes
+
+seek added 
+
+replay removed
+
