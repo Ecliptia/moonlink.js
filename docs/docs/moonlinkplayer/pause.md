@@ -16,6 +16,7 @@ player.pause()
 {
    Other infos,
     paused: true
-}```
+}
+```
 
 This means the player has been paused.
