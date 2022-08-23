@@ -4,6 +4,7 @@
 
 way to use:
 ```javascript
+
 let player = <client>.<moon>.players.get('GUILD_ID')
 player.pause()
 ```
@@ -11,6 +12,7 @@ player.pause()
 > **Note**
 >If you view, in the player information it will appear like this:
 ```javascript
+
 {
    Other infos,
     paused: true
