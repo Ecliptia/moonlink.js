@@ -33,7 +33,7 @@ MoonPlayer {
   },
   playing: Boolean | null,
   connected: Boolean| null,
-  current: Boolean | null,
+  current: Object | null ,
   queue: MoonQueue { guildId: String /* This will be auto */ },
   filters: MoonFilters {
     guildId: String,
@@ -95,7 +95,7 @@ MoonPlayer {
   },
   playing: Boolean | null,
   connected: Boolean| null,
-  current: Boolean | null,
+  current: Object | null,
   queue: MoonQueue { guildId: String /* This will be auto */ },
   filters: MoonFilters {
     guildId: String,
