@@ -6,6 +6,10 @@ description: >-
 
 # 🧁 Changes
 
+### 1.0.46 --> 1.1.36
+Several bugs that were occurring have been resolved, by user reporting 
+
+
 ### 1.0.15 --> 1.0.46
 support for spotify
 
