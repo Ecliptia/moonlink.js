@@ -5,6 +5,10 @@ mode of use:
 
 ```javascript
 await <client>.<moon>.search('background music')
+// Other sources
+await <client>.<moon>.search('background music', 'name_source')
+// other forms
+await <client>.<moon>.search({ query: 'background music', source: 'ytmusic' })
 // This requires await because it returns a promise
 // The search option has to be in string format 
 ```
