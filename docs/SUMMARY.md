@@ -8,7 +8,7 @@
 ## 🧸 docs
 
 * [🍭 MoonlinkManager](docs/moonlinkmanager/README.md)
-  * [🎯 constructor](docs/moonlinkmanager/constructor.md)
+  * [🎯 Starting](docs/moonlinkmanager/constructor.md)
   * [✨ search](docs/moonlinkmanager/search.md)
   * [🦎 updateVoiceState](docs/moonlinkmanager/updatevoicestate.md)
   * [🪗 players](docs/moonlinkmanager/players.md)
