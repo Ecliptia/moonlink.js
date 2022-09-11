@@ -16,7 +16,7 @@ example:
 host: 'localhost',
 port: 443,
 password: 'moonLink',
-secure: false
+secure: false // http...
 }, { //Node 2
 host: 'moonlink.lavalink.exemple',
 password: 'moon',
