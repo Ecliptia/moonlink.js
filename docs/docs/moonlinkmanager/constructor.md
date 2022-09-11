@@ -10,6 +10,20 @@ password: String, //optional
 secure: Boolean //optional
 }, {/* other nodes */}]
 ```
+example:
+```javascript
+[{
+host: 'localhost',
+port: 443,
+password: 'moonLink',
+secure: false
+}, { //Node 2
+host: 'moonlink.lavalink.exemple',
+password: 'moon',
+port: 443,
+secure: true // https...
+}]
+```
 ## 📍 Options
 > The options are additional options that you can use, like in lavalink login you want to put the name of your bot logged in instead of the package name
 ```javascript
