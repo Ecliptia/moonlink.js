@@ -44,17 +44,7 @@ MoonPlayer {
   },
   playing: true,
   connected: true,
-  current: MoonTrack { 
-position: 198860,
-title: "Billie Eilish - lovely (Lyrics) ft. Khalid",
-author: "SyrebralVibes",
-thumbnail: "a function"
-url: "https://www.youtube.com/watch?v=xirk18P889U",
-identifier: "xirk18P889U",
-duration: 201000,
-isSeekable: true,
-track: "QAAAkQIAKkJpbGxpZSBFaWxpc2ggLSBsb3ZlbHkgKEx5cmljcykgZnQuIEtoYWxpZAANU3lyZWJyYWxWaWJlcwAAAAAAAxEoAAt4aXJrMThQODg5VQABACtodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PXhpcmsxOFA4ODlVAAd5b3V0dWJlAAAAAAAAAAA=",
-source: "youtube"},
+  current: null, //When it is created there is no track yet, so it will return null
   queue: MoonQueue { guildId: '990369410344701964' },
   filters: MoonFilters {
     guildId: '990369410344701964',
@@ -74,7 +64,7 @@ let player = <cliente>.<moon>.players.get('/* Server ID */')
 ## 🍫 all
 > This will return all players from the package database 
 ```javascript
-Object
+
 ```
 
 ## 🍩 has
@@ -93,11 +83,11 @@ way to use:
 ```javascript
 
 <client>.<moon>.players.edit({
-guildId: String,
-textChannel: String,
-voiceChannel: String,
-setDeaf: Boolean,
-setMute: Boolean
+guildId: message.guild.id, //string
+textChannel: message.channel.id, //string
+voiceChannel: message.member.voice.channel.id, //string
+setDeaf: true, //boolean (optional)
+setMute: false //boolean (optional)
 })
 ```
 
@@ -106,20 +96,30 @@ setMute: Boolean
 
 MoonPlayer {
   infos: {
-    guildId: String, // All these objects have to return in string, if they come in another type, errors can occur
-    voiceChannel: String,
-    textChannel: String,
-    playing: Boolean | null,
-    paused: Boolean | null,
-    loop: Boolean | null,
-    connected: Boolean | null
+    guildId: '990369410344701964', // All these objects have to return in string, if they come in another type, errors can occur
+    voiceChannel: '1012808511949905961', //If this information is blank, post reporting may be a possible error
+    textChannel: '991752219634438235',
+    playing: true,
+    paused: false,
+    loop: 1,
+    connected: true
   },
-  playing: Boolean | null,
-  connected: Boolean| null,
-  current: Object | null,
-  queue: MoonQueue { guildId: String /* This will be auto */ },
+  playing: true,
+  connected: true,
+  current: MoonTrack { 
+position: 198860,
+title: "Billie Eilish - lovely (Lyrics) ft. Khalid",
+author: "SyrebralVibes",
+thumbnail: "a function"
+url: "https://www.youtube.com/watch?v=xirk18P889U",
+identifier: "xirk18P889U",
+duration: 201000,
+isSeekable: true,
+track: "QAAAkQIAKkJpbGxpZSBFaWxpc2ggLSBsb3ZlbHkgKEx5cmljcykgZnQuIEtoYWxpZAANU3lyZWJyYWxWaWJlcwAAAAAAAxEoAAt4aXJrMThQODg5VQABACtodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PXhpcmsxOFA4ODlVAAd5b3V0dWJlAAAAAAAAAAA=",
+source: "youtube"},
+  queue: MoonQueue { guildId: '990369410344701964' },
   filters: MoonFilters {
-    guildId: String,
+    guildId: '990369410344701964',
     status: { Object }
   }
 }
