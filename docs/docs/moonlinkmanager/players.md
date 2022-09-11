@@ -64,7 +64,7 @@ let player = <cliente>.<moon>.players.get('/* Server ID */')
 ## 🍫 all
 > This will return all players from the package database 
 ```javascript
-
+{ '960186492137897994': [Object], /*May contain others*/ }
 ```
 
 ## 🍩 has
