@@ -22,12 +22,11 @@
   * [🤩 volume](docs/moonlinkplayer/volume.md)
   * [🐛 seek](docs/moonlinkplayer/page-1.md)
   * [🎭 disconnect](docs/moonlinkplayer/disconnect.md)
-  * [🍒 stop](docs/moonlinkplayer/stop-1.md)
   * [🎡 destroy](docs/moonlinkplayer/destroy.md)
-* [🎼 MoonlinkQueue](docs/moonlinkqueue.md)
-* [🥳 MoonlinkFilters](docs/moonlinkfilters.md)
-* [🔰 MoonlinkListeners](docs/moonlinklisteners.md)
-* [🌀 MoonlinkUtils](docs/moonlinkutils.md)
+* [🎋 MoonlinkQueue](docs/moonlinkqueue.md)
+* [🎧 MoonlinkFilters](docs/moonlinkfilters.md)
+* [🎲 MoonlinkListeners](docs/moonlinklisteners.md)
+* [🎨 MoonlinkUtils](docs/moonlinkutils.md)
 
 ***
 
