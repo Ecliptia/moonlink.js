@@ -1,9 +1,4 @@
 # 🌀 MoonlinkUtils
+This class is a class where information is stored, a way to play to other moonlink files
 
-> the MoonlinkUtils structure is formed by several functions for the package to work
 
-> It was a way of throwing information to other structures
-
-> Package users are not allowed to use this class, so as not to damage package functions
-
-> Note this file is private
