@@ -3,7 +3,10 @@
 ### 📦 Get
 This function will get information about name, ws, status among others
 ```javascript
-client.moon.nodes.get(client.moon.nodesinfos[0])
+client.moon.nodes.get(0)
+//this will get the information from the first node that is saved
+//If you want to specify which node
+client.moon.nodes.get({ node: 'lavalink.moon.exemple', port: 1234 })
 ```
 An example is getting node status
 ```javascript
