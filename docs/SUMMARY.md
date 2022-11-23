@@ -3,7 +3,6 @@
 * [🎲 Introdução](README.md)
 * [🍯 Getting started](started/README.md)
   * [🏞 example commands](started/example-commands.md)
-* [🧁 Changes](changes.md)
 
 ## 🧸 docs
 
@@ -23,10 +22,8 @@
   * [🐛 seek](docs/moonlinkplayer/page-1.md)
   * [🎭 disconnect](docs/moonlinkplayer/disconnect.md)
   * [🎡 destroy](docs/moonlinkplayer/destroy.md)
-* [🎋 MoonlinkQueue](docs/moonlinkqueue.md)
-* [🎧 MoonlinkFilters](docs/moonlinkfilters.md)
-* [🎲 MoonlinkListeners](docs/moonlinklisteners.md)
-* [🎨 MoonlinkUtils](docs/moonlinkutils.md)
+* [🎼 MoonlinkQueue](docs/moonlinkqueue.md)
+* [🌀 MoonlinkUtils](docs/moonlinkutils.md)
 
 ***
 
