@@ -1,4 +1,5 @@
-# Imagine a Music
+
+L# Imagine a Music
 ## Moonlink.js
 
 <img src='https://cdn.discordapp.com/attachments/1019979902411350016/1044230708685713438/IMG_20221121_083735.png'></img>
@@ -91,7 +92,7 @@ client.login('TOKEN')
 
 ## 🎨 Suport
 
-> You can get support on our discord server [MoonLink - Support](https://discord.gg/Gv8uxApUUY)
+> You can get support on our discord server [MoonLink - Support](https://discord.gg/xQq2A8vku3)(Updated)
 
 ## 🎓 Contributors
 
