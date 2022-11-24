@@ -1,6 +1,0 @@
----
-layout: editorial
----
-
-# 🍧 starting
-
