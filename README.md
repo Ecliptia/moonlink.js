@@ -1,4 +1,4 @@
-# Imagine a Music
+# Imagine a Music Bot
 ## Moonlink.js
 
 <img src='https://cdn.discordapp.com/attachments/1019979902411350016/1044230708685713438/IMG_20221121_083735.png'></img>
