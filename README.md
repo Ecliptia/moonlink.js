@@ -87,7 +87,7 @@ client.login('TOKEN')
 
 ## 📖 documentation
 
-> Enter the documentation site to understand more about the package, there are many more examples [MoonLink Docs](https://moonlinkjs.netlify.app/)
+> Enter the documentation site to understand more about the package, there are many more examples [MoonLink Docs](https://moonlink.js.org)
 
 ## 🎨 Suport
 
