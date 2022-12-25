@@ -12,7 +12,6 @@ class MoonlinkManager extends EventEmitter {
     #on = false
     #ws;
     #options;
-    #clientId;
     #sPayload;
     #nodes;
     constructor(lavalinks, options, sPayload) {
@@ -28,10 +27,11 @@ class MoonlinkManager extends EventEmitter {
         this.#sPayload = sPayload;
         this.#nodes = lavalinks;
         this.#options = options;
+        this.version = require('./../package.json').version
         this.nodes;
-        
         this.sendWs;
-        manager = this
+       
+        manager = this 
         }
     init(clientId) {
 		if (!clientId) throw new TypeError('[ MoonLink ]: "clientId" option is required.')
@@ -42,7 +42,7 @@ class MoonlinkManager extends EventEmitter {
         this.sendWs = (json) => {
             return this.nodes.sendWs(json)
         }
-		this.#clientId = clientId 
+		this.clientId = clientId 
 	}
 
 	updateVoiceState(packet) {
@@ -56,7 +56,7 @@ class MoonlinkManager extends EventEmitter {
 			return this.#attemptConnection(packet.d.guild_id)
 		}
 		if (packet.t == 'VOICE_STATE_UPDATE') {
-			if (packet.d.user_id !== this.#clientId) return;
+			if (packet.d.user_id !== this.clientId) return;
 			if (packet.d.channel_id) {
 				let voiceStates = {}
 				voiceStates[packet.d.guild_id] = packet.d
@@ -73,32 +73,32 @@ class MoonlinkManager extends EventEmitter {
 			})
 			
 	}
-    async search(options, source) {
+    async search(...options) {
         return new Promise(async(resolve) => {
-		if (!options) throw new Error('[ MoonLink.Js ]: the search option has to be in string format or in an array')
-        if(source && typeof source !== 'string') throw new Error('[ moonlink.js ]: the source option has to be in string format')
-		if (typeof options !== 'string' && typeof options !== 'object' ) throw new Error('[ MoonLink.Js ]: (search) the search option has to be in string or array format')
-        if(typeof options.query !== 'undefined' && typeof options.query !== 'string') throw new Error('[ moonlink.js ]: query has to be in string format')
-        if(typeof options.source !== 'undefined' && typeof options.source !== 'string') throw new Error('[ moonlink.js ]: this option has to be in string format')
-		let db = utils.db
-          var spotifyApi = 'https://api.spotify.com/v1/'
-                let { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
-		if (typeof options !== 'undefined' && !options.startsWith('https://') && !options.startsWith('http://') && typeof source === 'undefined') {
-			 options = `ytsearch:${options}`;
-		}
-        if(typeof options !== 'undefined' && !options.startsWith('https://') && !options.startsWith('http://') && typeof source !== 'undefined') {
-            options = `${source}:${options}`
-        }
-        if(typeof options === 'object' && typeof options.query !== 'undefined' && !options.query.startsWith('https://') && !options.query.startsWith('http://') && typeof options.source === 'undefined') {
-            options = `ytsearch:${options.query}`;
-        } 
-        if(typeof options === 'object' && typeof options.query !== 'undefined' && !options.query.startsWith('https://') && !options.query.startsWith('http://') && typeof options.source !== 'undefined') {
-            options = `${options.source}:${options.query}`;
-        }
         
-        if(typeof options === 'object' && typeof options.query === 'string' && /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.test(options.query) || typeof options === 'string' && /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.test(options)) {
-               
-            if(typeof options === 'object' && typeof options.query === 'string') options = options.query
+		if (!options) throw new Error('[ MoonLink.Js ]: the search option has to be in string format or in an array')
+        
+        let [ query, source ] = options 
+        if(source && typeof source !== 'string') throw new Error('[ moonlink.js ]: the source option has to be in string format')
+		if (typeof query !== 'string' && typeof query !== 'object' ) throw new Error('[ moonlink.js ]: (search) the search option has to be in string or array format')
+        if(typeof query === 'object') {
+        query.source ? source = query.source : undefined
+        query.query ? query = query.query : undefined 
+        }
+        let sources = {
+            youtube: 'ytsearch', 
+            youtubemusic: 'ytmsearch',
+            soundcloud: 'scsearch'
+        }
+		let db = utils.db
+        var spotifyApi = 'https://api.spotify.com/v1/'
+        let { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
+        if(query && !query.startsWith('http://') && !query.startsWith('https://')) {
+            options = `${sources[source] || 'ytsearch'}:${query}`
+        }
+		
+        if(query && /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.test(query)) {
+            options = query
             let track = /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.exec(options)
             let url = '';
             switch(track[1]) {
@@ -129,7 +129,7 @@ class MoonlinkManager extends EventEmitter {
                  return resolve({
                      loadType: pes.loadType,
                      playlistInfo: pes.playlistInfo,
-                     tracks: [{...pes.tracks[0], title: req.name, author: req.artists.map(artist => artist.name).join(', '), thumbnail: req.album.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, sourceName: 'Spotify' }]
+                     tracks: [{...pes.tracks[0], title: req.name, author: req.artists.map(artist => artist.name).join(', '), thumbnail: req.album.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, source: 'spotify' }]
                  })
              }
             if (track[1] == 'episode') {
@@ -140,7 +140,7 @@ class MoonlinkManager extends EventEmitter {
                  return resolve({
                      loadType: pes.loadType,
                      playlistInfo: pes.playlistInfo,
-                     tracks: [{...pes.tracks[0], title: req.name, author: null, thumbnail: req.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, sourceName: 'Spotify' }]
+                     tracks: [{...pes.tracks[0], title: req.name, author: null, thumbnail: req.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, source: 'spotify' }]
                  })
             }
             if (track[1] == 'playlist' || track[1] == 'album') {
@@ -150,7 +150,7 @@ class MoonlinkManager extends EventEmitter {
                 
                 
                 let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] } 
-                var i = 0;
+                let i = 0;
                 req.tracks.items.forEach(async(x, y) => {
                     let tracks
                     if (track[1] === 'playlist') tracks = await this.search(`${x.track.name} ${x.track.artists[0].name}`)
@@ -163,8 +163,8 @@ class MoonlinkManager extends EventEmitter {
                   return;
 
                 }
-                   if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: y ,thumbnail: req.images[0].url, title: x.track.name, author: x.track.artists.map(artist => artist.name).join(', '), length: x.track.duration_ms, url: x.track.external_urls.spotify, source: 'Spotify' }
-                    else tracks = { ...tracks.tracks[0], position: i ,thumbnail: req.images[0].url, title: x.name, author: x.artists.map(artist => artist.name).join(', '), length: x.duration_ms, url: x.external_urls.spotify, source: 'Spotify' }
+                   if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: y ,thumbnail: req.images[0].url, title: x.track.name, author: x.track.artists.map(artist => artist.name).join(', '), length: x.track.duration_ms, url: x.track.external_urls.spotify, source: 'spotify' }
+                    else tracks = { ...tracks.tracks[0], position: i ,thumbnail: req.images[0].url, title: x.name, author: x.artists.map(artist => artist.name).join(', '), length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
                     
                    i++
                     res.tracks.push(tracks)
@@ -187,7 +187,7 @@ class MoonlinkManager extends EventEmitter {
                 
                 
                 let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] } 
-                var i = 0;
+                let i = 0;
                 req.tracks.items.forEach(async(x, y) => {
                     let tracks = await this.search(`${x.name} ${x.publisher}`)
                 
@@ -198,7 +198,7 @@ class MoonlinkManager extends EventEmitter {
                   return;
 
                 }
-                   if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: i ,thumbnail: req.images[0].url, title: x.name, author: req.publisher, length: x.duration_ms, url: x.external_urls.spotify, source: 'Spotify' }
+                   if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: i ,thumbnail: req.images[0].url, title: x.name, author: req.publisher, length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
                     
                    i++
                     res.tracks.push(tracks)
