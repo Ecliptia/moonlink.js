@@ -51,4 +51,6 @@ module.exports = {
 	, map: new Map()
 	, request 
     , makeRequest
+    , filters: []
+    
 }
