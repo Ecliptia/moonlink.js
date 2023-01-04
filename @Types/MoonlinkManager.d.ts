@@ -6,14 +6,14 @@ declare module 'ws' {
   }
 }
 
-declare module '../@Rest/MoonlinkUtils.js' {
+declare module './MoonlinkUtils' {
   export function request(options: any): Promise<any>;
   export function esdw(sPayload: (json: any) => void): void;
   export function makeRequest(url: string, method: string, options: any): Promise<any>;
   export const map: Map<string, any>;
 }
 
-declare module './MoonlinkNodes.js' {
+declare module './MoonlinkNodes' {
   export default class Nodes {
     constructor(manager: any, nodes: any[], options: any, sPayload: (json: any) => void, clientId: string);
     init(): void;
@@ -79,3 +79,4 @@ declare class MoonlinkManager extends EventEmitter {
 }
 
 declare var manager: MoonlinkManager;
+export MoonlinkManager
