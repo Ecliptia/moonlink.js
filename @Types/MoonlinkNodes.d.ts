@@ -1,7 +1,7 @@
 
   import { EventEmitter } from 'events';
-  import { MoonlinkManager } from 'MoonlinkManager';
-  import { MoonlinkUtils } from 'MoonlinkUtils';
+  import { MoonlinkManager } from './MoonlinkManager';
+  import { MoonlinkUtils } from './MoonlinkUtils';
 
   export class MoonlinkNodes {
     ws: WebSocket;
