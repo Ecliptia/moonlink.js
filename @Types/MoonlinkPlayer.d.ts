@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
-import { MoonQueue } from '../@Rest/MoonlinkQueue.js';
-import { MoonFilters } from '../@Rest/MoonlinkFilters.js';
+import { MoonQueue } from './MoonlinkQueue';
+import { MoonFilters } from './MoonlinkFilters';
 
 declare let sendDs: (guildId: string, data: string) => void;
 declare let utils: {
@@ -25,7 +25,7 @@ declare let player: {
   }
 };
 
-declare class MoonPlayer {
+export declare class MoonPlayer {
   #sendWs: (data: any) => void;
   #manager: { sendWs: (data: any) => void };
   #infos: {
