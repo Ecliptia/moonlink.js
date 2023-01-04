@@ -1,4 +1,4 @@
-import { MoonlinkManager } from './@Moonlink/MoonlinkManager.js';
+import { MoonlinkManager } from './@Types/MoonlinkManager';
 
 declare const version: string;
 
