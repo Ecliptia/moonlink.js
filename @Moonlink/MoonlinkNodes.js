@@ -132,6 +132,7 @@ this.manager.emit('playerUpdate', data)
 					utils.track.skipEdit(false)
 					return;
 				}
+        if(!players[data.guildId]) return this.manager.emit('debug', '[ @Moonlink/Players ]: information from a guildId was lost')
               				this.manager.emit('trackEnd', players[data.guildId], track)
                 if(!players[data.guildId]) return;
 				if (players[data.guildId].loop === 1) {
@@ -168,7 +169,9 @@ return this.sendWs({
 					this.manager.emit('debug', '[ MoonLink.Js ]: The queue is empty')
                     this.manager.emit('queueEnd', '[ Moonlink.js ]: the queue is empty')
 					utils.track.editCurrent(null)
-					players[data.guildId] = {
+		delete utils.filters[data.guildId]
+                    
+			players[data.guildId] = {
 						...players[data.guildId]
 						, playing: false
 					}
@@ -196,7 +199,8 @@ return this.sendWs({
 					}
 					map.set('players', players)
 					db.delete(`queue.${data.guildId}`)
-					utils.track.editCurrent(null)
+					utils.track.editCurrent(null) 
+delete utils.filters[data.guildId]
 				}
 				break;
 			}
@@ -223,7 +227,7 @@ var map = utils.map
                 this.manager.emit('trackEnd', track)
 				let queue = db.get('queue.' + data.guildId)
 				let players = map.get('players') || {}
-				if (players[data.guildId].loop == true) {
+				if (players[data.guildId].loop) {
 					
                     this.sendWs({
 						op: 'play'
