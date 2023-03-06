@@ -8,6 +8,7 @@ class MoonlinkDB {
     this.fetch()
   }
   set(key, value) {
+
     const keys = key.split('.')
     const obj = (data, key_s) => {
       if (key_s.length === 1) data[key_s[0]] = value

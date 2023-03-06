@@ -11,15 +11,15 @@ let db = new database()
 let track = {
 	skip: function () {
 		return skipMem || false
-	},
-	skipEdit: function (i) {
+	}
+	, skipEdit: function (i) {
 		delete skipMem
 		skipMem = i
-	},
-	current: function () {
+	}
+	, current: function () {
 		return CurrentTrack
-	},
-	editCurrent: function (track) {
+	}
+	, editCurrent: function (track) {
 		if (typeof track == 'undefined') throw new Error('[ MoonLink.Js ]: An internal error occurred, report to developers')
 		if (track) CurrentTrack = track
 	}
@@ -32,22 +32,25 @@ function esdw(x) {
 function sendDs() {
 	return sendDiscord
 }
+
     
 function request(node, endpoint, params) {
 	return makeRequest(`http${node.secure ? 's' : ''}://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, 'GET' ,{
-		headers: {
-		  Authorization: node.password
-		}
-	})
+			headers: {
+				Authorization: node.password
+			}
+		})
+	
 }
 
 module.exports = {
-	track,
-	db,
-	sendDs,
-	esdw,
-	map: new Map(),
-	request,
-  makeRequest,
-  filters: []  
+	track
+	, db
+	, sendDs
+	, esdw
+	, map: new Map()
+	, request 
+    , makeRequest
+    , filters: []
+    
 }
