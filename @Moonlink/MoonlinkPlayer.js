@@ -2,12 +2,13 @@
 const event = require('events')
 const eventos = new event()
 let utils = require('../@Rest/MoonlinkUtils.js')
-const { MoonQueue } = require('../@Rest/MoonlinkQueue.js')
-const { MoonFilters } = require('../@Rest/MoonlinkFilters.js')
+let { MoonQueue } = require('../@Rest/MoonlinkQueue.js')
+let { MoonFilters } = require('../@Rest/MoonlinkFilters.js')
 
-let map = utils.map
-let db = utils.db
-let sendDs = utils.sendDs();
+var map = utils.map
+var player = map.get('players') || {}
+var db = utils.db
+var sendDs = utils.sendDs();
 
 class MoonPlayer {
   #sendWs;
@@ -33,20 +34,16 @@ class MoonPlayer {
     if (!options) options = { setDeaf: false, setMute: false }
     let setDeaf = options.setDeaf || null
     let setMute = options.setMute || null
-    sendDs(
-      this.guildId,
-      JSON.stringify({
-        op: 4,
-        d: {
-          guild_id: this.guildId,
-          channel_id: this.voiceChannel,
-          self_mute: setMute || null,
-          self_deaf: setDeaf || null
-        }
-      })
-    )
-
-    let players = map.get('players')
+    sendDs(this.guildId, JSON.stringify({
+      op: 4
+      , d: {
+        guild_id: this.guildId
+        , channel_id: this.voiceChannel
+        , self_mute: setMute || null
+        , self_deaf: setDeaf || null
+      }
+    }))
+    var players = map.get('players')
     player[this.guildId] = {
       ...players[this.guildId]
       , connected: true
@@ -55,19 +52,17 @@ class MoonPlayer {
   }
 
   disconnect() {
-    sendDs(
-      this.guildId,
-      JSON.stringify({
-        op: 4,
-        d: {
-          guild_id: this.guildId,
-          channel_id: null,
-          self_mute: null,
-          self_deaf: null
-        }
-      })
-    )
 
+    sendDs(this.guildId, JSON.stringify({
+      op: 4
+      , d: {
+        guild_id: this.guildId
+        , channel_id: null
+        , self_mute: null
+        , self_deaf: null
+      }
+
+    }))
     this.connected = false
     this.destroy()
   }
@@ -81,74 +76,67 @@ class MoonPlayer {
         utils.track.editCurrent(track)
         db.set(`queue.${this.guildId}`, queue)
         this.#sendWs({
-          op: 'play',
-          guildId: this.guildId,
-          channelId: this.voiceChannel,
-          track: track.track,
-          volume: 80,
-          noReplace: false,
-          pause: false
+          op: 'play'
+          , guildId: this.guildId
+          , channelId: this.voiceChannel
+          , track: track.track
+          , volume: 80
+          , noReplace: false
+          , pause: false
         })
-
-        let players = map.get('players')
+        var players = map.get('players')
         player[this.guildId] = {
-          ...players[this.guildId],
-          playing: true
+          ...players[this.guildId]
+          , playing: true
         }
-
         map.set('players', player)
       }
     }
   }
 
   pause() {
-    let player = map.get('players') || {}
-
     if (player[this.guildId].pause) throw new TypeError(`[ MoonlinkJs ]: player is already been paused.`)
     player[this.guildId] = {
-      ...player[this.guildId],
-      playing: false,
-      paused: true
+      ...player[this.guildId]
+      , playing: false
+      , paused: true
     }
     map.set('players', player)
     this.#sendWs({
-      op: 'pause',
-      guildId: this.guildId,
-      pause: true
-    })
+      op: 'pause'
+      , guildId: this.guildId
+      , pause: true
+    });
   }
 
   resume() {
-    let players = map.get('players') || {}
-
-    if (!players[this.guildId].paused) throw new TypeError(`[ MoonlinkJs ]: player is not paused.`)
-    players[this.guildId] = {
-      ...player[this.guildId],
-      playing: true,
-      paused: false
+    if (!player[this.guildId].paused) throw new TypeError(`[ MoonlinkJs ]: player is not paused.`)
+    player[this.guildId] = {
+      ...player[this.guildId]
+      , playing: true
+      , paused: false
     }
-    map.set('players', players)
+    map.set('players', player)
     this.#sendWs({
-      op: 'pause',
-      guildId: this.guildId,
-      pause: false
-    })
+      op: 'pause'
+      , guildId: this.guildId
+      , pause: false
+    });
   }
 
-  setVolume(percent) {
+setVolume(percent) {
     let queue = db.get(`queue.${this.guildId}`)
     if (typeof percent !== 'string' && typeof percent !== 'number') throw new TypeError(`[ MoonlinkJs ]: the percentage must be in string and numbers format.`)
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
     this.#sendWs({
-      op: 'volume',
-      guildId: this.guildId,
-      volume: percent
+      op: 'volume'
+      , guildId: this.guildId
+      , volume: percent
     })
-
-    let players = map.get('players')
+    var players = map.get('players')
     player[this.guildId] = {
-      ...players[this.guildId],
-      volume: percent
+      ...players[this.guildId]
+      , volume: percent
     }
     map.set('players', player)
   }
@@ -157,17 +145,16 @@ class MoonPlayer {
     let queue = db.get(`queue.${this.guildId}`)
     if (!queue[0]) {
       this.#sendWs({
-        op: 'stop',
-        guildId: this.guildId
-      })
+        op: 'stop'
+        , guildId: this.guildId
+      });
     } else {
       delete map.get(`players`)[this.guildId]
       this.#sendWs({
-        op: 'stop',
-        guildId: this.guildId
-      })
+        op: 'stop'
+        , guildId: this.guildId
+      });
     }
-
     return true
   }
 
@@ -176,15 +163,14 @@ class MoonPlayer {
     this.#sendWs({
       op: 'destroy',
       guildId: this.guildId
-    })
+    });
+    if (db.get(`queue.${this.guildId}`)) {
 
-    if (db.get(`queue.${this.guildId}`))
       db.set(`queue.${this.guildId}`, null)
-
+    }
     let players = map.get('players')
     players[this.guildId] = null
     map.set('players', players)
-
     return true
   }
 
@@ -197,30 +183,29 @@ class MoonPlayer {
         return false
       }
       if (player[this.guildId].loop > 1) {
-        const trackl = queue.shift()
+        const trackl = queue.shift();
         queue.push(utils.track.current())
-        utils.track.editCurrent(trackl)
-        utils.track.skipEdit(true)
+        utils.track.editCurrent(trackl);
+        utils.track.skipEdit(true);
         db.set('queue.' + this.guildId, queue)
         this.#sendWs({
-          op: "play",
-          channelId: this.voiceChannel,
-          guildId: this.guildId,
-          track: trackl.track
+          op: "play"
+          , channelId: this.voiceChannel
+          , guildId: this.guildId
+          , track: trackl.track
         })
         return true
       }
-      let actualTrack = queue.shift()
-      utils.track.editCurrent(actualTrack)
-      utils.track.skipEdit(true)
+      let actualTrack = queue.shift();
+      utils.track.editCurrent(actualTrack);
+      utils.track.skipEdit(true);
       db.set(`queue.${this.guildId}`, queue)
       this.#sendWs({
-        op: 'play',
-        channelId: this.voiceChannel,
-        guildId: this.guildId,
-        track: actualTrack.track
+        op: 'play'
+        , channelId: this.voiceChannel
+        , guildId: this.guildId
+        , track: actualTrack.track
       })
-
       return true
     }
   }
@@ -231,29 +216,28 @@ class MoonPlayer {
     if (queue && queue[0]) return;
     if (!utils.track.current().isSeekable) throw new TypeError(`[ Moonlink.Js ]: the track "${utils.track.current().track}" is not seekable`)
     this.#sendWs({
-      op: 'seek',
-      guildId: this.guildId,
-      position: number
+      op: 'seek'
+      , guildId: this.guildId
+      , position: number
     })
     return true
   }
 
   loop(number) {
-    let players = map.get('players') || {}
+    var player = map.get('players') || {}
     if (!number) {
-      players[this.guildId] = {
-        ...players[this.infos.guildId],
-        loop: undefined
+      player[this.guildId] = {
+        ...player[this.infos.guildId]
+        , loop: undefined
       }
     }
-
     if (typeof number !== 'string' && typeof number !== 'number') throw new TypeError(`[ MoonlinkJs ]: loop accept only numbers in strings.`)
     if (number > 2) throw new TypeError(`[ MoonlinkJs ]: the number cannot be above 2.`);
-    players[this.guildId] = {
-      ...players[this.guildId],
-      loop: number
+    player[this.guildId] = {
+      ...player[this.guildId]
+      , loop: number
     }
-    map.set('players', players)
+    map.set('players', player)
   }
 
   removeSong(position) {
@@ -272,18 +256,19 @@ class MoonPlayer {
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
     else {
       let skipedToTrack = queue.splice(position, 1)
-      utils.track.editCurrent(skipedToTrack)
+      utils.track.editCurrent(skipedToTrack);
       db.set(`queue.${this.guildId}`, [])
-      utils.track.skipEdit(true)
-
+      utils.track.skipEdit(true);
       this.#sendWs({
-        op: 'play',
-        guildId: this.guildId,
-        channelId: this.voiceChannel,
-        track: utils.track.current().track
-      })
+        op: 'play'
+        , guildId: this.guildId
+        , channelId: this.voiceChannel
+        , track: utils.track.current().track
+      });
     }
   }
+
+
 }
 
 module.exports.MoonPlayer = MoonPlayer;
