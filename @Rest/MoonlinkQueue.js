@@ -6,6 +6,7 @@ class MoonQueue {
 	constructor(data) {
 		this.guildId = data.guildId
 	}
+
 	add(track) {
 		if (!track) throw new Error('[ MoonLink.Js ]: Track object must have a value')
 		let queue = db.get(`queue.${this.guildId}`)
@@ -18,6 +19,7 @@ class MoonQueue {
 			db.push(`queue.${this.guildId}`, track)
 		}
 	}
+
 	first() {
 		let queue = db.get(`queue.${this.guildId}`)
 		if (!db.get(`queue.${this.guildId}`)) return null
@@ -26,6 +28,7 @@ class MoonQueue {
 		} else if (queue && queue.length > 0 && queue[0]) return queue
 		else queue[0]
 	}
+
 	get all() {
 		if (!db.get('queue.' + this.guildId)) {
 			return null
@@ -33,21 +36,19 @@ class MoonQueue {
 			return db.get(`queue.${this.guildId}`)
 		}
 	}
-   clear() {
-      if(!db.get(`queue.${this.guildId}`)) {
-    throw new TypeError(`[ MoonlinkJs ]: unable to clear a non-existent queue.`)
-} else {
+  
+  clear() {
+    if(!db.get(`queue.${this.guildId}`))
+      throw new TypeError(`[ MoonlinkJs ]: unable to clear a non-existent queue.`)
+
     db.delete(`queue.${this.guildId}`)
+
     return true
+  }
+
+  get size() {
+    return db.get(`queue.${this.guildId}`) ? db.get(`queue.${this.guildId}`).length : 0
+  }
 }
-   }
-    get size() {
-        if(!db.get(`queue.${this.guildId}`)) {
-            return 0
-        } else {
-            return db.get(`queue.${this.guildId}`).length
-        }
-    }
- 
-}
+
 module.exports.MoonQueue = MoonQueue

@@ -1,6 +1,5 @@
 class MoonTrack {
 	constructor(data, request) {
-		
 		this.position = data.info.position
 		this.title = data.info.title
 		this.author = data.info.author
@@ -10,10 +9,12 @@ class MoonTrack {
 		this.isSeekable = data.info.isSeekable
 		this.track = data.track
 		this.source = data.info.sourceName || undefined 
-        this.requester = undefined
+    this.requester = undefined
 	}
-        get thumbnail() {
-            if(this.source === 'youtube') return `https://img.youtube.com/vi/${this.identifier}/sddefault.jpg`
-        }
+  
+  get thumbnail() {
+    if (this.source === 'youtube') return `https://img.youtube.com/vi/${this.identifier}/sddefault.jpg`
+  }
 }
+
 module.exports = { MoonTrack }
