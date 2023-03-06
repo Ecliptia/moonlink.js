@@ -1,9 +1,8 @@
-const { EventEmitter } = require('events')
-const { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
-const { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
-const utils = require('../@Rest/MoonlinkUtils.js')
-const Nodes = require('./MoonlinkNodes.js')
-let manager;
+var { EventEmitter } = require('events')
+var WebSocket = require('ws')
+var utils = require('../@Rest/MoonlinkUtils.js')
+var Nodes = require('./MoonlinkNodes.js')
+var manager;
 class MoonlinkManager extends EventEmitter {
   #reconnectAtattempts = 0;
   #retryAmount = 5;
@@ -16,8 +15,8 @@ class MoonlinkManager extends EventEmitter {
   #sPayload;
   #nodes;
   constructor(lavalinks, options, sPayload) {
-    super();
 
+    super();
     if (!lavalinks) throw new Error('[ Moonlink.js ]: Options is empty')
     if (lavalinks && !Array.isArray(lavalinks)) throw new Error('[ Moonlink.js ]: Option "nodes" must be in an array.')
     if (lavalinks.length === 0) throw new Error('[ Moonlink.js ]: Parament of "nodes" must contain an object')
@@ -25,7 +24,6 @@ class MoonlinkManager extends EventEmitter {
     if (typeof options.clientName !== 'undefined' && typeof options.clientName !== 'string') throw new TypeError('[ Moonlink.js ]: The "clientname" option must be in string.')
     if (typeof sPayload !== 'function') throw new TypeError('[ MoonLink ]: The "send" option must be a function')
     if (sPayload) utils.esdw(sPayload)
-
     this.#sPayload = sPayload;
     this.#nodes = lavalinks;
     this.#options = options;
@@ -39,25 +37,32 @@ class MoonlinkManager extends EventEmitter {
     this.nodes = new Nodes(this, this.#nodes, this.#options, this.#sPayload, clientId)
     this.nodes.init()
 
+
     this.sendWs = (json) => {
       return this.nodes.sendWs(json)
     }
     this.clientId = clientId 
+    
   }
 
   updateVoiceState(packet) {
-    const map = utils.map
-    switch (packet.t) {
-      case 'VOICE_SERVER_UPDATE':
-        let voiceServer = { [packet.d.guild_id]: { event: packet.d } }
-        map.set('voiceServer', voiceServer)
-        return MoonlinkManager.#attemptConnection(manager, packet.d.guild_id)
-      case 'VOICE_STATE_UPDATE':
-        if (packet.d.user_id !== manager.clientId || !packet.d.channel_id) return;
-
-        let voiceStates = { [packet.d.guild_id]: packet.d }
+    var map = utils.map
+    if (packet.t == 'VOICE_SERVER_UPDATE') {
+      let voiceServer = {}
+      voiceServer[packet.d.guild_id] = {
+        event: packet.d
+      }
+      map.set('voiceServer', voiceServer)
+      return MoonlinkManager.#attemptConnection(manager, packet.d.guild_id)
+    }
+    if (packet.t == 'VOICE_STATE_UPDATE') {
+      if (packet.d.user_id !== manager.clientId) return;
+      if (packet.d.channel_id) {
+        let voiceStates = {}
+        voiceStates[packet.d.guild_id] = packet.d
         map.set('voiceStates', voiceStates)
         return MoonlinkManager.#attemptConnection(manager, packet.d.guild_id)
+      }
     }
   }
   request(node, endpoint, params) {
@@ -66,9 +71,11 @@ class MoonlinkManager extends EventEmitter {
         Authorization: node.password
       }
     })
+
   }
   async search(...options) {
     return new Promise(async (resolve) => {
+
       if (!options) throw new Error('[ MoonLink.Js ]: the search option has to be in string format or in an array')
 
       let [query, source] = options
@@ -78,15 +85,14 @@ class MoonlinkManager extends EventEmitter {
         query.source ? source = query.source : undefined
         query.query ? query = query.query : undefined
       }
-      let sources = { 
+      let sources = {
         youtube: 'ytsearch',
         youtubemusic: 'ytmsearch',
         soundcloud: 'scsearch'
       }
-
       let db = utils.db
       var spotifyApi = 'https://api.spotify.com/v1/'
-
+      let { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
       if (query && !query.startsWith('http://') && !query.startsWith('https://')) {
         options = `${sources[source] || 'ytsearch'}:${query}`
       }
@@ -116,10 +122,8 @@ class MoonlinkManager extends EventEmitter {
         }
         let req = await this.#spotifyRequest(url)
 
-        if (req.error?.status == 400) return { loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] }
-        if (req.error) return resolve({ loadType: 'LOAD_FAILED', playlistInfo: {}, tracks: [], exception: { message: req.error.message, severity: 'UNKNOWN' } })
-
         if (track[1] === 'track') {
+          if (req.error?.status == 400) return resolve({ loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] })
           let pes = await this.search(`${req.name} ${req.artists[0].name}`)
           if (pes.loadType != 'SEARCH_RESULT') return pes
           return resolve({
@@ -129,6 +133,8 @@ class MoonlinkManager extends EventEmitter {
           })
         }
         if (track[1] == 'episode') {
+
+          if (req.error?.status == 400) return resolve({ loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] })
           let pes = await this.search(`${req.name} ${req.publisher}`)
           if (pes.loadType != 'SEARCH_RESULT') return resolve(pes)
           return resolve({
@@ -138,6 +144,11 @@ class MoonlinkManager extends EventEmitter {
           })
         }
         if (track[1] == 'playlist' || track[1] == 'album') {
+
+          if (req.error?.status == 400) return { loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] }
+          if (req.error) return resolve({ loadType: 'LOAD_FAILED', playlistInfo: {}, tracks: [], exception: { message: req.error.message, severity: 'UNKNOWN' } })
+
+
           let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] }
           let i = 0;
           req.tracks.items.forEach(async (x, y) => {
@@ -145,44 +156,66 @@ class MoonlinkManager extends EventEmitter {
             if (track[1] === 'playlist') tracks = await this.search(`${x.track.name} ${x.track.artists[0].name}`)
             else tracks = await this.search(`${x.name} ${x.publisher}`)
 
-            if (tracks.loadType !== 'SEARCH_RESULT') return y === x.tracks.items.length ? resolve(res) : undefined
+            if (tracks.loadType !== 'SEARCH_RESULT') {
 
+              if (y === x.tracks.items.length) return resolve(tracks)
+
+              return;
+
+            }
             if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: y, thumbnail: req.images[0].url, title: x.track.name, author: x.track.artists.map(artist => artist.name).join(', '), length: x.track.duration_ms, url: x.track.external_urls.spotify, source: 'spotify' }
             else tracks = { ...tracks.tracks[0], position: i, thumbnail: req.images[0].url, title: x.name, author: x.artists.map(artist => artist.name).join(', '), length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
 
             i++
             res.tracks.push(tracks)
 
+
             if (res.tracks.length === req.tracks.items.length) {
+
               res.tracks.sort((a, b) => a.position - b.position)
               i = 0
 
               return resolve(res)
+
             }
           })
         }
         if (track[1] == 'show') {
+
+          if (req.error?.status == 400) return { loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] }
+          if (req.error) return resolve({ loadType: 'LOAD_FAILED', playlistInfo: {}, tracks: [], exception: { message: req.error.message, severity: 'UNKNOWN' } })
+
+
           let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] }
           let i = 0;
           req.tracks.items.forEach(async (x, y) => {
             let tracks = await this.search(`${x.name} ${x.publisher}`)
 
-            if (tracks.loadType !== 'SEARCH_RESULT') return y === x.tracks.items.length ? resolve(res) : undefined
+            if (tracks.loadType !== 'SEARCH_RESULT') {
 
+              if (y === x.episodes.items.length) return resolve(tracks)
+
+              return;
+
+            }
             if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: i, thumbnail: req.images[0].url, title: x.name, author: req.publisher, length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
 
             i++
             res.tracks.push(tracks)
 
+
             if (res.tracks.length === req.episodes.items.length) {
+
               res.tracks.sort((a, b) => a.position - b.position)
               i = 0
 
               return resolve(res)
+
             }
           })
         }
       } else {
+
         let params = new URLSearchParams({ identifier: options })
         let res = await this.request(this.nodes.idealNode().node, 'loadtracks', params)
         this.emit('debug', '[ MoonLink.Js ]: searching songs')
@@ -194,8 +227,8 @@ class MoonlinkManager extends EventEmitter {
             res.playlistInfo.duration = tracks.reduce((acc, cur) => acc + cur.duration, 0);
           }
           return resolve({
-            ...res,
-            tracks
+            ...res
+            , tracks
           })
         }
       }
@@ -205,87 +238,93 @@ class MoonlinkManager extends EventEmitter {
 
   get players() {
     let map = utils.map
+    let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
     let get = function(guild) {
-      if (typeof guild !== 'number' && typeof guild !== 'string')
-      throw new TypeError('[ MOONLINK ] guild id support only numbers in string!')
-
+      if (typeof guild !== 'number' && typeof guild !== 'string') {
+        throw new TypeError('[ MOONLINK ] guild id support only numbers in string!')
+      }
+      const { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
       return (new MoonPlayer(map.get('players')[guild], manager))
     }
-    
     let create = function(t) {
-      if (typeof t.guildId !== 'string' && typeof t.guildId !== 'number')
+      if (typeof t.guildId !== 'string' && typeof t.guildId !== 'number') {
         throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
-
-      if (typeof t.voiceChannel !== 'string' && typeof t.guildId !== 'number')
+      }
+      if (typeof t.voiceChannel !== 'string' && typeof t.guildId !== 'number') {
         throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
-
-      if (typeof t.textChannel !== 'string' && typeof t.guildId !== 'number')
+      }
+      if (typeof t.textChannel !== 'string' && typeof t.guildId !== 'number') {
         throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
+      }
 
       let players = map.get('players') || {}
       if (!players[t.guildId]) {
         players[t.guildId] = {
-          guildId: t.guildId,
-          voiceChannel: String(t.voiceChannel),
-          textChannel: String(t.textChannel),
-          playing: false,
-          paused: false,
-          loop: false,
-          connected: false
+          guildId: t.guildId
+          , voiceChannel: String(t.voiceChannel)
+          , textChannel: String(t.textChannel)
+          , playing: false
+          , paused: false
+          , loop: false
+          , connected: false
         }
         map.set('players', players)
+
       }
+      let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
       return (new MoonPlayer(players[t.guildId], manager))
     }
-
     let all = function() {
       let players = map.get('players') || null
-
-      return players ? players : null
+      if (!players) {
+        return null
+      } else {
+        return players
+      }
     }
     let has = function(guild) {
       let player = map.get('players') || []
-
-      if (typeof guild !== 'string' && isNaN(guild))
+      if (typeof guild !== 'string' && isNaN(guild)) {
         throw new TypeError(`[ MoonLinkJs ]: ${guild} a number string was expected`)
-
-      return player[guild] ? true : false
+      }
+      if (player[guild]) player = true
+      else player = false
+      return player
     }
     function edit(info) {
       let player = map.get('players') || []
-      if (!info)
+      if (!info) {
         throw new TypeError(`[ MoonlinkJs ]: enter a term to edit your player.`)
-
-      if (!player[info.guildId]) 
-        throw new TypeError(`[ MoonLinkJs ]: cannot edit a player on guild ${info.guildId}.`)
-
-      if (typeof info.guildId !== 'number' && typeof info.guildId !== 'string')
+      }
+      if (!player[info.guildId]) { throw new TypeError(`[ MoonLinkJs ]: cannot edit a player on guild ${info.guildId}.`) }
+      if (typeof info.guildId !== 'number' && typeof info.guildId !== 'string') {
         throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
-
-      if (typeof info.voiceChannel !== 'number' && typeof info.voiceChannel !== 'string')
+      }
+      if (typeof info.voiceChannel !== 'number' && typeof info.voiceChannel !== 'string') {
         throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
-
-      if (typeof info.textChannel !== 'number' && typeof info.textChannel !== 'string')
+      }
+      if (typeof info.textChannel !== 'number' && typeof info.textChannel !== 'string') {
         throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
-
+      }
       player[info.guildId] = {
-        guildId: info.guildId,
-        voiceChannel: info.voiceChannel,
-        textChannel: info.textChannel,
-        playing: false,
-        paused: false,
-        loop: false
+        guildId: info.guildId
+        , voiceChannel: info.voiceChannel
+        , textChannel: info.textChannel
+        , playing: false
+        , paused: false
+        , loop: false
       }
       map.set('players', player)
-
       return (new MoonPlayer(player[info.guildId], manager))
+
     }
     return {
-      get,
-      create,
-      all,
-      has,
-      edit
+      get
+      , create
+      , all
+      , has
+      , edit
+
     }
   }
   //---------------------//
@@ -296,18 +335,17 @@ class MoonlinkManager extends EventEmitter {
     let voiceServer = map.get('voiceServer') || {}
     let voiceStates = map.get('voiceStates') || {}
     let players = map.get('players') || {}
-
-    if (!players[guildId] || !voiceServer[guildId]) return false
-
+    if (!players[guildId]) return false
+    if (!voiceServer[guildId]) return false 
     Manager.emit('debug', '[ @Moonlink.js ]: sending voiceUpdate to lavalink (' + guildId + ')')
     Manager.nodes.sendWs({
-      op: 'voiceUpdate',
-      sessionId: voiceStates[guildId].session_id,
-      guildId: voiceServer[guildId].event.guild_id,
-      event: voiceServer[guildId].event
+      op: 'voiceUpdate'
+      , sessionId: voiceStates[guildId].session_id
+      , guildId: voiceServer[guildId].event.guild_id
+      , event: voiceServer[guildId].event
     })
-
     return true
+
   }
 
   async #spotifyRequest(url) {
@@ -316,8 +354,12 @@ class MoonlinkManager extends EventEmitter {
       await utils.makeRequest('https://open.spotify.com/get_access_token', 'GET', {
         headers: {}
       }).then(async (data) => {
+
         this.#TokenSpotify = data.accessToken
-        req = await this.#spotifyRequest(url)
+        let r = await this.#spotifyRequest(url)
+
+        req = r
+
       })
     }
     return req
