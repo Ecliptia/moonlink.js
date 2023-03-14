@@ -4,6 +4,7 @@ const utils = require('../@Rest/MoonlinkUtils.js')
 const WebSocket = require('ws')
 class MoonlinkNodes {
     #on = false;
+    #stats = null;
     constructor(MoonlinkManager, nodes, options, sPayload, clientId) {
         
         this.ws;
@@ -12,7 +13,7 @@ class MoonlinkNodes {
         this.options = options 
         this.sPayload = sPayload 
         this.clientId = clientId
-        this.stats = {
+        this.#stats = {
       players: 0,
       playingPlayers: 0,
       uptime: 0,
@@ -33,6 +34,7 @@ class MoonlinkNodes {
         deficit: 0,
       },
     };
+        this.version = "resolving";
         this.retryTime = 300000;
         this.reconnectAtattempts = 0;
         this.retryAmount = 5;
@@ -76,13 +78,19 @@ this.idealNode().ws.send(JSON.stringify(json), (error) => {
             this.#on = true
             db.delete('queue')
         }
-        options.forEach((no) => {
+        options.forEach(async(no) => {
             if (typeof no.host !== 'undefined' && typeof no.host !== 'string') throw new TypeError('[ MoonLink ]: Option "host" must be empty string, for localhost leave empty')
             if (typeof no.password !== 'undefined' && typeof no.password !== 'string') throw new TypeError("[ MoonLink.Js ]: The password option must be in string, if you don't have a password, leave it empty")
             if (no.port && typeof no.port !== 'number' || no.port > 65535 || no.port < 0) throw new TypeError('[ MoonLink ]: The "port" option must be a ')
             if(!this.options.clientName) this.options.clientName = `MoonLink/${require('./../package.json').version}`
             if(Nodes && Nodes[`${no.host ? no.host : 'localhost'}${no.port ? ':' + no.port : ':443' }`] && Nodes[`${no.host ? no.host : 'localhost'}${no.port ? ':' + no.port : ':443' }`].connected) return;
-            this.ws = new WebSocket(`ws${no.secure ? 's' : '' }://${no.host ? no.host : 'localhost'}${no.port ? `:${no.port}` : ':443'}`, undefined, {
+            let version = await utils.request(no, 'version', '').catch(err => {
+              this.manager.emit('debug', "[ Moonlink/Nodes ]: Lavalink server is offline, unable to get version for endpoint verification")
+              return;
+            })
+            if(!version) return;
+            version = version.replace(/\./g, '')
+            this.ws = new WebSocket(`ws${no.secure ? 's' : '' }://${no.host ? no.host : 'localhost'}${no.port ? `:${no.port}` : ':443'}${version >= 370 ? version >= 400 ? "/v4/websocket" : "/v3/websocket" : "" }`, undefined, {
                 headers: {
 					Authorization: no.password ? no.password : ''
 					, 'Num-Shards': this.options.shards
@@ -90,9 +98,11 @@ this.idealNode().ws.send(JSON.stringify(json), (error) => {
 					, 'Client-Name': this.options.clientName
               }})
             this.ManagerNodes(no, this.ws)
-            this.ws.on('open', () => {
+            this.ws.on('open', async() => {
            this.manager.emit('nodeCreate', no)
            this.manager.emit('debug', `${no.host ? no.host : 'localhost'}${no.port ? ':' + no.port : ':443'} is online, and has also been connected`)
+              Nodes[`${no.host ? no.host : 'localhost'}${no.port ? ':' + no.port : ':443' }`].version = await utils.request(no, 'version', '');
+              this.manager.emit('debug', '[ @Moonlink/Nodes ]: your lava version has been checked (' +  Nodes[`${no.host ? no.host : 'localhost'}${no.port ? ':' + no.port : ':443' }`].version + ')')
             })
            this.ws.on('close', (code, reason) => {
                this.manager.emit('nodeClose', (no, code, reason))
@@ -107,8 +117,10 @@ this.idealNode().ws.send(JSON.stringify(json), (error) => {
 		}
 		switch (data.op) {
 		case 'playerUpdate': {
+      
 			let track = utils.track.current()
 			let infoUpdate = { ...track, thumbnail: track?.thumbnail, position: data.state.position }
+      if(data.state.ping) infoUpdate['ping'] = data.state.ping
 			utils.track.editCurrent(infoUpdate)
 this.manager.emit('playerUpdate', data)
 			break
@@ -332,19 +344,20 @@ this.manager.emit('debug', '[ MoonLink.Js ]: Trying to reconnect node, attempted
       }
     
      get(identify) {
-         if(identify) return undefined
+         if(!identify) return undefined
          let node;
          if(typeof identify == 'Number') {
           node = Object.values(Nodes)
              } else {
-                 if(Array.isArray(identify)) {
-                     if(!identify.host || !identify.port) return undefined
+                 if(typeof identify == "object") {
+                     if(!identify.host && !identify.port) return undefined
                  if(!Nodes[`${identify.host ? identify.host : 'localhost'}${identify.port ? ':' + identify.port : ':443'}`]) return undefined 
                      node = Nodes[`${identify.host ? identify.host : 'localhost'}${identify.port ? ':' + identify.port : ':443'}`]
+                   
                      }
                  
-             }
-         return node ? node : undefined;
+                       }
+       return node ? node : null
      }
      
      get size() {
