@@ -32,7 +32,6 @@ function esdw(x) {
 function sendDs() {
 	return sendDiscord
 }
-
     
 function request(node, endpoint, params) {
 	return makeRequest(`http${node.secure ? 's' : ''}://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, 'GET' ,{

@@ -8,7 +8,7 @@ class MoonTrack {
 		this.identifier = data.info.identifier
 		this.duration = data.info.length
 		this.isSeekable = data.info.isSeekable
-		this.track = data.track
+		this.track = data.encodedTrack ? data.encodedTrack : data.track
 		this.source = data.info.sourceName || undefined 
         this.requester = undefined
 	}
