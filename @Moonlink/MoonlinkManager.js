@@ -41,8 +41,8 @@ class MoonlinkManager extends EventEmitter {
     this.sendWs = (json) => {
       return this.nodes.sendWs(json)
     }
-    this.clientId = clientId 
-    
+    this.clientId = clientId
+
   }
 
   updateVoiceState(packet) {
@@ -66,7 +66,9 @@ class MoonlinkManager extends EventEmitter {
     }
   }
   request(node, endpoint, params) {
-    return utils.makeRequest(`http://${node.host}${node.port ? `:${node.port}` : ``}/${endpoint}?${params}`, 'GET', {
+    let version = this.nodes.get(node).version.replace(/\./g, '')
+
+    return utils.makeRequest(`http${node.secure ? `s` : ``}://${node.host}${node.port ? `:${node.port}` : ``}/${version >= 370 ? version >= 400 ? "v4/" : "v3/" : ""}${endpoint}?${params}`, 'GET', {
       headers: {
         Authorization: node.password
       }
@@ -88,13 +90,20 @@ class MoonlinkManager extends EventEmitter {
       let sources = {
         youtube: 'ytsearch',
         youtubemusic: 'ytmsearch',
-        soundcloud: 'scsearch'
+        soundcloud: 'scsearch',
+        twitter: 'twitter'
       }
       let db = utils.db
       var spotifyApi = 'https://api.spotify.com/v1/'
       let { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
       if (query && !query.startsWith('http://') && !query.startsWith('https://')) {
-        options = `${sources[source] || 'ytsearch'}:${query}`
+
+        if (source && !sources[source]) {
+          this.emit('debug', "[ Moonlink/Manager]: no default found, changing to custom source")
+          options = `${source}:${query}`
+        } else {
+          options = sources[source] || `ytsearch:${query}`
+        }
       }
 
       if (query && /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.test(query)) {
@@ -336,7 +345,7 @@ class MoonlinkManager extends EventEmitter {
     let voiceStates = map.get('voiceStates') || {}
     let players = map.get('players') || {}
     if (!players[guildId]) return false
-    if (!voiceServer[guildId]) return false 
+    if (!voiceServer[guildId]) return false
     Manager.emit('debug', '[ @Moonlink.js ]: sending voiceUpdate to lavalink (' + guildId + ')')
     Manager.nodes.sendWs({
       op: 'voiceUpdate'
