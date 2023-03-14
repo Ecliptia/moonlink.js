@@ -1,6 +1,6 @@
 {
     "name": "moonlink.js",
-    "version": "1.9.16",
+    "version": "1.10.32",
     "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
     "keywords": [
         "bot",
@@ -16,12 +16,11 @@
         "start": "index.js",
         "lint": "eslint ."
     },
-    "homepage": "moonlink.js.org",
+    "homepage": "https://moonlink.js.org",
     "bugs": {
         "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
         "email": "lucasmorais0306@gmail.com"
     },
-    "types": "index.d.ts",
     "license": {
         "type": "Apache-2.0",
         "url": "https://opensource.org/licenses/apache2.0.php"
@@ -38,10 +37,13 @@
         "node": ">=16.0.0"
     },
     "dependencies": {
-        "ws": "^8.12.1"
+        "ws": "^8.11.0"
     },
     "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.47.1",
+        "@typescript-eslint/parser": "^5.47.1",
         "discord.js": "^14.6.0",
-        "eslint": "latest"
+        "eslint": "latest",
+        "express": "^4.18.2"
     }
 }
