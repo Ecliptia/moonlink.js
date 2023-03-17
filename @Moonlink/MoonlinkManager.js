@@ -3,6 +3,9 @@ var WebSocket = require('ws')
 var utils = require('../@Rest/MoonlinkUtils.js')
 var Nodes = require('./MoonlinkNodes.js')
 var manager;
+const db = utils.db
+const { MoonlinkTrack } = require('../@Rest/MoonlinkTrack.js')
+const Spotify = require('../@sources/Spotify.js')
 class MoonlinkManager extends EventEmitter {
   #reconnectAtattempts = 0;
   #retryAmount = 5;
@@ -30,6 +33,7 @@ class MoonlinkManager extends EventEmitter {
     this.version = require('./../package.json').version
     this.nodes;
     this.sendWs
+    this.spotify = new Spotify(this, options)
     manager = this
   }
   init(clientId) {
@@ -76,6 +80,7 @@ class MoonlinkManager extends EventEmitter {
 
   }
   async search(...options) {
+    
     return new Promise(async (resolve) => {
 
       if (!options) throw new Error('[ MoonLink.Js ]: the search option has to be in string format or in an array')
@@ -91,11 +96,13 @@ class MoonlinkManager extends EventEmitter {
         youtube: 'ytsearch',
         youtubemusic: 'ytmsearch',
         soundcloud: 'scsearch',
-        twitter: 'twitter'
+        twitter: 'twitter',
+        spotify: 'spotify'
       }
-      let db = utils.db
-      var spotifyApi = 'https://api.spotify.com/v1/'
-      let { MoonTrack } = require('../@Rest/MoonlinkTrack.js')
+      if(this.spotify.check(query)) { 
+     
+        return resolve(await this.spotify.resolve(query))
+      }
       if (query && !query.startsWith('http://') && !query.startsWith('https://')) {
 
         if (source && !sources[source]) {
@@ -105,273 +112,141 @@ class MoonlinkManager extends EventEmitter {
           options = sources[source] || `ytsearch:${query}`
         }
       }
-
-      if (query && /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.test(query)) {
-        options = query
-        let track = /(?:https:\/\/open\.spotify\.com\/|spotify:)(?:.+)?(track|playlist|artist|episode|show|album)[/:]([A-Za-z0-9]+)/.exec(options)
-        let url = '';
-        switch (track[1]) {
-          case 'track':
-            url = spotifyApi + `tracks/${track[2]}`
-            break;
-          case 'album':
-            url = spotifyApi + `albums/${track[2]}`
-            break;
-          case 'show':
-            url = spotifyApi + `shows/${track[2]}`
-            break;
-          case 'episodes':
-            url = spotifyApi + `episodes/${track[2]}`
-            break;
-          case 'playlist':
-            url = spotifyApi + `playlists/${track[2]}?market=ES`
-            break;
-          default:
-            return resolve({ loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] })
-        }
-        let req = await this.#spotifyRequest(url)
-
-        if (track[1] === 'track') {
-          if (req.error?.status == 400) return resolve({ loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] })
-          let pes = await this.search(`${req.name} ${req.artists[0].name}`)
-          if (pes.loadType != 'SEARCH_RESULT') return pes
-          return resolve({
-            loadType: pes.loadType,
-            playlistInfo: pes.playlistInfo,
-            tracks: [{ ...pes.tracks[0], title: req.name, author: req.artists.map(artist => artist.name).join(', '), thumbnail: req.album.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, source: 'spotify' }]
-          })
-        }
-        if (track[1] == 'episode') {
-
-          if (req.error?.status == 400) return resolve({ loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] })
-          let pes = await this.search(`${req.name} ${req.publisher}`)
-          if (pes.loadType != 'SEARCH_RESULT') return resolve(pes)
-          return resolve({
-            loadType: pes.loadType,
-            playlistInfo: pes.playlistInfo,
-            tracks: [{ ...pes.tracks[0], title: req.name, author: null, thumbnail: req.images[0].url, length: req.duration_ms, url: req.external_urls.spotify, source: 'spotify' }]
-          })
-        }
-        if (track[1] == 'playlist' || track[1] == 'album') {
-
-          if (req.error?.status == 400) return { loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] }
-          if (req.error) return resolve({ loadType: 'LOAD_FAILED', playlistInfo: {}, tracks: [], exception: { message: req.error.message, severity: 'UNKNOWN' } })
-
-
-          let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] }
-          let i = 0;
-          req.tracks.items.forEach(async (x, y) => {
-            let tracks
-            if (track[1] === 'playlist') tracks = await this.search(`${x.track.name} ${x.track.artists[0].name}`)
-            else tracks = await this.search(`${x.name} ${x.publisher}`)
-
-            if (tracks.loadType !== 'SEARCH_RESULT') {
-
-              if (y === x.tracks.items.length) return resolve(tracks)
-
-              return;
-
-            }
-            if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: y, thumbnail: req.images[0].url, title: x.track.name, author: x.track.artists.map(artist => artist.name).join(', '), length: x.track.duration_ms, url: x.track.external_urls.spotify, source: 'spotify' }
-            else tracks = { ...tracks.tracks[0], position: i, thumbnail: req.images[0].url, title: x.name, author: x.artists.map(artist => artist.name).join(', '), length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
-
-            i++
-            res.tracks.push(tracks)
-
-
-            if (res.tracks.length === req.tracks.items.length) {
-
-              res.tracks.sort((a, b) => a.position - b.position)
-              i = 0
-
-              return resolve(res)
-
-            }
-          })
-        }
-        if (track[1] == 'show') {
-
-          if (req.error?.status == 400) return { loadType: 'NO_MATCHES', playlistInfo: {}, tracks: [] }
-          if (req.error) return resolve({ loadType: 'LOAD_FAILED', playlistInfo: {}, tracks: [], exception: { message: req.error.message, severity: 'UNKNOWN' } })
-
-
-          let res = { loadType: 'PLAYLIST_LOADED', playlistInfo: { selectedTrack: -1, name: req.name }, tracks: [] }
-          let i = 0;
-          req.tracks.items.forEach(async (x, y) => {
-            let tracks = await this.search(`${x.name} ${x.publisher}`)
-
-            if (tracks.loadType !== 'SEARCH_RESULT') {
-
-              if (y === x.episodes.items.length) return resolve(tracks)
-
-              return;
-
-            }
-            if (track[1] == 'playlist') tracks = { ...tracks.tracks[0], position: i, thumbnail: req.images[0].url, title: x.name, author: req.publisher, length: x.duration_ms, url: x.external_urls.spotify, source: 'spotify' }
-
-            i++
-            res.tracks.push(tracks)
-
-
-            if (res.tracks.length === req.episodes.items.length) {
-
-              res.tracks.sort((a, b) => a.position - b.position)
-              i = 0
-
-              return resolve(res)
-
-            }
-          })
-        }
-      } else {
-
-        let params = new URLSearchParams({ identifier: options })
-        let res = await this.request(this.nodes.idealNode().node, 'loadtracks', params)
-        this.emit('debug', '[ MoonLink.Js ]: searching songs')
-        if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
-          return resolve(res)
-        } else {
-          const tracks = res.tracks.map(x => new MoonTrack(x));
-          if (res.loadType === 'PLAYLIST_LOADED') {
-            res.playlistInfo.duration = tracks.reduce((acc, cur) => acc + cur.duration, 0);
-          }
-          return resolve({
-            ...res
-            , tracks
-          })
-        }
+      if(source == "spotify") {
+        return this.spotify.fetch(query)
       }
-    })
-  }
+      let params = new URLSearchParams({ identifier: options })
+      let res = await this.request(this.nodes.idealNode().node, 'loadtracks', params)
+      this.emit('debug', '[ MoonLink.Js ]: searching songs')
+      if (res.loadType === 'LOAD_FAILED' || res.loadType === 'NO_MATCHES') {
+        this.emit('debug', '[ @Moonlink/Manager ]: not found or there was an error loading the track')
+        return resolve(res)
+        
+      } else {
+        const tracks = res.tracks.map(x => new MoonlinkTrack(x));
+        if (res.loadType === 'PLAYLIST_LOADED') {
+          res.playlistInfo.duration = tracks.reduce((acc, cur) => acc + cur.duration, 0);
+        }
+        return resolve({
+          ...res
+          , tracks
+        })
+      }
+  })
+}
 
 
   get players() {
-    let map = utils.map
-    let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
-    let get = function(guild) {
-      if (typeof guild !== 'number' && typeof guild !== 'string') {
-        throw new TypeError('[ MOONLINK ] guild id support only numbers in string!')
-      }
-      const { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
-      return (new MoonPlayer(map.get('players')[guild], manager))
+  let map = utils.map
+  let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
+  let get = function(guild) {
+    if (typeof guild !== 'number' && typeof guild !== 'string') {
+      throw new TypeError('[ MOONLINK ] guild id support only numbers in string!')
     }
-    let create = function(t) {
-      if (typeof t.guildId !== 'string' && typeof t.guildId !== 'number') {
-        throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
-      }
-      if (typeof t.voiceChannel !== 'string' && typeof t.guildId !== 'number') {
-        throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
-      }
-      if (typeof t.textChannel !== 'string' && typeof t.guildId !== 'number') {
-        throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
-      }
+    const { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
+    return (new MoonPlayer(map.get('players')[guild], manager))
+  }
+  let create = function(t) {
+    if (typeof t.guildId !== 'string' && typeof t.guildId !== 'number') {
+      throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
+    }
+    if (typeof t.voiceChannel !== 'string' && typeof t.guildId !== 'number') {
+      throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
+    }
+    if (typeof t.textChannel !== 'string' && typeof t.guildId !== 'number') {
+      throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
+    }
 
-      let players = map.get('players') || {}
-      if (!players[t.guildId]) {
-        players[t.guildId] = {
-          guildId: t.guildId
-          , voiceChannel: String(t.voiceChannel)
-          , textChannel: String(t.textChannel)
-          , playing: false
-          , paused: false
-          , loop: false
-          , connected: false
-        }
-        map.set('players', players)
-
-      }
-      let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
-      return (new MoonPlayer(players[t.guildId], manager))
-    }
-    let all = function() {
-      let players = map.get('players') || null
-      if (!players) {
-        return null
-      } else {
-        return players
-      }
-    }
-    let has = function(guild) {
-      let player = map.get('players') || []
-      if (typeof guild !== 'string' && isNaN(guild)) {
-        throw new TypeError(`[ MoonLinkJs ]: ${guild} a number string was expected`)
-      }
-      if (player[guild]) player = true
-      else player = false
-      return player
-    }
-    function edit(info) {
-      let player = map.get('players') || []
-      if (!info) {
-        throw new TypeError(`[ MoonlinkJs ]: enter a term to edit your player.`)
-      }
-      if (!player[info.guildId]) { throw new TypeError(`[ MoonLinkJs ]: cannot edit a player on guild ${info.guildId}.`) }
-      if (typeof info.guildId !== 'number' && typeof info.guildId !== 'string') {
-        throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
-      }
-      if (typeof info.voiceChannel !== 'number' && typeof info.voiceChannel !== 'string') {
-        throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
-      }
-      if (typeof info.textChannel !== 'number' && typeof info.textChannel !== 'string') {
-        throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
-      }
-      player[info.guildId] = {
-        guildId: info.guildId
-        , voiceChannel: info.voiceChannel
-        , textChannel: info.textChannel
+    let players = map.get('players') || {}
+    if (!players[t.guildId]) {
+      players[t.guildId] = {
+        guildId: t.guildId
+        , voiceChannel: String(t.voiceChannel)
+        , textChannel: String(t.textChannel)
         , playing: false
         , paused: false
         , loop: false
+        , connected: false
       }
-      map.set('players', player)
-      return (new MoonPlayer(player[info.guildId], manager))
+      map.set('players', players)
 
     }
-    return {
-      get
-      , create
-      , all
-      , has
-      , edit
-
+    let { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
+    return (new MoonPlayer(players[t.guildId], manager))
+  }
+  let all = function() {
+    let players = map.get('players') || null
+    if (!players) {
+      return null
+    } else {
+      return players
     }
   }
+  let has = function(guild) {
+    let player = map.get('players') || []
+    if (typeof guild !== 'string' && isNaN(guild)) {
+      throw new TypeError(`[ MoonLinkJs ]: ${guild} a number string was expected`)
+    }
+    if (player[guild]) player = true
+    else player = false
+    return player
+  }
+  function edit(info) {
+    let player = map.get('players') || []
+    if (!info) {
+      throw new TypeError(`[ MoonlinkJs ]: enter a term to edit your player.`)
+    }
+    if (!player[info.guildId]) { throw new TypeError(`[ MoonLinkJs ]: cannot edit a player on guild ${info.guildId}.`) }
+    if (typeof info.guildId !== 'number' && typeof info.guildId !== 'string') {
+      throw new TypeError('[ MOONLINK ]: guild id support only numbers in string!')
+    }
+    if (typeof info.voiceChannel !== 'number' && typeof info.voiceChannel !== 'string') {
+      throw new TypeError('[ MOONLINK ]: voice channel id support only numbers in string!')
+    }
+    if (typeof info.textChannel !== 'number' && typeof info.textChannel !== 'string') {
+      throw new TypeError('[ MOONLINK ]: text channel id support only numbers in string!')
+    }
+    player[info.guildId] = {
+      guildId: info.guildId
+      , voiceChannel: info.voiceChannel
+      , textChannel: info.textChannel
+      , playing: false
+      , paused: false
+      , loop: false
+    }
+    map.set('players', player)
+    return (new MoonPlayer(player[info.guildId], manager))
+
+  }
+  return {
+    get
+    , create
+    , all
+    , has
+    , edit
+
+  }
+}
   //---------------------//
 
 
   static #attemptConnection(Manager, guildId) {
-    let map = utils.map
-    let voiceServer = map.get('voiceServer') || {}
-    let voiceStates = map.get('voiceStates') || {}
-    let players = map.get('players') || {}
-    if (!players[guildId]) return false
-    if (!voiceServer[guildId]) return false
-    Manager.emit('debug', '[ @Moonlink.js ]: sending voiceUpdate to lavalink (' + guildId + ')')
-    Manager.nodes.sendWs({
-      op: 'voiceUpdate'
-      , sessionId: voiceStates[guildId].session_id
-      , guildId: voiceServer[guildId].event.guild_id
-      , event: voiceServer[guildId].event
-    })
-    return true
+  let map = utils.map
+  let voiceServer = map.get('voiceServer') || {}
+  let voiceStates = map.get('voiceStates') || {}
+  let players = map.get('players') || {}
+  if (!players[guildId]) return false
+  if (!voiceServer[guildId]) return false
+  Manager.emit('debug', '[ @Moonlink.js ]: sending voiceUpdate to lavalink (' + guildId + ')')
+  Manager.nodes.sendWs({
+    op: 'voiceUpdate'
+    , sessionId: voiceStates[guildId].session_id
+    , guildId: voiceServer[guildId].event.guild_id
+    , event: voiceServer[guildId].event
+  })
+  return true
 
-  }
+}
 
-  async #spotifyRequest(url) {
-    let req = await utils.makeRequest(url, 'GET', { headers: { Authorization: ` Bearer ${this.#TokenSpotify}` } })
-    if (req.error?.status == 401) {
-      await utils.makeRequest('https://open.spotify.com/get_access_token', 'GET', {
-        headers: {}
-      }).then(async (data) => {
-
-        this.#TokenSpotify = data.accessToken
-        let r = await this.#spotifyRequest(url)
-
-        req = r
-
-      })
-    }
-    return req
-  }
 }
 module.exports = { MoonlinkManager }
