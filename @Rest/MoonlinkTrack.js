@@ -1,4 +1,4 @@
-class MoonTrack {
+class MoonlinkTrack {
 	constructor(data, request) {
 		
 		this.position = data.info.position
@@ -16,4 +16,4 @@ class MoonTrack {
             if(this.source === 'youtube') return `https://img.youtube.com/vi/${this.identifier}/sddefault.jpg`
         }
 }
-module.exports = { MoonTrack }
+module.exports = { MoonlinkTrack }
