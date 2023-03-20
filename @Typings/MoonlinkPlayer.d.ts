@@ -6,7 +6,7 @@ export class MoonPlayer {
     playing: any;
     connected: any;
     paused: any;
-    loop(number: any): void;
+    loop: any;
     volume: any;
     current: any;
     queue: MoonQueue;
@@ -21,8 +21,9 @@ export class MoonPlayer {
     destroy(): boolean;
     skip(): boolean;
     seek(number: any): boolean;
+    setLoop(number: any): void;
     removeSong(position: any): boolean;
-    skipTo(position: any): void;
+    skipTo(position: any): boolean;
     #private;
 }
 import { MoonQueue } from "../@Rest/MoonlinkQueue.js";
