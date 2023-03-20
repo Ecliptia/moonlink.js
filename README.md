@@ -128,8 +128,8 @@ meaning of [emojis](https://allcontributors.org/docs/en/emoji-key)
 <td align="center"><a href="https://github.com/motoG100"> <img src="https://cdn.discordapp.com/attachments/1046805409169682482/1087397208795643996/motog.png" width="100px;" alt="" /><br> <sub><b>MotoG.js</b></sub><br> </a><a href="https://github.com/1Lucas1apk/Moonlink.js/commits?author=motoG100" title="Code">💻</a><a href="https://moonlink.js.org/exemples" title="exemples">💡</a><a href="https://github.com/1Lucas1apk/moonlink.js" title="ideas">🤔</a><a href="https://github.com/1Lucas1apk/moonlink.js/issues" title="question">💬</a><a href="https://moonlink.js.org" title="designer">🎨</a></td>
 </tr>
 <tr>
-<td align="center"><a href="https://github.com/SudhanPlayz"> <img src="https://cdn.discordapp.com/attachments/990369914093207563/1087398012675952670/itzcuteklee.png" width="100px;" alt="" /><br> <sub><b>ItzCuteKlee</b></sub><br> </td>
-<td align="center"><a href="https://github.com/NotWrench"> <img src="https://cdn.discordapp.com/attachments/990369914093207563/1087398932474245130/wrench.png" width="100px;" alt="" /><br> <sub><b>Wrench</b></sub><br></td>
+<td align="center"><a href="https://github.com/SudhanPlayz"> <img src="https://cdn.discordapp.com/attachments/990369914093207563/1087398012675952670/itzcuteklee.png" width="100px;" alt="" /><br> <sub><b>ItzCuteKlee</b></sub><br> <a href="https://github.com/1Lucas1apk/Moonlink.js/commits?author=SudhanPlayz" title="Code">💻</a></td>
+<td align="center"><a href="https://github.com/NotWrench"> <img src="https://cdn.discordapp.com/attachments/990369914093207563/1087398932474245130/wrench.png" width="100px;" alt="" /><br> <sub><b>Wrench</b></sub><br><a href="https://github.com/1Lucas1apk/Moonlink.js/commits?author=NotWrench" title="Code">💻</a></td>
 </tr>
 <tr>
 <td align="center"><a href="https://discord.com/users/912987919357190194"> <img src="https://cdn.discordapp.com/avatars/912987919357190194/bfb477ccd7ab6b4927f6d7e56acf1037.webp?size=2048" width="100px;" alt="" /><br> <sub><b>ItzGG</b></sub><br> </a><a href="https://discord.gg/gPw8ycW5wN" title="Bug">🐛</a></td>
