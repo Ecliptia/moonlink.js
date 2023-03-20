@@ -223,7 +223,7 @@ setVolume(percent) {
     return true
   }
 
-  loop(number) {
+  setLoop(number) {
     var player = map.get('players') || {}
     if (!number) {
       player[this.guildId] = {
@@ -244,8 +244,8 @@ setVolume(percent) {
     let queue = db.get(`queue.${this.guildId}`)
     if (typeof position !== 'string' && typeof position !== 'number') throw new TypeError(`[ MoonlinkJs ]: accepts only numbers string.`);
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty!`);
-    if (!queue[position]) throw new TypeError(`[ MoonlinkJs ]: there are no song in the given position.`)
-    queue.splice(position, 1)
+    if (!queue[position - 1]) throw new TypeError(`[ MoonlinkJs ]: the position indicated by the user there is no track.`)
+    queue.splice(position - 1, 1)
     db.set('queue.' + this.guildId, queue)
     return true
   }
@@ -254,21 +254,19 @@ setVolume(percent) {
     let queue = db.get(`queue.${this.guildId}`)
     if (typeof position !== 'string' && typeof position !== 'number') throw new TypeError(`[ MoonlinkJs ]: skipTo accept only numbers in strings.`)
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
-    else {
-      let skipedToTrack = queue.splice(position, 1)
-      utils.track.editCurrent(skipedToTrack);
-      db.set(`queue.${this.guildId}`, [])
+    if (!queue[position - 1]) throw new TypeError(`[ MoonlinkJs ]: the position indicated by the user there is no track.`)
+      let skipedToTrack = queue.splice(position - 1, 1)
+      utils.track.editCurrent(skipedToTrack[0])
+      db.set(`queue.${this.guildId}`, queue)
       utils.track.skipEdit(true);
       this.#sendWs({
         op: 'play'
         , guildId: this.guildId
         , channelId: this.voiceChannel
-        , track: utils.track.current().track
+        , track: skipedToTrack[0].track
       });
-    }
+    return true
   }
-
-
 }
 
 module.exports.MoonPlayer = MoonPlayer;
