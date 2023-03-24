@@ -1,5 +1,7 @@
-const utils = require('../@Rest/MoonlinkUtils.js')
+
 const { MoonlinkTrack } = require('../@Rest/MoonlinkTrack.js')
+
+const makeRequest = require('../@Rest/MakeRequest.js')
 class Spotify {
   //based: https://github.com/parasop/poru/blob/main/src/platform/Spotify.js
   #token;
@@ -10,27 +12,28 @@ class Spotify {
     this.options = others
     this.clientId = this.options.clientId || null;
     this.clientSecret = this.options.clientSecret || null
+    this.requestToken()
   }
   check(uri) {
     return /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/.test(uri);
   }
   async requestToken() {
     if (!this.clientId && !this.clientSecret) {
-      let res = await utils.makeRequest('https://open.spotify.com/get_access_token', 'GET', {
+      let res = await makeRequest('https://open.spotify.com/get_access_token', 'GET', {
         headers: {}
       }).catch(err => {
         this.manager.emit('debug', '[ Moonlink/Sources/Spotify ]: An error occurred while making the request')
         return;
-      }) 
-      
+      })
+
       let access = res.accessToken
-    
+
       this.#token = `Bearer ${access}`;
       this.#interval = res.accessTokenExpirationTimestampMs * 1000;
       return;
     }
     this.#authorization = Buffer.from(`${this.clientID}:${this.clientSecret}`).toString("base64");
-    let res = await utils.makeRequest("https://accounts.spotify.com/api/token?grant_type=client_credentials", "POST", {
+    let res = await makeRequest("https://accounts.spotify.com/api/token?grant_type=client_credentials", "POST", {
       headers: {
         Authorization: `Basic ${this.#authorization}`,
         "Content-Type": "application/x-www-form-urlencoded",
@@ -49,12 +52,14 @@ class Spotify {
   }
   async request(endpoint) {
     await this.renew();
-    
-    let res = await utils.makeRequest(`https://api.spotify.com/v1${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`, "GET",
+
+    let res = await makeRequest(`https://api.spotify.com/v1${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`, "GET",
       {
         headers: { Authorization: this.#token },
       }).catch(err => {
-        this.manager.emit('debug', "[ @Moonlink/Sources/Spotify ]: unable to request Spotify ")
+
+        this.manager.emit('debug', "[ @Moonlink/Sources/Spotify ]: unable to request Spotify " + err)
+
       })
     return res;
   }
@@ -84,7 +89,7 @@ class Spotify {
     let pageLoaded = 1;
     while (nextPage) {
       if (!nextPage) break;
-      const req = await utils.makeRequest(nextPage, "GET", {
+      const req = await makeRequest(nextPage, "GET", {
         headers: { Authorization: this.#token },
       });
       if (req.error) break;
@@ -96,88 +101,88 @@ class Spotify {
       ? playlist.tracks.items.slice(0, this.options.playlistLimit * 100)
       : playlist.tracks.items;
     const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x.track))
-      );
+      limitedTracks.map((x) => this.buildUnresolved(x.track))
+    );
     return {
-        loadType: "PLAYLIST_LOADED",
-        tracks: unresolvedPlaylistTracks,
-        playlistInfo: playlist.name ? { name: playlist.name } : {},
-      }
-  }
-  async fetchAlbum(id) {
-  const album = await this.request(`/albums/${id}`);
-
-      const limitedTracks = this.options.albumLimit
-        ? album.tracks.items.slice(0, this.options.albumLimit * 100)
-        : album.tracks.items;
-
-      const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x))
-      );
-      return {
-  loadType: "PLAYLIST_LOADED",
-        tracks: unresolvedPlaylistTracks,
-        playlistInfo: album.name ? { name: album.name } : {}
-  }
-}
-async fetchArtist(id) {
-      const artist = await this.request(`/artists/${id}`);
-      const data = await this.request(
-        `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
-      );
-
-      const limitedTracks = this.options.artistLimit
-        ? data.tracks.slice(0, this.options.artistLimit * 100)
-        : data.tracks;
-
-      const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x))
-      );
-
-      return {
-       loadType: "PLAYLIST_LOADED",
-       tracks: unresolvedPlaylistTracks,
-       playlistInfo: artist.name ? { name: artist.name } : {}
-      }
-    } 
-async fetchTrack(id) {
-      const data = await this.request(`/tracks/${id}`);
-      const unresolvedTrack = await this.buildUnresolved(data);
-      console.log(unresolvedTrack, this.#token)
-      return {
-        loadType: "TRACK_LOADED",         tracks: [unresolvedTrack],
-        playlistInfo: {}
-      }
-    } 
-  async fetch(query) {
-      if (this.check(query)) return this.resolve(query);
-
-      const data = await this.request(
-        `/search/?q="${query}"&type=artist,album,track&market=${
-          this.options.searchMarket ?? "US"
-        }`
-      );
-      const unresolvedTracks = await Promise.all(
-        data.tracks.items.map((x) => this.buildUnresolved(x))
-      );
-      return {
-loadType: "TRACK_LOADED", tracks: unresolvedTracks, playlistInfo: {}
+      loadType: "PLAYLIST_LOADED",
+      tracks: unresolvedPlaylistTracks,
+      playlistInfo: playlist.name ? { name: playlist.name } : {},
     }
   }
-async buildUnresolved(track) {
+  async fetchAlbum(id) {
+    const album = await this.request(`/albums/${id}`);
+
+    const limitedTracks = this.options.albumLimit
+      ? album.tracks.items.slice(0, this.options.albumLimit * 100)
+      : album.tracks.items;
+
+    const unresolvedPlaylistTracks = await Promise.all(
+      limitedTracks.map((x) => this.buildUnresolved(x))
+    );
+    return {
+      loadType: "PLAYLIST_LOADED",
+      tracks: unresolvedPlaylistTracks,
+      playlistInfo: album.name ? { name: album.name } : {}
+    }
+  }
+  async fetchArtist(id) {
+    const artist = await this.request(`/artists/${id}`);
+    const data = await this.request(
+      `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
+    );
+
+    const limitedTracks = this.options.artistLimit
+      ? data.tracks.slice(0, this.options.artistLimit * 100)
+      : data.tracks;
+
+    const unresolvedPlaylistTracks = await Promise.all(
+      limitedTracks.map((x) => this.buildUnresolved(x))
+    );
+
+    return {
+      loadType: "PLAYLIST_LOADED",
+      tracks: unresolvedPlaylistTracks,
+      playlistInfo: artist.name ? { name: artist.name } : {}
+    }
+  }
+  async fetchTrack(id) {
+    const data = await this.request(`/tracks/${id}`);
+    const unresolvedTrack = await this.buildUnresolved(data);
+
+    return {
+      loadType: "TRACK_LOADED", tracks: [unresolvedTrack],
+      playlistInfo: {}
+    }
+  }
+  async fetch(query) {
+    if (this.check(query)) return this.resolve(query);
+
+    const data = await this.request(
+      `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"
+      }`
+    );
+    const unresolvedTracks = await Promise.all(
+      data.tracks.items.map((x) => this.buildUnresolved(x))
+    );
+    return {
+      loadType: "TRACK_LOADED", tracks: unresolvedTracks, playlistInfo: {}
+    }
+
+  }
+  async buildUnresolved(track) {
     if (!track)
       throw new ReferenceError("The Spotify track object was not provided");
-    let res = await this.manager.search(`${track.artists ? track.artists[0]?.name :"Unknown Artist"} ${track.name}`)
-  
+    let res = await this.manager.search(`${track.artists ? track.artists[0]?.name : "Unknown Artist"} ${track.name}`)
+
     let encodedTrack;
-    res.tracks[0].encodedTrack ? encodeTrack = res.tracks[0].encodedTrack : encodedTrack = res.tracks[0].track
+    res.tracks[0].encodedTrack ? encodedTrack = res.tracks[0].encodedTrack : encodedTrack = res.tracks[0].track
     return new MoonlinkTrack({
       track: encodedTrack,
       info: {
         sourceName: "spotify",
         identifier: track.id,
         isSeekable: true,
-        author: track.artists ? track.artists[0]?.name :"Unknown Artist" ,
+        author: track.artists ? track.artists[0]?.name : "Unknown Artist",
         length: track.duration_ms,
         isStream: false,
         title: track.name,
