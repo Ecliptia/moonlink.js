@@ -1,22 +1,18 @@
-"use strict";
-const event = require('events')
-const eventos = new event()
-let utils = require('../@Rest/MoonlinkUtils.js')
-let { MoonQueue } = require('../@Rest/MoonlinkQueue.js')
-let { MoonFilters } = require('../@Rest/MoonlinkFilters.js')
-
-var map = utils.map
-var player = map.get('players') || {}
-var db = utils.db
-var sendDs = utils.sendDs();
-
+"use strict"; 
+let { MoonlinkQueue } = require('../@Rest/MoonlinkQueue.js')
+const MoonlinkDB = require('../@Rest/MoonlinkDatabase.js') 
+const db = new MoonlinkDB();
+var map;
 class MoonPlayer {
   #sendWs;
   #manager;
+  #node;
   #infos;
-  constructor(infos, manager) {
-    this.#sendWs = manager.sendWs
+  constructor(infos, manager, manager_map) {
+    this.#node = infos.node ? infos.node : this.leastUsedNodes
+    this.#sendWs = this.#node.sendWs
     this.#manager = manager
+    this.sPayload = manager._sPayload;
     this.#infos = infos
     this.guildId = this.#infos.guildId
     this.textChannel = this.#infos.textChannel
@@ -26,34 +22,34 @@ class MoonPlayer {
     this.paused = this.#infos.paused || null
     this.loop = this.#infos.loop || null
     this.volume = this.#infos.volume || 80
-    this.current = utils.track.current()
-    this.queue = new MoonQueue({ guildId: infos.guildId })
-    this.filters = new MoonFilters({ guildId: infos.guildId, sendWs: this.#sendWs })
+    this.queue = new MoonlinkQueue(manager, { guildId: infos.guildId })
+    let current_map = manager_map.get(`current`) || {}
+    this.current = current_map[this.#infos.guildId] || {}
+    map = manager_map; 
   }
   connect(options) {
     if (!options) options = { setDeaf: false, setMute: false }
     let setDeaf = options.setDeaf || null
     let setMute = options.setMute || null
-    sendDs(this.guildId, JSON.stringify({
+    this.sPayload(this.guildId, JSON.stringify({
       op: 4
       , d: {
         guild_id: this.guildId
         , channel_id: this.voiceChannel
-        , self_mute: setMute || null
-        , self_deaf: setDeaf || null
+        , self_mute: setMute
+        , self_deaf: setDeaf
       }
     }))
     var players = map.get('players')
-    player[this.guildId] = {
+    players[this.guildId] = {
       ...players[this.guildId]
       , connected: true
     }
-    map.set('players', player)
+    map.set('players', players)
   }
 
   disconnect() {
-
-    sendDs(this.guildId, JSON.stringify({
+    this.sPayload(this.guildId, JSON.stringify({
       op: 4
       , d: {
         guild_id: this.guildId
@@ -61,20 +57,25 @@ class MoonPlayer {
         , self_mute: null
         , self_deaf: null
       }
-
     }))
     this.connected = false
     this.destroy()
   }
   play() {
     let queue = db.get(`queue.${this.guildId}`)
-    if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty, verify docs.`)
+    if (!queue) return;
     else {
       let track = queue.shift();
-      if (!track) throw new TypeError(`[ MoonlinkJs ]: an internal error has ocorred.`)
+      if (!track) return;
       if (track) {
-        utils.track.editCurrent(track)
-        db.set(`queue.${this.guildId}`, queue)
+db.set(`queue.${this.guildId}`, queue)
+        let current = map.get('current') || {}
+        current[this.guildId] = {
+          ...track,
+          thumbnail: track.thumbnail,
+          requester: track.requester
+        }
+        map.set('current', current)
         this.#sendWs({
           op: 'play'
           , guildId: this.guildId
@@ -84,12 +85,12 @@ class MoonPlayer {
           , noReplace: false
           , pause: false
         })
-        var players = map.get('players')
-        player[this.guildId] = {
+        var players = map.get('players') || {}
+        players[this.guildId] = {
           ...players[this.guildId]
           , playing: true
         }
-        map.set('players', player)
+        map.set('players', players)
       }
     }
   }
@@ -125,20 +126,19 @@ class MoonPlayer {
   }
 
 setVolume(percent) {
-    let queue = db.get(`queue.${this.guildId}`)
     if (typeof percent !== 'string' && typeof percent !== 'number') throw new TypeError(`[ MoonlinkJs ]: the percentage must be in string and numbers format.`)
-    if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
+    if(!this.playing) return throw new Error("[ @Moonlink/Nodes ]: nothing is being played")
     this.#sendWs({
       op: 'volume'
       , guildId: this.guildId
       , volume: percent
     })
     var players = map.get('players')
-    player[this.guildId] = {
+    players[this.guildId] = {
       ...players[this.guildId]
       , volume: percent
     }
-    map.set('players', player)
+    map.set('players', players)
   }
 
   stop() {
@@ -175,46 +175,14 @@ setVolume(percent) {
   }
 
   skip() {
-    let queue = db.get(`queue.${this.guildId}`), player = map.get('players') || {}
-    if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
-    else {
-      if (!queue[0]) {
-        this.destroy();
-        return false
-      }
-      if (player[this.guildId].loop > 1) {
-        const trackl = queue.shift();
-        queue.push(utils.track.current())
-        utils.track.editCurrent(trackl);
-        utils.track.skipEdit(true);
-        db.set('queue.' + this.guildId, queue)
-        this.#sendWs({
-          op: "play"
-          , channelId: this.voiceChannel
-          , guildId: this.guildId
-          , track: trackl.track
-        })
-        return true
-      }
-      let actualTrack = queue.shift();
-      utils.track.editCurrent(actualTrack);
-      utils.track.skipEdit(true);
-      db.set(`queue.${this.guildId}`, queue)
-      this.#sendWs({
-        op: 'play'
-        , channelId: this.voiceChannel
-        , guildId: this.guildId
-        , track: actualTrack.track
-      })
-      return true
-    }
+    this.play()
   }
 
   seek(number) {
     let queue = db.get(`queue.${this.guildId}`)
     if (typeof number !== 'string' && typeof number !== 'number') throw new TypeError(`[ MoonlinkJs ]: seek need a number in mileseconds.`)
     if (queue && queue[0]) return;
-    if (!utils.track.current().isSeekable) throw new TypeError(`[ Moonlink.Js ]: the track "${utils.track.current().track}" is not seekable`)
+    if (!this.current.isSeekable) throw new TypeError(`[ Moonlink.Js ]: the track "${this.current.track}" is not seekable`)
     this.#sendWs({
       op: 'seek'
       , guildId: this.guildId
@@ -256,7 +224,9 @@ setVolume(percent) {
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
     if (!queue[position - 1]) throw new TypeError(`[ MoonlinkJs ]: the position indicated by the user there is no track.`)
       let skipedToTrack = queue.splice(position - 1, 1)
-      utils.track.editCurrent(skipedToTrack[0])
+    let current_track = this.#map.get('current') || {}
+    current_track[this.guildId] = skipedToTrack[0]
+    this.#map.set('current', current_track)
       db.set(`queue.${this.guildId}`, queue)
       utils.track.skipEdit(true);
       this.#sendWs({
