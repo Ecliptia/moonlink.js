@@ -1,5 +1,6 @@
 export class MoonPlayer {
-    constructor(infos: any, manager: any);
+    constructor(infos: any, manager: any, manager_map: any);
+    sPayload: any;
     guildId: any;
     textChannel: any;
     voiceChannel: any;
@@ -8,23 +9,21 @@ export class MoonPlayer {
     paused: any;
     loop: any;
     volume: any;
+    queue: MoonlinkQueue;
     current: any;
-    queue: MoonQueue;
-    filters: MoonFilters;
     connect(options: any): void;
     disconnect(): void;
     play(): void;
     pause(): void;
     resume(): void;
-    setVolume(percent: any): void;
+    setVolume(percent: any): any;
     stop(): boolean;
     destroy(): boolean;
-    skip(): boolean;
+    skip(): void;
     seek(number: any): boolean;
     setLoop(number: any): void;
     removeSong(position: any): boolean;
     skipTo(position: any): boolean;
     #private;
 }
-import { MoonQueue } from "../@Rest/MoonlinkQueue.js";
-import { MoonFilters } from "../@Rest/MoonlinkFilters.js";
+import { MoonlinkQueue } from "../@Rest/MoonlinkQueue.js";

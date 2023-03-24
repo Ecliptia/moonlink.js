@@ -5,4 +5,6 @@ declare class MoonlinkDB {
     get(key: any): any;
     push(key: any, value: any): any;
     delete(key: any): void;
+    fetch(): void;
+    save(): void;
 }
