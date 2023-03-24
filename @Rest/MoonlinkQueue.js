@@ -1,11 +1,15 @@
 "use strict";
-let utils = require('../@Rest/MoonlinkUtils.js')
-let db = utils.db
-const map = new Map();
-class MoonQueue {
-	constructor(data) {
+const MoonlinkDB = require('./MoonlinkDatabase.js')
+const db = new MoonlinkDB()
+class MoonlinkQueue {
+	constructor(manager, data) {
 		this.guildId = data.guildId
+    this._manager = manager;
 	}
+  get current() {
+  let track_playing = db.get(`current.${this.guildId}`)
+  return track_playng || null
+  }
 	add(track) {
 		if (!track) throw new Error('[ MoonLink.Js ]: Track object must have a value')
 		let queue = db.get(`queue.${this.guildId}`)
@@ -50,4 +54,4 @@ class MoonQueue {
     }
  
 }
-module.exports.MoonQueue = MoonQueue
+module.exports.MoonlinkQueue = MoonlinkQueue
