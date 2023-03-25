@@ -9,7 +9,7 @@ class MoonPlayer {
   #node;
   #infos;
   constructor(infos, manager, manager_map) {
-    this.#node = infos.node ? infos.node : this.leastUsedNodes
+    this.#node = manager.leastUsedNodes
     this.#sendWs = this.#node.sendWs
     this.#manager = manager
     this.sPayload = manager._sPayload;
@@ -21,7 +21,8 @@ class MoonPlayer {
     this.connected = this.#infos.connected || null
     this.paused = this.#infos.paused || null
     this.loop = this.#infos.loop || null
-    this.volume = this.#infos.volume || 80
+    this.autoPlay = this.#infos.autoPlay || false
+   this.volume = this.#infos.volume || 80
     this.queue = new MoonlinkQueue(manager, { guildId: infos.guildId })
     let current_map = manager_map.get(`current`) || {}
     this.current = current_map[this.#infos.guildId] || {}
@@ -127,7 +128,7 @@ db.set(`queue.${this.guildId}`, queue)
 
 setVolume(percent) {
     if (typeof percent !== 'string' && typeof percent !== 'number') throw new TypeError(`[ MoonlinkJs ]: the percentage must be in string and numbers format.`)
-    if(!this.playing) return throw new Error("[ @Moonlink/Nodes ]: nothing is being played")
+    if(!this.playing) throw new Error("[ @Moonlink/Nodes ]: nothing is being played")
     this.#sendWs({
       op: 'volume'
       , guildId: this.guildId
@@ -224,9 +225,9 @@ setVolume(percent) {
     if (!queue) throw new TypeError(`[ MoonlinkJs ]: queue is empty.`)
     if (!queue[position - 1]) throw new TypeError(`[ MoonlinkJs ]: the position indicated by the user there is no track.`)
       let skipedToTrack = queue.splice(position - 1, 1)
-    let current_track = this.#map.get('current') || {}
+    let current_track = map.get('current') || {}
     current_track[this.guildId] = skipedToTrack[0]
-    this.#map.set('current', current_track)
+    map.set('current', current_track)
       db.set(`queue.${this.guildId}`, queue)
       utils.track.skipEdit(true);
       this.#sendWs({
