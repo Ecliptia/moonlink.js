@@ -47,7 +47,7 @@ export class MoonlinkNodes {
     close(code: any, reason: any): void;
     message(data: any): void;
     error(error: any): void;
-    handleEvent(payload: any): any;
+    handleEvent(payload: any): Promise<any>;
     #private;
 }
 import WebSocket = require("ws");

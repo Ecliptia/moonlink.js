@@ -1,11 +1,10 @@
 export class MoonlinkManager extends EventEmitter {
-    static "__#4@#attemptConnection"(Manager: any, guildId: any): boolean;
+    static "__#4@#attemptConnection"(Manager: any, guildId: any, map: any): boolean;
     constructor(lavalinks: any, options: any, sPayload: any);
     _nodes: any;
     _sPayload: any;
     options: any;
     version: any;
-    map: Map<any, any>;
     nodes: Map<any, any>;
     spotify: Spotify;
     init(clientId: any): void;

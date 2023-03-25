@@ -8,6 +8,7 @@ export class MoonPlayer {
     connected: any;
     paused: any;
     loop: any;
+    autoPlay: any;
     volume: any;
     queue: MoonlinkQueue;
     current: any;
@@ -16,7 +17,7 @@ export class MoonPlayer {
     play(): void;
     pause(): void;
     resume(): void;
-    setVolume(percent: any): any;
+    setVolume(percent: any): void;
     stop(): boolean;
     destroy(): boolean;
     skip(): void;
