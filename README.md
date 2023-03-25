@@ -49,7 +49,7 @@ client.moon = new MoonlinkManager([{
   client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload))
 })
 client.moon.on('nodeCreate', (node) => {
-  console.log(node + ' was connected')
+  console.log(`${node.host} was connected`)
 }) //emit to the console the node was connected to
 client.moon.on('trackStart', async(player, track) => {
   client.channels.cache.get(player.textChannel).send(`${track.title} is playing now`) //when the player starts it will send a message to the channel where the command was executed
@@ -61,7 +61,7 @@ client.on('ready', () => {
   client.moon.init(client.user.id); //initializing the package
 });
 client.on('raw', (data) => {
-  client.moon.updateVoiceState(data) //this will send to the package the information needed for the package to work properly
+  client.moon.packetUpdate(data) //this will send to the package the information needed for the package to work properly
 })
 client.on('interactionCreate', async(interaction) => {
   if (!interaction.isChatInputCommand()) return;
@@ -74,7 +74,8 @@ client.on('interactionCreate', async(interaction) => {
   let player = client.moon.players.create({
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channel.id,
-    textChannel: interaction.channel.id
+    textChannel: interaction.channel.id,
+    autoPlay: true
   }); //creating a player
   if (!player.connected) player.connect({
     setDeaf: true,
