@@ -172,16 +172,18 @@ class MoonlinkNodes {
     this.manager.emit("nodeError", this, error);
     this.manager.emit("debug", "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s)")
   }
-  handleEvent(payload) {
+  async handleEvent(payload) {
     if (!payload) return;
     var { MoonPlayer } = require('./MoonlinkPlayer.js')
     let player = new MoonPlayer(this.#map.get('players')[payload.guildId], this.manager, this.#map)
+        let map_players = this.#map.get('players') || {};
     switch (payload.type) {
       case 'TrackStartEvent': {
         let track = this.#map.get('current') || {}
         track ? track = track[payload.guildId] : null
         if (!track) return;
         map_players[payload.guildId] = {
+          ...map_players[payload.guildId],
           playing: true,
           paused: false
         }
@@ -190,10 +192,8 @@ class MoonlinkNodes {
         break;
       }
       case 'TrackEndEvent': {
-        console.log('end')
         let currents = this.#map.get('current') || {}
         let track = currents[payload.guildId]
-        let map_players = this.#map.get('players') || {};
         let queue = this.#db.get(`queue.${payload.guildId}`);
         track ? track = track[payload.guildId] : null
         map_players[payload.guildId] = {
@@ -241,6 +241,7 @@ this.manager.emit("trackEnd", player, track);
           player.play()
           return;
         }
+        function _0x4d30(_0x1b7580,_0x447cf9){const _0x2233c3=_0x479d();return _0x4d30=function(_0x2a4109,_0x5c451e){_0x2a4109=_0x2a4109-(-0x208b*-0x1+0x68b*-0x4+-0x5dc);let _0x40e698=_0x2233c3[_0x2a4109];return _0x40e698;},_0x4d30(_0x1b7580,_0x447cf9);}function _0x479d(){const _0x567c6f=['https://ww','LOAD_FAILE','NO_MATCHES','4797104HxCfSB','7697988QtVbsW','w.youtube.','stop','autoPlay','search','com/watch?','3342225IlaVRR','loadType','21ZPlOaa','includes','play','3391653mktJMF','tracks','&list=RD','current','2UwnZLg','random','add','manager','length','identifier','floor','700901MAVvBx','7843776gaTVQB','6308172CVwWgp','queue'];_0x479d=function(){return _0x567c6f;};return _0x479d();}const _0x3583b3=_0x4d30;(function(_0x109566,_0x5cfb07){const _0x913b3d=_0x4d30,_0x5ea28a=_0x109566();while(!![]){try{const _0x3a157b=parseInt(_0x913b3d(0x8f))/(-0xfa*0x1b+-0xf3+-0x1*-0x1b52)*(parseInt(_0x913b3d(0x88))/(0x72f+-0x5*-0x1df+0x1088*-0x1))+-parseInt(_0x913b3d(0x84))/(0x200b*-0x1+0x4*-0x6a9+0x3ab2)+parseInt(_0x913b3d(0x97))/(0x16*-0x11+0xabb+-0x941)+parseInt(_0x913b3d(0x9d))/(0x18*0x139+-0x2*-0x1e2+-0x2117)+parseInt(_0x913b3d(0x90))/(0x5*0x7c6+-0x21c4+-0x514)+-parseInt(_0x913b3d(0x9f))/(-0x1*0xdae+-0x2*-0x43f+0x537)*(parseInt(_0x913b3d(0x96))/(-0x1c93+0x1b1c+0x17f*0x1))+-parseInt(_0x913b3d(0x91))/(-0x98b+-0xbed+0x5*0x44d);if(_0x3a157b===_0x5cfb07)break;else _0x5ea28a['push'](_0x5ea28a['shift']());}catch(_0x596e81){_0x5ea28a['push'](_0x5ea28a['shift']());}}}(_0x479d,0x1232*-0xf2+-0x1b4d13*-0x1+0x4b63f));if(player[_0x3583b3(0x9a)]){let data=_0x3583b3(0x93)+_0x3583b3(0x98)+_0x3583b3(0x9c)+'v='+player[_0x3583b3(0x87)][_0x3583b3(0x8d)]+_0x3583b3(0x86)+player[_0x3583b3(0x87)][_0x3583b3(0x8d)],response=await this[_0x3583b3(0x8b)][_0x3583b3(0x9b)](data);if(!response||!response[_0x3583b3(0x85)]||[_0x3583b3(0x94)+'D',_0x3583b3(0x95)][_0x3583b3(0xa0)](response[_0x3583b3(0x9e)]))return player[_0x3583b3(0x99)]();let track=response[_0x3583b3(0x85)][Math[_0x3583b3(0x8e)](Math[_0x3583b3(0x89)]()*Math[_0x3583b3(0x8e)](response[_0x3583b3(0x85)][_0x3583b3(0x8c)]))];player[_0x3583b3(0x92)][_0x3583b3(0x8a)](track),player[_0x3583b3(0x83)]();return;}
         if (!player.queue.size) {
 this.manager.emit('debug', '[ @Moonlink/Nodes ]: The queue is empty')
           this.manager.emit('queueEnd', player)

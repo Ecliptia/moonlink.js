@@ -4,13 +4,16 @@ var WebSocket = require('ws')
 //-- -- -- --- ---- --- -- -- --//
 const { MoonlinkTrack } = require('../@Rest/MoonlinkTrack.js')
 const { MoonlinkNodes } = require('./MoonlinkNodes.js')
+const MoonlinkDB = require('../@Rest/MoonlinkDatabase.js')
 //-- -- -- --- ---- --- -- -- --//
 
 const Spotify = require('../@sources/Spotify.js')
 class MoonlinkManager extends EventEmitter {
   #ws;
   #options;
-  #sPayload;
+  #sPayload; 
+  #db = new MoonlinkDB()
+  #map = new Map();
   constructor(lavalinks, options, sPayload) {
 
     super();
@@ -24,7 +27,6 @@ class MoonlinkManager extends EventEmitter {
     this._sPayload = sPayload;
     this.options = options;
     this.version = require('./../package.json').version
-    this.map = new Map();
     this.nodes = new Map();
     this.sendWs;
     this.spotify = new Spotify(this, options)
@@ -35,7 +37,7 @@ class MoonlinkManager extends EventEmitter {
     this._nodes.forEach(node => this.addNodes(node))
   }
   addNodes(node_object) {
-    const node = new MoonlinkNodes(this, node_object, this.map)
+    const node = new MoonlinkNodes(this, node_object, this.#map)
     if(node_object.identifier) {
       this.nodes.set(node_object.identifier, node)
     } else {
@@ -56,8 +58,8 @@ class MoonlinkManager extends EventEmitter {
       voiceServer[packet.d.guild_id] = {
         event: packet.d
       }
-      this.map.set('voiceServer', voiceServer)
-      return MoonlinkManager.#attemptConnection(this, packet.d.guild_id)
+      this.#map.set('voiceServer', voiceServer)
+      return MoonlinkManager.#attemptConnection(this, packet.d.guild_id, this.#map)
    
     }
     if (packet.t == 'VOICE_STATE_UPDATE') {
@@ -65,8 +67,8 @@ class MoonlinkManager extends EventEmitter {
       if (packet.d.channel_id) {
         let voiceStates = {}
         voiceStates[packet.d.guild_id] = packet.d
-        this.map.set('voiceStates', voiceStates)
-        return MoonlinkManager.#attemptConnection(this, packet.d.guild_id)
+        this.#map.set('voiceStates', voiceStates)
+        return MoonlinkManager.#attemptConnection(this, packet.d.guild_id, this.#map)
    
       }
     }
@@ -123,12 +125,13 @@ class MoonlinkManager extends EventEmitter {
 //modify later
   get players() {
 var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
+    let map = this.#map;
     let get = function(guild) {
-      console.log(guild)
+
       if (typeof guild !== 'number' && typeof guild !== 'string') {
         throw new TypeError('[ @Moonlink/Manager ] guild id support only numbers in string!')
       }
-      return (new MoonPlayer(this.map.get('players')[guild], this, this.map))
+      return (new MoonPlayer(map.get('players')[guild], this, map))
     }
     let create = function(t) {
       if (typeof t.guildId !== 'string' && typeof t.guildId !== 'number') {
@@ -140,10 +143,11 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
       if (typeof t.textChannel !== 'string' && typeof t.guildId !== 'number') {
         throw new TypeError('[ @Moonlink/Manager ]: text channel id support only numbers in string!')
       }
-
-      let players = this.map.get('players') || {}
+      if(typeof t.autoPlay !== 'undefined' && typeof t.autoPlay !== 'boolean') {
+        throw new Error('[ @Moonlink/Manager ]: auto play option has to be in boolean format')
+      }
+      let players = map.get('players') || {}
       let node = this.leastUsedNodes;
-      node.players(t.guildId)
       if (!players[t.guildId]) {
         players[t.guildId] = {
           node,
@@ -154,14 +158,15 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
           , paused: false
           , loop: false
           , connected: false
+          , autoPlay: t.autoPlay || false
         }
-        this.map.set('players', players)
-        this.manager.emit('playerCreate', t)
+        map.set('players', players)
+        this.emit('playerCreate', t)
 }
-      return (new MoonPlayer(players[t.guildId], this, this.map))
+      return (new MoonPlayer(players[t.guildId], this, map))
     }
     let all = function() {
-      let players = this.map.get('players') || null
+      let players = map.get('players') || null
       if (!players) {
         return null
       } else {
@@ -169,7 +174,7 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
       }
     }
     let has = function(guild) {
-      let player = this.map.get('players') || []
+      let player = map.get('players') || []
       if (typeof guild !== 'string' && isNaN(guild)) {
         throw new TypeError(`[ @Moonlink/Manager ]: ${guild} a number string was expected`)
       }
@@ -178,7 +183,7 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
       return player
     }
     function edit(info) {
-      let player = this.map.get('players') || {}
+      let player = map.get('players') || {}
       if (!info) {
         throw new TypeError(`[ @Moonlink/Manager ]: enter a term to edit your player.`)
       }
@@ -200,8 +205,8 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
         , paused: false
         , loop: false
       }
-      this.map.set('players', player)
-      return (new MoonPlayer(player[info.guildId], this, this.map))
+      map.set('players', player)
+      return (new MoonPlayer(player[info.guildId], this, map))
 
     }
     return {
@@ -215,10 +220,10 @@ var { MoonPlayer } = require('../@Moonlink/MoonlinkPlayer.js')
   //---------------------//
 
 
-  static #attemptConnection(Manager, guildId) {
-    let voiceServer = Manager.map.get('voiceServer') || {}
-    let voiceStates = Manager.map.get('voiceStates') || {}
-    let players = Manager.map.get('players') || {}
+  static #attemptConnection(Manager, guildId, map) {
+    let voiceServer = map.get('voiceServer') || {}
+    let voiceStates = map.get('voiceStates') || {}
+    let players = map.get('players') || {}
     if (!players[guildId]) return false
     if (!voiceServer[guildId]) return false
     Manager.emit('debug', `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`)
