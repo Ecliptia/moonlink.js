@@ -9,5 +9,6 @@ export const MoonlinkQueue = mod.MoonlinkQueue;
 export const MoonlinkRest = mod.MoonlinkRest;
 export const MoonlinkTrack = mod.MoonlinkTrack;
 export const Spotify = mod.Spotify;
+export const Deezer = mod.Deezer
 export const makeRequest = mod.makeRequest;
 export const version = mod.version;

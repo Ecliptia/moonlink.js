@@ -110,7 +110,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 youtube: 'ytsearch',
                 youtubemusic: 'ytmsearch',
                 soundcloud: 'scsearch',
-                spotify: 'spotify'
+                spotify: 'spotify',
+                deezer: 'deezer'
             };
             if (this.spotify.check(query)) {
                 return resolve(await this.spotify.resolve(query));
