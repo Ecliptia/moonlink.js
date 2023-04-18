@@ -3,6 +3,7 @@ import { MoonlinkNode } from './MoonlinkNodes'
 import { MoonlinkPlayer, Track } from './MoonlinkPlayers'
 import { MoonlinkTrack } from '../@Rest/MoonlinkTrack'
 import { Spotify } from '../@Sources/Spotify'
+import { Deezer } from '../@Sources/Deezer'
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -17,8 +18,9 @@ export interface Options {
   clientName?: string;
   shards: string | number;
   clientId?: string;
-  clientSecret?: string;
+	clientSecret?: string;
 }
+
 export interface createOptions {
 	guildId: string;
 	textChannel: string;
@@ -57,6 +59,14 @@ export type LoadType =
   | "SEARCH_RESULT"
   | "LOAD_FAILED"
   | "NO_MATCHES";
+
+export type LoadTypeV4 = 
+	| "search" 
+	| "track" 
+	| "playlist" 
+	| "error" 
+	| "empty";
+
 export interface TrackData {
   track: string;
   info: TrackDataInfo;
@@ -73,7 +83,7 @@ export interface TrackDataInfo {
   uri: string;
 }
 
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify" ;
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify" | "deezer";
 
 export interface SearchQuery {
   source?: SearchPlatform | string | undefined | null;
@@ -140,7 +150,8 @@ export class MoonlinkManager extends EventEmitter {
 	public initiated: boolean;
   public options: Options;
 	public nodes: Map<string, Nodes> 
-	public spotify: Spotify;
+	public spotify: Spotify; 
+	public deezer: Deezer;
   public sendWs: any;
 	public clientId: string;
 	public version: string;
@@ -161,6 +172,7 @@ export class MoonlinkManager extends EventEmitter {
 		this.options = options;
 		this.nodes = new Map();
     this.spotify = new Spotify(this, options)
+    this.deezer = new Deezer(this, options)
 		this.sendWs;
 		this.version = require('../../index').version
   }
@@ -224,10 +236,14 @@ export class MoonlinkManager extends EventEmitter {
         youtube: 'ytsearch',
         youtubemusic: 'ytmsearch',
         soundcloud: 'scsearch',
-        spotify: 'spotify'
+        spotify: 'spotify',
+				deezer: 'deezer'
       }
       if (this.spotify.check(query)) {
         return resolve(await this.spotify.resolve(query))
+			}
+			if (this.deezer.check(query)) {
+        return resolve(await this.deezer.resolve(query))
 			}
       let opts: string | null;
       if (query && !(query as string).startsWith('http://') && !(query as string).startsWith('https://')) {
@@ -240,6 +256,9 @@ export class MoonlinkManager extends EventEmitter {
       }
       if (source == "spotify") {
         return resolve(this.spotify.fetch(query))
+			}
+			if (source == "deezer") {
+        return resolve(this.deezer.fetch(query))
 			}
       let params = new URLSearchParams({ identifier: opts })
       let res = await this.leastUsedNodes.request('loadtracks', params)
@@ -282,14 +301,11 @@ export class MoonlinkManager extends EventEmitter {
 		  	}
 			}
 	})
-		console.log(a)
     return true
   }
 	public get players (): object {
-		let map = this.map;
-    const { MoonlinkPlayer } = require('./MoonlinkPlayers')
 		let has: Function = (guildId: string): boolean => {
-      let players = map.get('players') || {};
+      let players = this.map.get('players') || {};
 			if(players[guildId]) players = true
 			else players = false
 			return players
@@ -297,17 +313,16 @@ export class MoonlinkManager extends EventEmitter {
 		let get: Function = (guildId: string): MoonlinkPlayer | null => {
 			if(!guildId && typeof guildId !== 'string') throw new Error('[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string')
 			if(!has(guildId)) return null;
-			return (new MoonlinkPlayer(map.get('players')[guildId], this, this.map, this.leastUsedNodes.rest))
+			return (new MoonlinkPlayer(this.map.get('players')[guildId], this, this.map, this.leastUsedNodes.rest))
 		}
 		let create: Function = (data: createOptions): MoonlinkPlayer => {
-			console.log(data)
       if(typeof data !== 'object') throw new Error('[ @Moonlink/Manager ]: parameter "data" is not an object')
 			if(!data.guildId && typeof data.guildId !== 'string') throw new Error('[ @Moonlink/Manager ]: "guildId" parameter in player creation is empty or not string type'); 
        if(!data.textChannel && typeof data.textChannel !== 'string') throw new Error('[ @Moonlink/Manager ]: "textChannel" parameter in player creation is empty or not string type');
 			  if(!data.voiceChannel && typeof data.voiceChannel !== 'string') throw new Error('[ @Moonlink/Manager ]: "voiceChannel" parameter in player creation is empty or not string type');
 			if("autoPlay" in data && typeof data.autoPlay !== 'boolean') throw new Error('[ @Moonlink/Manager ]: autoPlay parameter of player creation has to be boolean type')
 			if(has(data.guildId)) return get(data.guildId);
-			let players_map: Map<string, object> | object = map.get('players') || {}; 
+			let players_map: Map<string, object> | object = this.map.get('players') || {}; 
       players_map[data.guildId] = {
 				guildId: data.guildId,
 				textChannel: data.textChannel,
@@ -315,16 +330,13 @@ export class MoonlinkManager extends EventEmitter {
 				playing: false,
 				connected: false,
 				paused: false,
-				loop: false,
+				loop: null,
 				autoPlay: false,
 			}
-			map.set('players', players_map)
-			console.log(players_map)
-		
+			this.map.set('players', players_map)
       return (new MoonlinkPlayer(players_map[data.guildId], this, this.map, this.leastUsedNodes.rest))
 		};
 		
-    
 		return {
 			create: create.bind(this),
 			get: get.bind(this),

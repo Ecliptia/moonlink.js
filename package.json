@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "start": "tsc"
+    "start": "tsc && node bot.js"
   },
   "homepage": "https://moonlink.js.org",
     "bugs": {
