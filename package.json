@@ -1,16 +1,16 @@
 {
-    "name": "moonlink.js",
-    "version": "2.0.2",
-    "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
-    "keywords": [
-        "bot",
-        "discord.js",
-        "moonlink",
-        "discord",
-        "easy",
-        "lavalink",
-        "music"
-		],
+  "name": "moonlink.js",
+  "version": "2.0.2",
+  "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
+  "keywords": [
+    "bot",
+    "discord.js",
+    "moonlink",
+    "discord",
+    "easy",
+    "lavalink",
+    "music"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -24,25 +24,25 @@
     "start": "tsc"
   },
   "homepage": "https://moonlink.js.org",
-    "bugs": {
-        "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
-        "email": "lucasmorais0306@gmail.com"
-    },
-    "license": {
-        "type": "Apache-2.0",
-        "url": "https://opensource.org/licenses/apache2.0.php"
-    },
-    "contributors": [
-        "1Lucas1.apk",
-        "motoG.js"
-			],
-	"repository": {
-        "type": "git",
-        "url": "https://github.com/1Lucas1apk/moonlink.js"
-    },
-    "engines": {
-        "node": ">=16.0.0"
-    },
+  "bugs": {
+    "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
+    "email": "lucasmorais0306@gmail.com"
+  },
+  "license": {
+    "type": "Apache-2.0",
+    "url": "https://opensource.org/licenses/apache2.0.php"
+  },
+  "contributors": [
+    "1Lucas1.apk",
+    "motoG.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1Lucas1apk/moonlink.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "ws": "^8.13.0"
   },

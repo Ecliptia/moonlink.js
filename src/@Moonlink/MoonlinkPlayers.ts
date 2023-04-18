@@ -1,361 +1,450 @@
-import { MoonlinkManager } from './MoonlinkManager';
-import { MoonlinkQueue } from '../@Rest/MoonlinkQueue';
-import { MoonlinkRest } from './MoonlinkRest'
+import { MoonlinkManager } from "./MoonlinkManager";
+import { MoonlinkQueue } from "../@Rest/MoonlinkQueue";
+import { MoonlinkRest } from "./MoonlinkRest";
 
 export interface connectOptions {
-	setMute?: boolean;
-	setDeaf?: boolean;
+  setMute?: boolean;
+  setDeaf?: boolean;
 }
 export interface PlayerInfos {
-	guildId: string;
-	textChannel: string;
-	voiceChannel: string | null;
-	autoPlay?: boolean | null;
-	connected?: boolean | null;
-	playing?: boolean | null;
-	paused?: boolean | null;
-	loop?: number | null;
-	volume?: number | null;
+  guildId: string;
+  textChannel: string;
+  voiceChannel: string | null;
+  autoPlay?: boolean | null;
+  connected?: boolean | null;
+  playing?: boolean | null;
+  paused?: boolean | null;
+  loop?: number | null;
+  volume?: number | null;
 }
 
 export class MoonlinkPlayer {
-	private sendWs: Function;
-	private manager: MoonlinkManager;
-	private infos: object;
-  private map: Map<string, any>
-	public payload: Function;
-	public guildId: string;
-	public textChannel: string;
-	public voiceChannel: string;
-	public autoPlay: boolean | null;
-	public connected: boolean | null;
+  private sendWs: Function;
+  private manager: MoonlinkManager;
+  private infos: object;
+  private map: Map<string, any>;
+  public payload: Function;
+  public guildId: string;
+  public textChannel: string;
+  public voiceChannel: string;
+  public autoPlay: boolean | null;
+  public connected: boolean | null;
   public playing: boolean | null;
-	public paused: boolean | null;
-	public loop: number | null;
-	public volume: number;
-	public queue: MoonlinkQueue;
-	public current: any;
-	public rest: MoonlinkRest;
-	constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>, rest?: MoonlinkRest) {
-		this.payload = manager._sPayload
+  public paused: boolean | null;
+  public loop: number | null;
+  public volume: number;
+  public queue: MoonlinkQueue;
+  public current: any;
+  public rest: MoonlinkRest;
+  constructor(
+    infos: PlayerInfos,
+    manager: MoonlinkManager,
+    map: Map<string, any>,
+    rest?: MoonlinkRest
+  ) {
+    this.payload = manager._sPayload;
     this.sendWs = manager.leastUsedNodes.sendWs;
-		this.guildId = infos.guildId;
-		this.textChannel = infos.textChannel;
-		this.voiceChannel = infos.voiceChannel;
-		this.autoPlay = infos.autoPlay || null;
+    this.guildId = infos.guildId;
+    this.textChannel = infos.textChannel;
+    this.voiceChannel = infos.voiceChannel;
+    this.autoPlay = infos.autoPlay || null;
     this.connected = infos.connected || null;
-		this.playing = infos.playing || null;
-		this.paused = infos.paused || null;
-		this.loop = infos.loop || null;
-		this.volume = infos.volume || 90; 
+    this.playing = infos.playing || null;
+    this.paused = infos.paused || null;
+    this.loop = infos.loop || null;
+    this.volume = infos.volume || 90;
     this.queue = new MoonlinkQueue(this.manager, this);
-		this.current = map.get('currents') || {}
-			this.current = this.current[this.guildId] || null;
-		if(rest) this.rest = rest;
-		this.map = map;
-	}
-	public setTextChannel(channelId: string): boolean {
-		if(!channelId) throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-		if(typeof channelId !== 'string') throw new Error('[ @Moonlink/Player ]: option "channelId" is different from string')
-    let players = this.map.get('players') || {};
-		players[this.guildId] = {
-			...players[this.guildId],
-			textChannel: channelId,
-		}
-		this.map.set('players', players);
-    this.textChannel = channelId;
-		return true;
-	}
-	public setVoiceChannel(channelId: string): boolean {
-		if(!channelId) throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-		if(typeof channelId !== 'string') throw new Error('[ @Moonlink/Player ]: option "channelId" is different from string')
-    let players = this.map.get('players') || {};
-		players[this.guildId] = {
-			...players[this.guildId],
-			voiceChannel: channelId,
-		}
-		this.map.set('players', players);
-    this.voiceChannel = channelId;
-		return true;
-	}
-	public setAutoPlay(mode: boolean): boolean {
-		if(!mode && typeof mode !== 'boolean') throw new Error('[ @Moonlink/Player ]: "mode" option is empty or is different from boolean')
-		let players = this.map.get('players') || {};
-		players[this.guildId] = {
-			...players[this.guildId],
-			autoPlay: mode,
-		}
-		this.map.set('players', players);
-    this.autoPlay = mode;
-		return mode;
-	}
-	public connect(options: connectOptions): boolean | null {
-    if (!options) options = { setDeaf: false, setMute: false }
-    let setDeaf = options.setDeaf || null
-    let setMute = options.setMute || null
-    this.payload(this.guildId, JSON.stringify({
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: this.voiceChannel,
-        self_mute: setMute,
-        self_deaf: setDeaf,
-      }
-    }))
-    let players = this.map.get('players') || {}
-    players[this.guildId] = {
-      ...players[this.guildId]
-      , connected: true
-    }
-		this.connected = true;
-    this.map.set('players', players) 
-		return true;
+    this.current = map.get("currents") || {};
+    this.current = this.current[this.guildId] || null;
+    if (rest) this.rest = rest;
+    this.map = map;
   }
-	public disconnect(): boolean {
-      this.payload(this.guildId, JSON.stringify({
-      op: 4,
-			d: {
-        guild_id: this.guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      }
-    }))
-    let players = this.map.get('players') || {}
+  public setTextChannel(channelId: string): boolean {
+    if (!channelId)
+      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
+    if (typeof channelId !== "string")
+      throw new Error(
+        '[ @Moonlink/Player ]: option "channelId" is different from string'
+      );
+    let players = this.map.get("players") || {};
+    players[this.guildId] = {
+      ...players[this.guildId],
+      textChannel: channelId,
+    };
+    this.map.set("players", players);
+    this.textChannel = channelId;
+    return true;
+  }
+  public setVoiceChannel(channelId: string): boolean {
+    if (!channelId)
+      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
+    if (typeof channelId !== "string")
+      throw new Error(
+        '[ @Moonlink/Player ]: option "channelId" is different from string'
+      );
+    let players = this.map.get("players") || {};
+    players[this.guildId] = {
+      ...players[this.guildId],
+      voiceChannel: channelId,
+    };
+    this.map.set("players", players);
+    this.voiceChannel = channelId;
+    return true;
+  }
+  public setAutoPlay(mode: boolean): boolean {
+    if (!mode && typeof mode !== "boolean")
+      throw new Error(
+        '[ @Moonlink/Player ]: "mode" option is empty or is different from boolean'
+      );
+    let players = this.map.get("players") || {};
+    players[this.guildId] = {
+      ...players[this.guildId],
+      autoPlay: mode,
+    };
+    this.map.set("players", players);
+    this.autoPlay = mode;
+    return mode;
+  }
+  public connect(options: connectOptions): boolean | null {
+    if (!options) options = { setDeaf: false, setMute: false };
+    let setDeaf = options.setDeaf || null;
+    let setMute = options.setMute || null;
+    this.payload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: this.voiceChannel,
+          self_mute: setMute,
+          self_deaf: setDeaf,
+        },
+      })
+    );
+    let players = this.map.get("players") || {};
+    players[this.guildId] = {
+      ...players[this.guildId],
+      connected: true,
+    };
+    this.connected = true;
+    this.map.set("players", players);
+    return true;
+  }
+  public disconnect(): boolean {
+    this.payload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: null,
+          self_mute: false,
+          self_deaf: false,
+        },
+      })
+    );
+    let players = this.map.get("players") || {};
     players[this.guildId] = {
       ...players[this.guildId],
       connected: false,
-			voiceChannel: null,
-    }
-		this.connected = false;
-		this.voiceChannel = null;
-    this.map.set('players', players) 
-		return true;
-	}
-	public async play(): Promise<void> {
-		if(!this.queue.size) return;
-		let queue: any = this.queue.db.get(`queue.${this.guildId}`)
-		let data: any = queue.shift();
-		if(!data) return;
-		let current = this.map.get('current') || {}
+      voiceChannel: null,
+    };
+    this.connected = false;
+    this.voiceChannel = null;
+    this.map.set("players", players);
+    return true;
+  }
+  public async play(): Promise<void> {
+    if (!this.queue.size) return;
+    let queue: any = this.queue.db.get(`queue.${this.guildId}`);
+    let data: any = queue.shift();
+    if (!data) return;
+    let current = this.map.get("current") || {};
     current[this.guildId] = {
-          ...data,
-          thumbnail: data.thumbnail,
-          requester: data.requester
-        }
-		    this.current = current[this.guildId];
-        this.map.set('current', current)
-		    this.queue.db.set(`queue.${this.guildId}`, queue)
-        if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-					op: 'play',
-					guildId: this.guildId,
-          channelId: this.textChannel,
-          track: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
-					volume: 90,
-			    pause: false
-		}) 
-    else await this.rest.update({
-			guildId: this.guildId,
-      data: {
-				encodedTrack: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
-				volume: 90
-			}
-		})
-	}
-	public async pause(): Promise<boolean> {
-		if(this.paused) return true;
-		if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-      op: 'pause',
-      guildId: this.guildId,
-      pause: true
-    });
-		else await this.rest.update({
-      guildId: this.guildId,
-      data: { paused: true },
-    });
-		
-		let players = this.map.get('players') || {}
+      ...data,
+      thumbnail: data.thumbnail,
+      requester: data.requester,
+    };
+    this.current = current[this.guildId];
+    this.map.set("current", current);
+    this.queue.db.set(`queue.${this.guildId}`, queue);
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "play",
+        guildId: this.guildId,
+        channelId: this.textChannel,
+        track: data.track
+          ? data.track
+          : data.encoded
+          ? data.encoded
+          : data.trackEncoded
+          ? data.trackEncoded
+          : null,
+        volume: 90,
+        pause: false,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: {
+          encodedTrack: data.track
+            ? data.track
+            : data.encoded
+            ? data.encoded
+            : data.trackEncoded
+            ? data.trackEncoded
+            : null,
+          volume: 90,
+        },
+      });
+  }
+  public async pause(): Promise<boolean> {
+    if (this.paused) return true;
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "pause",
+        guildId: this.guildId,
+        pause: true,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: { paused: true },
+      });
+
+    let players = this.map.get("players") || {};
     players[this.guildId] = {
       ...players[this.guildId],
       paused: true,
-			playing: false,
-    }
-		this.paused = true;
+      playing: false,
+    };
+    this.paused = true;
     this.playing = false;
-    this.map.set('players', players) 
-		return true;
-	}
+    this.map.set("players", players);
+    return true;
+  }
   public async resume(): Promise<boolean> {
-		if(this.playing) return true;
-		if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-      op: 'pause',
-      guildId: this.guildId,
-      pause: false
-    });
-		else await this.rest.update({
-      guildId: this.guildId,
-      data: { paused: false },
-    });
-		
-		let players = this.map.get('players') || {}
+    if (this.playing) return true;
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "pause",
+        guildId: this.guildId,
+        pause: false,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: { paused: false },
+      });
+
+    let players = this.map.get("players") || {};
     players[this.guildId] = {
       ...players[this.guildId],
       paused: false,
-			playing: true,
-    }
-		this.paused = false;
+      playing: true,
+    };
+    this.paused = false;
     this.playing = true;
-    this.map.set('players', players) 
-		return true;
-	}
+    this.map.set("players", players);
+    return true;
+  }
   public async stop(): Promise<boolean> {
-		if(!this.queue.size) {
-			if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-	      op: 'stop',
-				guildId: this.guildId
-			})
-      else await this.rest.update({
-      guildId: this.guildId,
-      data: { encodedTrack: null },
-    });
-			return true;
-		} else {
-			delete this.map.get(`players`)[this.guildId]
-      if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-	      op: 'stop',
-				guildId: this.guildId
-			})
-      else await this.rest.update({
-      guildId: this.guildId,
-      data: { encodedTrack: null }
-      });
-			return true
-		}
+    if (!this.queue.size) {
+      if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+        this.sendWs({
+          op: "stop",
+          guildId: this.guildId,
+        });
+      else
+        await this.rest.update({
+          guildId: this.guildId,
+          data: { encodedTrack: null },
+        });
+      return true;
+    } else {
+      delete this.map.get(`players`)[this.guildId];
+      if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+        this.sendWs({
+          op: "stop",
+          guildId: this.guildId,
+        });
+      else
+        await this.rest.update({
+          guildId: this.guildId,
+          data: { encodedTrack: null },
+        });
+      return true;
+    }
     return false;
-	}
-	public async skip(): Promise<boolean> {
-		if(!this.queue.size) {
-			this.destroy();
-			return false;
-		} else {
-			this.play();
-			return true;
-		};
-	}
-	public async setVolume(percent: number): Promise<number> {
-		if(typeof percent == 'undefined' && typeof percent !== 'number') throw new Error('[ @Moonlink/Player ]: option "percent" is empty or different from number')
-		if(!this.playing) throw new
- Error('[ @Moonlink/Player ]: cannot change volume while player is not playing')
-		if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({    
-      op: 'volume',
-			guildId: this.guildId,
-      volume: percent,
-    })
-		else await this.rest.update({
-			guildId: this.guildId, 
-      data: { volume: percent },
-		})
-		let players = this.map.get('players') || {}
+  }
+  public async skip(): Promise<boolean> {
+    if (!this.queue.size) {
+      this.destroy();
+      return false;
+    } else {
+      this.play();
+      return true;
+    }
+  }
+  public async setVolume(percent: number): Promise<number> {
+    if (typeof percent == "undefined" && typeof percent !== "number")
+      throw new Error(
+        '[ @Moonlink/Player ]: option "percent" is empty or different from number'
+      );
+    if (!this.playing)
+      throw new Error(
+        "[ @Moonlink/Player ]: cannot change volume while player is not playing"
+      );
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "volume",
+        guildId: this.guildId,
+        volume: percent,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: { volume: percent },
+      });
+    let players = this.map.get("players") || {};
     players[this.guildId] = {
       ...players[this.guildId],
-      volume: percent
-    }
+      volume: percent,
+    };
     this.volume = percent;
-		this.map.set('players', players)
-		return percent;
-	}
+    this.map.set("players", players);
+    return percent;
+  }
   public setLoop(mode: number | null): number | null {
-		let players = this.map.get('players') || {};
-		if(!mode) {
-			players[this.guildId] = {
-				...players[this.guildId],
-				loop: mode,
-			}
-			this.map.set('players', players)
-			this.loop = mode;
-			return null;
-		}
-		if(typeof mode !== 'number' && mode > 2 && mode < 0) throw new Error('[ @Moonlink/Player ]: the option "mode" is different from number or the option does not exist')
-		players[this.guildId] = {
-			...players[this.guildId],
-			loop: mode
-		}
+    let players = this.map.get("players") || {};
+    if (!mode) {
+      players[this.guildId] = {
+        ...players[this.guildId],
+        loop: mode,
+      };
+      this.map.set("players", players);
+      this.loop = mode;
+      return null;
+    }
+    if (typeof mode !== "number" && mode > 2 && mode < 0)
+      throw new Error(
+        '[ @Moonlink/Player ]: the option "mode" is different from number or the option does not exist'
+      );
+    players[this.guildId] = {
+      ...players[this.guildId],
+      loop: mode,
+    };
     this.loop = mode;
-		this.map.set('players', players)
+    this.map.set("players", players);
     return mode;
-	}
-	public async destroy(): Promise<boolean> {
-		if(this.connected) this.disconnect();
-		if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({     
-      op: 'destroy',
-			guildId: this.guildId,
-    })
-		else await this.rest.destroy(this.guildId);
-     this.queue.db.delete(`queue.${this.guildId}`)
-    let players = this.map.get('players');
-		delete players[this.guildId];
-		this.map.set('players', players)
-		return true;
-	}
+  }
+  public async destroy(): Promise<boolean> {
+    if (this.connected) this.disconnect();
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "destroy",
+        guildId: this.guildId,
+      });
+    else await this.rest.destroy(this.guildId);
+    this.queue.db.delete(`queue.${this.guildId}`);
+    let players = this.map.get("players");
+    delete players[this.guildId];
+    this.map.set("players", players);
+    return true;
+  }
   public async seek(position: number): Promise<number | null> {
-		if(!position && typeof position !== 'number') throw new Error('[ @Moonlink/Player ]: option "position" is empty or different from number ');
-		if(position >= this.current.position) throw new Error('[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track');
-		if(!this.current.isSeekable && this.current.isStream) throw new Error('[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"');
-		if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-			op: "seek",
-			position: position,
-			guildId: this.guildId
-		})
-    else await this.rest.update({ 
-			guildId: this.guildId, 
-			data: { 
-				position
-			}
-		});
-		return position;
-	}
-	public async skipTo(position: number): Promise<boolean | void> {
-		if(!position && typeof position !== 'number') throw new Error('[ @Moonlink/Player ]: option "position" is empty or different from number ');
-		if(!this.queue.size) throw new Error('[ @Moonlink/Player ]: the queue is empty to use this function');
-		let queue = this.queue.db.get(`queue.${this.guildId}`);
-		if(queue[position - 1]) throw new Error('[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors');
-		let data: any = queue.splice(position - 1, 1)[0]
-    let currents: any = this.map.get('current') || {}
-    currents[this.guildId] = data
-    this.map.set('current', currents)
-    this.queue.db.set(`queue.${this.guildId}`, queue)
-    if((this.rest.node.version as string).replace(/\./g, '') <= '370') this.sendWs({
-					op: 'play',
-					guildId: this.guildId,
-          channelId: this.textChannel,
-          track: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
-					volume: 90,
-			    pause: false
-		}) 
-    else await this.rest.update({
-			guildId: this.guildId,
-      data: {
-				encodedTrack: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
-				volume: 90
-			}
-		})
-		return true;
-	}
+    if (!position && typeof position !== "number")
+      throw new Error(
+        '[ @Moonlink/Player ]: option "position" is empty or different from number '
+      );
+    if (position >= this.current.position)
+      throw new Error(
+        '[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track'
+      );
+    if (!this.current.isSeekable && this.current.isStream)
+      throw new Error(
+        '[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"'
+      );
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "seek",
+        position: position,
+        guildId: this.guildId,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: {
+          position,
+        },
+      });
+    return position;
+  }
+  public async skipTo(position: number): Promise<boolean | void> {
+    if (!position && typeof position !== "number")
+      throw new Error(
+        '[ @Moonlink/Player ]: option "position" is empty or different from number '
+      );
+    if (!this.queue.size)
+      throw new Error(
+        "[ @Moonlink/Player ]: the queue is empty to use this function"
+      );
+    let queue = this.queue.db.get(`queue.${this.guildId}`);
+    if (queue[position - 1])
+      throw new Error(
+        "[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors"
+      );
+    let data: any = queue.splice(position - 1, 1)[0];
+    let currents: any = this.map.get("current") || {};
+    currents[this.guildId] = data;
+    this.map.set("current", currents);
+    this.queue.db.set(`queue.${this.guildId}`, queue);
+    if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+      this.sendWs({
+        op: "play",
+        guildId: this.guildId,
+        channelId: this.textChannel,
+        track: data.track
+          ? data.track
+          : data.encoded
+          ? data.encoded
+          : data.trackEncoded
+          ? data.trackEncoded
+          : null,
+        volume: 90,
+        pause: false,
+      });
+    else
+      await this.rest.update({
+        guildId: this.guildId,
+        data: {
+          encodedTrack: data.track
+            ? data.track
+            : data.encoded
+            ? data.encoded
+            : data.trackEncoded
+            ? data.trackEncoded
+            : null,
+          volume: 90,
+        },
+      });
+    return true;
+  }
 }
 export interface Track {
   readonly track?: string | null;
-	readonly encoded?: string | null;
-	readonly trackEncoded?: string | null
+  readonly encoded?: string | null;
+  readonly trackEncoded?: string | null;
   readonly title: string;
   readonly identifier: string;
   readonly author: string;
   readonly duration: BigInt;
-	readonly position: BigInt;
+  readonly position: BigInt;
   readonly isSeekable: boolean;
   readonly isStream: boolean;
   readonly url?: string | null;
   readonly requester: unknown | null;
-	readonly sourceName: string | null;
+  readonly sourceName: string | null;
   thumbnail(): string | null;
-	setRequester(data: unknown): void;
+  setRequester(data: unknown): void;
 }

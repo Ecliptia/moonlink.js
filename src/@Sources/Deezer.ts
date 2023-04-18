@@ -1,25 +1,40 @@
-import { MoonlinkTrack } from '../@Rest/MoonlinkTrack'
-import { makeRequest } from '../@Rest/MakeRequest'
-import { MoonlinkManager } from '../@Moonlink/MoonlinkManager'
+import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
+import { makeRequest } from "../@Rest/MakeRequest";
+import { MoonlinkManager } from "../@Moonlink/MoonlinkManager";
 export class Deezer {
-	public manager: MoonlinkManager;
+  public manager: MoonlinkManager;
   constructor(options: MoonlinkManager, others: any) {
-    this.manager = options
-	}
+    this.manager = options;
+  }
   public check(uri: string): any {
-    return /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/.test(uri);
-	}
+    return /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/.test(
+      uri
+    );
+  }
   public async request(endpoint: string): Promise<any> {
-    let res = await makeRequest(`http://api.deezer.com${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`, { method: "GET", headers: {
-			'User-Agent': 'MoonQuest/Requester'
-		}}).catch(err => {
-        this.manager.emit('debug', "[ @Moonlink/Deezer ]: unable to request Deezer " + err)
-
-      })
+    let res = await makeRequest(
+      `http://api.deezer.com${
+        /^\//.test(endpoint) ? endpoint : `/${endpoint}`
+      }`,
+      {
+        method: "GET",
+        headers: {
+          "User-Agent": "MoonQuest/Requester",
+        },
+      }
+    ).catch((err) => {
+      this.manager.emit(
+        "debug",
+        "[ @Moonlink/Deezer ]: unable to request Deezer " + err
+      );
+    });
     return res;
   }
   public async resolve(url: string): Promise<any> {
-    const [, type, id] = /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/.exec(url) ?? [];
+    const [, type, id] =
+      /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/.exec(
+        url
+      ) ?? [];
 
     switch (type) {
       case "playlist": {
@@ -35,10 +50,10 @@ export class Deezer {
         return this.fetchArtist(id);
       }
     }
-	}
+  }
   public async fetchPlaylist(id: string): Promise<any> {
     const playlist = await this.request(`/playlist/${id}`);
-	
+
     const unresolvedPlaylistTracks = await Promise.all(
       playlist.tracks.data.map((x) => this.buildUnresolved(x))
     );
@@ -46,28 +61,28 @@ export class Deezer {
       loadType: "PLAYLIST_LOADED",
       tracks: unresolvedPlaylistTracks,
       playlistInfo: playlist.title ? { name: playlist.title } : {},
-    }
+    };
   }
   public async fetchAlbum(id: string): Promise<any> {
     const album = await this.request(`/albums/${id}`);
 
     const unresolvedPlaylistTracks = await Promise.all(
-       album.track.data.map((x) => this.buildUnresolved(x))
+      album.track.data.map((x) => this.buildUnresolved(x))
     );
     return {
       loadType: "PLAYLIST_LOADED",
       tracks: unresolvedPlaylistTracks,
-      playlistInfo: album.name ? { name: album.name } : {}
-    }
+      playlistInfo: album.name ? { name: album.name } : {},
+    };
   }
   public async fetchArtist(id: string): Promise<any> {
-		const artist = await this.request(`/artist/${id}/top`);
+    const artist = await this.request(`/artist/${id}/top`);
     let nextPage = artist.next;
     let pageLoaded = 1;
     while (nextPage) {
       if (!nextPage) break;
       const req: any = await makeRequest(nextPage, { method: "GET" });
-artist.data.push(...req.data);
+      artist.data.push(...req.data);
       nextPage = req.next;
       pageLoaded++;
     }
@@ -78,39 +93,46 @@ artist.data.push(...req.data);
     return {
       loadType: "PLAYLIST_LOADED",
       tracks: unresolvedPlaylistTracks,
-      playlistInfo: artist.name ? { name: artist.name } : {}
-    }
+      playlistInfo: artist.name ? { name: artist.name } : {},
+    };
   }
   public async fetchTrack(id: string): Promise<any> {
     const data = await this.request(`/tracks/${id}`);
     const unresolvedTrack = await this.buildUnresolved(data);
 
     return {
-      loadType: "TRACK_LOADED", tracks: [unresolvedTrack],
-      playlistInfo: {}
-    }
+      loadType: "TRACK_LOADED",
+      tracks: [unresolvedTrack],
+      playlistInfo: {},
+    };
   }
   public async fetch(query: string): Promise<any> {
     if (this.check(query)) return this.resolve(query);
 
-    const data = await this.request(
-      `/search?q="${query}"`
-    );
+    const data = await this.request(`/search?q="${query}"`);
     const unresolvedTracks = await Promise.all(
       data.tracks.items.map((x) => this.buildUnresolved(x))
     );
     return {
-      loadType: "TRACK_LOADED", tracks: unresolvedTracks, playlistInfo: {}
-	}
- }
-	public async buildUnresolved(track: any): Promise<any> {
-    let res: any = await this.manager.search(`${track.artist ? track.artist.name : "Unknown"} ${track.title}`)
+      loadType: "TRACK_LOADED",
+      tracks: unresolvedTracks,
+      playlistInfo: {},
+    };
+  }
+  public async buildUnresolved(track: any): Promise<any> {
+    let res: any = await this.manager.search(
+      `${track.artist ? track.artist.name : "Unknown"} ${track.title}`
+    );
     let enTrack: any;
-    res.tracks[0].encodedTrack ? enTrack = res.tracks[0].encodedTrack : res.tracks[0].encoded ? enTrack = res.tracks[0].encoded : enTrack = res.tracks[0].track;
+    res.tracks[0].encodedTrack
+      ? (enTrack = res.tracks[0].encodedTrack)
+      : res.tracks[0].encoded
+      ? (enTrack = res.tracks[0].encoded)
+      : (enTrack = res.tracks[0].track);
     return new MoonlinkTrack({
       track: enTrack,
       encoded: null,
-			trackEncoded: null,
+      trackEncoded: null,
       info: {
         sourceName: "deezer",
         identifier: track.id,
@@ -120,8 +142,8 @@ artist.data.push(...req.data);
         isStream: false,
         title: track.title,
         uri: track.link,
-				position: 0
-			},
-    })
+        position: 0,
+      },
+    });
   }
 }
