@@ -17,9 +17,6 @@ export interface Options {
     shards: string | number;
     clientId?: string;
     clientSecret?: string;
-    clientDeezerId?: string;
-    clientDeezerSecret?: string;
-    clientDeezerCode?: string;
 }
 export interface createOptions {
     guildId: string;
@@ -64,7 +61,7 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify" | "deezer";
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;

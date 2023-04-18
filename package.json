@@ -1,6 +1,6 @@
 {
     "name": "moonlink.js",
-    "version": "2.0.0",
+    "version": "2.0.2",
     "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
     "keywords": [
         "bot",
@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "start": "tsc && node bot.js"
+    "start": "tsc"
   },
   "homepage": "https://moonlink.js.org",
     "bugs": {

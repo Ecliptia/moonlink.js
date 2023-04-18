@@ -15,7 +15,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.version = void 0;
-exports.version = '2.0.0';
+exports.version = '2.0.2';
 __exportStar(require("./src/@Moonlink/MoonlinkManager"), exports);
 __exportStar(require("./src/@Moonlink/MoonlinkPlayers"), exports);
 __exportStar(require("./src/@Moonlink/MoonlinkNodes"), exports);
@@ -25,4 +25,5 @@ __exportStar(require("./src/@Rest/MoonlinkTrack"), exports);
 __exportStar(require("./src/@Rest/MoonlinkDatabase"), exports);
 __exportStar(require("./src/@Rest/MakeRequest"), exports);
 __exportStar(require("./src/@Sources/Spotify"), exports);
+__exportStar(require("./src/@Sources/Deezer"), exports);
 //# sourceMappingURL=index.js.map
