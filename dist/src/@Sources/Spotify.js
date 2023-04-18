@@ -26,7 +26,7 @@ class Spotify {
             let res = await (0, MakeRequest_1.makeRequest)('https://open.spotify.com/get_access_token', {
                 headers: {}
             }).catch(err => {
-                this.manager.emit('debug', '[ Moonlink/Sources/Spotify ]: An error occurred while making the request');
+                this.manager.emit('debug', '[ @Moonlink/Spotify ]: An error occurred while making the request');
                 return;
             });
             let access = res.accessToken;
@@ -42,7 +42,7 @@ class Spotify {
                 "Content-Type": "application/x-www-form-urlencoded",
             }
         }).catch(err => {
-            this.manager.emit('debug', '[ @Moonlink/Sources/Spotify ]: There was an error requesting your Spotify authorization');
+            this.manager.emit('debug', '[ @Moonlink/Spotify ]: There was an error requesting your Spotify authorization');
             return;
         });
         this.token = `Bearer ${res.access_token}`;
@@ -58,7 +58,7 @@ class Spotify {
         let res = await (0, MakeRequest_1.makeRequest)(`https://api.spotify.com/v1${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`, {
             headers: { Authorization: this.token },
         }).catch(err => {
-            this.manager.emit('debug', "[ @Moonlink/Sources/Spotify ]: unable to request Spotify " + err);
+            this.manager.emit('debug', "[ @Moonlink/Spotify ]: unable to request Spotify " + err);
         });
         return res;
     }

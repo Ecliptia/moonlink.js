@@ -1,4 +1,5 @@
-export interface MoonlinkTrackOptionsInfo {
+
+export interface TrackInfo {
 	identifier: string;
 	isSeekable: boolean;
 	author: string;
@@ -7,11 +8,11 @@ export interface MoonlinkTrackOptionsInfo {
 	position: number;
 	title: string;
 	uri?: string;
-  thumbnail?: string | null;
+  artworkUrl?: string | null;
 	sourceName: string;
 }
 export interface MoonlinkTrackOptions {
-  info: MoonlinkTrackOptionsInfo;
+  info: TrackInfo;
 	track?: string;
 	encoded?: string;
 	trackEncoded: string;

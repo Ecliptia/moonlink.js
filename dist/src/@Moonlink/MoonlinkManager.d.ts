@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events";
 import { MoonlinkNode } from './MoonlinkNodes';
 import { MoonlinkPlayer, Track } from './MoonlinkPlayers';
 import { Spotify } from '../@Sources/Spotify';
+import { Deezer } from '../@Sources/Deezer';
 export type Constructor<T> = new (...args: any[]) => T;
 export interface Nodes {
     host: string;
@@ -16,6 +17,9 @@ export interface Options {
     shards: string | number;
     clientId?: string;
     clientSecret?: string;
+    clientDeezerId?: string;
+    clientDeezerSecret?: string;
+    clientDeezerCode?: string;
 }
 export interface createOptions {
     guildId: string;
@@ -45,6 +49,7 @@ export interface VoicePacket {
     d: VoiceState | VoiceServer;
 }
 export type LoadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "LOAD_FAILED" | "NO_MATCHES";
+export type LoadTypeV4 = "search" | "track" | "playlist" | "error" | "empty";
 export interface TrackData {
     track: string;
     info: TrackDataInfo;
@@ -118,6 +123,7 @@ export declare class MoonlinkManager extends EventEmitter {
     options: Options;
     nodes: Map<string, Nodes>;
     spotify: Spotify;
+    deezer: Deezer;
     sendWs: any;
     clientId: string;
     version: string;

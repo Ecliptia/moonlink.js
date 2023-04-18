@@ -3,8 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkManager = void 0;
 const node_events_1 = require("node:events");
 const MoonlinkNodes_1 = require("./MoonlinkNodes");
+const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
 const MoonlinkTrack_1 = require("../@Rest/MoonlinkTrack");
 const Spotify_1 = require("../@Sources/Spotify");
+const Deezer_1 = require("../@Sources/Deezer");
 class MoonlinkManager extends node_events_1.EventEmitter {
     _nodes;
     _sPayload;
@@ -12,6 +14,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     options;
     nodes;
     spotify;
+    deezer;
     sendWs;
     clientId;
     version;
@@ -33,6 +36,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.options = options;
         this.nodes = new Map();
         this.spotify = new Spotify_1.Spotify(this, options);
+        this.deezer = new Deezer_1.Deezer(this, options);
         this.sendWs;
         this.version = require('../../index').version;
     }
@@ -111,6 +115,9 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             if (this.spotify.check(query)) {
                 return resolve(await this.spotify.resolve(query));
             }
+            if (this.deezer.check(query)) {
+                return resolve(await this.deezer.resolve(query));
+            }
             let opts;
             if (query && !query.startsWith('http://') && !query.startsWith('https://')) {
                 if (source && !sources[source]) {
@@ -123,6 +130,9 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             }
             if (source == "spotify") {
                 return resolve(this.spotify.fetch(query));
+            }
+            if (source == "deezer") {
+                return resolve(this.deezer.fetch(query));
             }
             let params = new URLSearchParams({ identifier: opts });
             let res = await this.leastUsedNodes.request('loadtracks', params);
@@ -170,14 +180,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     }
                 }
             });
-        console.log(a);
         return true;
     }
     get players() {
-        let map = this.map;
-        const { MoonlinkPlayer } = require('./MoonlinkPlayers');
         let has = (guildId) => {
-            let players = map.get('players') || {};
+            let players = this.map.get('players') || {};
             if (players[guildId])
                 players = true;
             else
@@ -189,10 +196,9 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 throw new Error('[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string');
             if (!has(guildId))
                 return null;
-            return (new MoonlinkPlayer(map.get('players')[guildId], this, this.map, this.leastUsedNodes.rest));
+            return (new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get('players')[guildId], this, this.map, this.leastUsedNodes.rest));
         };
         let create = (data) => {
-            console.log(data);
             if (typeof data !== 'object')
                 throw new Error('[ @Moonlink/Manager ]: parameter "data" is not an object');
             if (!data.guildId && typeof data.guildId !== 'string')
@@ -205,7 +211,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 throw new Error('[ @Moonlink/Manager ]: autoPlay parameter of player creation has to be boolean type');
             if (has(data.guildId))
                 return get(data.guildId);
-            let players_map = map.get('players') || {};
+            let players_map = this.map.get('players') || {};
             players_map[data.guildId] = {
                 guildId: data.guildId,
                 textChannel: data.textChannel,
@@ -213,12 +219,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 playing: false,
                 connected: false,
                 paused: false,
-                loop: false,
+                loop: null,
                 autoPlay: false,
             };
-            map.set('players', players_map);
-            console.log(players_map);
-            return (new MoonlinkPlayer(players_map[data.guildId], this, this.map, this.leastUsedNodes.rest));
+            this.map.set('players', players_map);
+            return (new MoonlinkPlayers_1.MoonlinkPlayer(players_map[data.guildId], this, this.map, this.leastUsedNodes.rest));
         };
         return {
             create: create.bind(this),
