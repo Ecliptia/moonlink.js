@@ -1,4 +1,4 @@
-export const version: string = '2.0.2';
+export const version: string = "2.0.2";
 export * from "./src/@Moonlink/MoonlinkManager";
 export * from "./src/@Moonlink/MoonlinkPlayers";
 export * from "./src/@Moonlink/MoonlinkNodes";
@@ -8,4 +8,4 @@ export * from "./src/@Rest/MoonlinkTrack";
 export * from "./src/@Rest/MoonlinkDatabase";
 export * from "./src/@Rest/MakeRequest";
 export * from "./src/@Sources/Spotify";
-export * from "./src/@Sources/Deezer"
+export * from "./src/@Sources/Deezer";
