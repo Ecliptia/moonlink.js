@@ -102,6 +102,12 @@ export interface SearchResult {
  };
 }
 
+export interface playersOptions {
+	create: Function;
+	get: Function;
+	has: Function;
+	}
+
 export interface PlaylistInfo {
  name: string;
  selectedTrack?: Track;
@@ -134,6 +140,8 @@ export interface MoonlinkEvents {
  trackStuck: (player: MoonlinkPlayer, track: any) => void;
  trackError: (player: MoonlinkPlayer, track: any) => void;
  queueEnd: (player: MoonlinkPlayer, track?: any) => void;
+ playerDisconnect: (player: MoonlinkPlayer) => void;
+ playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
  socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 
@@ -200,17 +208,24 @@ export class MoonlinkManager extends EventEmitter {
   if (!clientId)
    throw new TypeError('[ @Moonlink/Manager ]: "clientId" option is required.');
   this.clientId = clientId;
-  this._nodes.forEach((node) => this.addNodes(node));
+  this._nodes.forEach((node) => this.addNode(node));
   this.initiated = true;
   return this;
  }
- public addNodes(node: Nodes): Nodes {
+ public addNode(node: Nodes): Nodes {
   const new_node: MoonlinkNode = new MoonlinkNode(this, node, this.map);
   if (node.identifier) this.nodes.set(node.identifier, new_node);
   else this.nodes.set(node.host, new_node);
   new_node.init();
   return new_node;
  }
+ public removeNode(name: string): boolean {
+if(!name) throw new Error('[ @Moonlink/Manager ]: option "name" is empty')
+	 let node = this.nodes.get(name);
+   if(!node) return false;
+	 this.nodes.delete(name);
+	 return true;
+} 
  public get leastUsedNodes(): any {
   return [...this.nodes.values()]
    .filter((node: any) => node.isConnected)
@@ -219,9 +234,10 @@ export class MoonlinkManager extends EventEmitter {
  packetUpdate(packet: VoicePacket) {
   if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
   const update: any = packet.d;
+	let player: any = this.players.get(update.guild_id);
   if (!update || (!("token" in update) && !("session_id" in update))) return;
-  if ("t" in packet && "VOICE_SERVER_UPDATE".includes(packet.t)) {
-   let voiceServer: object = {};
+	 if ("t" in packet && "VOICE_SERVER_UPDATE".includes(packet.t)) {
+	let voiceServer: object = {};
    voiceServer[update.guild_id] = {
     event: update,
    };
@@ -230,14 +246,37 @@ export class MoonlinkManager extends EventEmitter {
   }
   if ("t" in packet && "VOICE_STATE_UPDATE".includes(packet.t)) {
    if (update.user_id !== this.clientId) return;
-   if (update.channel_id) {
+		if(!player) return;
+if(!update.channel_id) {
+	this.emit('playerDisconnect', player)
+    let players = this.map.get('players') || {};
+    players[update.guild_id] = {
+			...players[update.guild_id],
+			connected: false,
+			voiceChannel: null,
+			playing: false
+		}
+		player.connected = false;
+		player.voiceChannel = null;
+	  player.playing = false;
+    player.stop();
+ }
+if(update.channel_id !== player.voiceChannel) {
+this.emit('playerMove', player, update.channel_id, player.voiceChannel)
+    let players: any = this.map.get('players') || {};
+    players[update.guild_id] = {
+			...players[update.guild_id],
+			voiceChannel: update.channel_id
+		}
+			this.map.set('players', players)
+      player.voiceChannel = update.channel_id;
+		}
     let voiceStates: object = {};
     voiceStates[update.guild_id] = update;
     this.map.set("voiceStates", voiceStates);
     return this.attemptConnection(update.guild_id);
-   }
-  }
- }
+	}
+}
  public async search(options: string | SearchQuery): Promise<SearchResult> {
   return new Promise(async (resolve) => {
    if (!options)
@@ -336,9 +375,7 @@ export class MoonlinkManager extends EventEmitter {
     guildId: voiceServer[guildId].event.guild_id,
     event: voiceServer[guildId].event,
    });
-  let a: any;
-  if ((this.leastUsedNodes.version as string).replace(/\./g, "") >= "370")
-   a = await this.leastUsedNodes.rest.update({
+   else await this.leastUsedNodes.rest.update({
     guildId,
     data: {
      voice: {
@@ -350,7 +387,7 @@ export class MoonlinkManager extends EventEmitter {
    });
   return true;
  }
- public get players(): object {
+ public get players(): playersOptions {
   let has: Function = (guildId: string): boolean => {
    let players = this.map.get("players") || {};
    if (players[guildId]) players = true;
@@ -418,6 +455,3 @@ export class MoonlinkManager extends EventEmitter {
   };
  }
 }
-
-
-
