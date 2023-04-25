@@ -78,6 +78,11 @@ export interface SearchResult {
         severity: string;
     };
 }
+export interface playersOptions {
+    create: Function;
+    get: Function;
+    has: Function;
+}
 export interface PlaylistInfo {
     name: string;
     selectedTrack?: Track;
@@ -108,6 +113,8 @@ export interface MoonlinkEvents {
     trackStuck: (player: MoonlinkPlayer, track: any) => void;
     trackError: (player: MoonlinkPlayer, track: any) => void;
     queueEnd: (player: MoonlinkPlayer, track?: any) => void;
+    playerDisconnect: (player: MoonlinkPlayer) => void;
+    playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 export declare interface MoonlinkManager {
@@ -130,10 +137,11 @@ export declare class MoonlinkManager extends EventEmitter {
     map: Map<string, any>;
     constructor(nodes: Nodes[], options: Options, sPayload: Function);
     init(clientId: string): this;
-    addNodes(node: Nodes): Nodes;
+    addNode(node: Nodes): Nodes;
+    removeNode(name: string): boolean;
     get leastUsedNodes(): any;
     packetUpdate(packet: VoicePacket): Promise<boolean>;
     search(options: string | SearchQuery): Promise<SearchResult>;
     attemptConnection(guildId: string): Promise<boolean>;
-    get players(): object;
+    get players(): playersOptions;
 }
