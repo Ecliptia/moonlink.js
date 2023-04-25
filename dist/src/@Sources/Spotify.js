@@ -14,6 +14,8 @@ class Spotify {
     constructor(options, others) {
         this.manager = options;
         this.options = others;
+        if (!this.options.spotify)
+            this.options.spotify = {};
         this.clientId = this.options.spotify.clientId || null;
         this.clientSecret = this.options.spotify.clientSecret || null;
         this.requestToken();
