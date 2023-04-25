@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
 import { MoonlinkNode } from "./MoonlinkNodes";
-import { MoonlinkPlayer, Track } from "./MoonlinkPlayers";
+import { MoonlinkPlayer } from "./MoonlinkPlayers";
+import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { Spotify } from "../@Sources/Spotify";
 import { Deezer } from "../@Sources/Deezer";
 export type Constructor<T> = new (...args: any[]) => T;
@@ -71,7 +72,7 @@ export interface SearchQuery {
 }
 export interface SearchResult {
     loadType: LoadType;
-    tracks: Track[];
+    tracks: MoonlinkTrack[];
     playlist?: PlaylistInfo;
     exception?: {
         message: string;
@@ -79,13 +80,13 @@ export interface SearchResult {
     };
 }
 export interface playersOptions {
-    create: Function;
-    get: Function;
-    has: Function;
+    create: (data: createOptions) => MoonlinkPlayer;
+    get: (guildId: string) => MoonlinkPlayer | null;
+    has: (guildId: string) => boolean;
 }
 export interface PlaylistInfo {
     name: string;
-    selectedTrack?: Track;
+    selectedTrack?: MoonlinkTrack;
     duration: number;
 }
 export interface LavalinkResult {

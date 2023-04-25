@@ -1,9 +1,8 @@
 import WebSocket from "ws";
 import { MoonlinkManager, Options, SearchResult } from "./MoonlinkManager";
-import { MoonlinkPlayer, Track } from "./MoonlinkPlayers";
+import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkDatabase } from "../@Rest/MoonlinkDatabase";
 import { MoonlinkRest } from "./MoonlinkRest";
-import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { makeRequest } from "../@Rest/MakeRequest";
 export declare interface Node {
  host: string;

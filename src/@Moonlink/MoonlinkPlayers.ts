@@ -431,20 +431,3 @@ export class MoonlinkPlayer {
   return true;
  }
 }
-export interface Track {
- readonly track?: string | null;
- readonly encoded?: string | null;
- readonly trackEncoded?: string | null;
- readonly title: string;
- readonly identifier: string;
- readonly author: string;
- readonly duration: BigInt;
- readonly position: BigInt;
- readonly isSeekable: boolean;
- readonly isStream: boolean;
- readonly url?: string | null;
- readonly requester: unknown | null;
- readonly sourceName: string | null;
- thumbnail(): string | null;
- setRequester(data: unknown): void;
-}
