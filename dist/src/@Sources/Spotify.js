@@ -14,8 +14,8 @@ class Spotify {
     constructor(options, others) {
         this.manager = options;
         this.options = others;
-        this.clientId = this.options.clientId || null;
-        this.clientSecret = this.options.clientSecret || null;
+        this.clientId = this.options.spotify.clientId || null;
+        this.clientSecret = this.options.spotify.clientSecret || null;
         this.requestToken();
     }
     check(uri) {
