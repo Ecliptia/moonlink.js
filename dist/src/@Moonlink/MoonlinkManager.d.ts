@@ -73,7 +73,7 @@ export interface SearchQuery {
 export interface SearchResult {
     loadType: LoadType;
     tracks: MoonlinkTrack[];
-    playlist?: PlaylistInfo;
+    playlistInfo?: PlaylistInfo;
     exception?: {
         message: string;
         severity: string;
