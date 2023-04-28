@@ -119,6 +119,7 @@ export class MoonlinkNode {
    "debug",
    "[ @Moonlink/Node ]: starting server connection process"
   );
+  if(!this.manager.initiated) this.db.delete('queue');
   this.connect();
  }
  public async connect(): Promise<any> {
@@ -252,11 +253,10 @@ export class MoonlinkNode {
     let current: any = this.map.get(`current`) || {};
     current[payload.guildId] = {
      ...current[payload.guildId],
-     position: payload.state.position || 0,
-     thumbnail:
-      current.thumbnail ||
-      `https://img.youtube.com/vi/${current.identifier}/sddefault.jpg`,
-     ping: payload.state.ping || 0,
+     position: payload.state.position,
+     time: payload.state.time,
+     thumbnail: `https://img.youtube.com/vi/${current[payload.guildId] ? current[payload.guildId].identifier : null}/sddefault.jpg`,
+     ping: payload.state.ping,
     };
     this.map.set("current", current);
     break;
