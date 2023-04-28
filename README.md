@@ -47,9 +47,7 @@ client.moon = new MoonlinkManager([{
   port: 2333,
   secure: true,
   password: 'MyPassword'
-}], {
-  shards: 1
-}, (guild, sPayload) => {
+}], { /* Option */ }, (guild, sPayload) => {
   client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload))
 })
 client.moon.on('nodeCreate', (node) => {
@@ -139,6 +137,10 @@ meaning of [emojis](https://allcontributors.org/docs/en/emoji-key)
 <td align="center"><a href="https://discord.com/users/666270910692720661"> <img src="https://cdn.discordapp.com/avatars/666270910692720661/cf9ce4733dbeb61391eab6b16a56daef.webp?size=2048" width="100px;" alt="" /><br> <sub><b>Nah</b></sub><br> </a><a href="https://discord.com/channels/990369410344701964/1057275443587338262/1057275443587338262" title="Bug">🐛</a></td>
 </tr>
 <tr>
-<td align="center"><a href="https://discord.com/users/666270910692720661"> <img src="asset://asset/images/default_avatar_0.png?size=2048" width="100px;" alt="" /><br> <sub><b>SuperPlayerBots</b></sub><br> </a><a href="https://discord.com/channels/990369410344701964/1070454617294516284/1071695070639702056" title="Bug">🐛</a></td>
+<td align="center"><a href="https://discord.com/users/666270910692720661"> <img src="asset://asset/images/default_atatar_0.png?size=2048" width="100px;" alt="" /><br> <sub><b>SuperPlayerBots</b></sub><br> </a><a href="https://discord.com/channels/990369410344701964/1070454617294516284/1071695070639702056" title="Bug">🐛</a></td>
+<td align="center"><a href"https://github.com/ddemile"> <img src="https://avatars.githubusercontent.com/u/104416229?v=4" width="100px;" alt="" /><br> <sub><b>ddemile</b></sub><br> </a><a href="https://github.com/1Lucas1apk/moonlink.js/issues?q=author%3Addemile" title="Bug">🐛</a></td>
+</tr>
+<tr>
+<td align="center"><a href="https://github.com/Tasty-Kiwi"> <img src="https://avatars.githubusercontent.com/u/26067386?v=4" width="100px;" alt="" /><br> <sub><b>Tasty-Kiwi</b></sub><br> </a><a href="https://github.com/1Lucas1apk/moonlink.js/issues?q=author%3ATasty-Kiwi" title="Bug">🐛</a></td>
 </tr>
 </table>
