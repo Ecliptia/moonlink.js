@@ -349,7 +349,7 @@ class MoonlinkPlayer {
         if (!this.queue.size)
             throw new Error("[ @Moonlink/Player ]: the queue is empty to use this function");
         let queue = this.queue.db.get(`queue.${this.guildId}`);
-        if (queue[position - 1])
+        if (!queue[position - 1])
             throw new Error("[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors");
         let data = queue.splice(position - 1, 1)[0];
         let currents = this.map.get("current") || {};
