@@ -390,7 +390,7 @@ export class MoonlinkPlayer {
     "[ @Moonlink/Player ]: the queue is empty to use this function"
    );
   let queue = this.queue.db.get(`queue.${this.guildId}`);
-  if (queue[position - 1])
+  if (!queue[position - 1])
    throw new Error(
     "[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors"
    );
