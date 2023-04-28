@@ -54,8 +54,8 @@ export class MoonlinkPlayer {
   this.loop = infos.loop || null;
   this.volume = infos.volume || 90;
   this.queue = new MoonlinkQueue(this.manager, this);
-  this.current = map.get("currents") || {};
-  this.current = this.current[this.guildId] || null;
+  this.current = map.get("current") || {};
+  this.current = this.current[this.guildId]
   if (rest) this.rest = rest;
   this.map = map;
  }
