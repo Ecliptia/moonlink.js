@@ -357,7 +357,7 @@ export class MoonlinkPlayer {
    throw new Error(
     '[ @Moonlink/Player ]: option "position" is empty or different from number '
    );
-  if (position >= this.current.position)
+  if (position >= this.current.duration)
    throw new Error(
     '[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track'
    );

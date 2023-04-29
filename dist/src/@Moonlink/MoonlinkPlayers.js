@@ -324,7 +324,7 @@ class MoonlinkPlayer {
     async seek(position) {
         if (!position && typeof position !== "number")
             throw new Error('[ @Moonlink/Player ]: option "position" is empty or different from number ');
-        if (position >= this.current.position)
+        if (position >= this.current.duration)
             throw new Error('[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track');
         if (!this.current.isSeekable && this.current.isStream)
             throw new Error('[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"');
