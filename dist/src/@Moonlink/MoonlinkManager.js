@@ -5,6 +5,7 @@ const node_events_1 = require("node:events");
 const MoonlinkNodes_1 = require("./MoonlinkNodes");
 const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
 const MoonlinkTrack_1 = require("../@Rest/MoonlinkTrack");
+const Plugin_1 = require("../@Rest/Plugin");
 const Spotify_1 = require("../@Sources/Spotify");
 const Deezer_1 = require("../@Sources/Deezer");
 class MoonlinkManager extends node_events_1.EventEmitter {
@@ -31,6 +32,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             typeof options.clientName !== "string" &&
             typeof options.clientName !== "undefined")
             throw new Error('[ @Moonlink/Manager ]: clientName option of the "options" parameter must be in string format');
+        if (options.plugins) {
+            options.plugins.forEach(plugin => {
+                if (!(plugin instanceof Plugin_1.Plugin))
+                    throw new RangeError(`[ @Moonlink/Manager ]: this plugin is not compatible`);
+                plugin.load(this);
+            });
+        }
         this._nodes = nodes;
         this._sPayload = sPayload;
         this.options = options;
@@ -164,13 +172,15 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 else {
                     opts = sources[source] || `ytsearch:${query}`;
                 }
+                if (source == "spotify") {
+                    return resolve(this.spotify.fetch(query));
+                }
+                if (source == "deezer") {
+                    return resolve(this.deezer.fetch(query));
+                }
             }
-            if (source == "spotify") {
-                return resolve(this.spotify.fetch(query));
-            }
-            if (source == "deezer") {
-                return resolve(this.deezer.fetch(query));
-            }
+            else
+                opts = query;
             let params = new URLSearchParams({ identifier: opts });
             let res = await this.leastUsedNodes.request("loadtracks", params);
             if (res.loadType === "LOAD_FAILED" || res.loadType === "NO_MATCHES") {

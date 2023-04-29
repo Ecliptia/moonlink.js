@@ -7,5 +7,6 @@ export * from "./src/@Rest/MoonlinkQueue";
 export * from "./src/@Rest/MoonlinkTrack";
 export * from "./src/@Rest/MoonlinkDatabase";
 export * from "./src/@Rest/MakeRequest";
+export * from "./src/@Rest/Plugin";
 export * from "./src/@Sources/Spotify";
 export * from "./src/@Sources/Deezer";

@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
+import { Plugin } from "../@Rest/Plugin"
 import { Spotify } from "../@Sources/Spotify";
 import { Deezer } from "../@Sources/Deezer";
 
@@ -20,6 +21,7 @@ export interface spotifyOptions {
 }
 export interface Options {
  clientName?: string;
+ plugins: Plugin[];
  spotify: spotifyOptions;
 }
 
@@ -194,6 +196,13 @@ export class MoonlinkManager extends EventEmitter {
    throw new Error(
     '[ @Moonlink/Manager ]: clientName option of the "options" parameter must be in string format'
    );
+  if (options.plugins) {
+      options.plugins.forEach(plugin => {
+        if (!(plugin instanceof Plugin))
+          throw new RangeError(`[ @Moonlink/Manager ]: this plugin is not compatible`);
+        plugin.load(this);
+      })
+	}
   this._nodes = nodes;
   this._sPayload = sPayload;
   this.options = options;
@@ -328,13 +337,15 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     } else {
      opts = sources[source] || `ytsearch:${query}`;
     }
-   }
+   
    if (source == "spotify") {
     return resolve(this.spotify.fetch(query));
-   }
+    }
    if (source == "deezer") {
     return resolve(this.deezer.fetch(query));
-   }
+    }
+	 }
+		else opts = query;
    let params = new URLSearchParams({ identifier: opts });
    let res = await this.leastUsedNodes.request("loadtracks", params);
    if (res.loadType === "LOAD_FAILED" || res.loadType === "NO_MATCHES") {
