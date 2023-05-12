@@ -15,7 +15,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.version = void 0;
-exports.version = "2.1.52";
+exports.version = "2.1.54";
 __exportStar(require("./src/@Moonlink/MoonlinkManager"), exports);
 __exportStar(require("./src/@Moonlink/MoonlinkPlayers"), exports);
 __exportStar(require("./src/@Moonlink/MoonlinkNodes"), exports);
