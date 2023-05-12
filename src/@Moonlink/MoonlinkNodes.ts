@@ -292,7 +292,6 @@ export class MoonlinkNode {
    this.rest
   );
   let players: any = this.map.get("players") || {};
-  console.log(payload);
   switch (payload.type) {
    case "TrackStartEvent": {
     let current: any = null;
