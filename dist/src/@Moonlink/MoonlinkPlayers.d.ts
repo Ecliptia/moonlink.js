@@ -34,7 +34,10 @@ export declare class MoonlinkPlayer {
     queue: MoonlinkQueue;
     current: any;
     rest: MoonlinkRest;
+    data: any;
     constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>, rest?: MoonlinkRest);
+    set(key: string, value: unknown): void;
+    get<T>(key: string): T;
     setTextChannel(channelId: string): boolean;
     setVoiceChannel(channelId: string): boolean;
     setAutoPlay(mode: boolean): boolean;

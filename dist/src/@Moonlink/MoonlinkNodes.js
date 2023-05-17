@@ -131,8 +131,8 @@ class MoonlinkNode {
             ? this.version.replace(/\./g, "") >= "400"
                 ? "/v4/"
                 : "/v3/"
-            : ""}`;
-        this.ws = new ws_1.default(this.socketUri, undefined, { headers });
+            : "/"}`;
+        this.ws = new ws_1.default(this.socketUri, { headers });
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
         this.ws.on("message", this.message.bind(this));
@@ -144,6 +144,8 @@ class MoonlinkNode {
         this.manager.emit("debug", '[ @Moonlink/Nodes ]: a new node said "hello world!"');
         this.manager.emit("nodeCreate", this);
         this.isConnected = true;
+        if (this.version.replace(/\./g, '') <= '374')
+            this.rest.url = this.restUri;
     }
     reconnect() {
         if (this.reconnectAtattempts >= this.retryAmount) {

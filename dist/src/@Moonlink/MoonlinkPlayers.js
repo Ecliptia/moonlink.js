@@ -20,6 +20,7 @@ class MoonlinkPlayer {
     queue;
     current;
     rest;
+    data;
     constructor(infos, manager, map, rest) {
         this.payload = manager._sPayload;
         this.sendWs = manager.leastUsedNodes.sendWs;
@@ -38,6 +39,19 @@ class MoonlinkPlayer {
         if (rest)
             this.rest = rest;
         this.map = map;
+        this.data = this.map.get('players') || {};
+        this.data = this.data[this.guildId];
+    }
+    set(key, value) {
+        this.data[key] = value;
+        let players = this.map.get('players') || {};
+        players[this.guildId] = this.data;
+        this.map.set('players', players);
+    }
+    get(key) {
+        this.data = this.map.get('players') || {};
+        this.data = this.data[this.guildId];
+        return this.data[key];
     }
     setTextChannel(channelId) {
         if (!channelId)
