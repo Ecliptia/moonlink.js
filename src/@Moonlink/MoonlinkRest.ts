@@ -37,6 +37,7 @@ export class MoonlinkRest {
   this.url = this.node.restUri;
  }
  public async update(data: restOptions): Promise<object> {
+	if(!this.url) this.url = this.node.restUri;
   return await this.patch(
    `sessions/${this.sessionId}/players/${data.guildId}`,
    data
@@ -46,6 +47,7 @@ export class MoonlinkRest {
   return await this.delete(`sessions/${this.sessionId}/players/${guildId}`);
  }
  public async get(endpoint: Endpoint): Promise<object> {
+	if(!this.url) this.url = this.node.restUri;
   let req: any = await makeRequest(this.url + endpoint, {
    method: "GET",
    headers: {
@@ -57,6 +59,7 @@ export class MoonlinkRest {
   return req;
  }
  public async post(endpoint: Endpoint, data: restOptions): Promise<object> {
+	 if(!this.url) this.url = this.node.restUri;
   let req: any = await makeRequest(
    this.url + endpoint,
    {
@@ -72,6 +75,7 @@ export class MoonlinkRest {
   return req;
  }
  public async patch(endpoint: Endpoint, data: restOptions): Promise<object> {
+	 if(!this.url) this.url = this.node.restUri;
   let req: any = await makeRequest(
    this.url + endpoint,
    {
@@ -87,6 +91,7 @@ export class MoonlinkRest {
   return req;
  }
  public async delete(endpoint: Endpoint): Promise<object> {
+	 if(!this.url) this.url = this.node.restUri;
   let req: any = await makeRequest(this.url + endpoint, {
    method: "DELETE",
    headers: {

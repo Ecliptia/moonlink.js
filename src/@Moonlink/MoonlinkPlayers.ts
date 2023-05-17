@@ -36,6 +36,7 @@ export class MoonlinkPlayer {
  public queue: MoonlinkQueue;
  public current: any;
  public rest: MoonlinkRest;
+ public data: any;
  constructor(
   infos: PlayerInfos,
   manager: MoonlinkManager,
@@ -58,6 +59,19 @@ export class MoonlinkPlayer {
   this.current = this.current[this.guildId]
   if (rest) this.rest = rest;
   this.map = map;
+	this.data = this.map.get('players') || {}
+  this.data = this.data[this.guildId]
+ }
+ public set(key: string, value: unknown): void {
+	 this.data[key] = value;
+	 let players = this.map.get('players') || {}
+   players[this.guildId] = this.data
+	 this.map.set('players', players)
+ }
+ public get<T>(key: string): T {
+	 this.data = this.map.get('players') || {};
+   this.data = this.data[this.guildId];
+	 return this.data[key] as T;
  }
  public setTextChannel(channelId: string): boolean {
   if (!channelId)

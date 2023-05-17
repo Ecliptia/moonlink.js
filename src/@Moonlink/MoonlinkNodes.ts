@@ -174,9 +174,9 @@ export class MoonlinkNode {
     ? (this.version as string).replace(/\./g, "") >= "400"
       ? "/v4/"
       : "/v3/"
-    : ""
+    : "/"
   }`;
-  this.ws = new WebSocket(this.socketUri, undefined, { headers });
+  this.ws = new WebSocket(this.socketUri, { headers });
   this.ws.on("open", this.open.bind(this));
   this.ws.on("close", this.close.bind(this));
   this.ws.on("message", this.message.bind(this));
@@ -190,6 +190,7 @@ export class MoonlinkNode {
   );
   this.manager.emit("nodeCreate", this);
   this.isConnected = true;
+	if((this.version as string).replace(/\./g, '') <= '374') this.rest.url = this.restUri
  }
  private reconnect(): void {
   if (this.reconnectAtattempts >= this.retryAmount) {

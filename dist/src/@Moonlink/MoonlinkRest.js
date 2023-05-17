@@ -16,12 +16,16 @@ class MoonlinkRest {
         this.url = this.node.restUri;
     }
     async update(data) {
+        if (!this.url)
+            this.url = this.node.restUri;
         return await this.patch(`sessions/${this.sessionId}/players/${data.guildId}`, data);
     }
     async destroy(guildId) {
         return await this.delete(`sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(endpoint) {
+        if (!this.url)
+            this.url = this.node.restUri;
         let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "GET",
             headers: {
@@ -33,6 +37,8 @@ class MoonlinkRest {
         return req;
     }
     async post(endpoint, data) {
+        if (!this.url)
+            this.url = this.node.restUri;
         let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "POST",
             headers: {
@@ -44,6 +50,8 @@ class MoonlinkRest {
         return req;
     }
     async patch(endpoint, data) {
+        if (!this.url)
+            this.url = this.node.restUri;
         let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "PATCH",
             headers: {
@@ -55,6 +63,8 @@ class MoonlinkRest {
         return req;
     }
     async delete(endpoint) {
+        if (!this.url)
+            this.url = this.node.restUri;
         let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "DELETE",
             headers: {
