@@ -42,6 +42,7 @@ export declare class MoonlinkPlayer {
     setVoiceChannel(channelId: string): boolean;
     setAutoPlay(mode: boolean): boolean;
     connect(options: connectOptions): boolean | null;
+    restart(): Promise<void>;
     disconnect(): boolean;
     play(): Promise<void>;
     pause(): Promise<boolean>;

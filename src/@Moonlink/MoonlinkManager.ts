@@ -19,10 +19,20 @@ export interface spotifyOptions {
  clientId?: string;
  clientSecret?: string;
 }
+export interface customOptions {
+	player?: Constructor<MoonlinkPlayer>
+}
 export interface Options {
  clientName?: string;
- plugins: Plugin[];
- spotify: spotifyOptions;
+ reconnectAtattemps?: number;
+ retryTime?: number;
+ retryAmount?: number;
+ resumeKey?: string;
+ resumeTimeout?: number;
+ autoResume?: boolean;
+ plugins?: Plugin[];
+ spotify?: spotifyOptions;
+ custom?: customOptions;
 }
 
 export interface createOptions {
@@ -108,6 +118,7 @@ export interface playersOptions {
   create: (data: createOptions) => MoonlinkPlayer;
   get: (guildId: string) => MoonlinkPlayer | null;
   has: (guildId: string) => boolean;
+	all: any;
 }
 
 export interface PlaylistInfo {
@@ -143,6 +154,7 @@ export interface MoonlinkEvents {
  trackError: (player: MoonlinkPlayer, track: any) => void;
  queueEnd: (player: MoonlinkPlayer, track?: any) => void;
  playerDisconnect: (player: MoonlinkPlayer) => void;
+ playerResume: (player: MoonlinkPlayer) => void;
  playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
  socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
@@ -196,6 +208,7 @@ export class MoonlinkManager extends EventEmitter {
    throw new Error(
     '[ @Moonlink/Manager ]: clientName option of the "options" parameter must be in string format'
    );
+	if (!options.custom) options.custom = {};
   if (options.plugins) {
       options.plugins.forEach(plugin => {
         if (!(plugin instanceof Plugin))
@@ -379,7 +392,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    "debug",
    `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`
   );
-  if ((this.leastUsedNodes.version as string).replace(/\./g, "") <= "370")
+  if ((this.leastUsedNodes.version as string).replace(/\./g, "") <= "374")
    this.leastUsedNodes.sendWs({
     op: "voiceUpdate",
     sessionId: voiceStates[guildId].session_id,
@@ -411,6 +424,10 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
      '[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string'
     );
    if (!has(guildId)) return null;
+	 if (this.options.custom.player) { 
+		 this.emit('debug', '[ @Moonlink/Custom ]: the player is customized')
+		 return new this.options.custom.player(this.map.get("players")[guildId], this, this.map, this.leastUsedNodes.rest)
+	 }
    return new MoonlinkPlayer(
     this.map.get("players")[guildId],
     this,
@@ -449,8 +466,18 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     paused: false,
     loop: null,
     autoPlay: false,
+		node: this.leastUsedNodes
    };
    this.map.set("players", players_map);
+	 if (this.options.custom.player) { 
+		 this.emit('debug', '[ @Moonlink/Custom ]: the player is customized')
+		 return new this.options.custom.player(
+    players_map[data.guildId],
+    this,
+    this.map,
+    this.leastUsedNodes.rest
+   )
+	 }
    return new MoonlinkPlayer(
     players_map[data.guildId],
     this,
@@ -458,11 +485,12 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     this.leastUsedNodes.rest
    );
   };
-
+  let all: any = this.map.get('players') ? this.map.get('players') : null;
   return {
    create: create.bind(this),
    get: get.bind(this),
    has: has.bind(this),
+	 all
   };
  }
 }

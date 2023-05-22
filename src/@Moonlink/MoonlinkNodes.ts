@@ -54,6 +54,8 @@ export class MoonlinkNode {
  public retryTime: number | null;
  public reconnectAtattempts: number | null;
  public reconnectTimeout: any;
+ public resumeKey: string | null;
+ public resumeTimeout: number;
  public calls: number;
  public retryAmount: number | null;
  public sendWs: Function;
@@ -71,9 +73,11 @@ export class MoonlinkNode {
   this.identifier = node.identifier || null;
   this.password = node.password || "youshallnotpass";
   this.calls = 0;
-  this.retryTime = 30000;
-  this.reconnectAtattempts = 0;
-  this.retryAmount = 5;
+  this.resumeKey = manager.options.resumeKey || null;
+  this.resumeTimeout = manager.options.resumeTimeout || 30000;
+  this.retryTime = this.manager.options.retryTime || 30000;
+  this.reconnectAtattempts = this.manager.options.reconnectAtattemps || 0;
+  this.retryAmount = this.manager.options.retryAmount || 5;
   this.db = new MoonlinkDatabase();
   this.rest = new MoonlinkRest(this.manager, this);
   this.stats = {
@@ -158,6 +162,7 @@ export class MoonlinkNode {
    "User-Id": this.manager.clientId,
    "Client-Name": this.options.clientName,
   };
+      if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
   this.socketUri = `ws${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
   }${this.port ? `:${this.port}` : ":443"}${
@@ -182,7 +187,7 @@ export class MoonlinkNode {
   this.ws.on("message", this.message.bind(this));
   this.ws.on("error", this.error.bind(this));
  }
- protected open(): void {
+ protected async open(): Promise<void> {
   if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
   this.manager.emit(
    "debug",
@@ -227,7 +232,7 @@ export class MoonlinkNode {
   this.manager.emit("nodeClose", this, code, reason);
   this.isConnected = false;
  }
- protected message(data: Buffer | string): void {
+ protected async message(data: Buffer | string): Promise<void> {
   if (Array.isArray(data)) data = Buffer.concat(data);
   else if (data instanceof ArrayBuffer) data = Buffer.from(data);
 
@@ -245,6 +250,23 @@ export class MoonlinkNode {
       this.resumed ? ` session was resumed, ` : ``
      } session is currently ${this.sessionId}`
     );
+			      if (this.manager.options.resumeKey) { 
+         this.rest.patch(`sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout }) 
+         this.manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink` 
+         ); 
+						}
+      if (this.manager.options.autoResume) {
+       let obj = this.manager.map.get('players') || [];
+       const players = Object.keys(obj);
+       for (const player of players) { 
+         if (obj[player].node === this) { 
+					 await this.manager.attemptConnection(obj[player].guildId);
+					 this.manager.emit('playerResume', this.manager.players.get(obj[player].guildId))
+           this.manager.players.get(obj[player].guildId).restart();
+         }
+			 }
+    }
+						
     break;
    case "stats":
     delete payload.op;

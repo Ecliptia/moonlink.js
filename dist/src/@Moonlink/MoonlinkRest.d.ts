@@ -33,6 +33,6 @@ export declare class MoonlinkRest {
     destroy(guildId: string): Promise<object>;
     get(endpoint: Endpoint): Promise<object>;
     post(endpoint: Endpoint, data: restOptions): Promise<object>;
-    patch(endpoint: Endpoint, data: restOptions): Promise<object>;
+    patch(endpoint: Endpoint, data: restOptions | any): Promise<object>;
     delete(endpoint: Endpoint): Promise<object>;
 }

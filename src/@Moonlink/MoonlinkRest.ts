@@ -74,7 +74,7 @@ export class MoonlinkRest {
   });
   return req;
  }
- public async patch(endpoint: Endpoint, data: restOptions): Promise<object> {
+ public async patch(endpoint: Endpoint, data: restOptions | any): Promise<object> {
 	 if(!this.url) this.url = this.node.restUri;
   let req: any = await makeRequest(
    this.url + endpoint,
