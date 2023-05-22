@@ -51,6 +51,8 @@ export declare class MoonlinkNode {
     retryTime: number | null;
     reconnectAtattempts: number | null;
     reconnectTimeout: any;
+    resumeKey: string | null;
+    resumeTimeout: number;
     calls: number;
     retryAmount: number | null;
     sendWs: Function;
@@ -61,10 +63,10 @@ export declare class MoonlinkNode {
     request(endpoint: string, params: any): Promise<object>;
     init(): void;
     connect(): Promise<any>;
-    protected open(): void;
+    protected open(): Promise<void>;
     private reconnect;
     protected close(code: number, reason: any): void;
-    protected message(data: Buffer | string): void;
+    protected message(data: Buffer | string): Promise<void>;
     protected error(err: Error): void;
     protected handleEvent(payload: any): Promise<any>;
 }

@@ -32,6 +32,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             typeof options.clientName !== "string" &&
             typeof options.clientName !== "undefined")
             throw new Error('[ @Moonlink/Manager ]: clientName option of the "options" parameter must be in string format');
+        if (!options.custom)
+            options.custom = {};
         if (options.plugins) {
             options.plugins.forEach(plugin => {
                 if (!(plugin instanceof Plugin_1.Plugin))
@@ -208,7 +210,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         if (!voiceServer[guildId])
             return false;
         this.emit("debug", `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`);
-        if (this.leastUsedNodes.version.replace(/\./g, "") <= "370")
+        if (this.leastUsedNodes.version.replace(/\./g, "") <= "374")
             this.leastUsedNodes.sendWs({
                 op: "voiceUpdate",
                 sessionId: voiceStates[guildId].session_id,
@@ -242,6 +244,10 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 throw new Error('[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string');
             if (!has(guildId))
                 return null;
+            if (this.options.custom.player) {
+                this.emit('debug', '[ @Moonlink/Custom ]: the player is customized');
+                return new this.options.custom.player(this.map.get("players")[guildId], this, this.map, this.leastUsedNodes.rest);
+            }
             return new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[guildId], this, this.map, this.leastUsedNodes.rest);
         };
         let create = (data) => {
@@ -267,14 +273,21 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 paused: false,
                 loop: null,
                 autoPlay: false,
+                node: this.leastUsedNodes
             };
             this.map.set("players", players_map);
+            if (this.options.custom.player) {
+                this.emit('debug', '[ @Moonlink/Custom ]: the player is customized');
+                return new this.options.custom.player(players_map[data.guildId], this, this.map, this.leastUsedNodes.rest);
+            }
             return new MoonlinkPlayers_1.MoonlinkPlayer(players_map[data.guildId], this, this.map, this.leastUsedNodes.rest);
         };
+        let all = this.map.get('players') ? this.map.get('players') : null;
         return {
             create: create.bind(this),
             get: get.bind(this),
             has: has.bind(this),
+            all
         };
     }
 }

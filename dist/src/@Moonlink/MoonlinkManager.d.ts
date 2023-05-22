@@ -18,10 +18,20 @@ export interface spotifyOptions {
     clientId?: string;
     clientSecret?: string;
 }
+export interface customOptions {
+    player?: Constructor<MoonlinkPlayer>;
+}
 export interface Options {
     clientName?: string;
-    plugins: Plugin[];
-    spotify: spotifyOptions;
+    reconnectAtattemps?: number;
+    retryTime?: number;
+    retryAmount?: number;
+    resumeKey?: string;
+    resumeTimeout?: number;
+    autoResume?: boolean;
+    plugins?: Plugin[];
+    spotify?: spotifyOptions;
+    custom?: customOptions;
 }
 export interface createOptions {
     guildId: string;
@@ -85,6 +95,7 @@ export interface playersOptions {
     create: (data: createOptions) => MoonlinkPlayer;
     get: (guildId: string) => MoonlinkPlayer | null;
     has: (guildId: string) => boolean;
+    all: any;
 }
 export interface PlaylistInfo {
     name: string;
@@ -117,6 +128,7 @@ export interface MoonlinkEvents {
     trackError: (player: MoonlinkPlayer, track: any) => void;
     queueEnd: (player: MoonlinkPlayer, track?: any) => void;
     playerDisconnect: (player: MoonlinkPlayer) => void;
+    playerResume: (player: MoonlinkPlayer) => void;
     playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }

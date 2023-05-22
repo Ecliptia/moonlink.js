@@ -48,7 +48,7 @@ export class MoonlinkPlayer {
   this.guildId = infos.guildId;
   this.textChannel = infos.textChannel;
   this.voiceChannel = infos.voiceChannel;
-  this.autoPlay = infos.autoPlay || null;
+  this.autoPlay = infos.autoPlay
   this.connected = infos.connected || null;
   this.playing = infos.playing || null;
   this.paused = infos.paused || null;
@@ -144,6 +144,41 @@ export class MoonlinkPlayer {
   this.map.set("players", players);
   return true;
  }
+  public async restart(): Promise<void> {
+	 if(!this.current && !this.queue.size) return;
+	 if(!this.current) this.play();
+	 if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
+   this.sendWs({
+    op: "play",
+    guildId: this.guildId,
+    channelId: this.textChannel,
+	  position: this.current.position,
+    track: this.current.track
+     ? this.current.track
+     : this.current.encoded
+     ? this.current.encoded
+     : this.current.trackEncoded
+     ? this.current.trackEncoded
+     : null,
+    volume: this.volume,
+    pause: false,
+   });
+  else
+   await this.rest.update({
+    guildId: this.guildId,
+    data: {
+     encodedTrack: this.current.track
+      ? this.current.track
+      : this.current.encoded
+      ? this.current.encoded
+      : this.current.trackEncoded
+      ? this.current.trackEncoded
+      : null,
+	   position: this.current.position,
+     volume: this.volume,
+    },
+   })
+ }
  public disconnect(): boolean {
   this.payload(
    this.guildId,
@@ -182,7 +217,7 @@ export class MoonlinkPlayer {
   this.current = current[this.guildId];
   this.map.set("current", current);
   this.queue.db.set(`queue.${this.guildId}`, queue);
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "play",
     guildId: this.guildId,
@@ -194,7 +229,7 @@ export class MoonlinkPlayer {
      : data.trackEncoded
      ? data.trackEncoded
      : null,
-    volume: 90,
+    volume: this.volume,
     pause: false,
    });
   else
@@ -208,13 +243,13 @@ export class MoonlinkPlayer {
       : data.trackEncoded
       ? data.trackEncoded
       : null,
-     volume: 90,
+     volume: this.volume,
     },
-   });
+   })
  }
  public async pause(): Promise<boolean> {
   if (this.paused) return true;
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "pause",
     guildId: this.guildId,
@@ -239,7 +274,7 @@ export class MoonlinkPlayer {
  }
  public async resume(): Promise<boolean> {
   if (this.playing) return true;
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "pause",
     guildId: this.guildId,
@@ -264,7 +299,7 @@ export class MoonlinkPlayer {
  }
  public async stop(): Promise<boolean> {
   if (!this.queue.size) {
-   if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+   if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
     this.sendWs({
      op: "stop",
      guildId: this.guildId,
@@ -277,7 +312,7 @@ export class MoonlinkPlayer {
    return true;
   } else {
    delete this.map.get(`players`)[this.guildId];
-   if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+   if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
     this.sendWs({
      op: "stop",
      guildId: this.guildId,
@@ -309,7 +344,7 @@ export class MoonlinkPlayer {
    throw new Error(
     "[ @Moonlink/Player ]: cannot change volume while player is not playing"
    );
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "volume",
     guildId: this.guildId,
@@ -354,7 +389,7 @@ export class MoonlinkPlayer {
  }
  public async destroy(): Promise<boolean> {
   if (this.connected) this.disconnect();
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "destroy",
     guildId: this.guildId,
@@ -379,7 +414,7 @@ export class MoonlinkPlayer {
    throw new Error(
     '[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"'
    );
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "seek",
     position: position,
@@ -413,7 +448,7 @@ export class MoonlinkPlayer {
   currents[this.guildId] = data;
   this.map.set("current", currents);
   this.queue.db.set(`queue.${this.guildId}`, queue);
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "370")
+  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
    this.sendWs({
     op: "play",
     guildId: this.guildId,
