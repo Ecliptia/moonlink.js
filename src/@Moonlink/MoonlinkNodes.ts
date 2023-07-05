@@ -157,12 +157,13 @@ export class MoonlinkNode {
     },
    }
   );
+	 if((this.version as string).replace(/\./g, '') < '400') console.log('[ Moonlink/Upgrade ]: this version of moonlink.js is already being refactored for lavalink v4, errors occur when using outdated lavalinks and among others, update lavalink, or use an older version!')
   let headers: any = {
    Authorization: this.password,
    "User-Id": this.manager.clientId,
    "Client-Name": this.options.clientName,
   };
-      if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
+      if (this.resumeKey) headers["Session-Id"] = this.resumeKey;
   this.socketUri = `ws${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
   }${this.port ? `:${this.port}` : ":443"}${
@@ -339,7 +340,7 @@ export class MoonlinkNode {
      playing: false,
     };
     this.map.set("players", players);
-    if (["LOAD_FAILED", "CLEAN_UP"].includes(payload.reason)) {
+    if (["loadFailed", "cleanup"].includes(payload.reason)) {
      if (!queue) {
       this.db.delete(`queue.${payload.guildId}`);
       return this.manager.emit("queueEnd", player, track);
@@ -347,7 +348,7 @@ export class MoonlinkNode {
      player.play();
      return;
     }
-    if (payload.reason === "REPLACED") {
+    if (payload.reason === "replaced") {
      this.manager.emit("trackEnd", player, track, payload);
      return;
     }
@@ -363,13 +364,7 @@ export class MoonlinkNode {
        await this.rest.update({
         guildId: payload.guildId,
         data: {
-         encodedTrack: track.track
-          ? track.track
-          : track.encoded
-          ? track.encoded
-          : track.trackEncoded
-          ? track.trackEncoded
-          : null,
+         encodedTrack: track.encoded
         },
        });
       return;
@@ -389,13 +384,7 @@ export class MoonlinkNode {
        await this.rest.update({
         guildId: payload.guildId,
         data: {
-         encodedTrack: track.track
-          ? track.track
-          : track.encoded
-          ? track.encoded
-          : track.trackEncoded
-          ? track.trackEncoded
-          : null,
+         encodedTrack: track.encoded
         },
        });
       return;
@@ -418,7 +407,7 @@ export class MoonlinkNode {
      if (
       !req ||
       !req.tracks ||
-      ["LOAD_FAILED", "NO_MATCHES"].includes(req.loadType)
+      ["loadFailed", "cleanup"].includes(req.loadType)
      )
       return player.stop();
      let data: any =

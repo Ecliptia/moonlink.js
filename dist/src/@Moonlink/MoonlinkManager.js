@@ -185,13 +185,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 opts = query;
             let params = new URLSearchParams({ identifier: opts });
             let res = await this.leastUsedNodes.request("loadtracks", params);
-            if (res.loadType === "LOAD_FAILED" || res.loadType === "NO_MATCHES") {
+            if (res.loadType === "error" || res.loadType === "empty") {
                 this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
                 return resolve(res);
             }
             else {
-                const tracks = res.tracks.map((x) => new MoonlinkTrack_1.MoonlinkTrack(x));
-                if (res.loadType === "PLAYLIST_LOADED") {
+                const tracks = res.data.map((x) => new MoonlinkTrack_1.MoonlinkTrack(x));
+                if (res.loadType === "playlist") {
                     res.playlistInfo.duration = tracks.reduce((acc, cur) => acc + cur.duration, 0);
                 }
                 return resolve({

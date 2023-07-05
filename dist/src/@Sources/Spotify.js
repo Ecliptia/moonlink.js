@@ -105,8 +105,8 @@ class Spotify {
             : playlist.tracks.items;
         const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x.track)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: playlist.name ? { name: playlist.name } : {},
         };
     }
@@ -117,8 +117,8 @@ class Spotify {
             : album.tracks.items;
         const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: album.name ? { name: album.name } : {},
         };
     }
@@ -130,8 +130,8 @@ class Spotify {
             : data.tracks;
         const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: artist.name ? { name: artist.name } : {},
         };
     }
@@ -139,8 +139,8 @@ class Spotify {
         const data = await this.request(`/tracks/${id}`);
         const unresolvedTrack = await this.buildUnresolved(data);
         return {
-            loadType: "TRACK_LOADED",
-            tracks: [unresolvedTrack],
+            loadType: "track",
+            data: [unresolvedTrack],
             playlistInfo: {},
         };
     }
@@ -150,8 +150,8 @@ class Spotify {
         const data = await this.request(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
         const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "TRACK_LOADED",
-            tracks: unresolvedTracks,
+            loadType: "track",
+            data: unresolvedTracks,
             playlistInfo: {},
         };
     }
@@ -159,16 +159,8 @@ class Spotify {
         if (!track)
             throw new ReferenceError("The Spotify track object was not provided");
         let res = await this.manager.search(`${track.artists ? track.artists[0]?.name : "Unknown Artist"} ${track.name}`);
-        let enTrack;
-        res.tracks[0].encodedTrack
-            ? (enTrack = res.tracks[0].encodedTrack)
-            : res.tracks[0].encoded
-                ? (enTrack = res.tracks[0].encoded)
-                : (enTrack = res.tracks[0].track);
         return new MoonlinkTrack_1.MoonlinkTrack({
-            track: enTrack,
-            encoded: null,
-            trackEncoded: null,
+            encoded: res.data[0].encoded,
             info: {
                 sourceName: "spotify",
                 identifier: track.id,
@@ -179,6 +171,7 @@ class Spotify {
                 title: track.name,
                 uri: `https://open.spotify.com/track/${track.id}`,
                 position: 0,
+                isrc: res.data[0].isrc
             },
         });
     }

@@ -9,17 +9,15 @@ export interface TrackInfo {
     uri?: string;
     artworkUrl?: string | null;
     sourceName: string;
+    isrc?: string;
 }
 export interface MoonlinkTrackOptions {
     info: TrackInfo;
-    track?: string;
     encoded?: string;
-    trackEncoded: string;
+    pluginInfo?: object;
 }
 export declare class MoonlinkTrack {
-    track: string | null;
     encoded: string | null;
-    trackEncoded: string | null;
     identifier: string;
     title: string;
     author: string;
@@ -30,7 +28,8 @@ export declare class MoonlinkTrack {
     isStream: boolean;
     sourceName: string;
     requester: any;
+    artworkUrl: string;
+    isrc: string;
     constructor(data: MoonlinkTrackOptions);
-    get thumbnail(): string | null;
     setRequester(data: any): void;
 }

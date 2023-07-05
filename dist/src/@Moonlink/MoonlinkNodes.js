@@ -121,13 +121,15 @@ class MoonlinkNode {
                 Authorization: this.password,
             },
         });
+        if (this.version.replace(/\./g, '') < '400')
+            console.log('[ Moonlink/Upgrade ]: this version of moonlink.js is already being refactored for lavalink v4, errors occur when using outdated lavalinks and among others, update lavalink, or use an older version!');
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.clientId,
             "Client-Name": this.options.clientName,
         };
         if (this.resumeKey)
-            headers["Resume-Key"] = this.resumeKey;
+            headers["Session-Id"] = this.resumeKey;
         this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}${this.version.replace(/\./g, "") >= "370"
             ? this.version.replace(/\./g, "") >= "400"
                 ? "/v4/websocket"
@@ -274,7 +276,7 @@ class MoonlinkNode {
                     playing: false,
                 };
                 this.map.set("players", players);
-                if (["LOAD_FAILED", "CLEAN_UP"].includes(payload.reason)) {
+                if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
                         this.db.delete(`queue.${payload.guildId}`);
                         return this.manager.emit("queueEnd", player, track);
@@ -282,7 +284,7 @@ class MoonlinkNode {
                     player.play();
                     return;
                 }
-                if (payload.reason === "REPLACED") {
+                if (payload.reason === "replaced") {
                     this.manager.emit("trackEnd", player, track, payload);
                     return;
                 }
@@ -298,13 +300,7 @@ class MoonlinkNode {
                             await this.rest.update({
                                 guildId: payload.guildId,
                                 data: {
-                                    encodedTrack: track.track
-                                        ? track.track
-                                        : track.encoded
-                                            ? track.encoded
-                                            : track.trackEncoded
-                                                ? track.trackEncoded
-                                                : null,
+                                    encodedTrack: track.encoded
                                 },
                             });
                         return;
@@ -323,13 +319,7 @@ class MoonlinkNode {
                             await this.rest.update({
                                 guildId: payload.guildId,
                                 data: {
-                                    encodedTrack: track.track
-                                        ? track.track
-                                        : track.encoded
-                                            ? track.encoded
-                                            : track.trackEncoded
-                                                ? track.trackEncoded
-                                                : null,
+                                    encodedTrack: track.encoded
                                 },
                             });
                         return;
@@ -349,7 +339,7 @@ class MoonlinkNode {
                     let req = await this.manager.search(uri);
                     if (!req ||
                         !req.tracks ||
-                        ["LOAD_FAILED", "NO_MATCHES"].includes(req.loadType))
+                        ["loadFailed", "cleanup"].includes(req.loadType))
                         return player.stop();
                     let data = req.tracks[Math.floor(Math.random() * Math.floor(req.tracks.length))];
                     player.queue.add(data);

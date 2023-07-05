@@ -2,9 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkTrack = void 0;
 class MoonlinkTrack {
-    track;
     encoded;
-    trackEncoded;
     identifier;
     title;
     author;
@@ -15,14 +13,10 @@ class MoonlinkTrack {
     isStream;
     sourceName;
     requester;
+    artworkUrl;
+    isrc;
     constructor(data) {
-        data.track
-            ? (this.track = data.track)
-            : data.encoded
-                ? (this.encoded = data.encoded)
-                : data.trackEncoded
-                    ? (this.trackEncoded = data.trackEncoded)
-                    : null;
+        this.encoded = data.encoded;
         this.title = data.info.title;
         this.author = data.info.author;
         this.url = data.info.uri;
@@ -33,11 +27,8 @@ class MoonlinkTrack {
         this.isStream = Boolean(data.info.isStream);
         this.requester = null;
         this.sourceName = data.info.sourceName || null;
-    }
-    get thumbnail() {
-        if (this.sourceName === "youtube")
-            return `https://img.youtube.com/vi/${this.identifier}/sddefault.jpg`;
-        return null;
+        this.artworkUrl = data.info.artworkUrl;
+        this.isrc = data.info.isrc;
     }
     setRequester(data) {
         this.requester = data;
