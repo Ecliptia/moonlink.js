@@ -43,8 +43,8 @@ class Deezer {
         const playlist = await this.request(`/playlist/${id}`);
         const unresolvedPlaylistTracks = await Promise.all(playlist.tracks.data.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: playlist.title ? { name: playlist.title } : {},
         };
     }
@@ -52,8 +52,8 @@ class Deezer {
         const album = await this.request(`/albums/${id}`);
         const unresolvedPlaylistTracks = await Promise.all(album.track.data.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: album.name ? { name: album.name } : {},
         };
     }
@@ -71,8 +71,8 @@ class Deezer {
         }
         const unresolvedPlaylistTracks = await Promise.all(artist.data.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "PLAYLIST_LOADED",
-            tracks: unresolvedPlaylistTracks,
+            loadType: "playlist",
+            data: unresolvedPlaylistTracks,
             playlistInfo: artist.name ? { name: artist.name } : {},
         };
     }
@@ -80,8 +80,8 @@ class Deezer {
         const data = await this.request(`/tracks/${id}`);
         const unresolvedTrack = await this.buildUnresolved(data);
         return {
-            loadType: "TRACK_LOADED",
-            tracks: [unresolvedTrack],
+            loadType: "track",
+            data: [unresolvedTrack],
             playlistInfo: {},
         };
     }
@@ -89,35 +89,29 @@ class Deezer {
         if (this.check(query))
             return this.resolve(query);
         const data = await this.request(`/search?q="${query}"`);
-        const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x)));
+        const unresolvedTracks = await Promise.all(data.data.map((x) => this.buildUnresolved(x)));
         return {
-            loadType: "TRACK_LOADED",
-            tracks: unresolvedTracks,
+            loadType: "track",
+            data: unresolvedTracks,
             playlistInfo: {},
         };
     }
     async buildUnresolved(track) {
         let res = await this.manager.search(`${track.artist ? track.artist.name : "Unknown"} ${track.title}`);
-        let enTrack;
-        res.tracks[0].encodedTrack
-            ? (enTrack = res.tracks[0].encodedTrack)
-            : res.tracks[0].encoded
-                ? (enTrack = res.tracks[0].encoded)
-                : (enTrack = res.tracks[0].track);
         return new MoonlinkTrack_1.MoonlinkTrack({
-            track: enTrack,
-            encoded: null,
-            trackEncoded: null,
+            encoded: res.data[0].encoded,
             info: {
                 sourceName: "deezer",
                 identifier: track.id,
                 isSeekable: true,
                 author: track.artist ? track.artist.name : "Unknown",
-                length: res.tracks[0].duration,
+                artworkUrl: track.md5_image,
+                length: res.data[0].duration,
                 isStream: false,
                 title: track.title,
                 uri: track.link,
                 position: 0,
+                isrc: res.data[0].isrc,
             },
         });
     }

@@ -132,8 +132,8 @@ export class Spotify {
    limitedTracks.map((x) => this.buildUnresolved(x.track))
   );
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: playlist.name ? { name: playlist.name } : {},
   };
  }
@@ -148,8 +148,8 @@ export class Spotify {
    limitedTracks.map((x) => this.buildUnresolved(x))
   );
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: album.name ? { name: album.name } : {},
   };
  }
@@ -168,8 +168,8 @@ export class Spotify {
   );
 
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: artist.name ? { name: artist.name } : {},
   };
  }
@@ -178,8 +178,8 @@ export class Spotify {
   const unresolvedTrack = await this.buildUnresolved(data);
 
   return {
-   loadType: "TRACK_LOADED",
-   tracks: [unresolvedTrack],
+   loadType: "track",
+   data: [unresolvedTrack],
    playlistInfo: {},
   };
  }
@@ -195,8 +195,8 @@ export class Spotify {
    data.tracks.items.map((x) => this.buildUnresolved(x))
   );
   return {
-   loadType: "TRACK_LOADED",
-   tracks: unresolvedTracks,
+   loadType: "track",
+   data: unresolvedTracks,
    playlistInfo: {},
   };
  }
@@ -207,16 +207,8 @@ export class Spotify {
    `${track.artists ? track.artists[0]?.name : "Unknown Artist"} ${track.name}`
   );
 
-  let enTrack: any;
-  res.tracks[0].encodedTrack
-   ? (enTrack = res.tracks[0].encodedTrack)
-   : res.tracks[0].encoded
-   ? (enTrack = res.tracks[0].encoded)
-   : (enTrack = res.tracks[0].track);
   return new MoonlinkTrack({
-   track: enTrack,
-   encoded: null,
-   trackEncoded: null,
+   encoded: res.data[0].encoded,
    info: {
     sourceName: "spotify",
     identifier: track.id,
@@ -227,6 +219,7 @@ export class Spotify {
     title: track.name,
     uri: `https://open.spotify.com/track/${track.id}`,
     position: 0,
+		isrc: res.data[0].isrc
    },
   });
  }

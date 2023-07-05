@@ -56,8 +56,8 @@ export class Deezer {
    playlist.tracks.data.map((x) => this.buildUnresolved(x))
   );
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: playlist.title ? { name: playlist.title } : {},
   };
  }
@@ -68,8 +68,8 @@ export class Deezer {
    album.track.data.map((x) => this.buildUnresolved(x))
   );
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: album.name ? { name: album.name } : {},
   };
  }
@@ -89,8 +89,8 @@ export class Deezer {
   );
 
   return {
-   loadType: "PLAYLIST_LOADED",
-   tracks: unresolvedPlaylistTracks,
+   loadType: "playlist",
+   data: unresolvedPlaylistTracks,
    playlistInfo: artist.name ? { name: artist.name } : {},
   };
  }
@@ -99,8 +99,8 @@ export class Deezer {
   const unresolvedTrack = await this.buildUnresolved(data);
 
   return {
-   loadType: "TRACK_LOADED",
-   tracks: [unresolvedTrack],
+   loadType: "track",
+   data: [unresolvedTrack],
    playlistInfo: {},
   };
  }
@@ -109,11 +109,11 @@ export class Deezer {
 
   const data = await this.request(`/search?q="${query}"`);
   const unresolvedTracks = await Promise.all(
-   data.tracks.items.map((x) => this.buildUnresolved(x))
+   data.data.map((x) => this.buildUnresolved(x))
   );
   return {
-   loadType: "TRACK_LOADED",
-   tracks: unresolvedTracks,
+   loadType: "track",
+   data: unresolvedTracks,
    playlistInfo: {},
   };
  }
@@ -121,26 +121,20 @@ export class Deezer {
   let res: any = await this.manager.search(
    `${track.artist ? track.artist.name : "Unknown"} ${track.title}`
   );
-  let enTrack: any;
-  res.tracks[0].encodedTrack
-   ? (enTrack = res.tracks[0].encodedTrack)
-   : res.tracks[0].encoded
-   ? (enTrack = res.tracks[0].encoded)
-   : (enTrack = res.tracks[0].track);
   return new MoonlinkTrack({
-   track: enTrack,
-   encoded: null,
-   trackEncoded: null,
+   encoded: res.data[0].encoded,
    info: {
     sourceName: "deezer",
     identifier: track.id,
     isSeekable: true,
     author: track.artist ? track.artist.name : "Unknown",
-    length: res.tracks[0].duration,
+		artworkUrl: track.md5_image,
+    length: res.data[0].duration,
     isStream: false,
     title: track.title,
     uri: track.link,
     position: 0,
+		isrc: res.data[0].isrc,
    },
   });
  }

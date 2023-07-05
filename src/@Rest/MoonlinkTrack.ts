@@ -9,17 +9,15 @@ export interface TrackInfo {
  uri?: string;
  artworkUrl?: string | null;
  sourceName: string;
+ isrc?: string;
 }
 export interface MoonlinkTrackOptions {
  info: TrackInfo;
- track?: string;
  encoded?: string;
- trackEncoded: string;
+ pluginInfo?: object;
 }
 export class MoonlinkTrack {
- public track: string | null;
  public encoded: string | null;
- public trackEncoded: string | null;
  public identifier: string;
  public title: string;
  public author: string;
@@ -30,14 +28,10 @@ export class MoonlinkTrack {
  public isStream: boolean;
  public sourceName: string;
  public requester: any;
+ public artworkUrl: string;
+ public isrc: string;
  constructor(data: MoonlinkTrackOptions) {
-  data.track
-   ? (this.track = data.track)
-   : data.encoded
-   ? (this.encoded = data.encoded)
-   : data.trackEncoded
-   ? (this.trackEncoded = data.trackEncoded)
-   : null;
+  this.encoded = data.encoded
   this.title = data.info.title;
   this.author = data.info.author;
   this.url = data.info.uri;
@@ -48,11 +42,8 @@ export class MoonlinkTrack {
   this.isStream = Boolean(data.info.isStream);
   this.requester = null;
   this.sourceName = data.info.sourceName || null;
- }
- get thumbnail(): string | null {
-  if (this.sourceName === "youtube")
-   return `https://img.youtube.com/vi/${this.identifier}/sddefault.jpg`;
-  return null;
+	this.artworkUrl = data.info.artworkUrl;
+	this.isrc = data.info.isrc;
  }
  setRequester(data: any) {
   this.requester = data;
