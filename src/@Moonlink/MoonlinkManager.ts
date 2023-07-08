@@ -68,17 +68,16 @@ export interface VoicePacket {
 }
 
 export type LoadType =
- | "TRACK_LOADED"
- | "PLAYLIST_LOADED"
- | "SEARCH_RESULT"
- | "LOAD_FAILED"
- | "NO_MATCHES";
+ | "track"
+ | "playlist"
+ | "search"
+ | "empty"
+ | "error";
 
 export interface TrackData {
- track?: string;
- trackEncoded?: string;
  encoded?: string;
  info: TrackDataInfo;
+ pluginInfo: object;
 }
 
 export interface TrackDataInfo {
@@ -128,7 +127,7 @@ export interface PlaylistInfo {
 }
 
 export interface LavalinkResult {
- tracks: TrackData[];
+ data: TrackData[];
  loadType: LoadType;
  exception?: {
   message: string;
@@ -177,6 +176,19 @@ export declare interface MoonlinkManager {
   listener: MoonlinkEvents[K]
  ): this;
 }
+
+/**
+ * Creates a new MoonlinkManager instance.
+ * @param {Nodes[]} nodes - An array of objects containing information about the Lavalink nodes.
+ * @param {Options} options - An object containing options for the MoonlinkManager.
+ * @param {Function} sPayload - A function to send payloads to the Lavalink nodes.
+ * @returns {MoonlinkManager} - The new MoonlinkManager instance.
+ * @throws {Error} - If the nodes parameter is empty or not an array.
+ * @throws {Error} - If there are no parameters with node information in the nodes object.
+ * @throws {Error} - If the clientName option is not set correctly.
+ * @throws {RangeError} - If a plugin is not compatible.
+ */
+
 export class MoonlinkManager extends EventEmitter {
  public readonly _nodes: Nodes[];
  public readonly _sPayload: Function;
@@ -225,6 +237,14 @@ export class MoonlinkManager extends EventEmitter {
   this.sendWs;
   this.version = require("../../index").version;
  }
+
+ /**
+ * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
+ * @param {string} clientId - The ID of the Discord client.
+ * @returns {MoonlinkManager} - The MoonlinkManager instance.
+ * @throws {TypeError} - If the clientId option is empty.
+ */
+	
  public init(clientId: string): this {
   if (this.initiated) return this;
   if (!clientId)
@@ -234,6 +254,16 @@ export class MoonlinkManager extends EventEmitter {
   this.initiated = true;
   return this;
  }
+
+	/**
+ * Adds a new Lavalink node to the MoonlinkManager.
+ * @param {Node} node - An object containing information about the Lavalink node.
+ * @returns {Node} - The added node.
+ * @throws {Error} - If the host option is not configured correctly.
+ * @throws {Error} - If the password option is not set correctly.
+ * @throws {Error} - If the port option is not set correctly.
+ */
+	
  public addNode(node: Nodes): Nodes {
   const new_node: MoonlinkNode = new MoonlinkNode(this, node, this.map);
   if (node.identifier) this.nodes.set(node.identifier, new_node);
@@ -241,6 +271,14 @@ export class MoonlinkManager extends EventEmitter {
   new_node.init();
   return new_node;
  }
+
+/**
+ * Removes a Lavalink node from the MoonlinkManager.
+ * @param {string} name - The name or identifier of the node to remove.
+ * @returns {boolean} - True if the node is removed, false otherwise.
+ * @throws {Error} - If the name option is empty.
+ */
+	
  public removeNode(name: string): boolean {
 if(!name) throw new Error('[ @Moonlink/Manager ]: option "name" is empty')
 	 let node = this.nodes.get(name);
@@ -299,6 +337,13 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     return this.attemptConnection(update.guild_id);
 	}
 }
+	/**
+ * Searches for tracks using the specified query and source.
+ * @param {string | SearchQuery} options - The search query or an object containing the search options.
+ * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
+ * @throws {Error} - If the search option is empty or not in the correct format.
+ */
+
  public async search(options: string | SearchQuery): Promise<SearchResult> {
   return new Promise(async (resolve) => {
    if (!options)
@@ -368,13 +413,21 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     );
     return resolve(res);
    } else {
-    const tracks = res.data.map((x) => new MoonlinkTrack(x));
-    if (res.loadType === "playlist") {
-     res.playlistInfo.duration = tracks.reduce(
-      (acc, cur) => acc + cur.duration,
+		if(res.loadType === "track") {
+      res.data = [ res.data ]
+		}
+		 if (res.loadType === "playlist") {
+		 res.playlistInfo = {};
+     res.playlistInfo.duration = res.data.tracks.reduce(
+      (acc, cur) => acc + cur.length,
       0
      );
+			res.playlistInfo.name = res.data.name;
+			res.playlistInfo.selectedTrack = res.data.selectedTrack;
+			res.pluginInfo = res.data.pluginInfo;
+			res.data = [ ...res.data.tracks ];
     }
+		 const tracks = res.data.map((x) => new MoonlinkTrack(x));
     return resolve({
      ...res,
      tracks,
@@ -392,14 +445,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    "debug",
    `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`
   );
-  if ((this.leastUsedNodes.version as string).replace(/\./g, "") <= "374")
-   this.leastUsedNodes.sendWs({
-    op: "voiceUpdate",
-    sessionId: voiceStates[guildId].session_id,
-    guildId: voiceServer[guildId].event.guild_id,
-    event: voiceServer[guildId].event,
-   });
-   else await this.leastUsedNodes.rest.update({
+	 await this.leastUsedNodes.rest.update({
     guildId,
     data: {
      voice: {
@@ -435,6 +481,18 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     this.leastUsedNodes.rest
    );
   };
+
+/**
+ * Creates a new MoonlinkPlayer instance or gets an existing player for the specified guild.
+ * @param {createOptions} data - The options for creating the player.
+ * @returns {MoonlinkPlayer | null} - The MoonlinkPlayer instance or null if the guild does not have a player.
+ * @throws {Error} - If the data parameter is not an object.
+ * @throws {Error} - If the guildId option is empty or not a string.
+ * @throws {Error} - If the textChannel option is empty or not a string.
+ * @throws {Error} - If the voiceChannel option is empty or not a string.
+ * @throws {TypeError} - If the autoPlay option is not a boolean.
+ */
+	 
   let create: Function = (data: createOptions): MoonlinkPlayer => {
    if (typeof data !== "object")
     throw new Error('[ @Moonlink/Manager ]: parameter "data" is not an object');
