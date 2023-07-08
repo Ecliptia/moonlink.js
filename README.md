@@ -22,7 +22,7 @@ pnpm: pnpm install moonlink.js
 
 ## 🎲 Requirements
 
-> Requirements are, have a node above version `1.16 >==` support packages
+> Requirements are, have a node above version `1.16 >==` support packages, Requires version 4 lavalinks
 
 ## 📚 Getting started
 
@@ -84,16 +84,16 @@ client.on('interactionCreate', async(interaction) => {
     setMute: false
   }) // if the player is not connected it will connect to the voice channel
   let res = await client.moon.search(query) // will do a search on the video informed in the query
-  if (res.loadType === "LOAD_FAILED") {
+  if (res.loadType === "loadfailed") {
     return interaction.reply({
       content: `:x: Load failed. `
     }); //if there is an error when loading the tracks, it informs that there is an error
-  } else if (res.loadType === "NO_MATCHES") {
+  } else if (res.loadType === "empty") {
     return interaction.reply({
       content: `:x: No matches!`
     }); // nothing was found
   }
-  if (res.loadType === 'PLAYLIST_LOADED') {
+  if (res.loadType === 'playlist') {
     interaction.reply({
       content: `${res.playlistInfo.name} this playlist has been added to the waiting list`
     })

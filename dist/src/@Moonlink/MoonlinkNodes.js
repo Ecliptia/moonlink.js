@@ -121,8 +121,10 @@ class MoonlinkNode {
                 Authorization: this.password,
             },
         });
-        if (this.version.replace(/\./g, '') < '400')
-            console.log('[ Moonlink/Upgrade ]: this version of moonlink.js is already being refactored for lavalink v4, errors occur when using outdated lavalinks and among others, update lavalink, or use an older version!');
+        if (this.version.replace(/\./g, '') < '400') {
+            console.log('[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink');
+            return;
+        }
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.clientId,
@@ -130,16 +132,8 @@ class MoonlinkNode {
         };
         if (this.resumeKey)
             headers["Session-Id"] = this.resumeKey;
-        this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}${this.version.replace(/\./g, "") >= "370"
-            ? this.version.replace(/\./g, "") >= "400"
-                ? "/v4/websocket"
-                : "/v3/websocket"
-            : ""}`;
-        this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}${this.version.replace(/\./g, "") >= "370"
-            ? this.version.replace(/\./g, "") >= "400"
-                ? "/v4/"
-                : "/v3/"
-            : "/"}`;
+        this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
+        this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/`;
         this.ws = new ws_1.default(this.socketUri, { headers });
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
@@ -152,8 +146,7 @@ class MoonlinkNode {
         this.manager.emit("debug", '[ @Moonlink/Nodes ]: a new node said "hello world!"');
         this.manager.emit("nodeCreate", this);
         this.isConnected = true;
-        if (this.version.replace(/\./g, '') <= '374')
-            this.rest.url = this.restUri;
+        this.rest.url = this.restUri;
     }
     reconnect() {
         if (this.reconnectAtattempts >= this.retryAmount) {
@@ -290,38 +283,24 @@ class MoonlinkNode {
                 }
                 if (track && player.loop) {
                     if (player.loop == 1) {
-                        if (this.version.replace(/\./g, "") <= "370")
-                            this.sendWs({
-                                op: "play",
-                                track: track.track,
-                                guildId: payload.guildId,
-                            });
-                        else
-                            await this.rest.update({
-                                guildId: payload.guildId,
-                                data: {
-                                    encodedTrack: track.encoded
-                                },
-                            });
+                        await this.rest.update({
+                            guildId: payload.guildId,
+                            data: {
+                                encodedTrack: track.encoded
+                            },
+                        });
                         return;
                     }
                     if (player.loop == 2) {
                         this.manager.emit("trackEnd", player, track);
                         player.queue.add(track);
                         player.play();
-                        if (this.version.replace(/\./g, "") <= "370")
-                            this.sendWs({
-                                op: "play",
-                                track: track.track,
-                                guildId: payload.guildId,
-                            });
-                        else
-                            await this.rest.update({
-                                guildId: payload.guildId,
-                                data: {
-                                    encodedTrack: track.encoded
-                                },
-                            });
+                        await this.rest.update({
+                            guildId: payload.guildId,
+                            data: {
+                                encodedTrack: track.encoded
+                            },
+                        });
                         return;
                     }
                     else {

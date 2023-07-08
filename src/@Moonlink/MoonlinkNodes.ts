@@ -157,7 +157,10 @@ export class MoonlinkNode {
     },
    }
   );
-	 if((this.version as string).replace(/\./g, '') < '400') console.log('[ Moonlink/Upgrade ]: this version of moonlink.js is already being refactored for lavalink v4, errors occur when using outdated lavalinks and among others, update lavalink, or use an older version!')
+	 if((this.version as string).replace(/\./g, '') < '400') {
+		 console.log('[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink')
+		 return;
+	 }
   let headers: any = {
    Authorization: this.password,
    "User-Id": this.manager.clientId,
@@ -166,22 +169,10 @@ export class MoonlinkNode {
       if (this.resumeKey) headers["Session-Id"] = this.resumeKey;
   this.socketUri = `ws${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
-  }${this.port ? `:${this.port}` : ":443"}${
-   (this.version as string).replace(/\./g, "") >= "370"
-    ? (this.version as string).replace(/\./g, "") >= "400"
-      ? "/v4/websocket"
-      : "/v3/websocket"
-    : ""
-  }`;
+  }${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
   this.restUri = `http${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
-  }${this.port ? `:${this.port}` : ":443"}${
-   (this.version as string).replace(/\./g, "") >= "370"
-    ? (this.version as string).replace(/\./g, "") >= "400"
-      ? "/v4/"
-      : "/v3/"
-    : "/"
-  }`;
+  }${this.port ? `:${this.port}` : ":443"}/v4/`;
   this.ws = new WebSocket(this.socketUri, { headers });
   this.ws.on("open", this.open.bind(this));
   this.ws.on("close", this.close.bind(this));
@@ -196,7 +187,7 @@ export class MoonlinkNode {
   );
   this.manager.emit("nodeCreate", this);
   this.isConnected = true;
-	if((this.version as string).replace(/\./g, '') <= '374') this.rest.url = this.restUri
+  this.rest.url = this.restUri
  }
  private reconnect(): void {
   if (this.reconnectAtattempts >= this.retryAmount) {
@@ -354,13 +345,6 @@ export class MoonlinkNode {
     }
     if (track && player.loop) {
      if (player.loop == 1) {
-      if ((this.version as string).replace(/\./g, "") <= "370")
-       this.sendWs({
-        op: "play",
-        track: track.track,
-        guildId: payload.guildId,
-       });
-      else
        await this.rest.update({
         guildId: payload.guildId,
         data: {
@@ -373,15 +357,7 @@ export class MoonlinkNode {
       this.manager.emit("trackEnd", player, track);
       player.queue.add(track);
       player.play();
-
-      if ((this.version as string).replace(/\./g, "") <= "370")
-       this.sendWs({
-        op: "play",
-        track: track.track,
-        guildId: payload.guildId,
-       });
-      else
-       await this.rest.update({
+      await this.rest.update({
         guildId: payload.guildId,
         data: {
          encodedTrack: track.encoded

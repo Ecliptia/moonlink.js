@@ -60,12 +60,11 @@ export interface VoicePacket {
     t?: "VOICE_SERVER_UPDATE" | "VOICE_STATE_UPDATE";
     d: VoiceState | VoiceServer;
 }
-export type LoadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "LOAD_FAILED" | "NO_MATCHES";
+export type LoadType = "track" | "playlist" | "search" | "empty" | "error";
 export interface TrackData {
-    track?: string;
-    trackEncoded?: string;
     encoded?: string;
     info: TrackDataInfo;
+    pluginInfo: object;
 }
 export interface TrackDataInfo {
     title: string;
@@ -103,7 +102,7 @@ export interface PlaylistInfo {
     duration: number;
 }
 export interface LavalinkResult {
-    tracks: TrackData[];
+    data: TrackData[];
     loadType: LoadType;
     exception?: {
         message: string;
@@ -138,6 +137,17 @@ export declare interface MoonlinkManager {
     emit<K extends keyof MoonlinkEvents>(event: K, ...args: Parameters<MoonlinkEvents[K]>): boolean;
     off<K extends keyof MoonlinkEvents>(event: K, listener: MoonlinkEvents[K]): this;
 }
+/**
+ * Creates a new MoonlinkManager instance.
+ * @param {Nodes[]} nodes - An array of objects containing information about the Lavalink nodes.
+ * @param {Options} options - An object containing options for the MoonlinkManager.
+ * @param {Function} sPayload - A function to send payloads to the Lavalink nodes.
+ * @returns {MoonlinkManager} - The new MoonlinkManager instance.
+ * @throws {Error} - If the nodes parameter is empty or not an array.
+ * @throws {Error} - If there are no parameters with node information in the nodes object.
+ * @throws {Error} - If the clientName option is not set correctly.
+ * @throws {RangeError} - If a plugin is not compatible.
+ */
 export declare class MoonlinkManager extends EventEmitter {
     readonly _nodes: Nodes[];
     readonly _sPayload: Function;
@@ -151,11 +161,37 @@ export declare class MoonlinkManager extends EventEmitter {
     version: string;
     map: Map<string, any>;
     constructor(nodes: Nodes[], options: Options, sPayload: Function);
+    /**
+    * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
+    * @param {string} clientId - The ID of the Discord client.
+    * @returns {MoonlinkManager} - The MoonlinkManager instance.
+    * @throws {TypeError} - If the clientId option is empty.
+    */
     init(clientId: string): this;
+    /**
+ * Adds a new Lavalink node to the MoonlinkManager.
+ * @param {Node} node - An object containing information about the Lavalink node.
+ * @returns {Node} - The added node.
+ * @throws {Error} - If the host option is not configured correctly.
+ * @throws {Error} - If the password option is not set correctly.
+ * @throws {Error} - If the port option is not set correctly.
+ */
     addNode(node: Nodes): Nodes;
+    /**
+     * Removes a Lavalink node from the MoonlinkManager.
+     * @param {string} name - The name or identifier of the node to remove.
+     * @returns {boolean} - True if the node is removed, false otherwise.
+     * @throws {Error} - If the name option is empty.
+     */
     removeNode(name: string): boolean;
     get leastUsedNodes(): any;
     packetUpdate(packet: VoicePacket): Promise<boolean>;
+    /**
+ * Searches for tracks using the specified query and source.
+ * @param {string | SearchQuery} options - The search query or an object containing the search options.
+ * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
+ * @throws {Error} - If the search option is empty or not in the correct format.
+ */
     search(options: string | SearchQuery): Promise<SearchResult>;
     attemptConnection(guildId: string): Promise<boolean>;
     get players(): playersOptions;
