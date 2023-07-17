@@ -3,14 +3,16 @@
 ## Moonlink.js
 
 <img src='https://cdn.discordapp.com/attachments/1019979902411350016/1082098052808052816/114_Sem_Titulo_20230222123935.png'></img>
-[![NPM](https://nodei.co/npm/moonlink.js.png)]([https:/nodei.co/npm/moonlink.js)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm_source=github.com&utm_medium=referral&utm_content=1Lucas1apk/moonlink.js&utm_campaign=Badge_Grade) [![Downloads](https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF)](https://www.npmjs.com/package/moonlink.js) [![Version](https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF&label=version)](https://www.npmjs.com/package/moonlink.js) [![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js) ![vulnabilites](https://img.shields.io/snyk/vulnerabilities/npm/moonlink.js) ![node](https://img.shields.io/node/v/moonlink.js)
+[![NPM](https://nodei.co/npm/moonlink.js.png)](https://nodei.co/npm/moonlink.js)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm_source=github.com&utm_medium=referral&utm_content=1Lucas1apk/moonlink.js&utm_campaign=Badge_Grade) [![Downloads](https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF)](https://www.npmjs.com/package/moonlink.js) [![Version](https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF&label=version)](https://www.npmjs.com/package/moonlink.js) [![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js) ![node](https://img.shields.io/node/v/moonlink.js) [![Netlify Status](https://api.netlify.com/api/v1/badges/4f4a2a64-a8db-4db3-ad1d-0c4ac7274d0e/deploy-status)](https://app.netlify.com/sites/moonlinkjs/deploys)
 
-• Documentation
+Unleash the power of your imagination with Moonlink.js!
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/4f4a2a64-a8db-4db3-ad1d-0c4ac7274d0e/deploy-status)](https://app.netlify.com/sites/moonlinkjs/deploys)
-
-> MoonLink.js is a simple package for lavalink client, perfect for you to create your discord bot with songs, and very simple and easy to use.
+- Moonlink.js invites you to embark on a musical journey like no other, designed exclusively for Lavalink clients.
+- Step into a world of seamless communication and fluid interaction, where Moonlink.js takes your projects to new heights.
+- Experience the magic of TypeScript, as Moonlink.js provides full support for this dynamic language, fueling your creativity and productivity.
+- Immerse yourself in a thriving community of passionate developers and benefit from our active support system, including an intelligent bot, ready to assist you in unlocking the potential of your code.
+- Let your imagination run wild and create extraordinary music bots with Moonlink.js.
 
 ## 📦 How to install
 
