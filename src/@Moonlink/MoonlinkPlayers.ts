@@ -147,33 +147,10 @@ export class MoonlinkPlayer {
   public async restart(): Promise<void> {
 	 if(!this.current && !this.queue.size) return;
 	 if(!this.current) this.play();
-	 if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
-   this.sendWs({
-    op: "play",
-    guildId: this.guildId,
-    channelId: this.textChannel,
-	  position: this.current.position,
-    track: this.current.track
-     ? this.current.track
-     : this.current.encoded
-     ? this.current.encoded
-     : this.current.trackEncoded
-     ? this.current.trackEncoded
-     : null,
-    volume: this.volume,
-    pause: false,
-   });
-  else
    await this.rest.update({
     guildId: this.guildId,
     data: {
-     encodedTrack: this.current.track
-      ? this.current.track
-      : this.current.encoded
-      ? this.current.encoded
-      : this.current.trackEncoded
-      ? this.current.trackEncoded
-      : null,
+     encodedTrack: this.current.encoded,
 	   position: this.current.position,
      volume: this.volume,
     },
@@ -216,46 +193,18 @@ export class MoonlinkPlayer {
   };
   this.current = current[this.guildId];
   this.map.set("current", current);
-  this.queue.db.set(`queue.${this.guildId}`, queue);
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
-   this.sendWs({
-    op: "play",
-    guildId: this.guildId,
-    channelId: this.textChannel,
-    track: data.track
-     ? data.track
-     : data.encoded
-     ? data.encoded
-     : data.trackEncoded
-     ? data.trackEncoded
-     : null,
-    volume: this.volume,
-    pause: false,
-   });
-  else
+	 console.log(queue)
+  await this.queue.db.set(`queue.${this.guildId}`, queue);
    await this.rest.update({
     guildId: this.guildId,
     data: {
-     encodedTrack: data.track
-      ? data.track
-      : data.encoded
-      ? data.encoded
-      : data.trackEncoded
-      ? data.trackEncoded
-      : null,
+     encodedTrack: data.encoded,
      volume: this.volume,
     },
    })
  }
  public async pause(): Promise<boolean> {
   if (this.paused) return true;
-  if ((this.rest.node.version as string).replace(/\./g, "") <= "374")
-   this.sendWs({
-    op: "pause",
-    guildId: this.guildId,
-    pause: true,
-   });
-  else
    await this.rest.update({
     guildId: this.guildId,
     data: { paused: true },

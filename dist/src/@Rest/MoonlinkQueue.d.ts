@@ -5,7 +5,7 @@ export declare class MoonlinkQueue {
     guildId: string;
     private manager;
     constructor(manager: any, data: any);
-    add(data: MoonlinkTrack): void;
+    add(data: MoonlinkTrack, position?: number): void;
     first(): any;
     clear(): boolean;
     get size(): BigInt;

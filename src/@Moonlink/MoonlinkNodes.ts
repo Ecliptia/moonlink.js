@@ -307,6 +307,8 @@ export class MoonlinkNode {
    this.rest
   );
   let players: any = this.map.get("players") || {};
+	 
+		 console.log(payload)
   switch (payload.type) {
    case "TrackStartEvent": {
     let current: any = null;
@@ -326,6 +328,7 @@ export class MoonlinkNode {
     let currents: any = this.map.get("current") || {};
     let track: any = currents[payload.guildId] || null;
     let queue = this.db.get(`queue.${payload.guildId}`);
+		console.log(queue)
     players[payload.guildId] = {
      ...players[payload.guildId],
      playing: false,
