@@ -11,19 +11,28 @@ class MoonlinkQueue {
         this.guildId = data.guildId;
         this.manager = manager;
     }
-    add(data) {
+    add(data, position) {
         if (!data)
             throw new Error('[ @Moonlink/Queue ]: "data" option is empty');
         let queue = this.db.get(`queue.${this.guildId}`);
-        if (Array.isArray(queue)) {
-            this.db.push(`queue.${this.guildId}`, data);
+        if (typeof position !== 'undefined' && (position < 1 || position > queue.length + 1)) {
+            throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
         }
-        else if (queue && queue.length > 0 && queue[0]) {
-            queue = [queue, data];
-            this.db.set(`queue.${this.guildId}`, queue);
+        if (typeof position === 'undefined' || position > queue.length + 1) {
+            if (Array.isArray(queue)) {
+                this.db.push(`queue.${this.guildId}`, data);
+            }
+            else if (queue && queue.length > 0 && queue[0]) {
+                queue = [queue, data];
+                this.db.set(`queue.${this.guildId}`, queue);
+            }
+            else {
+                this.db.push(`queue.${this.guildId}`, data);
+            }
         }
         else {
-            this.db.push(`queue.${this.guildId}`, data);
+            queue.splice(position - 1, 0, data);
+            this.db.set(`queue.${this.guildId}`, queue);
         }
     }
     first() {

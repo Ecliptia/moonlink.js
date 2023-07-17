@@ -121,37 +121,14 @@ class MoonlinkPlayer {
             return;
         if (!this.current)
             this.play();
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "play",
-                guildId: this.guildId,
-                channelId: this.textChannel,
+        await this.rest.update({
+            guildId: this.guildId,
+            data: {
+                encodedTrack: this.current.encoded,
                 position: this.current.position,
-                track: this.current.track
-                    ? this.current.track
-                    : this.current.encoded
-                        ? this.current.encoded
-                        : this.current.trackEncoded
-                            ? this.current.trackEncoded
-                            : null,
                 volume: this.volume,
-                pause: false,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: {
-                    encodedTrack: this.current.track
-                        ? this.current.track
-                        : this.current.encoded
-                            ? this.current.encoded
-                            : this.current.trackEncoded
-                                ? this.current.trackEncoded
-                                : null,
-                    position: this.current.position,
-                    volume: this.volume,
-                },
-            });
+            },
+        });
     }
     disconnect() {
         this.payload(this.guildId, JSON.stringify({
@@ -189,51 +166,23 @@ class MoonlinkPlayer {
         };
         this.current = current[this.guildId];
         this.map.set("current", current);
-        this.queue.db.set(`queue.${this.guildId}`, queue);
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "play",
-                guildId: this.guildId,
-                channelId: this.textChannel,
-                track: data.track
-                    ? data.track
-                    : data.encoded
-                        ? data.encoded
-                        : data.trackEncoded
-                            ? data.trackEncoded
-                            : null,
+        console.log(queue);
+        await this.queue.db.set(`queue.${this.guildId}`, queue);
+        await this.rest.update({
+            guildId: this.guildId,
+            data: {
+                encodedTrack: data.encoded,
                 volume: this.volume,
-                pause: false,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: {
-                    encodedTrack: data.track
-                        ? data.track
-                        : data.encoded
-                            ? data.encoded
-                            : data.trackEncoded
-                                ? data.trackEncoded
-                                : null,
-                    volume: this.volume,
-                },
-            });
+            },
+        });
     }
     async pause() {
         if (this.paused)
             return true;
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "pause",
-                guildId: this.guildId,
-                pause: true,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: { paused: true },
-            });
+        await this.rest.update({
+            guildId: this.guildId,
+            data: { paused: true },
+        });
         let players = this.map.get("players") || {};
         players[this.guildId] = {
             ...players[this.guildId],

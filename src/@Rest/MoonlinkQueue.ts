@@ -10,9 +10,13 @@ export class MoonlinkQueue {
   this.guildId = data.guildId;
   this.manager = manager;
  }
- public add(data: MoonlinkTrack): void {
+ public add(data: MoonlinkTrack, position?: number): void {
   if (!data) throw new Error('[ @Moonlink/Queue ]: "data" option is empty');
   let queue = this.db.get(`queue.${this.guildId}`);
+	 if (typeof position !== 'undefined' && (position < 1 || position > queue.length + 1)) {
+      throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
+    }
+	 if (typeof position === 'undefined' || position > queue.length + 1) {
   if (Array.isArray(queue)) {
    this.db.push(`queue.${this.guildId}`, data);
   } else if (queue && queue.length > 0 && queue[0]) {
@@ -20,7 +24,11 @@ export class MoonlinkQueue {
    this.db.set(`queue.${this.guildId}`, queue);
   } else {
    this.db.push(`queue.${this.guildId}`, data);
-  }
+     }
+	 } else {
+		 queue.splice(position - 1, 0, data);
+		 this.db.set(`queue.${this.guildId}`, queue);
+	 }
  }
  public first(): any {
   let queue = this.db.get(`queue.${this.guildId}`) || null;

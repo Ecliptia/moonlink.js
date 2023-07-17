@@ -28,12 +28,11 @@ class MoonlinkDatabase {
         return this.get(keys[0]);
     }
     get(key) {
-        this.save();
+        this.fetch();
         const data = key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
         return data;
     }
     push(key, value) {
-        this.save();
         const old_array = this.get(key) ?? [];
         if (!Array.isArray(old_array) && old_array !== undefined)
             return;
@@ -43,7 +42,6 @@ class MoonlinkDatabase {
         return this.get(key.split(".")[0]);
     }
     delete(key) {
-        this.save();
         const data = this.get(key);
         key.split(".").reduce((o, curr, i, arr) => {
             if (i === arr.length - 1)
