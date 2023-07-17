@@ -122,25 +122,20 @@ client.login(process.env["DISCORD_TOKEN"])
 
 > You can get support on our discord server [MoonLink - Support](https://discord.gg/xQq2A8vku3)(Updated)
 
-## 🎓 Contributors
+## 🫶 Contributors
 
-meaning of [emojis](https://allcontributors.org/docs/en/emoji-key)
+We would like to express our gratitude to the amazing individuals who contributed to this project. Their hard work and dedication have been instrumental in making it a success.
 
-<table>
-<tr>
-<td align="center"><a href="https://github.com/1Lucas1apk"> <img src="https://cdn.discordapp.com/avatars/978981769661513758/438e182c14d5d28aa87ded076eca2755.webp?size=2048" width="100px;" alt="" /><br> <sub><b>1Lucas1.apk</b></sub><br> </a><a href="https://github.com/1Lucas1apk/Moonlink.js/commits?author=1Lucas1apk" title="Code">💻</a><a href="https://moonlink.js.org" title="Doc">📖</a><a href="https://moonlink.js.org/exemples" title="exemples">💡</a><a href="https://github.com/1Lucas1apk/Moonlink.js" title="infra">🚇</a><a href="https://github.com/1Lucas1apk/moonlink.js" title="ideas">🤔</a><br><a href="https://github.com/1Lucas1apk/moonlink.js" title="maintenance">🚧</a><a href="https://github.com/1Lucas1apk/moonlink.js/issues" title="question">💬</a><a href="https://github.com/1Lucas1apk/moonlink.js/" title="review">👀</a><a href="https://github.com/1Lucas1apk/moonlink.js/" title="Tools">🔧</a><a href="https://github.com/1Lucas1apk/moonlink.js/" title="Test">⚠️</a><a href="https://moonlink.js.org" title="tutorial">✅</a></td>
-<td align="center"><a href="https://github.com/motoG100"> <img src="https://cdn.discordapp.com/attachments/1046805409169682482/1087397208795643996/motog.png" width="100px;" alt="" /><br> <sub><b>MotoG.js</b></sub><br> </a><a href="https://github.com/1Lucas1apk/Moonlink.js/commits?author=motoG100" title="Code">💻</a><a href="https://moonlink.js.org/exemples" title="exemples">💡</a><a href="https://github.com/1Lucas1apk/moonlink.js" title="ideas">🤔</a><a href="https://github.com/1Lucas1apk/moonlink.js/issues" title="question">💬</a><a href="https://moonlink.js.org" title="designer">🎨</a></td>
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																					</tr>
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																					
-<tr>
-<td align="center"><a href="https://discord.com/users/912987919357190194"> <img src="https://cdn.discordapp.com/avatars/912987919357190194/ac7a60ebe7281cdcde46ad3d48d4ffb9.webp?size=2048" width="100px;" alt="" /><br> <sub><b>ItzGG</b></sub><br> </a><a href="https://discord.gg/gPw8ycW5wN" title="Bug">🐛</a></td>
-<td align="center"><a href="https://discord.com/users/666270910692720661"> <img src="https://cdn.discordapp.com/avatars/666270910692720661/cf9ce4733dbeb61391eab6b16a56daef.webp?size=2048" width="100px;" alt="" /><br> <sub><b>Nah</b></sub><br> </a><a href="https://discord.com/channels/990369410344701964/1057275443587338262/1057275443587338262" title="Bug">🐛</a></td>
-</tr>
-<tr>
-<td align="center"><a href="https://discord.com/users/666270910692720661"> <img src="asset://asset/images/default_atatar_0.png?size=2048" width="100px;" alt="" /><br> <sub><b>SuperPlayerBots</b></sub><br> </a><a href="https://discord.com/channels/990369410344701964/1070454617294516284/1071695070639702056" title="Bug">🐛</a></td>
-<td align="center"><a href"https://github.com/ddemile"> <img src="https://avatars.githubusercontent.com/u/104416229?v=4" width="100px;" alt="" /><br> <sub><b>ddemile</b></sub><br> </a><a href="https://github.com/1Lucas1apk/moonlink.js/issues?q=author%3Addemile" title="Bug">🐛</a></td>
-</tr>
-<tr>
-<td align="center"><a href="https://github.com/Tasty-Kiwi"> <img src="https://avatars.githubusercontent.com/u/26067386?v=4" width="100px;" alt="" /><br> <sub><b>Tasty-Kiwi</b></sub><br> </a><a href="https://github.com/1Lucas1apk/moonlink.js/issues?q=author%3ATasty-Kiwi" title="Bug">🐛</a></td>
-</tr>
-</table>
+1. **1Lucas1apk** - Lead Developer responsible for the project architecture and implementation of key features.
+
+2. **MotoG.js** - Project ideator and Designer, who came up with the concept and contributed to the visual design.
+
+Bug Hunters 🐛:
+
+- **Nah**
+- **ItzGG**
+- **SuperPlayerBots**
+- **ddemile**
+- **Tasty-Kiwi**
+
+We want to extend our heartfelt thanks to all the contributors mentioned above and to everyone who has helped in any way with this project. Your support is truly appreciated.
