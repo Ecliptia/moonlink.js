@@ -118,9 +118,18 @@ client.login(process.env["DISCORD_TOKEN"])
 
 > Enter the documentation site to understand more about the package, there are many more examples [MoonLink Docs](https://moonlink.js.org)
 
-## 🎨 Suport
+## 🛟 Support
 
-> You can get support on our discord server [MoonLink - Support](https://discord.gg/xQq2A8vku3)(Updated)
+We offer the following support for our project:
+
+- **Code Assistance**: Need help with the code? Our experienced developers and contributors are available to assist you. Open an issue on our GitHub repository for prompt assistance.
+
+- **Automated Bot**: We have an automated support bot that can provide answers to common questions and help troubleshoot known issues. It's available around the clock for your convenience.
+
+- **Community**: Join our community Discord server at [Moonlink.js - Imagine a Music Bot](https://discord.gg/xQq2A8vku3) to connect with other users, ask questions, and participate in discussions.
+
+For any inquiries or assistance, we're here to help!
+
 
 ## 🫶 Contributors
 
