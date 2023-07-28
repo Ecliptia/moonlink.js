@@ -244,7 +244,6 @@ class MoonlinkNode {
             return;
         let player = new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[payload.guildId], this.manager, this.map, this.rest);
         let players = this.map.get("players") || {};
-        console.log(payload);
         switch (payload.type) {
             case "TrackStartEvent": {
                 let current = null;
@@ -265,7 +264,6 @@ class MoonlinkNode {
                 let currents = this.map.get("current") || {};
                 let track = currents[payload.guildId] || null;
                 let queue = this.db.get(`queue.${payload.guildId}`);
-                console.log(queue);
                 players[payload.guildId] = {
                     ...players[payload.guildId],
                     playing: false,
