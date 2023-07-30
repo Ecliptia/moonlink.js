@@ -387,7 +387,7 @@ class MoonlinkPlayer {
             });
         return true;
     }
-    async shuffle() {
+    shuffle() {
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -402,6 +402,18 @@ class MoonlinkPlayer {
         let queue = this.queue.db.get(`queue.${this.guildId}`);
         shuffleArray(queue);
         this.queue.db.set(`queue.${this.guildId}`, queue);
+        return true;
+    }
+    remove(index) {
+        if (!this.queue.size) throw new Error("[ @Moonlink/Player ]: the queue is empty to use this function");
+        
+
+        if (typeof index !== "number" || index < 1 || index > this.queue.size) throw new Error("[ @Moonlink/Player ]: invalid track index");
+
+        let queue = this.queue.db.get(`queue.${this.guildId}`);
+        queue.splice(index - 1, 1);
+        this.queue.db.set(`queue.${this.guildId}`, queue);
+
         return true;
     }
 }
