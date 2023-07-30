@@ -296,6 +296,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
          * @throws {Error} - If the textChannel option is empty or not a string.
          * @throws {Error} - If the voiceChannel option is empty or not a string.
          * @throws {TypeError} - If the autoPlay option is not a boolean.
+         * @throws {TypeError} - If the volume option is not a number.
          */
         let create = (data) => {
             if (typeof data !== "object")
@@ -320,6 +321,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 paused: false,
                 loop: null,
                 autoPlay: false,
+                volume: data.volume || 50,
                 node: this.leastUsedNodes
             };
             this.map.set("players", players_map);

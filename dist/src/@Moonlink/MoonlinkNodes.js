@@ -292,15 +292,12 @@ class MoonlinkNode {
                         return;
                     }
                     if (player.loop == 2) {
-                        this.manager.emit("trackEnd", player, track);
                         player.queue.add(track);
+                        if (!queue || queue.length === 0) {
+                            return this.manager.emit("trackEnd", player, track, payload);
+                        }
+                        player.current = queue.shift();
                         player.play();
-                        await this.rest.update({
-                            guildId: payload.guildId,
-                            data: {
-                                encodedTrack: track.encoded
-                            },
-                        });
                         return;
                     }
                     else {
