@@ -387,6 +387,23 @@ class MoonlinkPlayer {
             });
         return true;
     }
+    async shuffle() {
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        if (!this.queue.size) {
+            throw new Error("[ @Moonlink/Player ]: the queue is empty to use this function");
+        }
+        let queue = this.queue.db.get(`queue.${this.guildId}`);
+        shuffleArray(queue);
+        this.queue.db.set(`queue.${this.guildId}`, queue);
+        return true;
+    }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;
 //# sourceMappingURL=MoonlinkPlayers.js.map
