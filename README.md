@@ -106,7 +106,7 @@ client.on('interactionCreate', async(interaction) => {
   } else {
     player.queue.add(res.tracks[0])
     interaction.reply({
-      content: `${res.tracks[0].name} was added to the waiting list`
+      content: `${res.tracks[0].title} was added to the waiting list`
     })
   }
   if (!player.playing) player.play()
@@ -148,5 +148,6 @@ Bug Hunters 🐛:
 - **SuperPlayerBots**
 - **ddemile**
 - **Tasty-Kiwi**
+- **rrm**
 
 We want to extend our heartfelt thanks to all the contributors mentioned above and to everyone who has helped in any way with this project. Your support is truly appreciated.
