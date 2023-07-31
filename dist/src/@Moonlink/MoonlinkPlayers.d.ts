@@ -54,4 +54,5 @@ export declare class MoonlinkPlayer {
     destroy(): Promise<boolean>;
     seek(position: number): Promise<number | null>;
     skipTo(position: number): Promise<boolean | void>;
+    shuffle(): Promise<boolean>;
 }

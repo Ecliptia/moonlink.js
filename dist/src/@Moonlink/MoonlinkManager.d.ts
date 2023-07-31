@@ -38,6 +38,7 @@ export interface createOptions {
     textChannel: string;
     voiceChannel: string;
     autoPlay?: boolean | null;
+    volume?: number;
 }
 export interface VoiceState {
     op: "voiceUpdate";
