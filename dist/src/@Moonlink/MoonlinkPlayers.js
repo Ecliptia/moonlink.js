@@ -404,18 +404,6 @@ class MoonlinkPlayer {
         this.queue.db.set(`queue.${this.guildId}`, queue);
         return true;
     }
-    remove(index) {
-        if (!this.queue.size) throw new Error("[ @Moonlink/Player ]: the queue is empty to use this function");
-        
-
-        if (typeof index !== "number" || index < 1 || index > this.queue.size) throw new Error("[ @Moonlink/Player ]: invalid track index");
-
-        let queue = this.queue.db.get(`queue.${this.guildId}`);
-        queue.splice(index - 1, 1);
-        this.queue.db.set(`queue.${this.guildId}`, queue);
-
-        return true;
-    }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;
 //# sourceMappingURL=MoonlinkPlayers.js.map
