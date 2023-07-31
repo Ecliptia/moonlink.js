@@ -428,4 +428,20 @@ export class MoonlinkPlayer {
    });
   return true;
  }
+	public async shuffle(): Promise<boolean> {
+		/*
+	    @Author: rrm (Discord) / Logic made by him, and standardized by the moonlink.js bot
+	  */
+		
+    if (!this.queue.size) {
+        throw new Error("[ @Moonlink/Player ]: the queue is empty to use this function");
+    }
+    let queue: any = this.queue.db.get(`queue.${this.guildId}`);
+    for (let i = queue.length - 1; i > 0; i--) {
+        const j: any = Math.floor(Math.random() * (i + 1));
+        [queue[i], queue[j]] = [queue[j], queue[i]];
+    }
+    this.queue.db.set(`queue.${this.guildId}`, queue);
+    return true;
+  }
 }

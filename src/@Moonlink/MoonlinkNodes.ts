@@ -158,6 +158,7 @@ export class MoonlinkNode {
    }
   );
 	 if((this.version as string).replace(/\./g, '') < '400') {
+		 console.log('[ @Mooblink ]: the lavalink version is ' + this.version)
 		 console.log('[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink')
 		 return;
 	 }
@@ -354,15 +355,10 @@ export class MoonlinkNode {
       return;
      }
      if (player.loop == 2) {
-      this.manager.emit("trackEnd", player, track);
       player.queue.add(track);
+     if (!queue || queue.length === 0) return this.manager.emit("trackEnd", player, track, payload);
+      player.current = queue.shift();
       player.play();
-      await this.rest.update({
-        guildId: payload.guildId,
-        data: {
-         encodedTrack: track.encoded
-        },
-       });
       return;
      } else {
       this.manager.emit("trackEnd", player, track);

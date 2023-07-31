@@ -40,6 +40,7 @@ export interface createOptions {
  textChannel: string;
  voiceChannel: string;
  autoPlay?: boolean | null;
+ volume?: number;
 }
 
 export interface VoiceState {
@@ -519,6 +520,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     guildId: data.guildId,
     textChannel: data.textChannel,
     voiceChannel: data.voiceChannel,
+		volume: data.volume || 80,
     playing: false,
     connected: false,
     paused: false,
