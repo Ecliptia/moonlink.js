@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
+import { MoonlinkQueue } from "../@Rest/MoonlinkQueue"
 import { Plugin } from "../@Rest/Plugin"
 import { Spotify } from "../@Sources/Spotify";
 import { Deezer } from "../@Sources/Deezer";
@@ -20,7 +21,8 @@ export interface spotifyOptions {
  clientSecret?: string;
 }
 export interface customOptions {
-	player?: Constructor<MoonlinkPlayer>
+	player?: Constructor<MoonlinkPlayer>;
+	queue?: Constructor<MoonlinkQueue>;
 }
 export interface Options {
  clientName?: string;

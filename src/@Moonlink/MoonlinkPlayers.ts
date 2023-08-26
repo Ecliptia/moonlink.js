@@ -54,7 +54,8 @@ export class MoonlinkPlayer {
   this.paused = infos.paused || null;
   this.loop = infos.loop || null;
   this.volume = infos.volume || 90;
-  this.queue = new MoonlinkQueue(this.manager, this);
+  if(this.manager.options.custom.queue) this.queue = new this.manager.options.custom.queue(this.manager, this)
+	 else this.queue = new MoonlinkQueue(this.manager, this);
   this.current = map.get("current") || {};
   this.current = this.current[this.guildId]
   if (rest) this.rest = rest;
@@ -193,7 +194,6 @@ export class MoonlinkPlayer {
   };
   this.current = current[this.guildId];
   this.map.set("current", current);
-	 console.log(queue)
   await this.queue.db.set(`queue.${this.guildId}`, queue);
    await this.rest.update({
     guildId: this.guildId,
