@@ -54,14 +54,15 @@ export class MoonlinkPlayer {
   this.paused = infos.paused || null;
   this.loop = infos.loop || null;
   this.volume = infos.volume || 90;
-  if(this.manager.options.custom.queue) this.queue = new this.manager.options.custom.queue(this.manager, this)
-	 else this.queue = new MoonlinkQueue(this.manager, this);
+  if(manager.options && manager.options.custom.queue) this.queue = new manager.options.custom.queue(manager, this)
+	 else this.queue = new MoonlinkQueue(manager, this);
   this.current = map.get("current") || {};
   this.current = this.current[this.guildId]
   if (rest) this.rest = rest;
   this.map = map;
 	this.data = this.map.get('players') || {}
   this.data = this.data[this.guildId]
+	this.manager = manager
  }
  public set(key: string, value: unknown): void {
 	 this.data[key] = value;

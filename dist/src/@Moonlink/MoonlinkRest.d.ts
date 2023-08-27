@@ -1,13 +1,13 @@
 import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkManager } from "./MoonlinkManager";
-export interface voiceOptions {
+export interface VoiceOptions {
     endpoint: string;
     token: string;
     sessionId: string;
     connected?: boolean;
     ping?: number;
 }
-export interface restOptions {
+export interface RestOptions {
     guildId: string;
     data: {
         encodedTrack?: string;
@@ -18,7 +18,7 @@ export interface restOptions {
         position?: number;
         paused?: Boolean;
         filters?: Object;
-        voice?: voiceOptions;
+        voice?: VoiceOptions;
     };
 }
 export type Endpoint = string;
@@ -28,11 +28,16 @@ export declare class MoonlinkRest {
     node: MoonlinkNode;
     url: string;
     constructor(manager: MoonlinkManager, node: MoonlinkNode);
-    setSessionId(sessionId: any): void;
-    update(data: restOptions): Promise<object>;
+    setSessionId(sessionId: string): void;
+    update(data: RestOptions): Promise<object>;
     destroy(guildId: string): Promise<object>;
     get(endpoint: Endpoint): Promise<object>;
-    post(endpoint: Endpoint, data: restOptions): Promise<object>;
-    patch(endpoint: Endpoint, data: restOptions | any): Promise<object>;
+    post(endpoint: Endpoint, data: RestOptions): Promise<object>;
+    patch(endpoint: Endpoint, data: RestOptions | any): Promise<object>;
     delete(endpoint: Endpoint): Promise<object>;
+    private ensureUrlIsSet;
+    private makeGetRequest;
+    private makePostRequest;
+    private makePatchRequest;
+    private makeDeleteRequest;
 }

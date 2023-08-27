@@ -175,7 +175,7 @@ export class MoonlinkNode {
   this.restUri = `http${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
   }${this.port ? `:${this.port}` : ":443"}/v4/`;
-  this.ws = new WebSocket(this.socketUri, { headers });
+  this.ws = new WebSocket(this.socketUri, undefined, { headers });
   this.ws.on("open", this.open.bind(this));
   this.ws.on("close", this.close.bind(this));
   this.ws.on("message", this.message.bind(this));

@@ -33,10 +33,10 @@ class MoonlinkPlayer {
         this.paused = infos.paused || null;
         this.loop = infos.loop || null;
         this.volume = infos.volume || 90;
-        if (this.manager.options.custom.queue)
-            this.queue = new this.manager.options.custom.queue(this.manager, this);
+        if (manager.options && manager.options.custom.queue)
+            this.queue = new manager.options.custom.queue(manager, this);
         else
-            this.queue = new MoonlinkQueue_1.MoonlinkQueue(this.manager, this);
+            this.queue = new MoonlinkQueue_1.MoonlinkQueue(manager, this);
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];
         if (rest)
@@ -44,6 +44,7 @@ class MoonlinkPlayer {
         this.map = map;
         this.data = this.map.get('players') || {};
         this.data = this.data[this.guildId];
+        this.manager = manager;
     }
     set(key, value) {
         this.data[key] = value;

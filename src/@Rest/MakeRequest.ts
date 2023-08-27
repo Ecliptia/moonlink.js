@@ -6,12 +6,8 @@ export type headers = {
  "Content-Type"?: string | null;
  "User-Agent"?: string | null;
 };
-export interface options {
- method?: string;
- headers?: headers;
-}
 
-export function makeRequest(uri: string, options: options, data?: any) {
+export function makeRequest(uri: string, options: any, data?: any): Promise<any> {
  return new Promise((resolve) => {
   let url = new URL(uri);
   if (!options.method) options.method = "GET";
