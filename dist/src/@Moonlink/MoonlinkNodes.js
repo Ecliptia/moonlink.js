@@ -135,7 +135,7 @@ class MoonlinkNode {
             headers["Session-Id"] = this.resumeKey;
         this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
         this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/`;
-        this.ws = new ws_1.default(this.socketUri, { headers });
+        this.ws = new ws_1.default(this.socketUri, undefined, { headers });
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
         this.ws.on("message", this.message.bind(this));

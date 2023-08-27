@@ -13,67 +13,78 @@ class MoonlinkRest {
     }
     setSessionId(sessionId) {
         this.sessionId = sessionId;
-        this.url = this.node.restUri;
+        this.ensureUrlIsSet();
     }
     async update(data) {
-        if (!this.url)
-            this.url = this.node.restUri;
-        return await this.patch(`sessions/${this.sessionId}/players/${data.guildId}`, data);
+        this.ensureUrlIsSet();
+        return await this.makePatchRequest(`sessions/${this.sessionId}/players/${data.guildId}`, data.data);
     }
     async destroy(guildId) {
-        return await this.delete(`sessions/${this.sessionId}/players/${guildId}`);
+        return await this.makeDeleteRequest(`sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(endpoint) {
+        this.ensureUrlIsSet();
+        return await this.makeGetRequest(endpoint);
+    }
+    async post(endpoint, data) {
+        this.ensureUrlIsSet();
+        return await this.makePostRequest(endpoint, data);
+    }
+    async patch(endpoint, data) {
+        this.ensureUrlIsSet();
+        return await this.makePatchRequest(endpoint, data.data);
+    }
+    async delete(endpoint) {
+        this.ensureUrlIsSet();
+        return await this.makeDeleteRequest(endpoint);
+    }
+    ensureUrlIsSet() {
         if (!this.url)
             this.url = this.node.restUri;
-        let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+    }
+    async makeGetRequest(endpoint) {
+        const headers = {
+            Authorization: this.node.password,
+        };
+        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "GET",
-            headers: {
-                Authorization: this.node.password,
-            },
+            headers,
         }).catch((err) => {
             return err;
         });
-        return req;
     }
-    async post(endpoint, data) {
-        if (!this.url)
-            this.url = this.node.restUri;
-        let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+    async makePostRequest(endpoint, data) {
+        const headers = {
+            Authorization: this.node.password,
+        };
+        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "POST",
-            headers: {
-                Authorization: this.node.password,
-            },
+            headers,
         }, data).catch((err) => {
             return err;
         });
-        return req;
     }
-    async patch(endpoint, data) {
-        if (!this.url)
-            this.url = this.node.restUri;
-        let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+    async makePatchRequest(endpoint, data) {
+        const headers = {
+            Authorization: this.node.password,
+        };
+        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "PATCH",
-            headers: {
-                Authorization: this.node.password,
-            },
-        }, data.data).catch((err) => {
+            headers,
+        }, data).catch((err) => {
             return err;
         });
-        return req;
     }
-    async delete(endpoint) {
-        if (!this.url)
-            this.url = this.node.restUri;
-        let req = await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+    async makeDeleteRequest(endpoint) {
+        const headers = {
+            Authorization: this.node.password,
+        };
+        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "DELETE",
-            headers: {
-                Authorization: this.node.password,
-            },
+            headers,
         }).catch((err) => {
             return err;
         });
-        return req;
     }
 }
 exports.MoonlinkRest = MoonlinkRest;
