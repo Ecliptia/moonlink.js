@@ -34,6 +34,7 @@ export interface Options {
     plugins?: Plugin[];
     spotify?: spotifyOptions;
     custom?: customOptions;
+    sortNode?: SortType;
 }
 export interface createOptions {
     guildId: string;
@@ -41,7 +42,9 @@ export interface createOptions {
     voiceChannel: string;
     autoPlay?: boolean | null;
     volume?: number;
+    node?: string;
 }
+export type SortType = "memory" | "cpuLavalink" | "cpuSystem" | "calls" | "playingPlayers" | "players";
 export interface VoiceState {
     op: "voiceUpdate";
     guildId: string;
@@ -156,7 +159,7 @@ export declare class MoonlinkManager extends EventEmitter {
     readonly _sPayload: Function;
     initiated: boolean;
     options: Options;
-    nodes: Map<string, Nodes>;
+    nodes: Map<string, MoonlinkNode>;
     spotify: Spotify;
     deezer: Deezer;
     sendWs: any;
@@ -181,13 +184,54 @@ export declare class MoonlinkManager extends EventEmitter {
  */
     addNode(node: Nodes): Nodes;
     /**
+    * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
+    * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
+    * @returns The sorted array of nodes based on the specified criteria.
+    */
+    sortByUsage(sortType: SortType): MoonlinkNode[];
+    /**
+    * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
+    * @param nodes - The connected Lavalink nodes to sort.
+    * @returns The sorted array of nodes by memory usage.
+    */
+    private sortNodesByMemoryUsage;
+    /**
+     * Sorts the connected Lavalink nodes by Lavalink CPU load and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by Lavalink CPU load.
+     */
+    private sortNodesByLavalinkCpuLoad;
+    /**
+     * Sorts the connected Lavalink nodes by system CPU load and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by system CPU load.
+     */
+    private sortNodesBySystemCpuLoad;
+    /**
+     * Sorts the connected Lavalink nodes by the number of calls and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by the number of calls.
+     */
+    private sortNodesByCalls;
+    /**
+     * Sorts the connected Lavalink nodes by the number of playing players and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by the number of playing players.
+     */
+    private sortNodesByPlayingPlayers;
+    /**
+     * Sorts the connected Lavalink nodes by the number of total players and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by the number of total players.
+     */
+    private sortNodesByPlayers;
+    /**
      * Removes a Lavalink node from the MoonlinkManager.
      * @param {string} name - The name or identifier of the node to remove.
      * @returns {boolean} - True if the node is removed, false otherwise.
      * @throws {Error} - If the name option is empty.
      */
     removeNode(name: string): boolean;
-    get leastUsedNodes(): any;
     packetUpdate(packet: VoicePacket): Promise<boolean>;
     /**
  * Searches for tracks using the specified query and source.

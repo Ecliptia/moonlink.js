@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkPlayer = void 0;
-const MoonlinkQueue_1 = require("../@Rest/MoonlinkQueue");
+const index_1 = require("../../index");
 class MoonlinkPlayer {
-    sendWs;
     manager;
     infos;
     map;
@@ -19,11 +18,11 @@ class MoonlinkPlayer {
     volume;
     queue;
     current;
-    rest;
     data;
-    constructor(infos, manager, map, rest) {
+    node;
+    rest;
+    constructor(infos, manager, map) {
         this.payload = manager._sPayload;
-        this.sendWs = manager.leastUsedNodes.sendWs;
         this.guildId = infos.guildId;
         this.textChannel = infos.textChannel;
         this.voiceChannel = infos.voiceChannel;
@@ -36,14 +35,14 @@ class MoonlinkPlayer {
         if (manager.options && manager.options.custom.queue)
             this.queue = new manager.options.custom.queue(manager, this);
         else
-            this.queue = new MoonlinkQueue_1.MoonlinkQueue(manager, this);
+            this.queue = new index_1.MoonlinkQueue(manager, this);
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];
-        if (rest)
-            this.rest = rest;
         this.map = map;
         this.data = this.map.get('players') || {};
         this.data = this.data[this.guildId];
+        this.node = manager.nodes.get(this.get('node'));
+        this.rest = this.node.rest;
         this.manager = manager;
     }
     set(key, value) {
@@ -200,17 +199,10 @@ class MoonlinkPlayer {
     async resume() {
         if (this.playing)
             return true;
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "pause",
-                guildId: this.guildId,
-                pause: false,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: { paused: false },
-            });
+        await this.rest.update({
+            guildId: this.guildId,
+            data: { paused: false },
+        });
         let players = this.map.get("players") || {};
         players[this.guildId] = {
             ...players[this.guildId],
@@ -224,30 +216,18 @@ class MoonlinkPlayer {
     }
     async stop() {
         if (!this.queue.size) {
-            if (this.rest.node.version.replace(/\./g, "") <= "374")
-                this.sendWs({
-                    op: "stop",
-                    guildId: this.guildId,
-                });
-            else
-                await this.rest.update({
-                    guildId: this.guildId,
-                    data: { encodedTrack: null },
-                });
+            await this.rest.update({
+                guildId: this.guildId,
+                data: { encodedTrack: null },
+            });
             return true;
         }
         else {
             delete this.map.get(`players`)[this.guildId];
-            if (this.rest.node.version.replace(/\./g, "") <= "374")
-                this.sendWs({
-                    op: "stop",
-                    guildId: this.guildId,
-                });
-            else
-                await this.rest.update({
-                    guildId: this.guildId,
-                    data: { encodedTrack: null },
-                });
+            await this.rest.update({
+                guildId: this.guildId,
+                data: { encodedTrack: null },
+            });
             return true;
         }
         return false;
@@ -267,17 +247,10 @@ class MoonlinkPlayer {
             throw new Error('[ @Moonlink/Player ]: option "percent" is empty or different from number');
         if (!this.playing)
             throw new Error("[ @Moonlink/Player ]: cannot change volume while player is not playing");
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "volume",
-                guildId: this.guildId,
-                volume: percent,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: { volume: percent },
-            });
+        await this.rest.update({
+            guildId: this.guildId,
+            data: { volume: percent },
+        });
         let players = this.map.get("players") || {};
         players[this.guildId] = {
             ...players[this.guildId],
@@ -311,13 +284,7 @@ class MoonlinkPlayer {
     async destroy() {
         if (this.connected)
             this.disconnect();
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "destroy",
-                guildId: this.guildId,
-            });
-        else
-            await this.rest.destroy(this.guildId);
+        await this.rest.destroy(this.guildId);
         this.queue.db.delete(`queue.${this.guildId}`);
         let players = this.map.get("players");
         delete players[this.guildId];
@@ -331,19 +298,12 @@ class MoonlinkPlayer {
             throw new Error('[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track');
         if (!this.current.isSeekable && this.current.isStream)
             throw new Error('[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"');
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "seek",
-                position: position,
-                guildId: this.guildId,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: {
-                    position,
-                },
-            });
+        await this.rest.update({
+            guildId: this.guildId,
+            data: {
+                position,
+            },
+        });
         return position;
     }
     async skipTo(position) {
@@ -359,12 +319,10 @@ class MoonlinkPlayer {
         currents[this.guildId] = data;
         this.map.set("current", currents);
         this.queue.db.set(`queue.${this.guildId}`, queue);
-        if (this.rest.node.version.replace(/\./g, "") <= "374")
-            this.sendWs({
-                op: "play",
-                guildId: this.guildId,
-                channelId: this.textChannel,
-                track: data.track
+        await this.rest.update({
+            guildId: this.guildId,
+            data: {
+                encodedTrack: data.track
                     ? data.track
                     : data.encoded
                         ? data.encoded
@@ -372,22 +330,8 @@ class MoonlinkPlayer {
                             ? data.trackEncoded
                             : null,
                 volume: 90,
-                pause: false,
-            });
-        else
-            await this.rest.update({
-                guildId: this.guildId,
-                data: {
-                    encodedTrack: data.track
-                        ? data.track
-                        : data.encoded
-                            ? data.encoded
-                            : data.trackEncoded
-                                ? data.trackEncoded
-                                : null,
-                    volume: 90,
-                },
-            });
+            },
+        });
         return true;
     }
     async shuffle() {

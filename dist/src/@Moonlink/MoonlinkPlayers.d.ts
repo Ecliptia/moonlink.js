@@ -1,6 +1,4 @@
-import { MoonlinkManager } from "./MoonlinkManager";
-import { MoonlinkQueue } from "../@Rest/MoonlinkQueue";
-import { MoonlinkRest } from "./MoonlinkRest";
+import { MoonlinkManager, MoonlinkQueue, MoonlinkRest, MoonlinkNode } from "../../index";
 export interface connectOptions {
     setMute?: boolean;
     setDeaf?: boolean;
@@ -17,7 +15,6 @@ export interface PlayerInfos {
     volume?: number | null;
 }
 export declare class MoonlinkPlayer {
-    private sendWs;
     private manager;
     private infos;
     private map;
@@ -33,9 +30,10 @@ export declare class MoonlinkPlayer {
     volume: number;
     queue: MoonlinkQueue;
     current: any;
-    rest: MoonlinkRest;
     data: any;
-    constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>, rest?: MoonlinkRest);
+    node: MoonlinkNode | any;
+    rest: MoonlinkRest;
+    constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>);
     set(key: string, value: unknown): void;
     get<T>(key: string): T;
     setTextChannel(channelId: string): boolean;
