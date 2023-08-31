@@ -35,6 +35,7 @@ export interface Options {
  plugins?: Plugin[];
  spotify?: spotifyOptions;
  custom?: customOptions;
+ sortNode?: SortType;
 }
 
 export interface createOptions {
@@ -43,7 +44,10 @@ export interface createOptions {
  voiceChannel: string;
  autoPlay?: boolean | null;
  volume?: number;
+ node?: string;
 }
+
+export type SortType = "memory" | "cpuLavalink" | "cpuSystem" | "calls" | "playingPlayers" | "players";
 
 export interface VoiceState {
  op: "voiceUpdate";
@@ -197,7 +201,7 @@ export class MoonlinkManager extends EventEmitter {
  public readonly _sPayload: Function;
  public initiated: boolean;
  public options: Options;
- public nodes: Map<string, Nodes>;
+ public nodes: Map<string, MoonlinkNode>;
  public spotify: Spotify;
  public deezer: Deezer;
  public sendWs: any;
@@ -223,6 +227,7 @@ export class MoonlinkManager extends EventEmitter {
    throw new Error(
     '[ @Moonlink/Manager ]: clientName option of the "options" parameter must be in string format'
    );
+	if (!options.sortNode) options.sortNode = "players";
 	if (!options.custom) options.custom = {};
   if (options.plugins) {
       options.plugins.forEach(plugin => {
@@ -275,6 +280,85 @@ export class MoonlinkManager extends EventEmitter {
   return new_node;
  }
 
+ /**
+ * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
+ * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
+ * @returns The sorted array of nodes based on the specified criteria.
+ */
+public sortByUsage(sortType: SortType): MoonlinkNode[] {
+    const connectedNodes = [...this.nodes.values()].filter((node) => node.isConnected);
+
+    switch (sortType) {
+        case "memory":
+            return this.sortNodesByMemoryUsage(connectedNodes);
+        case "cpuLavalink":
+            return this.sortNodesByLavalinkCpuLoad(connectedNodes);
+        case "cpuSystem":
+            return this.sortNodesBySystemCpuLoad(connectedNodes);
+        case "calls":
+            return this.sortNodesByCalls(connectedNodes);
+        case "playingPlayers":
+            return this.sortNodesByPlayingPlayers(connectedNodes);
+        case "players":
+        default:
+            return this.sortNodesByPlayers(connectedNodes);
+    }
+}
+
+ /**
+ * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by memory usage.
+ */
+private sortNodesByMemoryUsage(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0));
+}
+
+/**
+ * Sorts the connected Lavalink nodes by Lavalink CPU load and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by Lavalink CPU load.
+ */
+private sortNodesByLavalinkCpuLoad(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0));
+}
+
+/**
+ * Sorts the connected Lavalink nodes by system CPU load and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by system CPU load.
+ */
+private sortNodesBySystemCpuLoad(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0));
+}
+
+/**
+ * Sorts the connected Lavalink nodes by the number of calls and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by the number of calls.
+ */
+private sortNodesByCalls(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => a.calls - b.calls);
+}
+
+/**
+ * Sorts the connected Lavalink nodes by the number of playing players and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by the number of playing players.
+ */
+private sortNodesByPlayingPlayers(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => (a.stats?.playingPlayers || 0) - (b.stats?.playingPlayers || 0));
+}
+
+/**
+ * Sorts the connected Lavalink nodes by the number of total players and returns the sorted nodes array.
+ * @param nodes - The connected Lavalink nodes to sort.
+ * @returns The sorted array of nodes by the number of total players.
+ */
+private sortNodesByPlayers(nodes: MoonlinkNode[]): MoonlinkNode[] {
+    return nodes.sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
+}
+
 /**
  * Removes a Lavalink node from the MoonlinkManager.
  * @param {string} name - The name or identifier of the node to remove.
@@ -288,12 +372,8 @@ if(!name) throw new Error('[ @Moonlink/Manager ]: option "name" is empty')
    if(!node) return false;
 	 this.nodes.delete(name);
 	 return true;
-} 
- public get leastUsedNodes(): any {
-  return [...this.nodes.values()]
-   .filter((node: any) => node.isConnected)
-   .sort((a: any, b: any) => b.calls - a.calls)[0];
- }
+}
+
  packetUpdate(packet: VoicePacket) {
   if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
   const update: any = packet.d;
@@ -408,7 +488,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
 	 }
 		else opts = query;
    let params = new URLSearchParams({ identifier: opts });
-   let res = await this.leastUsedNodes.request("loadtracks", params);
+   let res: any = await this.sortByUsage('memory')[0].request("loadtracks", params);
    if (res.loadType === "error" || res.loadType === "empty") {
     this.emit(
      "debug",
@@ -448,7 +528,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    "debug",
    `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`
   );
-	 await this.leastUsedNodes.rest.update({
+	 await this.nodes.get(players[guildId].node).rest.update({
     guildId,
     data: {
      voice: {
@@ -475,13 +555,12 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    if (!has(guildId)) return null;
 	 if (this.options.custom.player) { 
 		 this.emit('debug', '[ @Moonlink/Custom ]: the player is customized')
-		 return new this.options.custom.player(this.map.get("players")[guildId], this, this.map, this.leastUsedNodes.rest)
+		 return new this.options.custom.player(this.map.get("players")[guildId], this, this.map)
 	 }
    return new MoonlinkPlayer(
     this.map.get("players")[guildId],
     this,
-    this.map,
-    this.leastUsedNodes.rest
+    this.map
    );
   };
 
@@ -511,10 +590,13 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     throw new Error(
      '[ @Moonlink/Manager ]: "voiceChannel" parameter in player creation is empty or not string type'
     );
-   if ("autoPlay" in data && typeof data.autoPlay !== "boolean")
+   if (data.autoPlay && typeof data.autoPlay !== "boolean")
     throw new Error(
      "[ @Moonlink/Manager ]: autoPlay parameter of player creation has to be boolean type"
     );
+		if(data.node && typeof data.node !== "string") throw new Error(
+     "[ @Moonlink/Manager ]: node parameter of player creation has to be string type"
+    )
    if (has(data.guildId)) return get(data.guildId);
    let players_map: Map<string, object> | object =
     this.map.get("players") || {};
@@ -528,7 +610,7 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
     paused: false,
     loop: null,
     autoPlay: false,
-		node: this.leastUsedNodes
+		node: data.node || this.sortByUsage(this.options.sortNode)[0].host,
    };
    this.map.set("players", players_map);
 	 if (this.options.custom.player) { 
@@ -536,15 +618,13 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
 		 return new this.options.custom.player(
     players_map[data.guildId],
     this,
-    this.map,
-    this.leastUsedNodes.rest
+    this.map
    )
 	 }
    return new MoonlinkPlayer(
     players_map[data.guildId],
     this,
-    this.map,
-    this.leastUsedNodes.rest
+    this.map
    );
   };
   let all: any = this.map.get('players') ? this.map.get('players') : null;

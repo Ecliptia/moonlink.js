@@ -77,21 +77,6 @@ class MoonlinkNode {
                 deficit: 0,
             },
         };
-        this.sendWs = (data) => {
-            return new Promise((resolve, reject) => {
-                if (!this.isConnected)
-                    return resolve(false);
-                if (!data || !JSON.stringify(data).startsWith("{")) {
-                    return reject(false);
-                }
-                this.ws.send(JSON.stringify(data), (error) => {
-                    if (error)
-                        reject(error);
-                    else
-                        resolve(true);
-                });
-            });
-        };
     }
     request(endpoint, params) {
         this.calls++;
@@ -243,7 +228,7 @@ class MoonlinkNode {
             return;
         if (!this.map.get("players")[payload.guildId])
             return;
-        let player = new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[payload.guildId], this.manager, this.map, this.rest);
+        let player = new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[payload.guildId], this.manager, this.map);
         let players = this.map.get("players") || {};
         switch (payload.type) {
             case "TrackStartEvent": {
