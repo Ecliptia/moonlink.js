@@ -86,6 +86,27 @@ class MoonlinkRest {
             return err;
         });
     }
+    async decodeTrack(encodedTrack) {
+        return await this.get(`decodetrack?encodedTrack=${encodedTrack}`);
+    }
+    async decodeTracks(data) {
+        return await this.post("decodetracks", data);
+    }
+    async getInfo() {
+        return await this.get("info");
+    }
+    async getStats() {
+        return await this.get("stats");
+    }
+    async getVersion() {
+        return await this.get("version");
+    }
+    async routePlannerFreeAddress(data) {
+        return await this.post("routeplanner/free/address", data);
+    }
+    async routePlannerFreeAll(data) {
+        return await this.post("routeplanner/free/all", data);
+    }
 }
 exports.MoonlinkRest = MoonlinkRest;
 //# sourceMappingURL=MoonlinkRest.js.map
