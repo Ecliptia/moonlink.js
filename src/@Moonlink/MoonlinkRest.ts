@@ -122,4 +122,31 @@ export class MoonlinkRest {
       return err;
     });
   }
+	public async decodeTrack(encodedTrack: string): Promise<object> {
+    return await this.get(`decodetrack?encodedTrack=${encodedTrack}`);
+  }
+
+  public async decodeTracks(data: RestOptions): Promise<object> {
+    return await this.post("decodetracks", data);
+  }
+
+  public async getInfo(): Promise<object> {
+    return await this.get("info");
+  }
+
+  public async getStats(): Promise<object> {
+    return await this.get("stats");
+  }
+
+  public async getVersion(): Promise<object> {
+    return await this.get("version");
+	}
+	
+	public async routePlannerFreeAddress(data: RestOptions): Promise<object> {
+    return await this.post("routeplanner/free/address", data);
+  }
+
+  public async routePlannerFreeAll(data: RestOptions): Promise<object> {
+    return await this.post("routeplanner/free/all", data);
+	}
 }

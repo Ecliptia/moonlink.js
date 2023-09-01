@@ -17,6 +17,7 @@ class MoonlinkPlayer {
     loop;
     volume;
     queue;
+    filters;
     current;
     data;
     node;
@@ -44,6 +45,7 @@ class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get('node'));
         this.rest = this.node.rest;
         this.manager = manager;
+        this.filters = new index_1.MoonlinkFilters(this);
     }
     updatePlayers() {
         let players = this.map.get('players') || {};
@@ -56,7 +58,7 @@ class MoonlinkPlayer {
     }
     get(key) {
         this.updatePlayers();
-        return this.data[key];
+        return this.data[key] || null;
     }
     setTextChannel(channelId) {
         if (!channelId)
@@ -117,6 +119,7 @@ class MoonlinkPlayer {
             return;
         if (!this.current)
             this.play();
+        await this.manager.attemptConnection(this.guildId);
         await this.rest.update({
             guildId: this.guildId,
             data: {

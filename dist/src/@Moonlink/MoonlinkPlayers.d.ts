@@ -1,4 +1,4 @@
-import { MoonlinkManager, MoonlinkQueue, MoonlinkRest, MoonlinkNode } from "../../index";
+import { MoonlinkManager, MoonlinkQueue, MoonlinkRest, MoonlinkNode, MoonlinkFilters } from "../../index";
 export interface connectOptions {
     setMute?: boolean;
     setDeaf?: boolean;
@@ -29,6 +29,7 @@ export declare class MoonlinkPlayer {
     loop: number | null;
     volume: number;
     queue: MoonlinkQueue;
+    filters: MoonlinkFilters;
     current: any;
     data: any;
     node: MoonlinkNode | any;

@@ -40,4 +40,11 @@ export declare class MoonlinkRest {
     private makePostRequest;
     private makePatchRequest;
     private makeDeleteRequest;
+    decodeTrack(encodedTrack: string): Promise<object>;
+    decodeTracks(data: RestOptions): Promise<object>;
+    getInfo(): Promise<object>;
+    getStats(): Promise<object>;
+    getVersion(): Promise<object>;
+    routePlannerFreeAddress(data: RestOptions): Promise<object>;
+    routePlannerFreeAll(data: RestOptions): Promise<object>;
 }

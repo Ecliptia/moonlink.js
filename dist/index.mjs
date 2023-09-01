@@ -11,5 +11,6 @@ export const MoonlinkTrack = mod.MoonlinkTrack;
 export const Spotify = mod.Spotify;
 export const Plugin = mod.Plugin;
 export const Deezer = mod.Deezer;
+export const MoonlinkFilters = mod.MoonlinkFilters;
 export const makeRequest = mod.makeRequest;
 export const version = mod.version;
