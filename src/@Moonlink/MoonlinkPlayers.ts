@@ -81,29 +81,28 @@ export class MoonlinkPlayer {
     return this.data[key] as T;
   }
 
-  public setTextChannel(channelId: string): boolean {
-    if (!channelId) {
-      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-    }
-    if (typeof channelId !== "string") {
-      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from string');
-    }
-    this.set('textChannel', channelId);
-    this.textChannel = channelId;
-    return true;
+  private validateChannelId(channelId: string): void {
+  if (!channelId) {
+    throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
   }
+  if (typeof channelId !== "string") {
+    throw new Error('[ @Moonlink/Player ]: option "channelId" is different from string');
+  }
+}
+
+  public setTextChannel(channelId: string): boolean {
+  this.validateChannelId(channelId);
+  this.set('textChannel', channelId);
+  this.textChannel = channelId;
+  return true;
+}
 
   public setVoiceChannel(channelId: string): boolean {
-    if (!channelId) {
-      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-    }
-    if (typeof channelId !== "string") {
-      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from string');
-    }
-    this.set('voiceChannel', channelId);
-    this.voiceChannel = channelId;
-    return true;
-  }
+  this.validateChannelId(channelId);
+  this.set('voiceChannel', channelId);
+  this.voiceChannel = channelId;
+  return true;
+}
 
   public setAutoPlay(mode: boolean): boolean {
     if (!mode && typeof mode !== "boolean") {
