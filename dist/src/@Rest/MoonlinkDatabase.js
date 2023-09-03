@@ -5,74 +5,98 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkDatabase = void 0;
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 class MoonlinkDatabase {
     data = {};
     constructor() {
         this.fetch();
     }
     set(key, value) {
-        this.fetch();
+        if (!key)
+            throw new Error('[ @Moonlink/Database ]: "key" is empty');
         const keys = key.split(".");
-        const obj = (data, _key) => {
-            if (_key.length === 1)
-                data[_key[0]] = value;
-            else {
-                if (typeof data[_key[0]] !== "object")
-                    data[_key[0]] = {};
-                data[_key[0]] = { ...data[_key[0]] };
-                obj(data[_key[0]], _key.slice(1));
-            }
-        };
-        obj(this.data, keys);
+        if (keys.length === 0)
+            return; // Key is invalid
+        this.updateData(this.data, keys, value);
         this.save();
-        return this.get(keys[0]);
     }
     get(key) {
         this.fetch();
-        const data = key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
-        return data;
+        if (!key)
+            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+        return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
     }
     push(key, value) {
-        const old_array = this.get(key) ?? [];
-        if (!Array.isArray(old_array) && old_array !== undefined)
-            return;
-        old_array.push(value);
-        this.set(key, old_array);
-        this.save();
-        return this.get(key.split(".")[0]);
+        if (!key)
+            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+        const oldArray = this.get(key) ?? [];
+        if (Array.isArray(oldArray)) {
+            oldArray.push(value);
+            this.set(key, oldArray);
+        }
+        else {
+            throw new Error('[ @Moonlink/Database ]: Key does not point to an array');
+        }
     }
     delete(key) {
-        const data = this.get(key);
-        key.split(".").reduce((o, curr, i, arr) => {
-            if (i === arr.length - 1)
-                delete o?.[curr];
-            else
-                return o?.[curr];
-        }, this.data);
-        this.save();
-        return true;
+        if (!key)
+            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+        const keys = key.split(".");
+        if (keys.length === 0)
+            return false; // Key is invalid
+        const lastKey = keys.pop() || "";
+        let currentObj = this.data;
+        keys.forEach((k) => {
+            if (typeof currentObj[k] === "object") {
+                currentObj = currentObj[k];
+            }
+            else {
+                throw new Error(`[ @Moonlink/Database ]: Key path "${key}" does not exist`);
+            }
+        });
+        if (currentObj && lastKey in currentObj) {
+            delete currentObj[lastKey];
+            this.save();
+            return true;
+        }
+        return false;
+    }
+    updateData(data, keys, value) {
+        let currentObj = data;
+        keys.forEach((key, index) => {
+            if (index === keys.length - 1) {
+                currentObj[key] = value;
+            }
+            else {
+                if (typeof currentObj[key] !== "object") {
+                    currentObj[key] = {};
+                }
+                currentObj = currentObj[key];
+            }
+        });
     }
     fetch() {
         try {
-            let data = JSON.parse(fs_1.default.readFileSync(__dirname + "/database.json").toString(), (key, value) => {
-                return value;
-            });
-            if (!data)
-                data = {};
-            this.data = data;
+            const filePath = path_1.default.join(__dirname, "database.json");
+            const rawData = fs_1.default.readFileSync(filePath, "utf-8");
+            this.data = JSON.parse(rawData) || {};
         }
         catch (err) {
-            if (err.code == "ENOENT")
+            if (err.code === "ENOENT") {
                 this.data = {};
+            }
+            else {
+                throw new Error('[ @Moonlink/Database ]: Failed to fetch data');
+            }
         }
     }
     save() {
         try {
-            fs_1.default.writeFileSync(__dirname + "/database.json", JSON.stringify(this.data, null, 2));
-            this.fetch();
+            const filePath = path_1.default.join(__dirname, "database.json");
+            fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
-        catch (e) {
-            console.log(e);
+        catch (error) {
+            throw new Error('[ @Moonlink/Database ]: Failed to save data');
         }
     }
 }

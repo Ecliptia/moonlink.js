@@ -1,338 +1,469 @@
 import { MoonlinkManager, MoonlinkQueue, MoonlinkRest, MoonlinkNode, MoonlinkFilters } from "../../index";
 
+/**
+ * Interface for optional connection options.
+ */
 export interface connectOptions {
- setMute?: boolean;
- setDeaf?: boolean;
+  setMute?: boolean;
+  setDeaf?: boolean;
 }
+
+/**
+ * Interface for player information.
+ */
 export interface PlayerInfos {
- guildId: string;
- textChannel: string;
- voiceChannel: string | null;
- autoPlay?: boolean | null;
- connected?: boolean | null;
- playing?: boolean | null;
- paused?: boolean | null;
- loop?: number | null;
- volume?: number | null;
+  guildId: string;
+  textChannel: string;
+  voiceChannel: string | null;
+  autoPlay?: boolean | null;
+  connected?: boolean | null;
+  playing?: boolean | null;
+  paused?: boolean | null;
+  loop?: number | null;
+  volume?: number | null;
+  node?: string;
 }
 
+/**
+ * Represents a Moonlink media player.
+ */
 export class MoonlinkPlayer {
- private manager: MoonlinkManager;
- private infos: object;
- private map: Map<string, any>;
- public payload: Function;
- public guildId: string;
- public textChannel: string;
- public voiceChannel: string;
- public autoPlay: boolean | null;
- public connected: boolean | null;
- public playing: boolean | null;
- public paused: boolean | null;
- public loop: number | null;
- public volume: number;
- public queue: MoonlinkQueue;
- public filters: MoonlinkFilters;
- public current: any;
- public data: any;
- public node: MoonlinkNode | any;
- public rest: MoonlinkRest;
- constructor(
-  infos: PlayerInfos,
-  manager: MoonlinkManager,
-  map: Map<string, any>
- ) {
-  this.payload = manager._sPayload;
-  this.guildId = infos.guildId;
-  this.textChannel = infos.textChannel;
-  this.voiceChannel = infos.voiceChannel;
-  this.autoPlay = infos.autoPlay
-  this.connected = infos.connected || null;
-  this.playing = infos.playing || null;
-  this.paused = infos.paused || null;
-  this.loop = infos.loop || null;
-  this.volume = infos.volume || 90;
-  if(manager.options && manager.options.custom.queue) this.queue = new manager.options.custom.queue(manager, this)
-	 else this.queue = new MoonlinkQueue(manager, this);
-  this.current = map.get("current") || {};
-  this.current = this.current[this.guildId]
-  this.map = map;
-	this.data = this.map.get('players') || {}
-  this.data = this.data[this.guildId]
-	this.node = manager.nodes.get(this.get('node'));
-	this.rest = this.node.rest;
-	this.manager = manager
-	this.filters = new MoonlinkFilters(this);
- }
- private updatePlayers(): void {
-  let players = this.map.get('players') || {};
-  players[this.guildId] = this.data;
-  this.map.set('players', players);
- }
-	
- public set(key: string, value: unknown): void {
-	 this.data[key] = value;
-	 this.updatePlayers()
- }
- public get<T>(key: string): T {
-	 this.updatePlayers()
-	 return this.data[key] as T || null;
- }
-	
- public setTextChannel(channelId: string): boolean {
-  if (!channelId)
-   throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-  if (typeof channelId !== "string")
-   throw new Error(
-    '[ @Moonlink/Player ]: option "channelId" is different from string'
-   );
-  this.set('textChannel', channelId)
-  this.textChannel = channelId;
-  return true;
- }
- public setVoiceChannel(channelId: string): boolean {
-  if (!channelId)
-   throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
-  if (typeof channelId !== "string")
-   throw new Error(
-    '[ @Moonlink/Player ]: option "channelId" is different from string'
-   );
-	this.set('voiceChannel', channelId)
-  this.voiceChannel = channelId;
-  return true;
- }
- public setAutoPlay(mode: boolean): boolean {
-  if (!mode && typeof mode !== "boolean")
-   throw new Error(
-    '[ @Moonlink/Player ]: "mode" option is empty or is different from boolean'
-   );
-	this.set('autoPlay', mode)
-  this.autoPlay = mode;
-  return mode;
- }
- public connect(options: connectOptions): boolean | null {
-  options = options || { setDeaf: false, setMute: false };
-  const { setDeaf, setMute } = options;
-  this.set("connected", true);
-  this.payload(this.guildId, JSON.stringify({
-    op: 4,
-    d: {
-      guild_id: this.guildId,
-      channel_id: this.voiceChannel,
-      self_mute: setMute,
-      self_deaf: setDeaf,
-    },
-  }));
-  return true;
-}
+  private manager: MoonlinkManager;
+  private infos: object;
+  private map: Map<string, any>;
+  public payload: Function;
+  public guildId: string;
+  public textChannel: string;
+  public voiceChannel: string;
+  public autoPlay: boolean | null;
+  public connected: boolean | null;
+  public playing: boolean | null;
+  public paused: boolean | null;
+  public loop: number | null;
+  public volume: number;
+  public queue: MoonlinkQueue;
+  public filters: MoonlinkFilters;
+  public current: any;
+  public data: any;
+  public node: MoonlinkNode | any;
+  public rest: MoonlinkRest;
 
-public disconnect(): boolean {
-  this.set("connected", false);
-  this.set("voiceChannel", null);
-  this.payload(this.guildId, JSON.stringify({
-    op: 4,
-    d: {
-      guild_id: this.guildId,
-      channel_id: null,
-      self_mute: false,
-      self_deaf: false,
-    },
-  }));
-  return true;
-}
-	
-  public async restart(): Promise<void> {
-	 if(!this.current && !this.queue.size) return;
-	 if(!this.current) this.play();
-	 await this.manager.attemptConnection(this.guildId);
-   await this.rest.update({
-    guildId: this.guildId,
-    data: {
-     encodedTrack: this.current.encoded,
-	   position: this.current.position,
-     volume: this.volume,
-    },
-   })
- }
- 
-public async play(): Promise<void> {
-  if (!this.queue.size) return;
-  let queue: any = this.queue.db.get(`queue.${this.guildId}`);
-  let data: any = queue.shift();
-  if (!data) return;
-  let current = this.map.get("current") || {};
-  current[this.guildId] = {
-   ...data,
-   thumbnail: data.thumbnail,
-   requester: data.requester,
-  };
-  this.current = current[this.guildId];
-  this.map.set("current", current);
-  await this.queue.db.set(`queue.${this.guildId}`, queue);
-   await this.rest.update({
-    guildId: this.guildId,
-    data: {
-     encodedTrack: data.encoded,
-     volume: this.volume,
-    },
-   })
- }
-	
-  public async pause(): Promise<boolean> {
-  if (!this.paused) return true;
-  await this.updatePlaybackStatus(true);
-  return true;
-}
+  /**
+   * Creates an instance of MoonlinkPlayer.
+   * @param infos - Player information.
+   * @param manager - MoonlinkManager instance.
+   * @param map - Map for storing player data.
+   */
+  constructor(
+    infos: PlayerInfos,
+    manager: MoonlinkManager,
+    map: Map<string, any>
+  ) {
+    // Initialize properties and set default values based on input parameters.
+    this.payload = manager._sPayload;
+    this.guildId = infos.guildId;
+    this.textChannel = infos.textChannel;
+    this.voiceChannel = infos.voiceChannel;
+    this.autoPlay = infos.autoPlay;
+    this.connected = infos.connected || null;
+    this.playing = infos.playing || null;
+    this.paused = infos.paused || null;
+    this.loop = infos.loop || null;
+    this.volume = infos.volume || 90;
+    if (manager.options && manager.options.custom.queue) {
+      this.queue = new manager.options.custom.queue(manager, this);
+    } else {
+      this.queue = new MoonlinkQueue(manager, this);
+    }
+    this.current = map.get("current") || {};
+    this.current = this.current[this.guildId];
+    this.map = map;
+    this.data = this.map.get('players') || {};
+    this.data = this.data[this.guildId];
+    this.node = manager.nodes.get(this.get('node'));
+    this.filters = new MoonlinkFilters(this);
+    this.rest = this.node.rest;
+    this.manager = manager;
+  }
 
-  public async resume(): Promise<boolean> {
-  if (this.playing) return true;
-  await this.updatePlaybackStatus(false);
-  return true;
-}
+  /**
+   * Private method to update player information in the map.
+   */
+  private updatePlayers(): void {
+    let players = this.map.get('players') || {};
+    players[this.guildId] = this.data;
+    this.map.set('players', players);
+  }
 
-  private async updatePlaybackStatus(paused: boolean): Promise<void> {
-  await this.rest.update({
-    guildId: this.guildId,
-    data: { paused },
-  });
-  this.set("paused", paused);
-  this.set("playing", !paused);
-}
+  /**
+   * Set a key-value pair in the player's data and update the map.
+   * @param key - The key to set.
+   * @param value - The value to set.
+   */
+  public set(key: string, value: unknown): void {
+    this.data[key] = value;
+    this.updatePlayers();
+  }
 
- public async stop(): Promise<boolean> {
-  const clearData = () => {
-    delete this.map.get(`players`)[this.guildId];
+  /**
+   * Get a value from the player's data.
+   * @param key - The key to retrieve.
+   * @returns The value associated with the key.
+   */
+  public get<T>(key: string): T {
+    this.updatePlayers();
+    return this.data[key] as T || null;
+  }
+
+  /**
+   * Set the text channel for the player.
+   * @param channelId - The ID of the text channel.
+   * @returns True if the channel was set successfully.
+   * @throws Error if channelId is empty or not a string.
+   */
+  public setTextChannel(channelId: string): boolean {
+    if (!channelId) {
+      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
+    }
+    if (typeof channelId !== "string") {
+      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
+    }
+    this.set('textChannel', channelId);
+    this.textChannel = channelId;
+    return true;
+  }
+
+  /**
+   * Set the voice channel for the player.
+   * @param channelId - The ID of the voice channel.
+   * @returns True if the channel was set successfully.
+   * @throws Error if channelId is empty or not a string.
+   */
+  public setVoiceChannel(channelId: string): boolean {
+    if (!channelId) {
+      throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
+    }
+    if (typeof channelId !== "string") {
+      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
+    }
+    this.set('voiceChannel', channelId);
+    this.voiceChannel = channelId;
+    return true;
+  }
+
+  /**
+   * Set the auto-play mode for the player.
+   * @param mode - Auto-play mode (true/false).
+   * @returns True if the mode was set successfully.
+   * @throws Error if mode is not a boolean.
+   */
+  public setAutoPlay(mode: boolean): boolean {
+    if (typeof mode !== "boolean") {
+      throw new Error('[ @Moonlink/Player ]: "mode" option is empty or different from a boolean');
+    }
+    this.set('autoPlay', mode);
+    this.autoPlay = mode;
+    return mode;
+  }
+
+  /**
+   * Connect the player to a voice channel with optional connection options.
+   * @param options - Connection options (setMute, setDeaf).
+   * @returns True if the connection was successful.
+   */
+  public connect(options: connectOptions): boolean | null {
+    options = options || { setDeaf: false, setMute: false };
+    const { setDeaf, setMute } = options;
+    this.set("connected", true);
+    this.payload(this.guildId, JSON.stringify({
+      op: 4,
+      d: {
+        guild_id: this.guildId,
+        channel_id: this.voiceChannel,
+        self_mute: setMute,
+        self_deaf: setDeaf,
+      },
+    }));
+    return true;
+  }
+
+  /**
+   * Disconnect the player from the voice channel.
+   * @returns True if the disconnection was successful.
+   */
+  public disconnect(): boolean {
     this.set("connected", false);
-    this.set("voiceChannel", null);
-  };
+		this.set('voiceChannel', null);
+    this.payload(this.guildId, JSON.stringify({
+      op: 4,
+      d: {
+        guild_id: this.guildId,
+        channel_id: null,
+        self_mute: false,
+        self_deaf: false,
+      },
+    }));
+    return true;
+  }
 
-  if (!this.queue.size) {
+  /**
+   * Restart the player by reconnecting and updating its state.
+   */
+  public async restart(): Promise<void> {
+    if (!this.current && !this.queue.size) return;
+    if (!this.current) this.play();
+    await this.manager.attemptConnection(this.guildId);
     await this.rest.update({
       guildId: this.guildId,
-      data: { encodedTrack: null },
+      data: {
+        encodedTrack: this.current.encoded,
+        position: this.current.position,
+        volume: this.volume,
+      },
     });
-    clearData();
-    return true;
-  } else {
-    clearData();
+  }
+  /**
+   * Play the next track in the queue.
+   */
+  public async play(): Promise<void> {
+    if (!this.queue.size) return;
+
+    let queue: any = this.queue.db.get(`queue.${this.guildId}`);
+    let data: any = queue.shift();
+
+    if (!data) return;
+
+    let current = this.map.get("current") || {};
+    current[this.guildId] = {
+      ...data,
+      thumbnail: data.thumbnail,
+      requester: data.requester,
+    };
+
+    this.current = current[this.guildId];
+    this.map.set("current", current);
+
+    await this.queue.db.set(`queue.${this.guildId}`, queue);
+
+    await this.rest.update({
+      guildId: this.guildId,
+      data: {
+        encodedTrack: data.encoded,
+        volume: this.volume,
+      },
+    });
+  }
+
+  /**
+   * Pause the playback.
+   * @returns True if paused successfully.
+   */
+  public async pause(): Promise<boolean> {
+    if (!this.paused) return true;
+    await this.updatePlaybackStatus(true);
     return true;
   }
-  return false;
-}
 
+  /**
+   * Resume the playback.
+   * @returns True if resumed successfully.
+   */
+  public async resume(): Promise<boolean> {
+    if (this.playing) return true;
+    await this.updatePlaybackStatus(false);
+    return true;
+  }
+
+  /**
+   * Private method to update the playback status (paused or resumed).
+   * @param paused - Indicates whether to pause or resume the playback.
+   */
+  private async updatePlaybackStatus(paused: boolean): Promise<void> {
+    await this.rest.update({
+      guildId: this.guildId,
+      data: { paused },
+    });
+    this.set("paused", paused);
+    this.set("playing", !paused);
+  }
+
+  /**
+   * Stop the playback and optionally clear player data.
+   * @returns True if stopped successfully.
+   */
+  public async stop(): Promise<boolean> {
+    if (!this.queue.size) {
+      await this.rest.update({
+        guildId: this.guildId,
+        data: { encodedTrack: null },
+      });
+    }
+      this.destroy();
+		  return true;
+  }
+
+  /**
+   * Skip to the next track in the queue.
+   * @returns True if the next track was successfully played.
+   */
   public async skip(): Promise<boolean> {
-  if (!this.queue.size) {
-    this.destroy();
-    return false;
-  } else {
-    this.play();
+    if (!this.queue.size) {
+      this.destroy();
+      return false;
+    } else {
+      this.play();
+      return true;
+    }
+  }
+
+  /**
+   * Set the volume level for the player.
+   * @param percent - Volume percentage (0 to Infinity).
+   * @returns The new volume level.
+   * @throws Error if the volume is not a valid number or player is not playing.
+   */
+  public async setVolume(percent: number): Promise<number> {
+    if (typeof percent == "undefined" || typeof percent !== "number") {
+      throw new Error('[ @Moonlink/Player ]: option "percent" is empty or different from a number');
+    }
+    if (!this.playing) {
+      throw new Error("[ @Moonlink/Player ]: cannot change volume while the player is not playing");
+    }
+
+    await this.rest.update({
+      guildId: this.guildId,
+      data: { volume: percent },
+    });
+    this.set('volume', percent)
+    return percent;
+  }
+
+  /**
+   * Set the loop mode for the player.
+   * @param mode - Loop mode (0 for no loop, 1 for single track, 2 for entire queue).
+   * @returns The new loop mode.
+   * @throws Error if the mode is not a valid number or out of range.
+   */
+  public setLoop(mode: number | null): number | null {
+    if (typeof mode !== 'number' || (mode !== null && (mode < 0 || mode > 2))) {
+      throw new Error('[ @Moonlink/Player ]: the option "mode" is different from a number or the option does not exist');
+    }
+
+    this.set("loop", mode);
+    return mode;
+  }
+
+  /**
+   * Destroy the player, disconnecting it and removing player data.
+   * @returns True if the player was successfully destroyed.
+   */
+  public async destroy(): Promise<boolean> {
+    if (this.connected) this.disconnect();
+    await this.rest.destroy(this.guildId);
+    this.queue.clear();
+    let players = this.map.get("players");
+    delete players[this.guildId];
+    this.map.set("players", players);
     return true;
   }
-}
- public async setVolume(percent: number): Promise<number> {
-  if (typeof percent == "undefined" && typeof percent !== "number")
-   throw new Error(
-    '[ @Moonlink/Player ]: option "percent" is empty or different from number'
-   );
-  if (!this.playing)
-   throw new Error(
-    "[ @Moonlink/Player ]: cannot change volume while player is not playing"
-   );
-  await this.rest.update({
-    guildId: this.guildId,
-    data: { volume: percent },
-   });
-  let players = this.map.get("players") || {};
-  players[this.guildId] = {
-   ...players[this.guildId],
-   volume: percent,
-  };
-  this.volume = percent;
-  this.map.set("players", players);
-  return percent;
- }
- public setLoop(mode: number | null): number | null {
-  if (typeof mode !== 'number' || (mode !== null && (mode < 0 || mode > 2))) {
-    throw new Error('[ @Moonlink/Player ]: the option "mode" is different from number or the option does not exist');
+
+  /**
+   * Private method to validate a number parameter.
+   * @param param - The number parameter to validate.
+   * @param paramName - The name of the parameter.
+   * @throws Error if the parameter is not a valid number.
+   */
+  private validateNumberParam(param: number, paramName: string): void {
+    if (typeof param !== "number") {
+      throw new Error(`[ @Moonlink/Player ]: option "${paramName}" is empty or different from a number`);
+    }
   }
 
-  this.set("loop", mode);
-  return mode;
-}
+  /**
+   * Seek to a specific position in the current track.
+   * @param position - The position to seek to.
+   * @returns The new position after seeking.
+   * @throws Error if the position is greater than the track duration or seek is not allowed.
+   */
+  public async seek(position: number): Promise<number | null> {
+    this.validateNumberParam(position, "position");
 
- public async destroy(): Promise<boolean> {
-  if (this.connected) this.disconnect();
-  await this.rest.destroy(this.guildId);
-  this.queue.db.delete(`queue.${this.guildId}`);
-  let players = this.map.get("players");
-  delete players[this.guildId];
-  this.map.set("players", players);
-  return true;
- }
+    if (position >= this.current.duration) {
+      throw new Error(`[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track`);
+    }
 
- private validateNumberParam(param: number, paramName: string): void {
-  if (typeof param !== "number") {
-    throw new Error(`[ @Moonlink/Player ]: option "${paramName}" is empty or different from number`);
-  }
-}
+    if (!this.current.isSeekable && this.current.isStream) {
+      throw new Error(`[ @Moonlink/Player ]: seek function cannot be applied on live video or cannot be applied in "isSeekable"`);
+    }
 
-public async seek(position: number): Promise<number | null> {
-  this.validateNumberParam(position, "position");
-  if (position >= this.current.duration) {
-    throw new Error(`[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track`);
-  }
-  if (!this.current.isSeekable && this.current.isStream) {
-    throw new Error(`[ @Moonlink/Player ]: seek function cannot be applied on live video | or cannot be applied in "isSeekable"`);
-  }
-  await this.rest.update({
-    guildId: this.guildId,
-    data: { position },
-  });
-  return position;
-}
+    await this.rest.update({
+      guildId: this.guildId,
+      data: { position },
+    });
 
-public async skipTo(position: number): Promise<boolean | void> {
-  this.validateNumberParam(position, "position");
-  if (!this.queue.size) {
-    throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
+    return position;
   }
-  let queue = this.queue.db.get(`queue.${this.guildId}`);
-  if (!queue[position - 1]) {
-    throw new Error(`[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`);
-  }
-  let data: any = queue.splice(position - 1, 1)[0];
-  let currents: any = this.map.get("current") || {};
-  currents[this.guildId] = data;
-  this.map.set("current", currents);
-  this.queue.db.set(`queue.${this.guildId}`, queue);
-  await this.rest.update({
-    guildId: this.guildId,
-    data: {
-     encodedTrack: data.track
-      ? data.track
-      : data.encoded
-      ? data.encoded
-      : data.trackEncoded
-      ? data.trackEncoded
-      : null,
-     volume: 90,
-    },
-   });
-  return true;
-}
- public async shuffle(): Promise<boolean> {
-  if (!this.queue.size) {
-    throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
-  }
-  let queue: any = this.queue.all;
-  this.shuffleArray(queue);
-  this.queue.db.set(`queue.${this.guildId}`, queue);
-  return true;
-}
 
-private shuffleArray(array: any[]): void {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+  /**
+   * Skip to a specific position in the queue.
+   * @param position - The position to skip to.
+   * @returns True if the position exists and the skip was successful.
+   * @throws Error if the queue is empty, or the indicated position does not exist.
+   */
+  public async skipTo(position: number): Promise<boolean | void> {
+    this.validateNumberParam(position, "position");
+
+    if (!this.queue.size) {
+      throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
+    }
+
+    let queue = this.queue.db.get(`queue.${this.guildId}`);
+    if (!queue[position - 1]) {
+      throw new Error(`[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`);
+    }
+
+    let data: any = queue.splice(position - 1, 1)[0];
+    let currents: any = this.map.get("current") || {};
+    currents[this.guildId] = data;
+    this.map.set("current", currents);
+    this.queue.db.set(`queue.${this.guildId}`, queue);
+
+    await this.rest.update({
+      guildId: this.guildId,
+      data: {
+        encodedTrack: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
+        volume: 90,
+      },
+    });
+
+    return true;
   }
- }
+
+  /**
+   * Shuffle the tracks in the queue.
+   * @returns True if the shuffle was successful.
+   * @throws Error if the queue is empty.
+   */
+  public async shuffle(): Promise<boolean> {
+    if (!this.queue.size) {
+      throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
+    }
+
+    let queue: any = this.queue.all;
+    this.shuffleArray(queue);
+    this.queue.db.set(`queue.${this.guildId}`, queue);
+
+    return true;
+  }
+
+  /**
+   * Private method to shuffle an array randomly.
+   * @param array - The array to shuffle.
+   */
+  private shuffleArray(array: any[]): void {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
 }

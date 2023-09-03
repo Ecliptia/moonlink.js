@@ -1,10 +1,11 @@
 export declare class MoonlinkDatabase {
-    data: object;
+    private data;
     constructor();
-    set(key: string, value: any): any;
+    set(key: string, value: any): void;
     get(key: string): any;
-    push(key: string, value: any): any;
+    push(key: string, value: any): void;
     delete(key: string): boolean;
-    fetch(): void;
-    save(): void;
+    private updateData;
+    private fetch;
+    private save;
 }
