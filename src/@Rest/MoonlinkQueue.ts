@@ -1,70 +1,79 @@
 import { MoonlinkDatabase } from "./MoonlinkDatabase";
 import { MoonlinkManager } from "../@Moonlink/MoonlinkManager";
 import { MoonlinkTrack } from "./MoonlinkTrack";
+
 export class MoonlinkQueue {
- public db: MoonlinkDatabase;
- public guildId: string;
- private manager: MoonlinkManager;
- constructor(manager, data) {
-  this.db = new MoonlinkDatabase();
-  this.guildId = data.guildId;
-  this.manager = manager;
- }
- public add(data: MoonlinkTrack, position?: number): void {
-  if (!data) throw new Error('[ @Moonlink/Queue ]: "data" option is empty');
-  let queue = this.db.get(`queue.${this.guildId}`);
-	 if (typeof position !== 'undefined' && (position < 1 || position > queue.length + 1)) {
+  public db: MoonlinkDatabase;
+  private guildId: string;
+  private manager: MoonlinkManager;
+
+  constructor(manager: MoonlinkManager, data: { guildId: string }) {
+    if (!manager || !data || !data.guildId) {
+      throw new Error('[ @Moonlink/Queue ]: Invalid constructor arguments');
+    }
+
+    this.db = new MoonlinkDatabase();
+    this.guildId = data.guildId;
+    this.manager = manager;
+  }
+
+  public add(data: MoonlinkTrack, position?: number): void {
+    if (!data) throw new Error('[ @Moonlink/Queue ]: "data" option is empty');
+
+    let queue = this.getQueue();
+    position = (position !== undefined && position >= 1) ? position - 1 : queue.length;
+
+    if (position < 0 || position > queue.length) {
       throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
     }
-	 if (typeof position === 'undefined' || position > queue.length + 1) {
-  if (Array.isArray(queue)) {
-   this.db.push(`queue.${this.guildId}`, data);
-  } else if (queue && queue.length > 0 && queue[0]) {
-   queue = [queue, data];
-   this.db.set(`queue.${this.guildId}`, queue);
-  } else {
-   this.db.push(`queue.${this.guildId}`, data);
-     }
-	 } else {
-		 queue.splice(position - 1, 0, data);
-		 this.db.set(`queue.${this.guildId}`, queue);
-	 }
- }
- public first(): any {
-  let queue = this.db.get(`queue.${this.guildId}`) || null;
-  if (!queue) return null;
-  if (Array.isArray(queue)) {
-   return queue[0];
-  } else if (queue && queue.length > 0 && queue[0]) return queue;
-  else queue[0];
- }
- public clear(): boolean {
-  let queue = this.db.get(`queue.${this.guildId}`) || null;
-  if (!queue) return false;
-  this.db.delete(`queue.${this.guildId}`);
-  return true;
- }
- public get size(): BigInt {
-  return this.db.get(`queue.${this.guildId}`)
-   ? this.db.get(`queue.${this.guildId}`).length
-   : 0;
- }
- public remove(position: number): boolean {
-  if (!position && typeof position !== "number")
-   throw new Error(
-    '[ @Moonlink/Queue ]: option "position" is empty or different from number'
-   );
-  if (!this.size) throw new Error("[ @Moonlink/Queue ]: the queue is empty");
-  let queue = this.db.get(`queue.${this.guildId}`);
-  if (!queue[position - 1])
-   throw new Error("[ @Moonlink/Queue ]: indicated position is undefined");
-  queue.splice(position - 1, 1);
-  this.db.set(`queue.${this.guildId}`, queue);
-  return true;
- }
- public get all(): any {
-  return this.db.get(`queue.${this.guildId}`)
-   ? this.db.get(`queue.${this.guildId}`)
-   : null;
- }
+
+    queue.splice(position, 0, data);
+    this.setQueue(queue);
+  }
+
+  public first(): any {
+    const queue = this.getQueue();
+    return queue.length > 0 ? queue[0] : null;
+  }
+
+  public clear(): boolean {
+    const queue = this.getQueue();
+    if (queue.length > 0) {
+      this.setQueue([]);
+      return true;
+    }
+    return false;
+  }
+
+  public get size(): number {
+    return this.getQueue().length;
+  }
+
+  public remove(position: number): boolean {
+    if (!position || typeof position !== 'number' || position < 1) {
+      throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
+    }
+
+    const queue = this.getQueue();
+
+    if (position > queue.length) {
+      throw new Error('[ @Moonlink/Queue ]: Position exceeds queue length');
+    }
+
+    queue.splice(position - 1, 1);
+    this.setQueue(queue);
+    return true;
+  }
+
+  public get all(): any {
+    return this.getQueue();
+  }
+
+  private getQueue(): MoonlinkTrack[] {
+    return this.db.get(`queue.${this.guildId}`) || [];
+  }
+
+  private setQueue(queue: MoonlinkTrack[]): void {
+    this.db.set(`queue.${this.guildId}`, queue);
+  }
 }

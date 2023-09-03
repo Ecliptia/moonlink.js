@@ -1,70 +1,102 @@
 import fs from "fs";
 import path from "path";
+
 export class MoonlinkDatabase {
- public data: object = {};
- constructor() {
-  this.fetch();
- }
- set(key: string, value: any): any {
-  this.fetch();
-  const keys: string[] = key.split(".");
-  const obj: Function = (data: object, _key: any) => {
-   if (_key.length === 1) data[_key[0]] = value;
-   else {
-    if (typeof data[_key[0]] !== "object") data[_key[0]] = {};
-    data[_key[0]] = { ...data[_key[0]] };
-    obj(data[_key[0]], _key.slice(1));
-   }
-  };
-  obj(this.data, keys);
-  this.save();
-  return this.get(keys[0]);
- }
- get(key: string): any {
-	this.fetch();
-  const data = key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
-  return data;
- }
- push(key: string, value: any): any {
-  const old_array = this.get(key) ?? [];
-  if (!Array.isArray(old_array) && old_array !== undefined) return;
-  old_array.push(value);
-  this.set(key, old_array);
-  this.save();
-  return this.get(key.split(".")[0]);
- }
- delete(key: string): boolean {
-  const data = this.get(key);
-  key.split(".").reduce((o, curr, i, arr) => {
-   if (i === arr.length - 1) delete o?.[curr];
-   else return o?.[curr];
-  }, this.data);
-  this.save();
-  return true;
- }
- fetch(): void {
-  try {
-   let data: any = JSON.parse(
-    fs.readFileSync(__dirname + "/database.json").toString(),
-    (key: any, value: any) => {
-     return value;
+  private data: object = {};
+
+  constructor() {
+    this.fetch();
+  }
+
+  set(key: string, value: any): void {
+    if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    
+    const keys: string[] = key.split(".");
+    if (keys.length === 0) return; // Key is invalid
+    
+    this.updateData(this.data, keys, value);
+    this.save();
+  }
+
+  get(key: string): any {
+    this.fetch();
+    if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    
+    return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
+  }
+
+  push(key: string, value: any): void {
+    if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    
+    const oldArray = this.get(key) ?? [];
+    if (Array.isArray(oldArray)) {
+      oldArray.push(value);
+      this.set(key, oldArray);
+    } else {
+      throw new Error('[ @Moonlink/Database ]: Key does not point to an array');
     }
-   );
-   if (!data) data = {};
-   this.data = data;
-  } catch (err: any) {
-   if (err.code == "ENOENT") this.data = {};
   }
- }
- save(): void {
-  try {
-   fs.writeFileSync(
-    __dirname + "/database.json",
-    JSON.stringify(this.data, null, 2)
-   );
-   this.fetch();
-  } catch (e: any) {
-   console.log(e);
+
+  delete(key: string): boolean {
+    if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    
+    const keys: string[] = key.split(".");
+    if (keys.length === 0) return false; // Key is invalid
+    
+    const lastKey: string = keys.pop() || "";
+    let currentObj: any = this.data;
+
+    keys.forEach((k) => {
+      if (typeof currentObj[k] === "object") {
+        currentObj = currentObj[k];
+      } else {
+        throw new Error(`[ @Moonlink/Database ]: Key path "${key}" does not exist`);
+      }
+    });
+
+    if (currentObj && lastKey in currentObj) {
+      delete currentObj[lastKey];
+      this.save();
+      return true;
+    }
+    return false;
   }
- }
+
+  private updateData(data: object, keys: string[], value: any): void {
+    let currentObj: any = data;
+
+    keys.forEach((key, index) => {
+      if (index === keys.length - 1) {
+        currentObj[key] = value;
+      } else {
+        if (typeof currentObj[key] !== "object") {
+          currentObj[key] = {};
+        }
+        currentObj = currentObj[key];
+      }
+    });
+  }
+
+  private fetch(): void {
+    try {
+      const filePath: string = path.join(__dirname, "database.json");
+      const rawData: string = fs.readFileSync(filePath, "utf-8");
+      this.data = JSON.parse(rawData) || {};
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        this.data = {};
+      } else {
+        throw new Error('[ @Moonlink/Database ]: Failed to fetch data');
+      }
+    }
+  }
+
+  private save(): void {
+    try {
+      const filePath: string = path.join(__dirname, "database.json");
+      fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
+    } catch (error) {
+      throw new Error('[ @Moonlink/Database ]: Failed to save data');
+    }
+  }
 }
