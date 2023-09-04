@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkNode = void 0;
-const ws_1 = __importDefault(require("ws"));
+const MoonlinkWebsocket_1 = require("./MoonlinkWebsocket");
 const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
 const MoonlinkDatabase_1 = require("../@Rest/MoonlinkDatabase");
 const MoonlinkRest_1 = require("./MoonlinkRest");
@@ -120,7 +117,8 @@ class MoonlinkNode {
             headers["Session-Id"] = this.resumeKey;
         this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
         this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/`;
-        this.ws = new ws_1.default(this.socketUri, undefined, { headers });
+        this.ws = new MoonlinkWebsocket_1.MoonlinkWebsocket(this.socketUri, { host: this.host, port: this.port, secure: this.secure, headers });
+        this.ws.connect();
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
         this.ws.on("message", this.message.bind(this));

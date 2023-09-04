@@ -1,5 +1,6 @@
 export declare const version: string;
 export * from "./src/@Moonlink/MoonlinkManager";
+export * from "./src/@Moonlink/MoonlinkWebsocket";
 export * from "./src/@Moonlink/MoonlinkPlayers";
 export * from "./src/@Moonlink/MoonlinkNodes";
 export * from "./src/@Moonlink/MoonlinkRest";

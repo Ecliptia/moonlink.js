@@ -1,4 +1,4 @@
-import WebSocket from "ws";
+import { MoonlinkWebsocket } from "./MoonlinkWebsocket";
 import { MoonlinkManager, Options, SearchResult } from "./MoonlinkManager";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkDatabase } from "../@Rest/MoonlinkDatabase";
@@ -50,7 +50,7 @@ export class MoonlinkNode {
  public resumed: boolean;
  public sessionId: string;
  public isConnected: boolean;
- public ws: WebSocket | null;
+ public ws: MoonlinkWebsocket | null;
  public stats: NodeStats;
  public retryTime: number | null;
  public reconnectAtattempts: number | null;
@@ -163,7 +163,8 @@ export class MoonlinkNode {
   this.restUri = `http${this.secure ? "s" : ""}://${
    this.host ? this.host : "localhost"
   }${this.port ? `:${this.port}` : ":443"}/v4/`;
-  this.ws = new WebSocket(this.socketUri, undefined, { headers });
+  this.ws = new MoonlinkWebsocket(this.socketUri, { host: this.host, port: this.port, secure: this.secure, headers });
+	this.ws.connect();
   this.ws.on("open", this.open.bind(this));
   this.ws.on("close", this.close.bind(this));
   this.ws.on("message", this.message.bind(this));
