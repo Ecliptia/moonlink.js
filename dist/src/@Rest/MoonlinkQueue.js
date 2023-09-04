@@ -10,7 +10,7 @@ class MoonlinkQueue {
         if (!manager || !data || !data.guildId) {
             throw new Error('[ @Moonlink/Queue ]: Invalid constructor arguments');
         }
-        this.db = new MoonlinkDatabase_1.MoonlinkDatabase();
+        this.db = new MoonlinkDatabase_1.MoonlinkDatabase(manager.clientId);
         this.guildId = data.guildId;
         this.manager = manager;
     }

@@ -8,8 +8,10 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 class MoonlinkDatabase {
     data = {};
-    constructor() {
+    id;
+    constructor(clientId) {
         this.fetch();
+        this.id = clientId;
     }
     set(key, value) {
         if (!key)
@@ -75,14 +77,17 @@ class MoonlinkDatabase {
             }
         });
     }
+    getFilePath() {
+        return path_1.default.join(__dirname, `database-${this.id}.json`);
+    }
     fetch() {
         try {
-            const filePath = path_1.default.join(__dirname, "database.json");
-            const rawData = fs_1.default.readFileSync(filePath, "utf-8");
+            const filePath = this.getFilePath();
+            const rawData = fs_1.default.readFileSync(filePath, 'utf-8');
             this.data = JSON.parse(rawData) || {};
         }
         catch (err) {
-            if (err.code === "ENOENT") {
+            if (err.code === 'ENOENT') {
                 this.data = {};
             }
             else {
@@ -92,7 +97,7 @@ class MoonlinkDatabase {
     }
     save() {
         try {
-            const filePath = path_1.default.join(__dirname, "database.json");
+            const filePath = this.getFilePath();
             fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
         catch (error) {

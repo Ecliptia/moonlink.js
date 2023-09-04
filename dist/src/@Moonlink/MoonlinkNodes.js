@@ -51,7 +51,7 @@ class MoonlinkNode {
         this.retryTime = this.manager.options.retryTime || 30000;
         this.reconnectAtattempts = this.manager.options.reconnectAtattemps || 0;
         this.retryAmount = this.manager.options.retryAmount || 5;
-        this.db = new MoonlinkDatabase_1.MoonlinkDatabase();
+        this.db = new MoonlinkDatabase_1.MoonlinkDatabase(this.manager.clientId);
         this.rest = new MoonlinkRest_1.MoonlinkRest(this.manager, this);
         this.stats = {
             players: 0,
