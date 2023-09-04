@@ -259,7 +259,7 @@ export class MoonlinkPlayer {
    * @returns True if paused successfully.
    */
   public async pause(): Promise<boolean> {
-    if (!this.paused) return true;
+    if (this.paused) return true;
     await this.updatePlaybackStatus(true);
     return true;
   }
