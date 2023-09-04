@@ -3,9 +3,10 @@ import path from "path";
 
 export class MoonlinkDatabase {
   private data: object = {};
-
-  constructor() {
+  private id: any;
+  constructor(clientId) {
     this.fetch();
+		this.id = clientId
   }
 
   set(key: string, value: any): void {
@@ -77,13 +78,17 @@ export class MoonlinkDatabase {
     });
   }
 
-  private fetch(): void {
+ private getFilePath() {
+    return path.join(__dirname, `database-${this.id}.json`);
+  }
+
+  private fetch() {
     try {
-      const filePath: string = path.join(__dirname, "database.json");
-      const rawData: string = fs.readFileSync(filePath, "utf-8");
+      const filePath = this.getFilePath();
+      const rawData = fs.readFileSync(filePath, 'utf-8');
       this.data = JSON.parse(rawData) || {};
     } catch (err) {
-      if (err.code === "ENOENT") {
+      if (err.code === 'ENOENT') {
         this.data = {};
       } else {
         throw new Error('[ @Moonlink/Database ]: Failed to fetch data');
@@ -91,9 +96,9 @@ export class MoonlinkDatabase {
     }
   }
 
-  private save(): void {
+  private save() {
     try {
-      const filePath: string = path.join(__dirname, "database.json");
+      const filePath = this.getFilePath();
       fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
     } catch (error) {
       throw new Error('[ @Moonlink/Database ]: Failed to save data');

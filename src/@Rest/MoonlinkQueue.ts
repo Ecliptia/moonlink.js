@@ -12,7 +12,7 @@ export class MoonlinkQueue {
       throw new Error('[ @Moonlink/Queue ]: Invalid constructor arguments');
     }
 
-    this.db = new MoonlinkDatabase();
+    this.db = new MoonlinkDatabase(manager.clientId);
     this.guildId = data.guildId;
     this.manager = manager;
   }
