@@ -29,6 +29,7 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     getRemotePort(): number | null;
     upgradeConnection(newSocket: tls.TLSSocket | net.Socket): void;
     private handleWebSocketData;
+    private cleanInvalidCharacters;
     private bufferedData;
     private applyMask;
     private decodeWebSocketFrames;

@@ -201,12 +201,16 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         });
     }
     handleWebSocketData(data) {
-        const frames = this.decodeWebSocketFrames(data);
+        const cleanedData = this.cleanInvalidCharacters(data);
+        const frames = this.decodeWebSocketFrames(cleanedData);
         if (frames) {
             frames.forEach((frame) => {
                 this.emit('message', frame);
             });
         }
+    }
+    cleanInvalidCharacters(data) {
+        return data.toString().replace(/[^ -~]/g, '');
     }
     bufferedData = Buffer.from([]);
     applyMask(data, mask) {
