@@ -58,7 +58,6 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
                 ...(this.options.headers || {}),
             },
         };
-        console.log(requestOptions);
         this.options.secure ? requestOptions.protocol = 'https:' : requestOptions.protocol = 'http:';
         this.socket = this.agent.request(requestOptions);
         this.socket.on('error', (err) => {
