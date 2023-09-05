@@ -121,49 +121,51 @@ export class MoonlinkWebsocket extends EventEmitter {
     }
   }
 
-  private parseFrameHeader(data: Buffer) {
-    if (data.length < 2) {
-      throw new Error('WebSocket frame header is too short.');
-    }
-
-    const isFinalFrame = (data[0] & 0x80) !== 0;
-    const opcode = data[0] & 0x0F;
-    const isMasked = (data[1] & 0x80) !== 0;
-    let payloadStartIndex = 2;
-    let payloadLength = data[1] & 0x7F;
-
-    if (payloadLength === 126) {
-      if (data.length < 4) {
-        throw new Error('WebSocket frame header is too short for extended payload length.');
-      }
-      payloadLength = data.readUInt16BE(2);
-      payloadStartIndex = 4;
-    } else if (payloadLength === 127) {
-      if (data.length < 10) {
-        throw new Error('WebSocket frame header is too short for extended payload length.');
-      }
-      payloadLength = data.readUInt32BE(6) * Math.pow(2, 32) + data.readUInt32BE(2);
-      payloadStartIndex = 10;
-    }
-
-    let mask: any = null;
-    if (isMasked) {
-      if (data.length < payloadStartIndex + 4) {
-        throw new Error('WebSocket frame header is too short for masking key.');
-      }
-      mask = data.slice(payloadStartIndex, payloadStartIndex + 4);
-      payloadStartIndex += 4;
-    }
-
-    return {
-      isFinalFrame,
-      opcode,
-      isMasked,
-      mask,
-      payloadLength,
-      payloadStartIndex,
-    };
+private parseFrameHeader(data: Buffer) {
+  if (data.length < 2) {
+    throw new Error('WebSocket frame header is too short.');
   }
+
+  const isFinalFrame = (data[0] & 0x80) !== 0;
+  const opcode = data[0] & 0x0F;
+  const isMasked = (data[1] & 0x80) !== 0;
+  let payloadStartIndex = 2;
+  let payloadLength = data[1] & 0x7F;
+
+  if (payloadLength === 126) {
+    if (data.length < 4) {
+      throw new Error('WebSocket frame header is too short for extended payload length.');
+    }
+    payloadLength = data.readUInt16BE(2);
+    payloadStartIndex = 4;
+  } else if (payloadLength === 127) {
+    if (data.length < 10) {
+      throw new Error('WebSocket frame header is too short for extended payload length.');
+    }
+    const upperPart = data.readUInt32BE(6);
+    const lowerPart = data.readUInt32BE(2);
+    payloadLength = upperPart * Math.pow(2, 32) + lowerPart;
+    payloadStartIndex = 10;
+  }
+
+  let mask: any | null = null;
+  if (isMasked) {
+    if (data.length < payloadStartIndex + 4) {
+      throw new Error('WebSocket frame header is too short for masking key.');
+    }
+    mask = data.slice(payloadStartIndex, payloadStartIndex + 4);
+    payloadStartIndex += 4;
+  }
+
+  return {
+    isFinalFrame,
+    opcode,
+    payloadLength,
+    isMasked,
+    mask,
+    payloadStartIndex,
+  };
+}
 
   private generateWebSocketKey(): string {
     const keyBytes = [];
@@ -213,20 +215,14 @@ export class MoonlinkWebsocket extends EventEmitter {
   }
 
   private handleWebSocketData(data: Buffer) {
-    const cleanedData = this.cleanInvalidCharacters(data);
-
-        const frames = this.decodeWebSocketFrames(cleanedData);
-        if (frames) {
-            frames.forEach((frame) => {
-                this.emit('message', frame);
-            });
-				
+    const frames = this.decodeWebSocketFrames(data);
+    if (frames) {
+      frames.forEach((frame) => {
+        this.emit('message', frame);
+      });
+    }
   }
-							}
 
-private cleanInvalidCharacters(data: any): any {
-        return data.toString().replace(/[^ -~]/g, '');
-  }
 	
 private bufferedData: Buffer = Buffer.from([]);
 
