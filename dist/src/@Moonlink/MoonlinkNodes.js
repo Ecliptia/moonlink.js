@@ -165,7 +165,15 @@ class MoonlinkNode {
             data = Buffer.concat(data);
         else if (data instanceof ArrayBuffer)
             data = Buffer.from(data);
-        let payload = JSON.parse(data.toString());
+        let payload;
+        try {
+            payload = JSON.parse(data.toString());
+        }
+        catch (error) {
+            payload = data.toString();
+            let cleanedJsonStr = payload.replace(/�|%EF%BF%BD/g, '');
+            payload = cleanedJsonStr.map(json => json.replace(/'/g, '"'));
+        }
         if (!payload.op)
             return;
         this.manager.emit("nodeRaw", this, payload);
