@@ -213,14 +213,21 @@ export class MoonlinkWebsocket extends EventEmitter {
   }
 
   private handleWebSocketData(data: Buffer) {
-    const frames = this.decodeWebSocketFrames(data);
-    if (frames) {
-      frames.forEach((frame) => {
-        this.emit('message', frame);
-      });
-    }
-  }
+    const cleanedData = this.cleanInvalidCharacters(data);
 
+        const frames = this.decodeWebSocketFrames(cleanedData);
+        if (frames) {
+            frames.forEach((frame) => {
+                this.emit('message', frame);
+            });
+				
+  }
+							}
+
+private cleanInvalidCharacters(data: any): any {
+        return data.toString().replace(/[^ -~]/g, '');
+  }
+	
 private bufferedData: Buffer = Buffer.from([]);
 
 private applyMask(data: Buffer, mask: number[]): Buffer {
