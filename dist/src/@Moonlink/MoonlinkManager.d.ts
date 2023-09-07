@@ -5,8 +5,6 @@ import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { MoonlinkQueue } from "../@Rest/MoonlinkQueue";
 import { Plugin } from "../@Rest/Plugin";
-import { Spotify } from "../@Sources/Spotify";
-import { Deezer } from "../@Sources/Deezer";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface Nodes {
     host: string;
@@ -14,10 +12,6 @@ export interface Nodes {
     identifier?: string;
     secure?: boolean;
     password?: string | null;
-}
-export interface spotifyOptions {
-    clientId?: string;
-    clientSecret?: string;
 }
 export interface customOptions {
     player?: Constructor<MoonlinkPlayer>;
@@ -32,7 +26,6 @@ export interface Options {
     resumeTimeout?: number;
     autoResume?: boolean;
     plugins?: Plugin[];
-    spotify?: spotifyOptions;
     custom?: customOptions;
     sortNode?: SortType;
 }
@@ -82,7 +75,7 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify" | "deezer";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;
@@ -160,8 +153,6 @@ export declare class MoonlinkManager extends EventEmitter {
     initiated: boolean;
     options: Options;
     nodes: Map<string, MoonlinkNode>;
-    spotify: Spotify;
-    deezer: Deezer;
     sendWs: any;
     clientId: string;
     version: string;
