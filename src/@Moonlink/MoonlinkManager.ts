@@ -3,6 +3,7 @@ import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { MoonlinkQueue } from "../@Rest/MoonlinkQueue"
+import { Spotify } from "../@Sources/Spotify"
 import { Plugin } from "../@Rest/Plugin";
 
 export type Constructor<T> = new (...args: any[]) => T;
@@ -13,6 +14,10 @@ export interface Nodes {
  identifier?: string;
  secure?: boolean;
  password?: string | null;
+}
+export interface spotifyOptions {
+ clientId?: string;
+ clientSecret?: string;
 }
 export interface customOptions {
 	player?: Constructor<MoonlinkPlayer>;
@@ -27,6 +32,7 @@ export interface Options {
  resumeTimeout?: number;
  autoResume?: boolean;
  plugins?: Plugin[];
+ spotify?: spotifyOptions;
  custom?: customOptions;
  sortNode?: SortType;
 }
@@ -94,7 +100,8 @@ export interface TrackDataInfo {
 export type SearchPlatform =
  | "youtube"
  | "youtubemusic"
- | "soundcloud";
+ | "soundcloud"
+ | "spotify";
 
 export interface SearchQuery {
  source?: SearchPlatform | string | undefined | null;
@@ -193,6 +200,7 @@ export class MoonlinkManager extends EventEmitter {
  public initiated: boolean;
  public options: Options;
  public nodes: Map<string, MoonlinkNode>;
+ public spotify: Spotify;
  public sendWs: any;
  public clientId: string;
  public version: string;
@@ -229,6 +237,7 @@ export class MoonlinkManager extends EventEmitter {
   this._sPayload = sPayload;
   this.options = options;
   this.nodes = new Map();
+  this.spotify = new Spotify(options.spotify, this);
   this.sendWs;
   this.version = require("../../index").version;
  }
@@ -440,8 +449,12 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    let sources = {
     youtube: "ytsearch",
     youtubemusic: "ytmsearch",
-    soundcloud: "scsearch"
+    soundcloud: "scsearch",
+    spotify: "spotify",
    };
+   if (this.spotify.isSpotifyUrl(query)) {
+    return resolve(await this.spotify.resolve(query));
+   }
    let opts: string | null;
    if (
     query &&
@@ -456,6 +469,10 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
      opts = `${source}:${query}`;
     } else {
      opts = sources[source] || `ytsearch:${query}`;
+    }
+   
+   if (source == "spotify") {
+    return resolve(this.spotify.fetch(query));
     }
 	 }
 		else opts = query;

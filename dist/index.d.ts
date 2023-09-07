@@ -9,4 +9,5 @@ export * from "./src/@Rest/MoonlinkFilters";
 export * from "./src/@Rest/MoonlinkTrack";
 export * from "./src/@Rest/MoonlinkDatabase";
 export * from "./src/@Rest/MakeRequest";
+export * from "./src/@Sources/Spotify";
 export * from "./src/@Rest/Plugin";

@@ -1,6 +1,6 @@
 {
  "name": "moonlink.js",
- "version": "2.10.95",
+ "version": "2.10.98",
  "description": "Imagine a Music... Welcome to MoonLink! A sample npm maked in javascript to your create your discord music bot using lavalink!",
  "keywords": [
   "bot",
@@ -24,7 +24,8 @@
  "scripts": {
   "clean": "rm -rf dist",
   "build": "tsc",
-  "start": "npm run clean && npm run build && node bot.js"
+  "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
+  "start": "npm run clean && npm run build && npm run build:esm && node bot.js"
  },
  "homepage": "https://moonlink.js.org",
  "bugs": {
@@ -52,6 +53,7 @@
   "discord.js": "^14.11.0",
   "express": "^4.18.2",
   "openai": "^4.5.0",
-  "typescript": "^5.2.2"
+  "typescript": "^5.2.2",
+  "gen-esm-wrapper": "^1.1.3"
  }
 }
