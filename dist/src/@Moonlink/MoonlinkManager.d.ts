@@ -4,6 +4,7 @@ import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { MoonlinkQueue } from "../@Rest/MoonlinkQueue";
+import { Spotify } from "../@Sources/Spotify";
 import { Plugin } from "../@Rest/Plugin";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface Nodes {
@@ -12,6 +13,10 @@ export interface Nodes {
     identifier?: string;
     secure?: boolean;
     password?: string | null;
+}
+export interface spotifyOptions {
+    clientId?: string;
+    clientSecret?: string;
 }
 export interface customOptions {
     player?: Constructor<MoonlinkPlayer>;
@@ -26,6 +31,7 @@ export interface Options {
     resumeTimeout?: number;
     autoResume?: boolean;
     plugins?: Plugin[];
+    spotify?: spotifyOptions;
     custom?: customOptions;
     sortNode?: SortType;
 }
@@ -75,7 +81,7 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | "spotify";
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;
@@ -153,6 +159,7 @@ export declare class MoonlinkManager extends EventEmitter {
     initiated: boolean;
     options: Options;
     nodes: Map<string, MoonlinkNode>;
+    spotify: Spotify;
     sendWs: any;
     clientId: string;
     version: string;

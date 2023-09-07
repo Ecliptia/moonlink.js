@@ -5,6 +5,7 @@ const node_events_1 = require("node:events");
 const MoonlinkNodes_1 = require("./MoonlinkNodes");
 const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
 const MoonlinkTrack_1 = require("../@Rest/MoonlinkTrack");
+const Spotify_1 = require("../@Sources/Spotify");
 const Plugin_1 = require("../@Rest/Plugin");
 /**
  * Creates a new MoonlinkManager instance.
@@ -23,6 +24,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     initiated;
     options;
     nodes;
+    spotify;
     sendWs;
     clientId;
     version;
@@ -54,6 +56,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this._sPayload = sPayload;
         this.options = options;
         this.nodes = new Map();
+        this.spotify = new Spotify_1.Spotify(options.spotify, this);
         this.sendWs;
         this.version = require("../../index").version;
     }
@@ -252,8 +255,12 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             let sources = {
                 youtube: "ytsearch",
                 youtubemusic: "ytmsearch",
-                soundcloud: "scsearch"
+                soundcloud: "scsearch",
+                spotify: "spotify",
             };
+            if (this.spotify.isSpotifyUrl(query)) {
+                return resolve(await this.spotify.resolve(query));
+            }
             let opts;
             if (query &&
                 !query.startsWith("http://") &&
@@ -264,6 +271,9 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 }
                 else {
                     opts = sources[source] || `ytsearch:${query}`;
+                }
+                if (source == "spotify") {
+                    return resolve(this.spotify.fetch(query));
                 }
             }
             else
