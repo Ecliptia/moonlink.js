@@ -6,8 +6,6 @@ const MoonlinkNodes_1 = require("./MoonlinkNodes");
 const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
 const MoonlinkTrack_1 = require("../@Rest/MoonlinkTrack");
 const Plugin_1 = require("../@Rest/Plugin");
-const Spotify_1 = require("../@Sources/Spotify");
-const Deezer_1 = require("../@Sources/Deezer");
 /**
  * Creates a new MoonlinkManager instance.
  * @param {Nodes[]} nodes - An array of objects containing information about the Lavalink nodes.
@@ -25,8 +23,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     initiated;
     options;
     nodes;
-    spotify;
-    deezer;
     sendWs;
     clientId;
     version;
@@ -58,8 +54,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this._sPayload = sPayload;
         this.options = options;
         this.nodes = new Map();
-        this.spotify = new Spotify_1.Spotify(this, options);
-        this.deezer = new Deezer_1.Deezer(this, options);
         this.sendWs;
         this.version = require("../../index").version;
     }
@@ -258,16 +252,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             let sources = {
                 youtube: "ytsearch",
                 youtubemusic: "ytmsearch",
-                soundcloud: "scsearch",
-                spotify: "spotify",
-                deezer: "deezer",
+                soundcloud: "scsearch"
             };
-            if (this.spotify.check(query)) {
-                return resolve(await this.spotify.resolve(query));
-            }
-            if (this.deezer.check(query)) {
-                return resolve(await this.deezer.resolve(query));
-            }
             let opts;
             if (query &&
                 !query.startsWith("http://") &&
@@ -278,12 +264,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 }
                 else {
                     opts = sources[source] || `ytsearch:${query}`;
-                }
-                if (source == "spotify") {
-                    return resolve(this.spotify.fetch(query));
-                }
-                if (source == "deezer") {
-                    return resolve(this.deezer.fetch(query));
                 }
             }
             else

@@ -3,9 +3,7 @@ import { MoonlinkNode } from "./MoonlinkNodes";
 import { MoonlinkPlayer } from "./MoonlinkPlayers";
 import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
 import { MoonlinkQueue } from "../@Rest/MoonlinkQueue"
-import { Plugin } from "../@Rest/Plugin"
-import { Spotify } from "../@Sources/Spotify";
-import { Deezer } from "../@Sources/Deezer";
+import { Plugin } from "../@Rest/Plugin";
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -15,10 +13,6 @@ export interface Nodes {
  identifier?: string;
  secure?: boolean;
  password?: string | null;
-}
-export interface spotifyOptions {
- clientId?: string;
- clientSecret?: string;
 }
 export interface customOptions {
 	player?: Constructor<MoonlinkPlayer>;
@@ -33,7 +27,6 @@ export interface Options {
  resumeTimeout?: number;
  autoResume?: boolean;
  plugins?: Plugin[];
- spotify?: spotifyOptions;
  custom?: customOptions;
  sortNode?: SortType;
 }
@@ -101,9 +94,7 @@ export interface TrackDataInfo {
 export type SearchPlatform =
  | "youtube"
  | "youtubemusic"
- | "soundcloud"
- | "spotify"
- | "deezer";
+ | "soundcloud";
 
 export interface SearchQuery {
  source?: SearchPlatform | string | undefined | null;
@@ -202,8 +193,6 @@ export class MoonlinkManager extends EventEmitter {
  public initiated: boolean;
  public options: Options;
  public nodes: Map<string, MoonlinkNode>;
- public spotify: Spotify;
- public deezer: Deezer;
  public sendWs: any;
  public clientId: string;
  public version: string;
@@ -240,8 +229,6 @@ export class MoonlinkManager extends EventEmitter {
   this._sPayload = sPayload;
   this.options = options;
   this.nodes = new Map();
-  this.spotify = new Spotify(this, options);
-  this.deezer = new Deezer(this, options);
   this.sendWs;
   this.version = require("../../index").version;
  }
@@ -453,16 +440,8 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
    let sources = {
     youtube: "ytsearch",
     youtubemusic: "ytmsearch",
-    soundcloud: "scsearch",
-    spotify: "spotify",
-    deezer: "deezer",
+    soundcloud: "scsearch"
    };
-   if (this.spotify.check(query)) {
-    return resolve(await this.spotify.resolve(query));
-   }
-   if (this.deezer.check(query)) {
-    return resolve(await this.deezer.resolve(query));
-   }
    let opts: string | null;
    if (
     query &&
@@ -477,13 +456,6 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
      opts = `${source}:${query}`;
     } else {
      opts = sources[source] || `ytsearch:${query}`;
-    }
-   
-   if (source == "spotify") {
-    return resolve(this.spotify.fetch(query));
-    }
-   if (source == "deezer") {
-    return resolve(this.deezer.fetch(query));
     }
 	 }
 		else opts = query;
