@@ -34,28 +34,23 @@ class Spotify {
         }
     }
     async fetchPlaylist(id) {
-        try {
-            const playlist = await this.request(`/playlists/${id}`);
-            const allTracks = await this.fetchAllTracks(playlist.tracks);
-            const unresolvedPlaylistTracks = await Promise.all(allTracks.map((x) => this.buildUnresolved(x.track)));
-            return {
-                loadType: 'playlist',
-                tracks: unresolvedPlaylistTracks,
-                playlistInfo: playlist.name ? { name: playlist.name } : {},
-            };
-        }
-        catch (err) {
-            this.handleError('Error fetching playlist:', err);
-            return null;
-        }
+        const playlist = await this.request(`/playlists/${id}`);
+        const allTracks = await this.fetchAllTracks(playlist.tracks);
+        return {
+            loadType: 'playlist',
+            tracks: allTracks,
+            playlistInfo: playlist.name ? { name: playlist.name } : {},
+        };
     }
     async fetchAllTracks(initialPage) {
         const items = initialPage.items || [];
         let nextPage = initialPage.next;
         const trackPromises = [];
         while (nextPage) {
+            if (!nextPage)
+                break;
             try {
-                const req = (0, index_1.makeRequest)(nextPage, {
+                const req = await (0, index_1.makeRequest)(nextPage, {
                     headers: { Authorization: this.token },
                 });
                 if (!req.error) {
@@ -63,10 +58,12 @@ class Spotify {
                     nextPage = req.next;
                 }
                 else {
+                    console.error("Erro ao buscar próxima página de tracks:", req.error);
                     break;
                 }
             }
-            catch (err) {
+            catch (error) {
+                console.error("Erro ao fazer a solicitação HTTP:", error);
                 break;
             }
         }
@@ -141,10 +138,7 @@ class Spotify {
     }
     async fetchAlbum(id) {
         const album = await this.request(`/albums/${id}`);
-        const limitedTracks = this.albumLimit
-            ? album.tracks.items.slice(0, this.albumLimit * 100)
-            : album.tracks.items;
-        const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x)));
+        const unresolvedPlaylistTracks = await Promise.all(album.tracks.items.map((x) => this.buildUnresolved(x)));
         return {
             loadType: 'playlist',
             tracks: unresolvedPlaylistTracks,
@@ -167,7 +161,6 @@ class Spotify {
     async fetchTrack(id) {
         const data = await this.request(`/tracks/${id}`);
         const unresolvedTrack = await this.buildUnresolved(data);
-        console.log(unresolvedTrack);
         return {
             loadType: 'track',
             tracks: [unresolvedTrack],

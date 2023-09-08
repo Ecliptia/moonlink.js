@@ -41,52 +41,48 @@ export class Spotify  {
   }
 
   async fetchPlaylist(id: string): Promise<any> {
-    try {
       const playlist = await this.request(`/playlists/${id}`);
+			
       const allTracks = await this.fetchAllTracks(playlist.tracks);
-      const unresolvedPlaylistTracks = await Promise.all(
-        allTracks.map((x) => this.buildUnresolved(x.track))
-      );
 
       return {
         loadType: 'playlist',
-        tracks: unresolvedPlaylistTracks,
+        tracks: allTracks,
         playlistInfo: playlist.name ? { name: playlist.name } : {},
       };
-    } catch (err) {
-      this.handleError('Error fetching playlist:', err);
-      return null;
-    }
   }
 
   private async fetchAllTracks(initialPage: any): Promise<any[]> {
-    const items = initialPage.items || [];
-    let nextPage = initialPage.next;
-    const trackPromises = [];
+  const items = initialPage.items || [];
+  let nextPage = initialPage.next;
+  const trackPromises = [];
 
-    while (nextPage) {
-      try {
-        const req: any = makeRequest(nextPage, {
-          headers: { Authorization: this.token },
-        });
+  while (nextPage) {
+		if (!nextPage) break;
+    try {
+      const req: any = await makeRequest(nextPage, {
+        headers: { Authorization: this.token },
+      });
 
-        if (!req.error) {
-          items.push(...(req.items || []));
-          nextPage = req.next;
-        } else {
-          break;
-        }
-      } catch (err) {
+      if (!req.error) {
+        items.push(...(req.items || []));
+        nextPage = req.next;
+      } else {
+        console.error("Erro ao buscar próxima página de tracks:", req.error);
         break;
       }
+    } catch (error) {
+      console.error("Erro ao fazer a solicitação HTTP:", error);
+      break;
     }
-
-    for (const item of items) {
-      trackPromises.push(this.buildUnresolved(item.track));
-    }
-
-    return Promise.all(trackPromises);
   }
+
+  for (const item of items) {
+    trackPromises.push(this.buildUnresolved(item.track));
+  }
+
+  return Promise.all(trackPromises);
+}
 
   async requestToken(): Promise<void> {
     if (!this.clientId || !this.clientSecret) {
@@ -189,12 +185,9 @@ export class Spotify  {
 
   async fetchAlbum(id: string): Promise<any> {
     const album = await this.request(`/albums/${id}`);
-    const limitedTracks = this.albumLimit
-      ? album.tracks.items.slice(0, this.albumLimit * 100)
-      : album.tracks.items;
     const unresolvedPlaylistTracks = await Promise.all(
-      limitedTracks.map((x) => this.buildUnresolved(x))
-    );
+      album.tracks.items.map((x) => this.buildUnresolved(x))
+    )
     return {
       loadType: 'playlist',
       tracks: unresolvedPlaylistTracks,
@@ -223,7 +216,6 @@ export class Spotify  {
   async fetchTrack(id: string): Promise<any> {
     const data = await this.request(`/tracks/${id}`);
     const unresolvedTrack = await this.buildUnresolved(data);
-		console.log(unresolvedTrack)
     return {
       loadType: 'track',
       tracks: [unresolvedTrack],
@@ -256,7 +248,6 @@ export class Spotify  {
     if (!track) {
       throw new ReferenceError('The Spotify track object was not provided');
     }
-
     const res: any = await this.manager.search(
       `${track.artists ? track.artists[0]?.name : 'Unknown Artist'} ${
         track.name
