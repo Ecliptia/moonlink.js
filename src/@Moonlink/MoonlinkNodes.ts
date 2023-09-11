@@ -224,6 +224,7 @@ export class MoonlinkNode {
   payload = JSON.parse(data.toString());
   } catch (error) {
   payload = data.toString();
+	console.log(payload)
   let cleanedJsonStr = payload.replace(/�|%EF%BF%BD/g, '');
 	payload = cleanedJsonStr.replace(/'/g, '"');
   }

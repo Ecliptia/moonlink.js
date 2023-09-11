@@ -206,9 +206,29 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         const frames = this.decodeWebSocketFrames(data);
         if (frames) {
             frames.forEach((frame) => {
-                this.emit('message', frame);
+                const frameString = frame.toString();
+                const jsons = this.extractJSONs(frameString);
+                jsons.forEach((data) => {
+                    this.emit('message', data);
+                });
             });
         }
+    }
+    extractJSONs(frameString) {
+        const jsons = [];
+        let startIndex = 0;
+        while (startIndex < frameString.length) {
+            const start = frameString.indexOf('{', startIndex);
+            const end = frameString.indexOf('}', start + 1);
+            if (start !== -1 && end !== -1) {
+                jsons.push(frameString.substring(start, end + 1));
+                startIndex = end + 1;
+            }
+            else {
+                break;
+            }
+        }
+        return jsons;
     }
     bufferedData = Buffer.from([]);
     applyMask(data, mask) {

@@ -171,6 +171,7 @@ class MoonlinkNode {
         }
         catch (error) {
             payload = data.toString();
+            console.log(payload);
             let cleanedJsonStr = payload.replace(/�|%EF%BF%BD/g, '');
             payload = cleanedJsonStr.replace(/'/g, '"');
         }
