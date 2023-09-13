@@ -167,3 +167,23 @@ We offer various forms of support for our project:
 
 For any inquiries or assistance, we're here to help! 🌟
 
+## Contributors 🙌
+
+We would like to express our gratitude to the amazing individuals who contributed to this project. Their hard work and dedication have been instrumental in making it a success. 🎉
+
+1. **1Lucas1apk** - Lead Developer, responsible for project architecture and key feature implementation. 🚀
+
+2. **MotoG.js** - Project Ideator and Designer, contributing to the concept and visual design. 🎨
+
+Bug Hunters 🐛:
+
+- **Nah**
+- **ItzGG**
+- **SuperPlayerBots**
+- **ddemile**
+- **Tasty-Kiwi**
+- **rrm**
+
+We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
+
+
