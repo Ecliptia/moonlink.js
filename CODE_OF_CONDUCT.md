@@ -1,5 +1,3 @@
----
-
 **Moonlink.js Community Code of Conduct 🌙**
 
 *On the Road to the Moon, harmony is our melody, and accessibility is our guiding constellation. Through our digital skies, we navigate with respect, patience, and excellence in every star we create.*
@@ -39,5 +37,3 @@ Shooting stars will be tested and reviewed regularly to maintain celestial stand
 Our Moonlink.js constellation shines with the promise of respect, excellence, and accessibility. Adhering to this code of conduct is paramount to maintaining harmony in our stellar community. If you have questions or need clarification, do not hesitate to contact us on our Discord server.
 
 Developer: 1Lucas1apk
-
----
