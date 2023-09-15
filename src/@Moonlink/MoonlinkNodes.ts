@@ -309,7 +309,6 @@ if (objetsJSON.length > 0) {
      ...current[payload.guildId],
      position: payload.state.position,
      time: payload.state.time,
-     thumbnail: `https://img.youtube.com/vi/${current[payload.guildId] ? current[payload.guildId].identifier : null}/sddefault.jpg`,
      ping: payload.state.ping,
     };
     this.map.set("current", current);
