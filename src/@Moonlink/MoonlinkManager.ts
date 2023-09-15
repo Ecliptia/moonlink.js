@@ -201,7 +201,6 @@ export class MoonlinkManager extends EventEmitter {
  public options: Options;
  public nodes: Map<string, MoonlinkNode>;
  public spotify: Spotify;
- public sendWs: any;
  public clientId: string;
  public version: string;
  public map: Map<string, any> = new Map();
@@ -238,7 +237,6 @@ export class MoonlinkManager extends EventEmitter {
   this.options = options;
   this.nodes = new Map();
   this.spotify = new Spotify(options.spotify, this);
-  this.sendWs;
   this.version = require("../../index").version;
  }
 
@@ -422,91 +420,89 @@ this.emit('playerMove', player, update.channel_id, player.voiceChannel)
  * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
  * @throws {Error} - If the search option is empty or not in the correct format.
  */
+public async search(options: string | SearchQuery): Promise<SearchResult> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!options) {
+        throw new Error("[ @Moonlink/Manager ]: the search option has to be in string format or in an array");
+      }
 
- public async search(options: string | SearchQuery): Promise<SearchResult> {
-  return new Promise(async (resolve) => {
-   if (!options)
-    throw new Error(
-     "[ @Moonlink/Manager ]: the search option has to be in string format or in an array"
-    );
-   let query: string | undefined;
-   let source: string | undefined;
-   if (typeof options == "object") {
-    query = options.query ? options.query : undefined;
-    source = options.source ? options.source : undefined;
-   } else {
-    query = options;
-   }
+      let query: string | undefined;
+      let source: string | undefined;
 
-   if (source && typeof source !== "string")
-    throw new Error(
-     "[ @Moonlink/Manager ]: the source option has to be in string format"
-    );
-   if (typeof query !== "string" && typeof query !== "object")
-    throw new Error(
-     "[ @Moonlink/Manager ]: (search) the search option has to be in string or array format"
-    );
-   let sources = {
-    youtube: "ytsearch",
-    youtubemusic: "ytmsearch",
-    soundcloud: "scsearch",
-    spotify: "spotify",
-   };
-   if (this.spotify.isSpotifyUrl(query)) {
-    return resolve(await this.spotify.resolve(query));
-   }
-   let opts: string | null;
-   if (
-    query &&
-    !(query as string).startsWith("http://") &&
-    !(query as string).startsWith("https://")
-   ) {
-    if (source && !sources[source]) {
-     this.emit(
-      "debug",
-      "[ Moonlink/Manager]: no default found, changing to custom source"
-     );
-     opts = `${source}:${query}`;
-    } else {
-     opts = sources[source] || `ytsearch:${query}`;
+      if (typeof options === "object") {
+        ({ query, source } = options);
+      } else {
+        query = options;
+      }
+
+      if (source && typeof source !== "string") {
+        throw new Error("[ @Moonlink/Manager ]: the source option has to be in string format");
+      }
+
+      if (typeof query !== "string" && typeof query !== "object") {
+        throw new Error("[ @Moonlink/Manager ]: (search) the search option has to be in string or array format");
+      }
+
+      const sources = {
+        youtube: "ytsearch",
+        youtubemusic: "ytmsearch",
+        soundcloud: "scsearch",
+        spotify: "spotify",
+      };
+
+      if (this.spotify.isSpotifyUrl(query)) {
+        return resolve(await this.spotify.resolve(query));
+      }
+
+      let searchIdentifier: string | null;
+
+      if (query && !query.startsWith("http://") && !query.startsWith("https://")) {
+        if (source && !sources[source]) {
+          this.emit("debug", "[ Moonlink/Manager]: no default found, changing to custom source");
+          searchIdentifier = `${source}:${query}`;
+        } else {
+          searchIdentifier = sources[source] || `ytsearch:${query}`;
+        }
+      } else {
+        searchIdentifier = query;
+      }
+
+      const params = new URLSearchParams({ identifier: searchIdentifier });
+      const res: any = await this.sortByUsage('memory')[0].request("loadtracks", params);
+
+      if (res.loadType === "error" || res.loadType === "empty") {
+        this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
+        return resolve(res);
+      }
+
+      if (res.loadType === "track") {
+        res.data = [res.data];
+      }
+
+      if (res.loadType === "playlist") {
+        res.playlistInfo = {
+          duration: res.data.tracks.reduce((acc, cur) => acc + cur.info.length, 0),
+          name: res.data.info.name,
+          selectedTrack: res.data.info.selectedTrack,
+        };
+        res.pluginInfo = res.data.pluginInfo;
+        res.data = [...res.data.tracks];
+      }
+
+      const tracks = res.data.map((x) => new MoonlinkTrack(x));
+
+      return resolve({
+        ...res,
+        tracks,
+      });
+    } catch (error) {
+      this.emit("debug", `[ @Moonlink/Manager ]: An error occurred: ${error.message}`);
+      reject(error);
     }
-   
-   if (source == "spotify") {
-    return resolve(this.spotify.fetch(query));
-    }
-	 }
-		else opts = query;
-   let params = new URLSearchParams({ identifier: opts });
-   let res: any = await this.sortByUsage('memory')[0].request("loadtracks", params);
-   if (res.loadType === "error" || res.loadType === "empty") {
-    this.emit(
-     "debug",
-     "[ @Moonlink/Manager ]: not found or there was an error loading the track"
-    );
-    return resolve(res);
-   } else {
-		if(res.loadType === "track") {
-      res.data = [ res.data ]
-		}
-		 if (res.loadType === "playlist") {
-		 res.playlistInfo = {};
-     res.playlistInfo.duration = res.data.tracks.reduce(
-      (acc, cur) => acc + cur.length,
-      0
-     );
-			res.playlistInfo.name = res.data.name;
-			res.playlistInfo.selectedTrack = res.data.selectedTrack;
-			res.pluginInfo = res.data.pluginInfo;
-			res.data = [ ...res.data.tracks ];
-    }
-		 const tracks = res.data.map((x) => new MoonlinkTrack(x));
-    return resolve({
-     ...res,
-     tracks,
-    });
-   }
   });
- }
+}
+
  public async attemptConnection(guildId: string): Promise<boolean> {
   let voiceServer = this.map.get("voiceServer") || {};
   let voiceStates = this.map.get("voiceStates") || {};

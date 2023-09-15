@@ -25,7 +25,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     options;
     nodes;
     spotify;
-    sendWs;
     clientId;
     version;
     map = new Map();
@@ -57,7 +56,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.options = options;
         this.nodes = new Map();
         this.spotify = new Spotify_1.Spotify(options.spotify, this);
-        this.sendWs;
         this.version = require("../../index").version;
     }
     /**
@@ -236,63 +234,62 @@ class MoonlinkManager extends node_events_1.EventEmitter {
  * @throws {Error} - If the search option is empty or not in the correct format.
  */
     async search(options) {
-        return new Promise(async (resolve) => {
-            if (!options)
-                throw new Error("[ @Moonlink/Manager ]: the search option has to be in string format or in an array");
-            let query;
-            let source;
-            if (typeof options == "object") {
-                query = options.query ? options.query : undefined;
-                source = options.source ? options.source : undefined;
-            }
-            else {
-                query = options;
-            }
-            if (source && typeof source !== "string")
-                throw new Error("[ @Moonlink/Manager ]: the source option has to be in string format");
-            if (typeof query !== "string" && typeof query !== "object")
-                throw new Error("[ @Moonlink/Manager ]: (search) the search option has to be in string or array format");
-            let sources = {
-                youtube: "ytsearch",
-                youtubemusic: "ytmsearch",
-                soundcloud: "scsearch",
-                spotify: "spotify",
-            };
-            if (this.spotify.isSpotifyUrl(query)) {
-                return resolve(await this.spotify.resolve(query));
-            }
-            let opts;
-            if (query &&
-                !query.startsWith("http://") &&
-                !query.startsWith("https://")) {
-                if (source && !sources[source]) {
-                    this.emit("debug", "[ Moonlink/Manager]: no default found, changing to custom source");
-                    opts = `${source}:${query}`;
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (!options) {
+                    throw new Error("[ @Moonlink/Manager ]: the search option has to be in string format or in an array");
+                }
+                let query;
+                let source;
+                if (typeof options === "object") {
+                    ({ query, source } = options);
                 }
                 else {
-                    opts = sources[source] || `ytsearch:${query}`;
+                    query = options;
                 }
-                if (source == "spotify") {
-                    return resolve(this.spotify.fetch(query));
+                if (source && typeof source !== "string") {
+                    throw new Error("[ @Moonlink/Manager ]: the source option has to be in string format");
                 }
-            }
-            else
-                opts = query;
-            let params = new URLSearchParams({ identifier: opts });
-            let res = await this.sortByUsage('memory')[0].request("loadtracks", params);
-            if (res.loadType === "error" || res.loadType === "empty") {
-                this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
-                return resolve(res);
-            }
-            else {
+                if (typeof query !== "string" && typeof query !== "object") {
+                    throw new Error("[ @Moonlink/Manager ]: (search) the search option has to be in string or array format");
+                }
+                const sources = {
+                    youtube: "ytsearch",
+                    youtubemusic: "ytmsearch",
+                    soundcloud: "scsearch",
+                    spotify: "spotify",
+                };
+                if (this.spotify.isSpotifyUrl(query)) {
+                    return resolve(await this.spotify.resolve(query));
+                }
+                let searchIdentifier;
+                if (query && !query.startsWith("http://") && !query.startsWith("https://")) {
+                    if (source && !sources[source]) {
+                        this.emit("debug", "[ Moonlink/Manager]: no default found, changing to custom source");
+                        searchIdentifier = `${source}:${query}`;
+                    }
+                    else {
+                        searchIdentifier = sources[source] || `ytsearch:${query}`;
+                    }
+                }
+                else {
+                    searchIdentifier = query;
+                }
+                const params = new URLSearchParams({ identifier: searchIdentifier });
+                const res = await this.sortByUsage('memory')[0].request("loadtracks", params);
+                if (res.loadType === "error" || res.loadType === "empty") {
+                    this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
+                    return resolve(res);
+                }
                 if (res.loadType === "track") {
                     res.data = [res.data];
                 }
                 if (res.loadType === "playlist") {
-                    res.playlistInfo = {};
-                    res.playlistInfo.duration = res.data.tracks.reduce((acc, cur) => acc + cur.length, 0);
-                    res.playlistInfo.name = res.data.name;
-                    res.playlistInfo.selectedTrack = res.data.selectedTrack;
+                    res.playlistInfo = {
+                        duration: res.data.tracks.reduce((acc, cur) => acc + cur.info.length, 0),
+                        name: res.data.info.name,
+                        selectedTrack: res.data.info.selectedTrack,
+                    };
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
@@ -301,6 +298,10 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     ...res,
                     tracks,
                 });
+            }
+            catch (error) {
+                this.emit("debug", `[ @Moonlink/Manager ]: An error occurred: ${error.message}`);
+                reject(error);
             }
         });
     }

@@ -68,11 +68,11 @@ export class Spotify  {
         items.push(...(req.items || []));
         nextPage = req.next;
       } else {
-        console.error("Erro ao buscar próxima página de tracks:", req.error);
+        console.error("Error when searching for next page of tracks:", req.error);
         break;
       }
     } catch (error) {
-      console.error("Erro ao fazer a solicitação HTTP:", error);
+      console.error("Error making HTTP request:", error);
       break;
     }
   }
@@ -85,51 +85,36 @@ export class Spotify  {
 }
 
   async requestToken(): Promise<void> {
+  try {
     if (!this.clientId || !this.clientSecret) {
-      const res: any = await makeRequest(
+      const { accessToken, accessTokenExpirationTimestampMs } = await makeRequest(
         'https://open.spotify.com/get_access_token',
-        {
-          headers: {},
-        }
-      ).catch((err) => {
-        this.handleError(
-          '[ @Moonlink/Spotify ]: An error occurred while making the request',
-          err
-        );
-        return;
-      });
-
-      const access: any = res.accessToken;
-
-      this.token = `Bearer ${access}`;
-      this.interval = res.accessTokenExpirationTimestampMs * 1000;
-      return;
-    }
-
-    this.authorization = Buffer.from(
-      `${this.clientId}:${this.clientSecret}`
-    ).toString('base64');
-
-    const res: any = await makeRequest(
-      'https://accounts.spotify.com/api/token?grant_type=client_credentials',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${this.authorization}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    ).catch((err) => {
-      this.handleError(
-        '[ @Moonlink/Spotify ]: There was an error requesting your Spotify authorization',
-        err
+        { headers: {} }
       );
-      return;
-    });
 
-    this.token = `Bearer ${res.access_token}`;
-    this.interval = res.expires_in * 1000;
+      this.token = `Bearer ${accessToken}`;
+      this.interval = accessTokenExpirationTimestampMs * 1000;
+    } else {
+      this.authorization = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+
+      const { access_token, expires_in } = await makeRequest(
+        'https://accounts.spotify.com/api/token?grant_type=client_credentials',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${this.authorization}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+
+      this.token = `Bearer ${access_token}`;
+      this.interval = expires_in * 1000;
+    }
+  } catch (err) {
+    this.handleError('[ @Moonlink/Spotify ]: An error occurred while making the request', err);
   }
+}
 
   async renew(): Promise<void> {
     if (Date.now() >= (this.interval || 0)) {

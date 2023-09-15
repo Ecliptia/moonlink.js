@@ -160,7 +160,6 @@ export declare class MoonlinkManager extends EventEmitter {
     options: Options;
     nodes: Map<string, MoonlinkNode>;
     spotify: Spotify;
-    sendWs: any;
     clientId: string;
     version: string;
     map: Map<string, any>;
