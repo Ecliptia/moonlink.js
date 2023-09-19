@@ -274,6 +274,7 @@ if (objetsJSON.length > 0) {
    case "ready":
     this.sessionId = payload.sessionId;
     this.resumed = payload.resumed;
+		this.manager.map.set('sessionId', payload.sessionId)
     this.rest.setSessionId(this.sessionId);
     this.manager.emit(
      "debug",

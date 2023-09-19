@@ -218,6 +218,7 @@ class MoonlinkNode {
             case "ready":
                 this.sessionId = payload.sessionId;
                 this.resumed = payload.resumed;
+                this.manager.map.set('sessionId', payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
                 this.manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
                 if (this.manager.options.resumeKey) {

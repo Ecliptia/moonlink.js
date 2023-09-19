@@ -73,6 +73,7 @@ export class MoonlinkRest {
 
   private ensureUrlIsSet() {
     if (!this.url) this.url = this.node.restUri;
+		if(!this.sessionId) this.sessionId = this.node.manager.map.get('sessionId');
   }
   
   private async makeGetRequest(endpoint: string): Promise<object> {
