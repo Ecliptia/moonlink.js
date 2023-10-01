@@ -152,6 +152,19 @@ client.on('interactionCreate', async (interaction) => {
 // Log in with the Discord token
 client.login(process.env["DISCORD_TOKEN"]);
 ```
+## Sponsorship 
+### Shardux - Unrivalled hosting at an affordable price
+
+Here at Shardux, we aim to help you get your mission critical applications running on powerful and saleable infrastructure. 
+
+We offer Discord Bot Hosting and Lavalink Hosting from as little as **$1/mo**.
+
+All our servers run on high quality hardware (**Intel i9-9900K's**) and **NVMe** drives, not to mention free **daily backups** and **outstanding DDOS protection**.
+
+Let's get your bot online today.
+
+https://shardux.com & https://discord.gg/WmBzCPZstv
+
 
 ## Our Philosophy 💭
 
