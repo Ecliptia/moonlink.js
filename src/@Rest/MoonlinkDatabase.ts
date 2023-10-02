@@ -6,15 +6,15 @@ export class MoonlinkDatabase {
   private id: any;
   constructor(clientId) {
     this.fetch();
-		this.id = clientId
+    this.id = clientId;
   }
 
   set(key: string, value: any): void {
     if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
-    
+
     const keys: string[] = key.split(".");
     if (keys.length === 0) return; // Key is invalid
-    
+
     this.updateData(this.data, keys, value);
     this.save();
   }
@@ -22,28 +22,28 @@ export class MoonlinkDatabase {
   get(key: string): any {
     this.fetch();
     if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
-    
+
     return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
   }
 
   push(key: string, value: any): void {
     if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
-    
+
     const oldArray = this.get(key) ?? [];
     if (Array.isArray(oldArray)) {
       oldArray.push(value);
       this.set(key, oldArray);
     } else {
-      throw new Error('[ @Moonlink/Database ]: Key does not point to an array');
+      throw new Error("[ @Moonlink/Database ]: Key does not point to an array");
     }
   }
 
   delete(key: string): boolean {
     if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
-    
+
     const keys: string[] = key.split(".");
     if (keys.length === 0) return false; // Key is invalid
-    
+
     const lastKey: string = keys.pop() || "";
     let currentObj: any = this.data;
 
@@ -51,7 +51,9 @@ export class MoonlinkDatabase {
       if (typeof currentObj[k] === "object") {
         currentObj = currentObj[k];
       } else {
-        throw new Error(`[ @Moonlink/Database ]: Key path "${key}" does not exist`);
+        throw new Error(
+          `[ @Moonlink/Database ]: Key path "${key}" does not exist`,
+        );
       }
     });
 
@@ -78,20 +80,20 @@ export class MoonlinkDatabase {
     });
   }
 
- private getFilePath() {
+  private getFilePath() {
     return path.join(__dirname, `database-${this.id}.json`);
   }
 
   private fetch() {
     try {
       const filePath = this.getFilePath();
-      const rawData = fs.readFileSync(filePath, 'utf-8');
+      const rawData = fs.readFileSync(filePath, "utf-8");
       this.data = JSON.parse(rawData) || {};
     } catch (err) {
-      if (err.code === 'ENOENT') {
+      if (err.code === "ENOENT") {
         this.data = {};
       } else {
-        throw new Error('[ @Moonlink/Database ]: Failed to fetch data');
+        throw new Error("[ @Moonlink/Database ]: Failed to fetch data");
       }
     }
   }
@@ -101,7 +103,7 @@ export class MoonlinkDatabase {
       const filePath = this.getFilePath();
       fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
     } catch (error) {
-      throw new Error('[ @Moonlink/Database ]: Failed to save data');
+      throw new Error("[ @Moonlink/Database ]: Failed to save data");
     }
   }
 }

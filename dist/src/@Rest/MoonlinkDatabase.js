@@ -37,7 +37,7 @@ class MoonlinkDatabase {
             this.set(key, oldArray);
         }
         else {
-            throw new Error('[ @Moonlink/Database ]: Key does not point to an array');
+            throw new Error("[ @Moonlink/Database ]: Key does not point to an array");
         }
     }
     delete(key) {
@@ -83,15 +83,15 @@ class MoonlinkDatabase {
     fetch() {
         try {
             const filePath = this.getFilePath();
-            const rawData = fs_1.default.readFileSync(filePath, 'utf-8');
+            const rawData = fs_1.default.readFileSync(filePath, "utf-8");
             this.data = JSON.parse(rawData) || {};
         }
         catch (err) {
-            if (err.code === 'ENOENT') {
+            if (err.code === "ENOENT") {
                 this.data = {};
             }
             else {
-                throw new Error('[ @Moonlink/Database ]: Failed to fetch data');
+                throw new Error("[ @Moonlink/Database ]: Failed to fetch data");
             }
         }
     }
@@ -101,7 +101,7 @@ class MoonlinkDatabase {
             fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
         catch (error) {
-            throw new Error('[ @Moonlink/Database ]: Failed to save data');
+            throw new Error("[ @Moonlink/Database ]: Failed to save data");
         }
     }
 }

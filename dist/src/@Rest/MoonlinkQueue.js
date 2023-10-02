@@ -8,7 +8,7 @@ class MoonlinkQueue {
     manager;
     constructor(manager, data) {
         if (!manager || !data || !data.guildId) {
-            throw new Error('[ @Moonlink/Queue ]: Invalid constructor arguments');
+            throw new Error("[ @Moonlink/Queue ]: Invalid constructor arguments");
         }
         this.db = new MoonlinkDatabase_1.MoonlinkDatabase(manager.clientId);
         this.guildId = data.guildId;
@@ -18,9 +18,10 @@ class MoonlinkQueue {
         if (!data)
             throw new Error('[ @Moonlink/Queue ]: "data" option is empty');
         let queue = this.getQueue();
-        position = (position !== undefined && position >= 1) ? position - 1 : queue.length;
+        position =
+            position !== undefined && position >= 1 ? position - 1 : queue.length;
         if (position < 0 || position > queue.length) {
-            throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
+            throw new Error("[ @Moonlink/Queue ]: Invalid position specified");
         }
         queue.splice(position, 0, data);
         this.setQueue(queue);
@@ -41,12 +42,12 @@ class MoonlinkQueue {
         return this.getQueue().length;
     }
     remove(position) {
-        if (!position || typeof position !== 'number' || position < 1) {
-            throw new Error('[ @Moonlink/Queue ]: Invalid position specified');
+        if (!position || typeof position !== "number" || position < 1) {
+            throw new Error("[ @Moonlink/Queue ]: Invalid position specified");
         }
         const queue = this.getQueue();
         if (position > queue.length) {
-            throw new Error('[ @Moonlink/Queue ]: Position exceeds queue length');
+            throw new Error("[ @Moonlink/Queue ]: Position exceeds queue length");
         }
         queue.splice(position - 1, 1);
         this.setQueue(queue);

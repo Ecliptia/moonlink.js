@@ -165,32 +165,32 @@ export declare class MoonlinkManager extends EventEmitter {
     map: Map<string, any>;
     constructor(nodes: Nodes[], options: Options, sPayload: Function);
     /**
-    * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
-    * @param {string} clientId - The ID of the Discord client.
-    * @returns {MoonlinkManager} - The MoonlinkManager instance.
-    * @throws {TypeError} - If the clientId option is empty.
-    */
+     * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
+     * @param {string} clientId - The ID of the Discord client.
+     * @returns {MoonlinkManager} - The MoonlinkManager instance.
+     * @throws {TypeError} - If the clientId option is empty.
+     */
     init(clientId: string): this;
     /**
- * Adds a new Lavalink node to the MoonlinkManager.
- * @param {Node} node - An object containing information about the Lavalink node.
- * @returns {Node} - The added node.
- * @throws {Error} - If the host option is not configured correctly.
- * @throws {Error} - If the password option is not set correctly.
- * @throws {Error} - If the port option is not set correctly.
- */
+     * Adds a new Lavalink node to the MoonlinkManager.
+     * @param {Node} node - An object containing information about the Lavalink node.
+     * @returns {Node} - The added node.
+     * @throws {Error} - If the host option is not configured correctly.
+     * @throws {Error} - If the password option is not set correctly.
+     * @throws {Error} - If the port option is not set correctly.
+     */
     addNode(node: Nodes): Nodes;
     /**
-    * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
-    * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
-    * @returns The sorted array of nodes based on the specified criteria.
-    */
+     * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
+     * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
+     * @returns The sorted array of nodes based on the specified criteria.
+     */
     sortByUsage(sortType: SortType): MoonlinkNode[];
     /**
-    * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
-    * @param nodes - The connected Lavalink nodes to sort.
-    * @returns The sorted array of nodes by memory usage.
-    */
+     * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by memory usage.
+     */
     private sortNodesByMemoryUsage;
     /**
      * Sorts the connected Lavalink nodes by Lavalink CPU load and returns the sorted nodes array.
@@ -231,11 +231,11 @@ export declare class MoonlinkManager extends EventEmitter {
     removeNode(name: string): boolean;
     packetUpdate(packet: VoicePacket): Promise<boolean>;
     /**
- * Searches for tracks using the specified query and source.
- * @param {string | SearchQuery} options - The search query or an object containing the search options.
- * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
- * @throws {Error} - If the search option is empty or not in the correct format.
- */
+     * Searches for tracks using the specified query and source.
+     * @param {string | SearchQuery} options - The search query or an object containing the search options.
+     * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
+     * @throws {Error} - If the search option is empty or not in the correct format.
+     */
     search(options: string | SearchQuery): Promise<SearchResult>;
     attemptConnection(guildId: string): Promise<boolean>;
     get players(): playersOptions;

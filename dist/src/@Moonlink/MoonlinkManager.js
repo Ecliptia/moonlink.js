@@ -45,7 +45,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         if (!options.custom)
             options.custom = {};
         if (options.plugins) {
-            options.plugins.forEach(plugin => {
+            options.plugins.forEach((plugin) => {
                 if (!(plugin instanceof Plugin_1.Plugin))
                     throw new RangeError(`[ @Moonlink/Manager ]: this plugin is not compatible`);
                 plugin.load(this);
@@ -59,11 +59,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.version = require("../../index").version;
     }
     /**
-    * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
-    * @param {string} clientId - The ID of the Discord client.
-    * @returns {MoonlinkManager} - The MoonlinkManager instance.
-    * @throws {TypeError} - If the clientId option is empty.
-    */
+     * Initializes the MoonlinkManager by connecting to the Lavalink nodes.
+     * @param {string} clientId - The ID of the Discord client.
+     * @returns {MoonlinkManager} - The MoonlinkManager instance.
+     * @throws {TypeError} - If the clientId option is empty.
+     */
     init(clientId) {
         if (this.initiated)
             return this;
@@ -75,13 +75,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         return this;
     }
     /**
- * Adds a new Lavalink node to the MoonlinkManager.
- * @param {Node} node - An object containing information about the Lavalink node.
- * @returns {Node} - The added node.
- * @throws {Error} - If the host option is not configured correctly.
- * @throws {Error} - If the password option is not set correctly.
- * @throws {Error} - If the port option is not set correctly.
- */
+     * Adds a new Lavalink node to the MoonlinkManager.
+     * @param {Node} node - An object containing information about the Lavalink node.
+     * @returns {Node} - The added node.
+     * @throws {Error} - If the host option is not configured correctly.
+     * @throws {Error} - If the password option is not set correctly.
+     * @throws {Error} - If the port option is not set correctly.
+     */
     addNode(node) {
         const new_node = new MoonlinkNodes_1.MoonlinkNode(this, node, this.map);
         if (node.identifier)
@@ -92,10 +92,10 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         return new_node;
     }
     /**
-    * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
-    * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
-    * @returns The sorted array of nodes based on the specified criteria.
-    */
+     * Sorts the connected Lavalink nodes based on the specified criteria and returns the sorted nodes array.
+     * @param sortType - The criteria by which to sort the nodes (e.g., "memory", "cpuLavalink", "cpuSystem", "calls", "playingPlayers", "players").
+     * @returns The sorted array of nodes based on the specified criteria.
+     */
     sortByUsage(sortType) {
         const connectedNodes = [...this.nodes.values()].filter((node) => node.isConnected);
         switch (sortType) {
@@ -115,10 +115,10 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         }
     }
     /**
-    * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
-    * @param nodes - The connected Lavalink nodes to sort.
-    * @returns The sorted array of nodes by memory usage.
-    */
+     * Sorts the connected Lavalink nodes by memory usage and returns the sorted nodes array.
+     * @param nodes - The connected Lavalink nodes to sort.
+     * @returns The sorted array of nodes by memory usage.
+     */
     sortNodesByMemoryUsage(nodes) {
         return nodes.sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0));
     }
@@ -198,13 +198,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             if (!player)
                 return;
             if (!update.channel_id) {
-                this.emit('playerDisconnect', player);
-                let players = this.map.get('players') || {};
+                this.emit("playerDisconnect", player);
+                let players = this.map.get("players") || {};
                 players[update.guild_id] = {
                     ...players[update.guild_id],
                     connected: false,
                     voiceChannel: null,
-                    playing: false
+                    playing: false,
                 };
                 player.connected = false;
                 player.voiceChannel = null;
@@ -212,13 +212,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 player.stop();
             }
             if (update.channel_id !== player.voiceChannel) {
-                this.emit('playerMove', player, update.channel_id, player.voiceChannel);
-                let players = this.map.get('players') || {};
+                this.emit("playerMove", player, update.channel_id, player.voiceChannel);
+                let players = this.map.get("players") || {};
                 players[update.guild_id] = {
                     ...players[update.guild_id],
-                    voiceChannel: update.channel_id
+                    voiceChannel: update.channel_id,
                 };
-                this.map.set('players', players);
+                this.map.set("players", players);
                 player.voiceChannel = update.channel_id;
             }
             let voiceStates = {};
@@ -228,11 +228,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         }
     }
     /**
- * Searches for tracks using the specified query and source.
- * @param {string | SearchQuery} options - The search query or an object containing the search options.
- * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
- * @throws {Error} - If the search option is empty or not in the correct format.
- */
+     * Searches for tracks using the specified query and source.
+     * @param {string | SearchQuery} options - The search query or an object containing the search options.
+     * @returns {Promise<SearchResult>} - A promise that resolves with the search result.
+     * @throws {Error} - If the search option is empty or not in the correct format.
+     */
     async search(options) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -263,20 +263,22 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     return resolve(await this.spotify.resolve(query));
                 }
                 let searchIdentifier;
-                if (query && !query.startsWith("http://") && !query.startsWith("https://")) {
+                if (query &&
+                    !query.startsWith("http://") &&
+                    !query.startsWith("https://")) {
                     if (source && !sources[source]) {
                         this.emit("debug", "[ Moonlink/Manager]: no default found, changing to custom source");
                         searchIdentifier = `${source}:${query}`;
                     }
                     else {
-                        searchIdentifier = sources[source] || `ytsearch:${query}`;
+                        searchIdentifier = `${sources[source]}:${query}`;
                     }
                 }
                 else {
-                    searchIdentifier = query;
+                    searchIdentifier = `ytsearch:${query}`;
                 }
                 const params = new URLSearchParams({ identifier: searchIdentifier });
-                const res = await this.sortByUsage('memory')[0].request("loadtracks", params);
+                const res = await this.sortByUsage("memory")[0].request("loadtracks", params);
                 if (res.loadType === "error" || res.loadType === "empty") {
                     this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
                     return resolve(res);
@@ -341,7 +343,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             if (!has(guildId))
                 return null;
             if (this.options.custom.player) {
-                this.emit('debug', '[ @Moonlink/Custom ]: the player is customized');
+                this.emit("debug", "[ @Moonlink/Custom ]: the player is customized");
                 return new this.options.custom.player(this.map.get("players")[guildId], this, this.map);
             }
             return new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[guildId], this, this.map);
@@ -382,21 +384,23 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 paused: false,
                 loop: null,
                 autoPlay: false,
-                node: data.node || this.sortByUsage(this.options.sortNode)[0].host,
+                node: data.node
+                    ? data.node
+                    : this.sortByUsage(`${this.options.sortNode ? this.options.sortNode : "players"}`)[0].host,
             };
             this.map.set("players", players_map);
             if (this.options.custom.player) {
-                this.emit('debug', '[ @Moonlink/Custom ]: the player is customized');
+                this.emit("debug", "[ @Moonlink/Custom ]: the player is customized");
                 return new this.options.custom.player(players_map[data.guildId], this, this.map);
             }
             return new MoonlinkPlayers_1.MoonlinkPlayer(players_map[data.guildId], this, this.map);
         };
-        let all = this.map.get('players') ? this.map.get('players') : null;
+        let all = this.map.get("players") ? this.map.get("players") : null;
         return {
             create: create.bind(this),
             get: get.bind(this),
             has: has.bind(this),
-            all
+            all,
         };
     }
 }

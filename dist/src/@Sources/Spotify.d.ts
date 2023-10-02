@@ -1,4 +1,4 @@
-import { MoonlinkManager } from '../../index';
+import { MoonlinkManager } from "../../index";
 interface SpotifyOptions {
     clientSecret?: string;
     clientId?: string;

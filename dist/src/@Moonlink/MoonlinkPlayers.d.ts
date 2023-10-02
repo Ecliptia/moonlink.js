@@ -41,6 +41,7 @@ export declare class MoonlinkPlayer {
     queue: MoonlinkQueue;
     filters: MoonlinkFilters;
     current: any;
+    previous: any;
     data: any;
     node: MoonlinkNode | any;
     rest: MoonlinkRest;
@@ -126,7 +127,7 @@ export declare class MoonlinkPlayer {
      * Stop the playback and optionally clear player data.
      * @returns True if stopped successfully.
      */
-    stop(): Promise<boolean>;
+    stop(destroy?: boolean): Promise<boolean>;
     /**
      * Skip to the next track in the queue.
      * @returns True if the next track was successfully played.

@@ -1,4 +1,10 @@
-import { MoonlinkManager, MoonlinkQueue, MoonlinkRest, MoonlinkNode, MoonlinkFilters } from "../../index";
+import {
+  MoonlinkManager,
+  MoonlinkQueue,
+  MoonlinkRest,
+  MoonlinkNode,
+  MoonlinkFilters,
+} from "../../index";
 
 /**
  * Interface for optional connection options.
@@ -44,6 +50,7 @@ export class MoonlinkPlayer {
   public queue: MoonlinkQueue;
   public filters: MoonlinkFilters;
   public current: any;
+  public previous: any;
   public data: any;
   public node: MoonlinkNode | any;
   public rest: MoonlinkRest;
@@ -57,7 +64,7 @@ export class MoonlinkPlayer {
   constructor(
     infos: PlayerInfos,
     manager: MoonlinkManager,
-    map: Map<string, any>
+    map: Map<string, any>,
   ) {
     // Initialize properties and set default values based on input parameters.
     this.payload = manager._sPayload;
@@ -77,10 +84,12 @@ export class MoonlinkPlayer {
     }
     this.current = map.get("current") || {};
     this.current = this.current[this.guildId];
+    this.previous = map.get("previous") || {};
+    this.previous = this.previous[this.guildId];
     this.map = map;
-    this.data = this.map.get('players') || {};
+    this.data = this.map.get("players") || {};
     this.data = this.data[this.guildId];
-    this.node = manager.nodes.get(this.get('node'));
+    this.node = manager.nodes.get(this.get("node"));
     this.filters = new MoonlinkFilters(this);
     this.rest = this.node.rest;
     this.manager = manager;
@@ -90,9 +99,9 @@ export class MoonlinkPlayer {
    * Private method to update player information in the map.
    */
   private updatePlayers(): void {
-    let players = this.map.get('players') || {};
+    let players = this.map.get("players") || {};
     players[this.guildId] = this.data;
-    this.map.set('players', players);
+    this.map.set("players", players);
   }
 
   /**
@@ -112,7 +121,7 @@ export class MoonlinkPlayer {
    */
   public get<T>(key: string): T {
     this.updatePlayers();
-    return this.data[key] as T || null;
+    return (this.data[key] as T) || null;
   }
 
   /**
@@ -126,9 +135,11 @@ export class MoonlinkPlayer {
       throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
     }
     if (typeof channelId !== "string") {
-      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
+      throw new Error(
+        '[ @Moonlink/Player ]: option "channelId" is different from a string',
+      );
     }
-    this.set('textChannel', channelId);
+    this.set("textChannel", channelId);
     this.textChannel = channelId;
     return true;
   }
@@ -144,9 +155,11 @@ export class MoonlinkPlayer {
       throw new Error('[ @Moonlink/Player ]: "channelId" option is empty');
     }
     if (typeof channelId !== "string") {
-      throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
+      throw new Error(
+        '[ @Moonlink/Player ]: option "channelId" is different from a string',
+      );
     }
-    this.set('voiceChannel', channelId);
+    this.set("voiceChannel", channelId);
     this.voiceChannel = channelId;
     return true;
   }
@@ -159,9 +172,11 @@ export class MoonlinkPlayer {
    */
   public setAutoPlay(mode: boolean): boolean {
     if (typeof mode !== "boolean") {
-      throw new Error('[ @Moonlink/Player ]: "mode" option is empty or different from a boolean');
+      throw new Error(
+        '[ @Moonlink/Player ]: "mode" option is empty or different from a boolean',
+      );
     }
-    this.set('autoPlay', mode);
+    this.set("autoPlay", mode);
     this.autoPlay = mode;
     return mode;
   }
@@ -175,15 +190,18 @@ export class MoonlinkPlayer {
     options = options || { setDeaf: false, setMute: false };
     const { setDeaf, setMute } = options;
     this.set("connected", true);
-    this.payload(this.guildId, JSON.stringify({
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: this.voiceChannel,
-        self_mute: setMute,
-        self_deaf: setDeaf,
-      },
-    }));
+    this.payload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: this.voiceChannel,
+          self_mute: setMute,
+          self_deaf: setDeaf,
+        },
+      }),
+    );
     return true;
   }
 
@@ -193,16 +211,19 @@ export class MoonlinkPlayer {
    */
   public disconnect(): boolean {
     this.set("connected", false);
-		this.set('voiceChannel', null);
-    this.payload(this.guildId, JSON.stringify({
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      },
-    }));
+    this.set("voiceChannel", null);
+    this.payload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: null,
+          self_mute: false,
+          self_deaf: false,
+        },
+      }),
+    );
     return true;
   }
 
@@ -291,15 +312,15 @@ export class MoonlinkPlayer {
    * Stop the playback and optionally clear player data.
    * @returns True if stopped successfully.
    */
-  public async stop(): Promise<boolean> {
+  public async stop(destroy?: boolean): Promise<boolean> {
     if (!this.queue.size) {
       await this.rest.update({
         guildId: this.guildId,
         data: { encodedTrack: null },
       });
     }
-      this.destroy();
-		  return true;
+    destroy ? this.destroy() : this.queue.clear();
+    return true;
   }
 
   /**
@@ -324,17 +345,21 @@ export class MoonlinkPlayer {
    */
   public async setVolume(percent: number): Promise<number> {
     if (typeof percent == "undefined" || typeof percent !== "number") {
-      throw new Error('[ @Moonlink/Player ]: option "percent" is empty or different from a number');
+      throw new Error(
+        '[ @Moonlink/Player ]: option "percent" is empty or different from a number',
+      );
     }
     if (!this.playing) {
-      throw new Error("[ @Moonlink/Player ]: cannot change volume while the player is not playing");
+      throw new Error(
+        "[ @Moonlink/Player ]: cannot change volume while the player is not playing",
+      );
     }
 
     await this.rest.update({
       guildId: this.guildId,
       data: { volume: percent },
     });
-    this.set('volume', percent)
+    this.set("volume", percent);
     return percent;
   }
 
@@ -345,8 +370,10 @@ export class MoonlinkPlayer {
    * @throws Error if the mode is not a valid number or out of range.
    */
   public setLoop(mode: number | null): number | null {
-    if (typeof mode !== 'number' || (mode !== null && (mode < 0 || mode > 2))) {
-      throw new Error('[ @Moonlink/Player ]: the option "mode" is different from a number or the option does not exist');
+    if (typeof mode !== "number" || (mode !== null && (mode < 0 || mode > 2))) {
+      throw new Error(
+        '[ @Moonlink/Player ]: the option "mode" is different from a number or the option does not exist',
+      );
     }
 
     this.set("loop", mode);
@@ -375,7 +402,9 @@ export class MoonlinkPlayer {
    */
   private validateNumberParam(param: number, paramName: string): void {
     if (typeof param !== "number") {
-      throw new Error(`[ @Moonlink/Player ]: option "${paramName}" is empty or different from a number`);
+      throw new Error(
+        `[ @Moonlink/Player ]: option "${paramName}" is empty or different from a number`,
+      );
     }
   }
 
@@ -389,11 +418,15 @@ export class MoonlinkPlayer {
     this.validateNumberParam(position, "position");
 
     if (position >= this.current.duration) {
-      throw new Error(`[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track`);
+      throw new Error(
+        `[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track`,
+      );
     }
 
     if (!this.current.isSeekable && this.current.isStream) {
-      throw new Error(`[ @Moonlink/Player ]: seek function cannot be applied on live video or cannot be applied in "isSeekable"`);
+      throw new Error(
+        `[ @Moonlink/Player ]: seek function cannot be applied on live video or cannot be applied in "isSeekable"`,
+      );
     }
 
     await this.rest.update({
@@ -414,12 +447,16 @@ export class MoonlinkPlayer {
     this.validateNumberParam(position, "position");
 
     if (!this.queue.size) {
-      throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
+      throw new Error(
+        `[ @Moonlink/Player ]: the queue is empty to use this function`,
+      );
     }
 
     let queue = this.queue.db.get(`queue.${this.guildId}`);
     if (!queue[position - 1]) {
-      throw new Error(`[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`);
+      throw new Error(
+        `[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`,
+      );
     }
 
     let data: any = queue.splice(position - 1, 1)[0];
@@ -431,7 +468,7 @@ export class MoonlinkPlayer {
     await this.rest.update({
       guildId: this.guildId,
       data: {
-        encodedTrack: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
+        encodedTrack: data.encoded,
         volume: 90,
       },
     });
@@ -446,7 +483,9 @@ export class MoonlinkPlayer {
    */
   public async shuffle(): Promise<boolean> {
     if (!this.queue.size) {
-      throw new Error(`[ @Moonlink/Player ]: the queue is empty to use this function`);
+      throw new Error(
+        `[ @Moonlink/Player ]: the queue is empty to use this function`,
+      );
     }
 
     let queue: any = this.queue.all;

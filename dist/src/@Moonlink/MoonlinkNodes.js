@@ -82,13 +82,14 @@ class MoonlinkNode {
     init() {
         this.manager.emit("debug", "[ @Moonlink/Node ]: starting server connection process");
         if (!this.manager.initiated)
-            this.db.delete('queue');
+            this.db.delete("queue");
         this.connect();
     }
     async connect() {
         if (typeof this.host !== "string" && typeof this.host !== "undefined")
             throw new Error('[ @Moonlink/Node ]: "host" option is not configured correctly');
-        if (typeof this.password !== "string" && typeof this.password !== "undefined")
+        if (typeof this.password !== "string" &&
+            typeof this.password !== "undefined")
             throw new Error('[ @Moonlink/Node ]: the option "password" is not set correctly');
         if ((this.port && typeof this.port !== "number") ||
             this.port > 65535 ||
@@ -103,9 +104,9 @@ class MoonlinkNode {
                 Authorization: this.password,
             },
         });
-        if (this.version.replace(/\./g, '') < '400') {
-            console.log('[ @Mooblink ]: the lavalink version is ' + this.version);
-            console.log('[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink');
+        if (this.version.replace(/\./g, "") < "400") {
+            console.log("[ @Mooblink ]: the lavalink version is " + this.version);
+            console.log("[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink");
             return;
         }
         let headers = {
@@ -117,14 +118,19 @@ class MoonlinkNode {
             headers["Session-Id"] = this.resumeKey;
         this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
         this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/`;
-        this.ws = new MoonlinkWebsocket_1.MoonlinkWebsocket(this.socketUri, { host: this.host, port: this.port, secure: this.secure, headers });
+        this.ws = new MoonlinkWebsocket_1.MoonlinkWebsocket(this.socketUri, {
+            host: this.host,
+            port: this.port,
+            secure: this.secure,
+            headers,
+        });
         this.ws.connect();
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
         this.ws.on("message", this.message.bind(this));
         this.ws.on("error", this.error.bind(this));
     }
-    async open() {
+    async open(socket) {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.manager.emit("debug", '[ @Moonlink/Nodes ]: a new node said "hello world!"');
@@ -167,16 +173,16 @@ class MoonlinkNode {
             data = Buffer.from(data);
         let payload;
         try {
-            payload = JSON.parse(data.toString('utf8'));
+            payload = JSON.parse(data.toString("utf8"));
         }
         catch (error) {
             payload = data.toString();
             function findJSONObjects(input) {
                 const objetosJSON = [];
-                const objetoAberto = '{';
-                const objetoFechado = '}';
+                const objetoAberto = "{";
+                const objetoFechado = "}";
                 let objetoContador = 0;
-                let objetoAtual = '';
+                let objetoAtual = "";
                 for (let i = 0; i < input.length; i++) {
                     const char = input.charAt(i);
                     if (char === objetoAberto) {
@@ -190,9 +196,8 @@ class MoonlinkNode {
                                 const parsedObject = JSON.parse(objetoAtual);
                                 objetosJSON.push(parsedObject);
                             }
-                            catch (error) {
-                            }
-                            objetoAtual = '';
+                            catch (error) { }
+                            objetoAtual = "";
                         }
                     }
                     if (objetoContador > 0) {
@@ -205,7 +210,7 @@ class MoonlinkNode {
             if (objetsJSON.length > 0) {
                 objetsJSON.forEach(async (object) => {
                     const jsonString = JSON.stringify(object);
-                    const buffer = Buffer.from(jsonString, 'utf8');
+                    const buffer = Buffer.from(jsonString, "utf8");
                     await this.message(buffer);
                 });
             }
@@ -218,20 +223,23 @@ class MoonlinkNode {
             case "ready":
                 this.sessionId = payload.sessionId;
                 this.resumed = payload.resumed;
-                this.manager.map.set('sessionId', payload.sessionId);
+                this.manager.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
                 this.manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
                 if (this.manager.options.resumeKey) {
-                    this.rest.patch(`sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                    this.rest.patch(`sessions/${this.sessionId}`, {
+                        resumingKey: this.resumeKey,
+                        timeout: this.resumeTimeout,
+                    });
                     this.manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
                 }
                 if (this.manager.options.autoResume) {
-                    let obj = this.manager.map.get('players') || [];
+                    let obj = this.manager.map.get("players") || [];
                     const players = Object.keys(obj);
                     for (const player of players) {
                         if (obj[player].node === this) {
                             await this.manager.attemptConnection(obj[player].guildId);
-                            this.manager.emit('playerResume', this.manager.players.get(obj[player].guildId));
+                            this.manager.emit("playerResume", this.manager.players.get(obj[player].guildId));
                             this.manager.players.get(obj[player].guildId).restart();
                         }
                     }
@@ -258,11 +266,11 @@ class MoonlinkNode {
                 this.manager.emit("nodeError", this, new Error(`[ @Moonlink/Nodes ]: Unexpected op "${payload.op}" with data: ${payload}`));
         }
     }
-    error(err) {
-        if (!err)
+    error(error) {
+        if (!error)
             return;
-        this.manager.emit("nodeError", this, err);
-        this.manager.emit("debug", "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s)");
+        this.manager.emit("nodeError", this, error);
+        this.manager.emit("debug", "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s)", error);
     }
     async handleEvent(payload) {
         if (!payload)
@@ -291,13 +299,18 @@ class MoonlinkNode {
             }
             case "TrackEndEvent": {
                 let currents = this.map.get("current") || {};
+                let previousData = this.map.get("previous") || {};
                 let track = currents[payload.guildId] || null;
                 let queue = this.db.get(`queue.${payload.guildId}`);
                 players[payload.guildId] = {
                     ...players[payload.guildId],
                     playing: false,
                 };
+                previousData[payload.guildId] = {
+                    ...track,
+                };
                 this.map.set("players", players);
+                this.map.set("previous", previousData);
                 if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
                         this.db.delete(`queue.${payload.guildId}`);
@@ -315,7 +328,7 @@ class MoonlinkNode {
                         await this.rest.update({
                             guildId: payload.guildId,
                             data: {
-                                encodedTrack: track.encoded
+                                encodedTrack: track.encoded,
                             },
                         });
                         return;
