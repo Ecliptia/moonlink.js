@@ -42,7 +42,7 @@ class MoonlinkRest {
         if (!this.url)
             this.url = this.node.restUri;
         if (!this.sessionId)
-            this.sessionId = this.node.manager.map.get('sessionId');
+            this.sessionId = this.node.manager.map.get("sessionId");
     }
     async makeGetRequest(endpoint) {
         const headers = {

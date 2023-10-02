@@ -22,6 +22,7 @@ class MoonlinkPlayer {
     queue;
     filters;
     current;
+    previous;
     data;
     node;
     rest;
@@ -51,10 +52,12 @@ class MoonlinkPlayer {
         }
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];
+        this.previous = map.get("previous") || {};
+        this.previous = this.previous[this.guildId];
         this.map = map;
-        this.data = this.map.get('players') || {};
+        this.data = this.map.get("players") || {};
         this.data = this.data[this.guildId];
-        this.node = manager.nodes.get(this.get('node'));
+        this.node = manager.nodes.get(this.get("node"));
         this.filters = new index_1.MoonlinkFilters(this);
         this.rest = this.node.rest;
         this.manager = manager;
@@ -63,9 +66,9 @@ class MoonlinkPlayer {
      * Private method to update player information in the map.
      */
     updatePlayers() {
-        let players = this.map.get('players') || {};
+        let players = this.map.get("players") || {};
         players[this.guildId] = this.data;
-        this.map.set('players', players);
+        this.map.set("players", players);
     }
     /**
      * Set a key-value pair in the player's data and update the map.
@@ -98,7 +101,7 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
         }
-        this.set('textChannel', channelId);
+        this.set("textChannel", channelId);
         this.textChannel = channelId;
         return true;
     }
@@ -115,7 +118,7 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('[ @Moonlink/Player ]: option "channelId" is different from a string');
         }
-        this.set('voiceChannel', channelId);
+        this.set("voiceChannel", channelId);
         this.voiceChannel = channelId;
         return true;
     }
@@ -129,7 +132,7 @@ class MoonlinkPlayer {
         if (typeof mode !== "boolean") {
             throw new Error('[ @Moonlink/Player ]: "mode" option is empty or different from a boolean');
         }
-        this.set('autoPlay', mode);
+        this.set("autoPlay", mode);
         this.autoPlay = mode;
         return mode;
     }
@@ -159,7 +162,7 @@ class MoonlinkPlayer {
      */
     disconnect() {
         this.set("connected", false);
-        this.set('voiceChannel', null);
+        this.set("voiceChannel", null);
         this.payload(this.guildId, JSON.stringify({
             op: 4,
             d: {
@@ -252,14 +255,14 @@ class MoonlinkPlayer {
      * Stop the playback and optionally clear player data.
      * @returns True if stopped successfully.
      */
-    async stop() {
+    async stop(destroy) {
         if (!this.queue.size) {
             await this.rest.update({
                 guildId: this.guildId,
                 data: { encodedTrack: null },
             });
         }
-        this.destroy();
+        destroy ? this.destroy() : this.queue.clear();
         return true;
     }
     /**
@@ -293,7 +296,7 @@ class MoonlinkPlayer {
             guildId: this.guildId,
             data: { volume: percent },
         });
-        this.set('volume', percent);
+        this.set("volume", percent);
         return percent;
     }
     /**
@@ -303,7 +306,7 @@ class MoonlinkPlayer {
      * @throws Error if the mode is not a valid number or out of range.
      */
     setLoop(mode) {
-        if (typeof mode !== 'number' || (mode !== null && (mode < 0 || mode > 2))) {
+        if (typeof mode !== "number" || (mode !== null && (mode < 0 || mode > 2))) {
             throw new Error('[ @Moonlink/Player ]: the option "mode" is different from a number or the option does not exist');
         }
         this.set("loop", mode);
@@ -377,7 +380,7 @@ class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: data.track ? data.track : data.encoded ? data.encoded : data.trackEncoded ? data.trackEncoded : null,
+                encodedTrack: data.encoded,
                 volume: 90,
             },
         });

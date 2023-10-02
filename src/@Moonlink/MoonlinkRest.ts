@@ -44,11 +44,16 @@ export class MoonlinkRest {
 
   public async update(data: RestOptions): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makePatchRequest(`sessions/${this.sessionId}/players/${data.guildId}`, data.data);
+    return await this.makePatchRequest(
+      `sessions/${this.sessionId}/players/${data.guildId}`,
+      data.data,
+    );
   }
 
   public async destroy(guildId: string): Promise<object> {
-    return await this.makeDeleteRequest(`sessions/${this.sessionId}/players/${guildId}`);
+    return await this.makeDeleteRequest(
+      `sessions/${this.sessionId}/players/${guildId}`,
+    );
   }
 
   public async get(endpoint: Endpoint): Promise<object> {
@@ -61,7 +66,10 @@ export class MoonlinkRest {
     return await this.makePostRequest(endpoint, data);
   }
 
-  public async patch(endpoint: Endpoint, data: RestOptions | any): Promise<object> {
+  public async patch(
+    endpoint: Endpoint,
+    data: RestOptions | any,
+  ): Promise<object> {
     this.ensureUrlIsSet();
     return await this.makePatchRequest(endpoint, data.data);
   }
@@ -73,9 +81,10 @@ export class MoonlinkRest {
 
   private ensureUrlIsSet() {
     if (!this.url) this.url = this.node.restUri;
-		if(!this.sessionId) this.sessionId = this.node.manager.map.get('sessionId');
+    if (!this.sessionId)
+      this.sessionId = this.node.manager.map.get("sessionId");
   }
-  
+
   private async makeGetRequest(endpoint: string): Promise<object> {
     const headers = {
       Authorization: this.node.password,
@@ -88,26 +97,40 @@ export class MoonlinkRest {
     });
   }
 
-  private async makePostRequest(endpoint: string, data: RestOptions | any): Promise<object> {
+  private async makePostRequest(
+    endpoint: string,
+    data: RestOptions | any,
+  ): Promise<object> {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(this.url + endpoint, {
-      method: "POST",
-      headers,
-    }, data).catch((err) => {
+    return await makeRequest(
+      this.url + endpoint,
+      {
+        method: "POST",
+        headers,
+      },
+      data,
+    ).catch((err) => {
       return err;
     });
   }
 
-  private async makePatchRequest(endpoint: string, data: RestOptions | any): Promise<object> {
+  private async makePatchRequest(
+    endpoint: string,
+    data: RestOptions | any,
+  ): Promise<object> {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(this.url + endpoint, {
-      method: "PATCH",
-      headers,
-    }, data).catch((err) => {
+    return await makeRequest(
+      this.url + endpoint,
+      {
+        method: "PATCH",
+        headers,
+      },
+      data,
+    ).catch((err) => {
       return err;
     });
   }
@@ -123,7 +146,7 @@ export class MoonlinkRest {
       return err;
     });
   }
-	public async decodeTrack(encodedTrack: string): Promise<object> {
+  public async decodeTrack(encodedTrack: string): Promise<object> {
     return await this.get(`decodetrack?encodedTrack=${encodedTrack}`);
   }
 
@@ -141,13 +164,13 @@ export class MoonlinkRest {
 
   public async getVersion(): Promise<object> {
     return await this.get("version");
-	}
-	
-	public async routePlannerFreeAddress(data: RestOptions): Promise<object> {
+  }
+
+  public async routePlannerFreeAddress(data: RestOptions): Promise<object> {
     return await this.post("routeplanner/free/address", data);
   }
 
   public async routePlannerFreeAll(data: RestOptions): Promise<object> {
     return await this.post("routeplanner/free/all", data);
-	}
+  }
 }

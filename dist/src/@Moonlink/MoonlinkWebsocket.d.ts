@@ -1,9 +1,5 @@
 /// <reference types="node" />
-/// <reference types="node" />
-/// <reference types="node" />
-import * as tls from 'tls';
-import * as net from 'net';
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 interface WebSocketOptions {
     timeout?: number;
     headers?: Record<string, string>;
@@ -27,11 +23,5 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     isOpen(): boolean;
     getRemoteAddress(): string | null;
     getRemotePort(): number | null;
-    upgradeConnection(newSocket: tls.TLSSocket | net.Socket): void;
-    private handleWebSocketData;
-    private extractJSONs;
-    private bufferedData;
-    private applyMask;
-    private decodeWebSocketFrames;
 }
 export {};
