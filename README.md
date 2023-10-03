@@ -196,7 +196,6 @@ Bug Hunters 🐛:
 - **ddemile**
 - **Tasty-Kiwi**
 - **rrm**
-
+- **WilsontheWolf**
+  
 We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
-
-

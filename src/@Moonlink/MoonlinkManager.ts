@@ -15,20 +15,24 @@ export interface Nodes {
   secure?: boolean;
   password?: string | null;
 }
+
 export interface spotifyOptions {
   clientId?: string;
   clientSecret?: string;
 }
+
 export interface customOptions {
   player?: Constructor<MoonlinkPlayer>;
   queue?: Constructor<MoonlinkQueue>;
 }
+
 export interface Options {
   clientName?: string;
   reconnectAtattemps?: number;
   retryTime?: number;
   retryAmount?: number;
   resumeKey?: string;
+  resumeStatus?: boolean;
   resumeTimeout?: number;
   autoResume?: boolean;
   plugins?: Plugin[];
@@ -293,7 +297,10 @@ export class MoonlinkManager extends EventEmitter {
     const connectedNodes = [...this.nodes.values()].filter(
       (node) => node.isConnected,
     );
-
+    if (!connectedNodes)
+      throw new TypeError(
+        "[ @Moonlink/Manager ]: No lavalink server connected",
+      );
     switch (sortType) {
       case "memory":
         return this.sortNodesByMemoryUsage(connectedNodes);
@@ -500,10 +507,12 @@ export class MoonlinkManager extends EventEmitter {
             );
             searchIdentifier = `${source}:${query}`;
           } else {
-            searchIdentifier = `${sources[source]}:${query}`;
+            searchIdentifier = `ytsearch:${query}`;
+            if (source && sources[source])
+              searchIdentifier = `${sources[source]}:${query}`;
           }
         } else {
-          searchIdentifier = `ytsearch:${query}`;
+          searchIdentifier = `${query}`;
         }
 
         const params = new URLSearchParams({ identifier: searchIdentifier });

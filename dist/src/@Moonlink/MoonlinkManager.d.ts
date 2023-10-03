@@ -28,6 +28,7 @@ export interface Options {
     retryTime?: number;
     retryAmount?: number;
     resumeKey?: string;
+    resumeStatus?: boolean;
     resumeTimeout?: number;
     autoResume?: boolean;
     plugins?: Plugin[];

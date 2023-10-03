@@ -56,6 +56,7 @@ export class MoonlinkNode {
   public reconnectAtattempts: number | null;
   public reconnectTimeout: any;
   public resumeKey: string | null;
+  public resumeStatus: boolean | null;
   public resumeTimeout: number;
   public calls: number;
   public retryAmount: number | null;
@@ -75,6 +76,7 @@ export class MoonlinkNode {
     this.password = node.password || "youshallnotpass";
     this.calls = 0;
     this.resumeKey = manager.options.resumeKey || null;
+    this.resumeStatus = manager.options.resumeStatus || true;
     this.resumeTimeout = manager.options.resumeTimeout || 30000;
     this.retryTime = this.manager.options.retryTime || 30000;
     this.reconnectAtattempts = this.manager.options.reconnectAtattemps || 0;
@@ -291,9 +293,9 @@ export class MoonlinkNode {
             this.resumed ? ` session was resumed, ` : ``
           } session is currently ${this.sessionId}`,
         );
-        if (this.manager.options.resumeKey) {
+        if (this.resumeStatus) {
           this.rest.patch(`sessions/${this.sessionId}`, {
-            resumingKey: this.resumeKey,
+            resumingKey: this.resumeStatus,
             timeout: this.resumeTimeout,
           });
           this.manager.emit(
@@ -323,9 +325,20 @@ export class MoonlinkNode {
         break;
       case "playerUpdate":
         let current: any = this.map.get(`current`) || {};
+        const player = this.manager.players.get(payload.guildId);
         current[payload.guildId] = {
           ...current[payload.guildId],
-          position: payload.state.position,
+          get position() {
+            /* 
+		       @Author: WilsontheWolf
+				   @Refactored by: 1Lucas1apk
+		      */
+            if (player.paused) {
+              return player.current.position;
+            }
+
+            return payload.state.position + (Date.now() - payload.state.time);
+          },
           time: payload.state.time,
           ping: payload.state.ping,
         };

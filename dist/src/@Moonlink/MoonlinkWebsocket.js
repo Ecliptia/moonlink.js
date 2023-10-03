@@ -28,6 +28,15 @@ const https = __importStar(require("https"));
 const http = __importStar(require("http"));
 const url_1 = require("url");
 const events_1 = require("events");
+class WebSocketError extends Error {
+    innerError;
+    name;
+    constructor(message, innerError) {
+        super(message);
+        this.name = "WebSocketError";
+        this.innerError = innerError;
+    }
+}
 class MoonlinkWebsocket extends events_1.EventEmitter {
     options;
     socket = null;
@@ -50,57 +59,43 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             port: this.options.port,
             method: "GET",
             timeout: this.options.timeout || 5000,
-            headers: {
-                "Sec-WebSocket-Key": this.options.keyGenerator(),
-                "Sec-WebSocket-Version": 13,
-                Upgrade: "websocket",
-                Connection: "Upgrade",
-                ...(this.options.headers || {}),
-            },
+            headers: this.buildHeaders(),
+            protocol: this.options.secure ? "https:" : "http:",
         };
-        this.options.secure
-            ? (requestOptions.protocol = "https:")
-            : (requestOptions.protocol = "http:");
         this.socket = this.agent.request(requestOptions);
-        this.socket.on("error", (err) => {
-            this.emit("error", err);
+        this.setupSocketListeners();
+    }
+    setupSocketListeners() {
+        this.socket.on("error", this.handleSocketError.bind(this));
+        this.socket.on("upgrade", this.handleSocketUpgrade.bind(this));
+        this.socket.on("socket", this.handleSocketConnection.bind(this));
+    }
+    handleSocketError(err) {
+        console.error("WebSocket error:", err);
+        this.emit("error", new WebSocketError("WebSocket error", err));
+    }
+    handleSocketUpgrade(res, socket, head) {
+        if (res.statusCode !== 101) {
+            this.emit("error", new Error(`[ @Moonlink/Websocket ]: ${res.statusCode} ${res.statusMessage}`));
+            return;
+        }
+        socket.on("data", (data) => {
+            const frameHeader = this.parseFrameHeader(data);
+            const payload = data.subarray(frameHeader.payloadStartIndex);
+            this.emit("message", payload.toString());
         });
-        this.socket.on("upgrade", (res, socket, head) => {
-            if (res.statusCode !== 101) {
-                this.emit("error", new Error(`[ @Moonlink/Websocket ]: ${res.statusCode} ${res.statusMessage}`));
-                return;
-            }
-            socket.on("data", (data) => {
-                const frameHeader = this.parseFrameHeader(data);
-                const payload = data.subarray(frameHeader.payloadStartIndex);
-                this.emit("message", payload.toString());
-            });
-            socket.on("error", (err) => {
-                console.error("WebSocket error:", err);
-                this.emit("error", err);
-            });
-            this.emit("open", socket);
+        socket.on("error", (err) => {
+            console.error("WebSocket error:", err);
+            this.emit("error", new WebSocketError("WebSocket error", err));
         });
-        this.socket.on("socket", (req) => {
-            req.on("close", () => this.emit("close"));
-            req.on("end", () => this.emit("end"));
-            req.on("timeout", () => this.emit("timeout"));
-            req.on(this.options.secure ? "secureConnect" : "connect", () => {
-                const headers = [
-                    `GET ${this.url.pathname}${this.url.search} HTTP/1.1`,
-                    `Host: ${this.options.host}`,
-                    "Upgrade: websocket",
-                    "Connection: Upgrade",
-                    `Sec-WebSocket-Key: ${this.options.keyGenerator()}`,
-                    "Sec-WebSocket-Version: 13",
-                ];
-                if (this.options.headers) {
-                    Object.keys(this.options.headers).forEach((key) => {
-                        headers.push(`${key}: ${this.options.headers[key]}`);
-                    });
-                }
-                req.write(headers.join("\r\n") + "\r\n\r\n");
-            });
+        this.emit("open", socket);
+    }
+    handleSocketConnection(req) {
+        req.on("close", () => this.emit("close"));
+        req.on("end", () => this.emit("end"));
+        req.on("timeout", () => this.emit("timeout"));
+        req.on(this.options.secure ? "secureConnect" : "connect", () => {
+            req.write(this.buildUpgradeHeaders() + "\r\n\r\n");
         });
     }
     send(data) {
@@ -188,6 +183,32 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     }
     getRemotePort() {
         return this.socket ? this.socket.remotePort : null;
+    }
+    buildHeaders() {
+        const headers = {
+            "Sec-WebSocket-Key": this.options.keyGenerator(),
+            "Sec-WebSocket-Version": "13",
+            Upgrade: "websocket",
+            Connection: "Upgrade",
+            ...(this.options.headers || {}),
+        };
+        return headers;
+    }
+    buildUpgradeHeaders() {
+        const headers = [
+            `GET ${this.url.pathname}${this.url.search} HTTP/1.1`,
+            `Host: ${this.options.host}`,
+            "Upgrade: websocket",
+            "Connection: Upgrade",
+            `Sec-WebSocket-Key: ${this.options.keyGenerator()}`,
+            "Sec-WebSocket-Version: 13",
+        ];
+        if (this.options.headers) {
+            Object.keys(this.options.headers).forEach((key) => {
+                headers.push(`${key}: ${this.options.headers[key]}`);
+            });
+        }
+        return headers.join("\r\n");
     }
 }
 exports.MoonlinkWebsocket = MoonlinkWebsocket;

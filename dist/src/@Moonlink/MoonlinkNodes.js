@@ -28,6 +28,7 @@ class MoonlinkNode {
     reconnectAtattempts;
     reconnectTimeout;
     resumeKey;
+    resumeStatus;
     resumeTimeout;
     calls;
     retryAmount;
@@ -47,6 +48,7 @@ class MoonlinkNode {
         this.password = node.password || "youshallnotpass";
         this.calls = 0;
         this.resumeKey = manager.options.resumeKey || null;
+        this.resumeStatus = manager.options.resumeStatus || true;
         this.resumeTimeout = manager.options.resumeTimeout || 30000;
         this.retryTime = this.manager.options.retryTime || 30000;
         this.reconnectAtattempts = this.manager.options.reconnectAtattemps || 0;
@@ -226,9 +228,9 @@ class MoonlinkNode {
                 this.manager.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
                 this.manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
-                if (this.manager.options.resumeKey) {
+                if (this.resumeStatus) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
-                        resumingKey: this.resumeKey,
+                        resumingKey: this.resumeStatus,
                         timeout: this.resumeTimeout,
                     });
                     this.manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
@@ -251,9 +253,19 @@ class MoonlinkNode {
                 break;
             case "playerUpdate":
                 let current = this.map.get(`current`) || {};
+                const player = this.manager.players.get(payload.guildId);
                 current[payload.guildId] = {
                     ...current[payload.guildId],
-                    position: payload.state.position,
+                    get position() {
+                        /*
+                           @Author: WilsontheWolf
+                               @Refactored by: 1Lucas1apk
+                          */
+                        if (player.paused) {
+                            return player.current.position;
+                        }
+                        return payload.state.position + (Date.now() - payload.state.time);
+                    },
                     time: payload.state.time,
                     ping: payload.state.ping,
                 };
