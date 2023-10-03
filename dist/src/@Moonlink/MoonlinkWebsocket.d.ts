@@ -1,4 +1,6 @@
 /// <reference types="node" />
+/// <reference types="node" />
+import { URL } from "url";
 import { EventEmitter } from "events";
 interface WebSocketOptions {
     timeout?: number;
@@ -12,9 +14,13 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     options: WebSocketOptions;
     socket: any;
     agent: any;
-    url: any;
+    url: URL;
     constructor(url: string, options?: WebSocketOptions);
     connect(): void;
+    private setupSocketListeners;
+    private handleSocketError;
+    private handleSocketUpgrade;
+    private handleSocketConnection;
     send(data: string): void;
     close(code?: number, reason?: string): void;
     private parseFrameHeader;
@@ -23,5 +29,7 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     isOpen(): boolean;
     getRemoteAddress(): string | null;
     getRemotePort(): number | null;
+    private buildHeaders;
+    private buildUpgradeHeaders;
 }
 export {};

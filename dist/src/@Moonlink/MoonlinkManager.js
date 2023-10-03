@@ -98,6 +98,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
      */
     sortByUsage(sortType) {
         const connectedNodes = [...this.nodes.values()].filter((node) => node.isConnected);
+        if (!connectedNodes)
+            throw new TypeError("[ @Moonlink/Manager ]: No lavalink server connected");
         switch (sortType) {
             case "memory":
                 return this.sortNodesByMemoryUsage(connectedNodes);
@@ -271,11 +273,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                         searchIdentifier = `${source}:${query}`;
                     }
                     else {
-                        searchIdentifier = `${sources[source]}:${query}`;
+                        searchIdentifier = `ytsearch:${query}`;
+                        if (source && sources[source])
+                            searchIdentifier = `${sources[source]}:${query}`;
                     }
                 }
                 else {
-                    searchIdentifier = `ytsearch:${query}`;
+                    searchIdentifier = `${query}`;
                 }
                 const params = new URLSearchParams({ identifier: searchIdentifier });
                 const res = await this.sortByUsage("memory")[0].request("loadtracks", params);

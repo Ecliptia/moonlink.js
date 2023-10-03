@@ -52,6 +52,7 @@ export declare class MoonlinkNode {
     reconnectAtattempts: number | null;
     reconnectTimeout: any;
     resumeKey: string | null;
+    resumeStatus: boolean | null;
     resumeTimeout: number;
     calls: number;
     retryAmount: number | null;
