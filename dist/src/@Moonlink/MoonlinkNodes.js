@@ -117,7 +117,7 @@ class MoonlinkNode {
             "Client-Name": this.options.clientName,
         };
         if (this.resumeKey)
-            headers["Session-Id"] = this.resumeKey;
+            headers["Session-Id"] = this.sessionId ? this.sessionId : this.resumeKey;
         this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
         this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/v4/`;
         this.ws = new MoonlinkWebsocket_1.MoonlinkWebsocket(this.socketUri, {
@@ -230,8 +230,10 @@ class MoonlinkNode {
                 this.manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
                 if (this.resumeStatus) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
-                        resumingKey: this.resumeStatus,
-                        timeout: this.resumeTimeout,
+                        data: {
+                            resuming: this.resumeStatus,
+                            timeout: this.resumeTimeout,
+                        },
                     });
                     this.manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
                 }
@@ -239,7 +241,7 @@ class MoonlinkNode {
                     let obj = this.manager.map.get("players") || [];
                     const players = Object.keys(obj);
                     for (const player of players) {
-                        if (obj[player].node === this) {
+                        if (obj[player].node == this.host) {
                             await this.manager.attemptConnection(obj[player].guildId);
                             this.manager.emit("playerResume", this.manager.players.get(obj[player].guildId));
                             this.manager.players.get(obj[player].guildId).restart();
@@ -259,10 +261,12 @@ class MoonlinkNode {
                     get position() {
                         /*
                            @Author: WilsontheWolf
-                               @Refactored by: 1Lucas1apk
                           */
                         if (player.paused) {
-                            return player.current.position;
+                            return payload.state.position;
+                        }
+                        if (!player.node.isConnected) {
+                            return payload.state.position;
                         }
                         return payload.state.position + (Date.now() - payload.state.time);
                     },
@@ -357,6 +361,19 @@ class MoonlinkNode {
                         this.manager.emit("trackEnd", player, track);
                         this.manager.emit("debug", "[ @Manager/Nodes ]: invalid loop value will be ignored!");
                     }
+                }
+                /*
+                    @Author: PiscesXD
+                    Track shuffling logic
+                  */
+                if (player.queue.size && player.data.shuffled) {
+                    let currentQueue = this.db.get(`queue.${payload.guildId}`);
+                    const randomIndex = Math.floor(Math.random() * currentQueue.length);
+                    const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
+                    currentQueue.unshift(shuffledTrack);
+                    this.db.set(`queue.${payload.guildId}`, currentQueue);
+                    player.play();
+                    return;
                 }
                 if (player.queue.size) {
                     this.manager.emit("trackEnd", player, track);

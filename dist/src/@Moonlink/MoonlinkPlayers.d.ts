@@ -17,6 +17,7 @@ export interface PlayerInfos {
     connected?: boolean | null;
     playing?: boolean | null;
     paused?: boolean | null;
+    shuffled?: boolean | null;
     loop?: number | null;
     volume?: number | null;
     node?: string;
@@ -38,6 +39,7 @@ export declare class MoonlinkPlayer {
     paused: boolean | null;
     loop: number | null;
     volume: number;
+    shuffled: boolean | null;
     queue: MoonlinkQueue;
     filters: MoonlinkFilters;
     current: any;
@@ -178,10 +180,5 @@ export declare class MoonlinkPlayer {
      * @returns True if the shuffle was successful.
      * @throws Error if the queue is empty.
      */
-    shuffle(): Promise<boolean>;
-    /**
-     * Private method to shuffle an array randomly.
-     * @param array - The array to shuffle.
-     */
-    private shuffleArray;
+    shuffle(mode?: boolean | null): boolean | null;
 }

@@ -25,6 +25,7 @@ export interface PlayerInfos {
   connected?: boolean | null;
   playing?: boolean | null;
   paused?: boolean | null;
+  shuffled?: boolean | null;
   loop?: number | null;
   volume?: number | null;
   node?: string;
@@ -47,6 +48,7 @@ export class MoonlinkPlayer {
   public paused: boolean | null;
   public loop: number | null;
   public volume: number;
+  public shuffled: boolean | null;
   public queue: MoonlinkQueue;
   public filters: MoonlinkFilters;
   public current: any;
@@ -77,6 +79,7 @@ export class MoonlinkPlayer {
     this.paused = infos.paused || null;
     this.loop = infos.loop || null;
     this.volume = infos.volume || 90;
+    this.shuffled = infos.shuffled || false;
     if (manager.options && manager.options.custom.queue) {
       this.queue = new manager.options.custom.queue(manager, this);
     } else {
@@ -231,8 +234,7 @@ export class MoonlinkPlayer {
    * Restart the player by reconnecting and updating its state.
    */
   public async restart(): Promise<void> {
-    if (!this.current && !this.queue.size) return;
-    if (!this.current) this.play();
+    if (!this.current) return;
     await this.manager.attemptConnection(this.guildId);
     await this.rest.update({
       guildId: this.guildId,
@@ -328,6 +330,21 @@ export class MoonlinkPlayer {
    * @returns True if the next track was successfully played.
    */
   public async skip(): Promise<boolean> {
+    /* 
+	    @Author: PiscesXD
+	    Track shuffling logic
+	  */
+
+    if (this.queue.size && this.data.shuffled) {
+      let currentQueue = this.queue.db.get(`queue.${this.guildId}`);
+      const randomIndex = Math.floor(Math.random() * currentQueue.length);
+      const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
+      currentQueue.unshift(shuffledTrack);
+      this.queue.db.set(`queue.${this.guildId}`, currentQueue);
+      this.play();
+      return;
+    }
+
     if (!this.queue.size) {
       this.destroy();
       return false;
@@ -481,28 +498,20 @@ export class MoonlinkPlayer {
    * @returns True if the shuffle was successful.
    * @throws Error if the queue is empty.
    */
-  public async shuffle(): Promise<boolean> {
+  public shuffle(mode?: boolean | null): boolean | null {
+    /* 
+	    @Author: PiscesXD
+	    Track shuffling logic
+	  */
     if (!this.queue.size) {
       throw new Error(
-        `[ @Moonlink/Player ]: the queue is empty to use this function`,
+        `[ @Moonlink/Player ]: The "shuffle" method doesn't work if there are no tracks in the queue`,
       );
+      return false;
     }
-
-    let queue: any = this.queue.all;
-    this.shuffleArray(queue);
-    this.queue.db.set(`queue.${this.guildId}`, queue);
-
-    return true;
-  }
-
-  /**
-   * Private method to shuffle an array randomly.
-   * @param array - The array to shuffle.
-   */
-  private shuffleArray(array: any[]): void {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
+    mode ? mode : (mode = !this.shuffled);
+    this.set("shuffled", mode);
+    this.shuffled = mode;
+    return mode;
   }
 }
