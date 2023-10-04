@@ -188,6 +188,10 @@ We would like to express our gratitude to the amazing individuals who contribute
 
 2. **MotoG.js** - Project Ideator and Designer, contributing to the concept and visual design. 🎨
 
+3. **WilsontheWolf** - It contributed to the track position logic in real time, rather than just receiving the payload from lavalink
+
+4. **PiscesXD** - First sponsor and contributed to making the shuffle method reversible
+
 Bug Hunters 🐛:
 
 - **Nah**
