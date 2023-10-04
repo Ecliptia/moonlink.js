@@ -297,7 +297,7 @@ export class MoonlinkManager extends EventEmitter {
     const connectedNodes = [...this.nodes.values()].filter(
       (node) => node.isConnected,
     );
-    if (!connectedNodes)
+    if (connectedNodes.length == 0)
       throw new TypeError(
         "[ @Moonlink/Manager ]: No lavalink server connected",
       );
@@ -659,13 +659,14 @@ export class MoonlinkManager extends EventEmitter {
         playing: false,
         connected: false,
         paused: false,
+        shuffled: false,
         loop: null,
         autoPlay: false,
         node: data.node
           ? data.node
           : this.sortByUsage(
               `${this.options.sortNode ? this.options.sortNode : "players"}`,
-            )[0].host,
+            )[0]?.host,
       };
       this.map.set("players", players_map);
       if (this.options.custom.player) {
