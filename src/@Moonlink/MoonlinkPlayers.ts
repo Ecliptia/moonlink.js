@@ -19,9 +19,10 @@ export interface connectOptions {
  */
 export interface PlayerInfos {
   guildId: string;
-  textChannel: string;
+  textChannel: string | null;
   voiceChannel: string | null;
   autoPlay?: boolean | null;
+  autoLeave?: boolean | null;
   connected?: boolean | null;
   playing?: boolean | null;
   paused?: boolean | null;
@@ -43,6 +44,7 @@ export class MoonlinkPlayer {
   public textChannel: string;
   public voiceChannel: string;
   public autoPlay: boolean | null;
+  public autoLeave: boolean | null;
   public connected: boolean | null;
   public playing: boolean | null;
   public paused: boolean | null;
@@ -74,6 +76,7 @@ export class MoonlinkPlayer {
     this.textChannel = infos.textChannel;
     this.voiceChannel = infos.voiceChannel;
     this.autoPlay = infos.autoPlay;
+    this.autoLeave = infos.autoLeave || false;
     this.connected = infos.connected || null;
     this.playing = infos.playing || null;
     this.paused = infos.paused || null;
@@ -96,6 +99,26 @@ export class MoonlinkPlayer {
     this.filters = new MoonlinkFilters(this);
     this.rest = this.node.rest;
     this.manager = manager;
+
+    const existingData = this.queue.db.get(`players.${this.guildId}`) || {};
+
+    if (
+      this.voiceChannel &&
+      this.voiceChannel !==
+        (existingData.voiceChannel && existingData.voiceChannel)
+    ) {
+      existingData.voiceChannel = this.voiceChannel;
+    }
+
+    if (
+      this.textChannel &&
+      this.textChannel !==
+        (existingData.textChannel && existingData.textChannel)
+    ) {
+      existingData.textChannel = this.textChannel;
+    }
+
+    this.queue.db.set(`players.${this.guildId}`, existingData);
   }
 
   /**
@@ -166,7 +189,18 @@ export class MoonlinkPlayer {
     this.voiceChannel = channelId;
     return true;
   }
-
+  /* Logic created by PiscesXD */
+  public setAutoLeave(mode?: boolean | null): boolean | null {
+    if (typeof mode !== "boolean") {
+      throw new Error(
+        '[ @Moonlink/Player ]: "mode" option is empty or different from a boolean',
+      );
+    }
+    mode ? mode : (mode = !this.autoLeave);
+    this.set("autoLeave", mode);
+    this.autoLeave = mode;
+    return mode;
+  }
   /**
    * Set the auto-play mode for the player.
    * @param mode - Auto-play mode (true/false).
@@ -345,11 +379,11 @@ export class MoonlinkPlayer {
       return;
     }
 
-    if (!this.queue.size) {
-      this.destroy();
+    if (this.queue.size) {
+      this.play();
       return false;
     } else {
-      this.play();
+      this.stop();
       return true;
     }
   }

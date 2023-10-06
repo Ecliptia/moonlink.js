@@ -2,11 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkManager = void 0;
 const node_events_1 = require("node:events");
-const MoonlinkNodes_1 = require("./MoonlinkNodes");
-const MoonlinkPlayers_1 = require("./MoonlinkPlayers");
-const MoonlinkTrack_1 = require("../@Rest/MoonlinkTrack");
-const Spotify_1 = require("../@Sources/Spotify");
-const Plugin_1 = require("../@Rest/Plugin");
+const index_1 = require("../../index");
 /**
  * Creates a new MoonlinkManager instance.
  * @param {Nodes[]} nodes - An array of objects containing information about the Lavalink nodes.
@@ -46,7 +42,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             options.custom = {};
         if (options.plugins) {
             options.plugins.forEach((plugin) => {
-                if (!(plugin instanceof Plugin_1.Plugin))
+                if (!(plugin instanceof index_1.Plugin))
                     throw new RangeError(`[ @Moonlink/Manager ]: this plugin is not compatible`);
                 plugin.load(this);
             });
@@ -55,7 +51,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this._sPayload = sPayload;
         this.options = options;
         this.nodes = new Map();
-        this.spotify = new Spotify_1.Spotify(options.spotify, this);
+        this.spotify = new index_1.Spotify(options.spotify, this);
         this.version = require("../../index").version;
     }
     /**
@@ -83,7 +79,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
      * @throws {Error} - If the port option is not set correctly.
      */
     addNode(node) {
-        const new_node = new MoonlinkNodes_1.MoonlinkNode(this, node, this.map);
+        const new_node = new index_1.MoonlinkNode(this, node, this.map);
         if (node.identifier)
             this.nodes.set(node.identifier, new_node);
         else
@@ -299,7 +295,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
-                const tracks = res.data.map((x) => new MoonlinkTrack_1.MoonlinkTrack(x));
+                const tracks = res.data.map((x) => new index_1.MoonlinkTrack(x));
                 return resolve({
                     ...res,
                     tracks,
@@ -350,7 +346,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 this.emit("debug", "[ @Moonlink/Custom ]: the player is customized");
                 return new this.options.custom.player(this.map.get("players")[guildId], this, this.map);
             }
-            return new MoonlinkPlayers_1.MoonlinkPlayer(this.map.get("players")[guildId], this, this.map);
+            return new index_1.MoonlinkPlayer(this.map.get("players")[guildId], this, this.map);
         };
         /**
          * Creates a new MoonlinkPlayer instance or gets an existing player for the specified guild.
@@ -398,7 +394,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 this.emit("debug", "[ @Moonlink/Custom ]: the player is customized");
                 return new this.options.custom.player(players_map[data.guildId], this, this.map);
             }
-            return new MoonlinkPlayers_1.MoonlinkPlayer(players_map[data.guildId], this, this.map);
+            return new index_1.MoonlinkPlayer(players_map[data.guildId], this, this.map);
         };
         let all = this.map.get("players") ? this.map.get("players") : null;
         return {

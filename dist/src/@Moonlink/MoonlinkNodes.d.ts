@@ -1,7 +1,6 @@
 /// <reference types="node" />
 import { MoonlinkWebsocket } from "./MoonlinkWebsocket";
-import { MoonlinkManager, Options } from "./MoonlinkManager";
-import { MoonlinkRest } from "./MoonlinkRest";
+import { MoonlinkManager, Options, MoonlinkDatabase, MoonlinkRest } from "../../index";
 export declare interface Node {
     host: string;
     password?: string;
@@ -43,6 +42,7 @@ export declare class MoonlinkNode {
     socketUri: string | null;
     restUri: any;
     rest: MoonlinkRest;
+    resume: boolean | null;
     resumed: boolean;
     sessionId: string;
     isConnected: boolean;
@@ -59,7 +59,7 @@ export declare class MoonlinkNode {
     sendWs: Function;
     private node;
     private map;
-    private db;
+    db: MoonlinkDatabase;
     constructor(manager: MoonlinkManager, node: Node, map: Map<string, any[]>);
     request(endpoint: string, params: any): Promise<object>;
     init(): void;

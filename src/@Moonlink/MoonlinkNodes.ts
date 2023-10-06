@@ -1,9 +1,15 @@
 import { MoonlinkWebsocket } from "./MoonlinkWebsocket";
-import { MoonlinkManager, Options, SearchResult } from "./MoonlinkManager";
-import { MoonlinkPlayer } from "./MoonlinkPlayers";
-import { MoonlinkDatabase } from "../@Rest/MoonlinkDatabase";
-import { MoonlinkRest } from "./MoonlinkRest";
-import { makeRequest } from "../@Rest/MakeRequest";
+import {
+  MoonlinkManager,
+  Options,
+  SearchResult,
+  MoonlinkPlayer,
+  MoonlinkDatabase,
+  MoonlinkRest,
+  makeRequest,
+  MoonlinkTrack,
+} from "../../index";
+
 export declare interface Node {
   host: string;
   password?: string;
@@ -47,6 +53,7 @@ export class MoonlinkNode {
   public socketUri: string | null;
   public restUri: any;
   public rest: MoonlinkRest;
+  public resume: boolean | null;
   public resumed: boolean;
   public sessionId: string;
   public isConnected: boolean;
@@ -63,7 +70,7 @@ export class MoonlinkNode {
   public sendWs: Function;
   private node: Node;
   private map: Map<string, any[]>;
-  private db: MoonlinkDatabase;
+  public db: MoonlinkDatabase;
   constructor(manager: MoonlinkManager, node: Node, map: Map<string, any[]>) {
     this.manager = manager;
     this.map = map;
@@ -75,7 +82,7 @@ export class MoonlinkNode {
     this.identifier = node.identifier || null;
     this.password = node.password || "youshallnotpass";
     this.calls = 0;
-    this.resumeKey = manager.options.resumeKey || null;
+    this.resume = manager.options.resume || null;
     this.resumeStatus = manager.options.resumeStatus || true;
     this.resumeTimeout = manager.options.resumeTimeout || 30000;
     this.retryTime = this.manager.options.retryTime || 30000;
@@ -114,7 +121,6 @@ export class MoonlinkNode {
       "debug",
       "[ @Moonlink/Node ]: starting server connection process",
     );
-    if (!this.manager.initiated) this.db.delete("queue");
     this.connect();
   }
   public async connect(): Promise<any> {
@@ -164,7 +170,9 @@ export class MoonlinkNode {
       "Client-Name": this.options.clientName,
     };
     if (this.resumeKey)
-      headers["Session-Id"] = this.sessionId ? this.sessionId : this.resumeKey;
+      headers["Session-Id"] = this.db.get("sessionId")
+        ? this.db.get("sessionId")
+        : null;
     this.socketUri = `ws${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
     }${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
@@ -285,9 +293,14 @@ export class MoonlinkNode {
     switch (payload.op) {
       case "ready":
         this.sessionId = payload.sessionId;
+        this.resume ? this.db.set("sessionId", this.sessionId) : null;
         this.resumed = payload.resumed;
         this.manager.map.set("sessionId", payload.sessionId);
         this.rest.setSessionId(this.sessionId);
+        if (!this.manager.initiated && !this.resumed) {
+          this.db.delete("queue");
+          this.db.delete("players");
+        }
         this.manager.emit(
           "debug",
           `[ @Moonlink/Node ]:${
@@ -320,7 +333,31 @@ export class MoonlinkNode {
             }
           }
         }
-
+        if (this.resumed) {
+          let players: any = await this.rest.get(
+            `sessions/${this.sessionId}/players`,
+          );
+          for (const player of players) {
+            let previousInfosPlayer =
+              this.db.get(`players.${player.guildId}`) || {};
+            let playerClass = this.manager.players.create({
+              guildId: player.guildId,
+              voiceChannel: previousInfosPlayer.voiceChannel,
+              textChannel: previousInfosPlayer.textChannel,
+              node: this.host,
+            });
+            playerClass.connect({
+              setDeaf: true,
+              setMute: false,
+            });
+            playerClass.set("playing", true);
+            playerClass.set("conneted", true);
+            let track = new MoonlinkTrack(player.track);
+            let current: any = this.map.get("currents") || {};
+            current[player.guildId] = track;
+            this.map.set("currents", current);
+          }
+        }
         break;
       case "stats":
         delete payload.op;
@@ -328,19 +365,22 @@ export class MoonlinkNode {
         break;
       case "playerUpdate":
         let current: any = this.map.get(`current`) || {};
-        const player = this.manager.players.get(payload.guildId);
+        let player = this.manager.players.get(payload.guildId);
+        const manager = this.manager;
         current[payload.guildId] = {
           ...current[payload.guildId],
           get position() {
             /* 
-		       @Author: WilsontheWolf
-		      */
-            if (player.paused) {
+		         @Author: WilsontheWolf
+		        */
+            let player = manager.players.get(payload.guildId);
+            if (player && player.paused) {
               return payload.state.position;
             }
-            if (!player.node.isConnected) {
+            if (player && !player.node.isConnected) {
               return payload.state.position;
             }
+            if (!player) return payload.state.position;
             return payload.state.position + (Date.now() - payload.state.time);
           },
           time: payload.state.time,
@@ -481,6 +521,11 @@ export class MoonlinkNode {
           player.queue.add(data);
           player.play();
           return;
+        }
+        /* Logic created by PiscesXD */
+        if (player.data.autoLeave) {
+          player.destroy();
+          this.manager.emit("autoLeaved", player, track);
         }
         if (!player.queue.size) {
           this.manager.emit("debug", "[ @Moonlink/Nodes ]: The queue is empty");

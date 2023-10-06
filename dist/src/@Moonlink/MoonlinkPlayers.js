@@ -14,6 +14,7 @@ class MoonlinkPlayer {
     textChannel;
     voiceChannel;
     autoPlay;
+    autoLeave;
     connected;
     playing;
     paused;
@@ -40,6 +41,7 @@ class MoonlinkPlayer {
         this.textChannel = infos.textChannel;
         this.voiceChannel = infos.voiceChannel;
         this.autoPlay = infos.autoPlay;
+        this.autoLeave = infos.autoLeave || false;
         this.connected = infos.connected || null;
         this.playing = infos.playing || null;
         this.paused = infos.paused || null;
@@ -63,6 +65,18 @@ class MoonlinkPlayer {
         this.filters = new index_1.MoonlinkFilters(this);
         this.rest = this.node.rest;
         this.manager = manager;
+        const existingData = this.queue.db.get(`players.${this.guildId}`) || {};
+        if (this.voiceChannel &&
+            this.voiceChannel !==
+                (existingData.voiceChannel && existingData.voiceChannel)) {
+            existingData.voiceChannel = this.voiceChannel;
+        }
+        if (this.textChannel &&
+            this.textChannel !==
+                (existingData.textChannel && existingData.textChannel)) {
+            existingData.textChannel = this.textChannel;
+        }
+        this.queue.db.set(`players.${this.guildId}`, existingData);
     }
     /**
      * Private method to update player information in the map.
@@ -123,6 +137,16 @@ class MoonlinkPlayer {
         this.set("voiceChannel", channelId);
         this.voiceChannel = channelId;
         return true;
+    }
+    /* Logic created by PiscesXD */
+    setAutoLeave(mode) {
+        if (typeof mode !== "boolean") {
+            throw new Error('[ @Moonlink/Player ]: "mode" option is empty or different from a boolean');
+        }
+        mode ? mode : (mode = !this.autoLeave);
+        this.set("autoLeave", mode);
+        this.autoLeave = mode;
+        return mode;
     }
     /**
      * Set the auto-play mode for the player.
@@ -283,12 +307,12 @@ class MoonlinkPlayer {
             this.play();
             return;
         }
-        if (!this.queue.size) {
-            this.destroy();
+        if (this.queue.size) {
+            this.play();
             return false;
         }
         else {
-            this.play();
+            this.stop();
             return true;
         }
     }

@@ -11,9 +11,10 @@ export interface connectOptions {
  */
 export interface PlayerInfos {
     guildId: string;
-    textChannel: string;
+    textChannel: string | null;
     voiceChannel: string | null;
     autoPlay?: boolean | null;
+    autoLeave?: boolean | null;
     connected?: boolean | null;
     playing?: boolean | null;
     paused?: boolean | null;
@@ -34,6 +35,7 @@ export declare class MoonlinkPlayer {
     textChannel: string;
     voiceChannel: string;
     autoPlay: boolean | null;
+    autoLeave: boolean | null;
     connected: boolean | null;
     playing: boolean | null;
     paused: boolean | null;
@@ -84,6 +86,7 @@ export declare class MoonlinkPlayer {
      * @throws Error if channelId is empty or not a string.
      */
     setVoiceChannel(channelId: string): boolean;
+    setAutoLeave(mode?: boolean | null): boolean | null;
     /**
      * Set the auto-play mode for the player.
      * @param mode - Auto-play mode (true/false).
