@@ -1,11 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { MoonlinkNode } from "./MoonlinkNodes";
-import { MoonlinkPlayer } from "./MoonlinkPlayers";
-import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
-import { MoonlinkQueue } from "../@Rest/MoonlinkQueue";
-import { Spotify } from "../@Sources/Spotify";
-import { Plugin } from "../@Rest/Plugin";
+import { MoonlinkNode, MoonlinkPlayer, MoonlinkTrack, MoonlinkQueue, Spotify, Plugin } from "../../index";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface Nodes {
     host: string;
@@ -27,7 +22,7 @@ export interface Options {
     reconnectAtattemps?: number;
     retryTime?: number;
     retryAmount?: number;
-    resumeKey?: string;
+    resume?: boolean;
     resumeStatus?: boolean;
     resumeTimeout?: number;
     autoResume?: boolean;
@@ -120,6 +115,7 @@ export interface LavalinkResult {
     };
 }
 export interface MoonlinkEvents {
+    autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
     debug: (...args: any) => void;
     nodeCreate: (node: MoonlinkNode) => void;
     nodeDestroy: (node: MoonlinkNode) => void;
