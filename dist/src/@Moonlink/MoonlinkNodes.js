@@ -25,7 +25,6 @@ class MoonlinkNode {
     retryTime;
     reconnectAtattempts;
     reconnectTimeout;
-    resumeKey;
     resumeStatus;
     resumeTimeout;
     calls;
@@ -112,7 +111,7 @@ class MoonlinkNode {
             "User-Id": this.manager.clientId,
             "Client-Name": this.options.clientName,
         };
-        if (this.resumeKey)
+        if (this.resume)
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : null;
@@ -231,7 +230,7 @@ class MoonlinkNode {
                     this.db.delete("players");
                 }
                 this.manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
-                if (this.resumeStatus) {
+                if (this.resume && this.resumeStatus) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
                             resuming: this.resumeStatus,
@@ -268,9 +267,9 @@ class MoonlinkNode {
                         playerClass.set("playing", true);
                         playerClass.set("conneted", true);
                         let track = new index_1.MoonlinkTrack(player.track);
-                        let current = this.map.get("currents") || {};
+                        let current = this.map.get("current") || {};
                         current[player.guildId] = track;
-                        this.map.set("currents", current);
+                        this.map.set("current", current);
                     }
                 }
                 break;
@@ -409,7 +408,7 @@ class MoonlinkNode {
                     player.play();
                     return;
                 }
-                if (player.autoPlay) {
+                if (typeof player.autoPlay === "boolean" && player.autoPlay === true) {
                     let uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
                     let req = await this.manager.search(uri);
                     if (!req ||
