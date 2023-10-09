@@ -166,6 +166,7 @@ export interface MoonlinkEvents {
   trackStuck: (player: MoonlinkPlayer, track: any) => void;
   trackError: (player: MoonlinkPlayer, track: any) => void;
   queueEnd: (player: MoonlinkPlayer, track?: any) => void;
+  playerCreated: (guildId: string) => void;
   playerDisconnect: (player: MoonlinkPlayer) => void;
   playerResume: (player: MoonlinkPlayer) => void;
   playerMove: (
@@ -403,52 +404,88 @@ export class MoonlinkManager extends EventEmitter {
     return true;
   }
 
-  packetUpdate(packet: VoicePacket) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
-      return;
-    const update: any = packet.d;
-    let player: any = this.players.get(update.guild_id);
-    if (!update || (!("token" in update) && !("session_id" in update))) return;
-    if ("t" in packet && "VOICE_SERVER_UPDATE".includes(packet.t)) {
-      let voiceServer: object = {};
-      voiceServer[update.guild_id] = {
-        event: update,
-      };
-      this.map.set("voiceServer", voiceServer);
-      return this.attemptConnection(update.guild_id);
+  public packetUpdate(packet: VoicePacket): void {
+    const { t, d } = packet;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(t)) return;
+
+    const update: any = d;
+    const guildId = update.guild_id;
+    const player: any = this.players.get(guildId);
+
+    if (!update || (!update.token && !update.session_id)) return;
+
+    if (t === "VOICE_SERVER_UPDATE") {
+      this.handleVoiceServerUpdate(update, guildId);
     }
-    if ("t" in packet && "VOICE_STATE_UPDATE".includes(packet.t)) {
-      if (update.user_id !== this.clientId) return;
+
+    if (t === "VOICE_STATE_UPDATE" && update.user_id === this.clientId) {
       if (!player) return;
+
       if (!update.channel_id) {
-        this.emit("playerDisconnect", player);
-        let players = this.map.get("players") || {};
-        players[update.guild_id] = {
-          ...players[update.guild_id],
-          connected: false,
-          voiceChannel: null,
-          playing: false,
-        };
-        player.connected = false;
-        player.voiceChannel = null;
-        player.playing = false;
-        player.stop();
+        this.handlePlayerDisconnect(player, guildId);
       }
-      if (update.channel_id !== player.voiceChannel) {
-        this.emit("playerMove", player, update.channel_id, player.voiceChannel);
-        let players: any = this.map.get("players") || {};
-        players[update.guild_id] = {
-          ...players[update.guild_id],
-          voiceChannel: update.channel_id,
-        };
-        this.map.set("players", players);
-        player.voiceChannel = update.channel_id;
+
+      if (update.channel_id && update.channel_id !== player.voiceChannel) {
+        this.handlePlayerMove(
+          player,
+          update.channel_id,
+          player.voiceChannel,
+          guildId,
+        );
       }
-      let voiceStates: object = {};
-      voiceStates[update.guild_id] = update;
-      this.map.set("voiceStates", voiceStates);
-      return this.attemptConnection(update.guild_id);
+
+      this.updateVoiceStates(guildId, update);
+      this.attemptConnection(guildId);
     }
+  }
+
+  private handleVoiceServerUpdate(update: any, guildId: string): void {
+    const voiceServerData = { event: update };
+    const existingVoiceServer = this.map.get("voiceServer") || {};
+    existingVoiceServer[guildId] = voiceServerData;
+
+    this.map.set("voiceServer", existingVoiceServer);
+    this.attemptConnection(guildId);
+  }
+
+  private handlePlayerDisconnect(
+    player: MoonlinkPlayer,
+    guildId: string,
+  ): void {
+    this.emit("playerDisconnect", player);
+    const players = this.map.get("players") || {};
+    players[guildId] = {
+      ...players[guildId],
+      connected: false,
+      voiceChannel: null,
+      playing: false,
+    };
+    player.connected = false;
+    player.voiceChannel = null;
+    player.playing = false;
+    player.stop();
+  }
+
+  private handlePlayerMove(
+    player: MoonlinkPlayer,
+    newChannelId: string,
+    oldChannelId: string,
+    guildId: string,
+  ): void {
+    this.emit("playerMove", player, newChannelId, oldChannelId);
+    const players: any = this.map.get("players") || {};
+    players[guildId] = {
+      ...players[guildId],
+      voiceChannel: newChannelId,
+    };
+    this.map.set("players", players);
+    player.voiceChannel = newChannelId;
+  }
+
+  private updateVoiceStates(guildId: string, update: any): void {
+    const voiceStates = this.map.get("voiceStates") || {};
+    voiceStates[guildId] = update;
+    this.map.set("voiceStates", voiceStates);
   }
   /**
    * Searches for tracks using the specified query and source.
@@ -574,7 +611,7 @@ export class MoonlinkManager extends EventEmitter {
     if (!voiceServer[guildId]) return false;
     this.emit(
       "debug",
-      `[ @Moonlink/Manager ]: sending to lavalink, player data from server (${guildId})`,
+      `[ @Moonlink/Manager ]: Application connection information being sent to Lavalink (${guildId})`,
     );
     await this.nodes.get(players[guildId].node).rest.update({
       guildId,
@@ -628,33 +665,44 @@ export class MoonlinkManager extends EventEmitter {
      */
 
     let create: Function = (data: createOptions): MoonlinkPlayer => {
-      if (typeof data !== "object")
+      if (
+        typeof data !== "object" ||
+        !data.guildId ||
+        typeof data.guildId !== "string" ||
+        !data.textChannel ||
+        typeof data.textChannel !== "string" ||
+        !data.voiceChannel ||
+        typeof data.voiceChannel !== "string" ||
+        (data.autoPlay !== undefined && typeof data.autoPlay !== "boolean") ||
+        (data.node && typeof data.node !== "string")
+      ) {
+        const missingParams = [];
+        if (!data.guildId || typeof data.guildId !== "string")
+          missingParams.push("guildId");
+        if (!data.textChannel || typeof data.textChannel !== "string")
+          missingParams.push("textChannel");
+        if (!data.voiceChannel || typeof data.voiceChannel !== "string")
+          missingParams.push("voiceChannel");
+        if (data.autoPlay !== undefined && typeof data.autoPlay !== "boolean")
+          missingParams.push("autoPlay");
+        if (data.node && typeof data.node !== "string")
+          missingParams.push("node");
+
         throw new Error(
-          '[ @Moonlink/Manager ]: parameter "data" is not an object',
+          `[ @Moonlink/Manager ]: Invalid or missing parameters for player creation: ${missingParams.join(
+            ", ",
+          )}`,
         );
-      if (!data.guildId && typeof data.guildId !== "string")
-        throw new Error(
-          '[ @Moonlink/Manager ]: "guildId" parameter in player creation is empty or not string type',
-        );
-      if (!data.textChannel && typeof data.textChannel !== "string")
-        throw new Error(
-          '[ @Moonlink/Manager ]: "textChannel" parameter in player creation is empty or not string type',
-        );
-      if (!data.voiceChannel && typeof data.voiceChannel !== "string")
-        throw new Error(
-          '[ @Moonlink/Manager ]: "voiceChannel" parameter in player creation is empty or not string type',
-        );
-      if (data.autoPlay && typeof data.autoPlay !== "boolean")
-        throw new Error(
-          "[ @Moonlink/Manager ]: autoPlay parameter of player creation has to be boolean type",
-        );
-      if (data.node && typeof data.node !== "string")
-        throw new Error(
-          "[ @Moonlink/Manager ]: node parameter of player creation has to be string type",
-        );
+      }
+
       if (has(data.guildId)) return get(data.guildId);
+
       let players_map: Map<string, object> | object =
         this.map.get("players") || {};
+      let nodeSorted = this.sortByUsage(
+        `${this.options.sortNode ? this.options.sortNode : "players"}`,
+      )[0];
+
       players_map[data.guildId] = {
         guildId: data.guildId,
         textChannel: data.textChannel,
@@ -665,25 +713,24 @@ export class MoonlinkManager extends EventEmitter {
         paused: false,
         shuffled: false,
         loop: null,
-        autoPlay: false,
-        node: data.node
-          ? data.node
-          : this.sortByUsage(
-              `${this.options.sortNode ? this.options.sortNode : "players"}`,
-            )[0]?.host,
+        autoPlay: data.autoPlay !== undefined ? data.autoPlay : true, // Default to true if not provided
+        node: data.node || nodeSorted?.identifier || nodeSorted?.host,
       };
       this.map.set("players", players_map);
 
       if (this.options.custom.player) {
         this.emit("debug", "[ @Moonlink/Custom ]: the player is customized");
+        this.emit("playerCreated", data.guildId);
         return new this.options.custom.player(
           players_map[data.guildId],
           this,
           this.map,
         );
       }
+      this.emit("playerCreated", data.guildId);
       return new MoonlinkPlayer(players_map[data.guildId], this, this.map);
     };
+
     let all: any = this.map.get("players") ? this.map.get("players") : null;
     return {
       create: create.bind(this),

@@ -128,6 +128,7 @@ export interface MoonlinkEvents {
     trackStuck: (player: MoonlinkPlayer, track: any) => void;
     trackError: (player: MoonlinkPlayer, track: any) => void;
     queueEnd: (player: MoonlinkPlayer, track?: any) => void;
+    playerCreated: (guildId: string) => void;
     playerDisconnect: (player: MoonlinkPlayer) => void;
     playerResume: (player: MoonlinkPlayer) => void;
     playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
@@ -226,7 +227,11 @@ export declare class MoonlinkManager extends EventEmitter {
      * @throws {Error} - If the name option is empty.
      */
     removeNode(name: string): boolean;
-    packetUpdate(packet: VoicePacket): Promise<boolean>;
+    packetUpdate(packet: VoicePacket): void;
+    private handleVoiceServerUpdate;
+    private handlePlayerDisconnect;
+    private handlePlayerMove;
+    private updateVoiceStates;
     /**
      * Searches for tracks using the specified query and source.
      * @param {string | SearchQuery} options - The search query or an object containing the search options.
