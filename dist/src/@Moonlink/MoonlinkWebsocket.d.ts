@@ -8,8 +8,6 @@ interface WebSocketOptions {
     secure?: boolean;
     host?: string;
     port?: number;
-    keyGenerator?: () => string;
-    pingInterval?: number;
     maxConnections?: number;
 }
 export declare class MoonlinkWebsocket extends EventEmitter {
@@ -26,16 +24,11 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     private handleSocketError;
     private handleSocketUpgrade;
     private handleSocketConnection;
-    private parseFrameHeader;
+    private buildHeaders;
     private generateWebSocketKey;
     private createWebSocketCloseFrame;
-    private sendPing;
-    isOpen(): boolean;
-    getRemoteAddress(): string | null;
-    getRemotePort(): number | null;
-    private buildHeaders;
+    private parseFrameHeader;
     private buildUpgradeHeaders;
     private incrementConnectionCount;
-    private decrementConnectionCount;
 }
 export {};

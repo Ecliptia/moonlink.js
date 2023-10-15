@@ -18,7 +18,7 @@ class MoonlinkFilters {
     pluginFilters;
     constructor(player) {
         this.player = player;
-        this.rest = player.rest;
+        this.rest = player.node.rest;
         this.manager = player.manager;
         this.volume = this.player.get("volume") || null;
         this.equalizer = this.player.get("equalizer") || null;
