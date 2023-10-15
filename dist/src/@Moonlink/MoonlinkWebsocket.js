@@ -42,6 +42,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     socket = null;
     agent;
     url;
+    connectionCount = 0;
     constructor(url, options = {}) {
         super();
         this.url = new url_1.URL(url);
@@ -49,21 +50,56 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             timeout: 1000,
             headers: {},
             keyGenerator: () => this.generateWebSocketKey(),
+            pingInterval: 30000,
+            maxConnections: 100,
             ...options,
         };
         this.agent = this.options.secure ? https : http;
     }
     connect() {
-        const requestOptions = {
-            hostname: this.options.host,
-            port: this.options.port,
-            method: "GET",
-            timeout: this.options.timeout || 5000,
-            headers: this.buildHeaders(),
-            protocol: this.options.secure ? "https:" : "http:",
-        };
-        this.socket = this.agent.request(requestOptions);
-        this.setupSocketListeners();
+        if (this.connectionCount < this.options.maxConnections) {
+            const requestOptions = {
+                hostname: this.url.hostname,
+                port: this.url.port,
+                method: "GET",
+                timeout: this.options.timeout || 5000,
+                headers: this.buildHeaders(),
+                protocol: this.options.secure ? "https:" : "http:",
+            };
+            this.socket = this.agent.request(requestOptions);
+            this.setupSocketListeners();
+            this.incrementConnectionCount();
+            const pingTimer = setInterval(() => this.sendPing(), this.options.pingInterval);
+            this.socket.on("close", () => {
+                clearInterval(pingTimer);
+                this.decrementConnectionCount();
+            });
+        }
+        else {
+            console.error("Maximum connection limit reached.");
+        }
+    }
+    send(data) {
+        if (this.socket) {
+            this.socket.write(data);
+        }
+        else {
+            console.error("WebSocket is not connected for sending.");
+            this.emit("error", new Error("WebSocket is not connected for sending."));
+        }
+    }
+    close(code, reason) {
+        if (this.socket) {
+            if (code && reason) {
+                const closeFrame = this.createWebSocketCloseFrame(code, reason);
+                this.socket.write(closeFrame);
+            }
+            this.socket.end();
+        }
+        else {
+            console.error("WebSocket is not connected to close.");
+            this.emit("error", new Error("WebSocket is not connected to close."));
+        }
     }
     setupSocketListeners() {
         this.socket.on("error", this.handleSocketError.bind(this));
@@ -98,28 +134,6 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             req.write(this.buildUpgradeHeaders() + "\r\n\r\n");
         });
     }
-    send(data) {
-        if (this.socket) {
-            this.socket.write(data);
-        }
-        else {
-            console.error("WebSocket is not connected for sending.");
-            this.emit("error", new Error("WebSocket is not connected for sending."));
-        }
-    }
-    close(code, reason) {
-        if (this.socket) {
-            if (code && reason) {
-                const closeFrame = this.createWebSocketCloseFrame(code, reason);
-                this.socket.write(closeFrame);
-            }
-            this.socket.end();
-        }
-        else {
-            console.error("WebSocket is not connected to close.");
-            this.emit("error", new Error("WebSocket is not connected to close."));
-        }
-    }
     parseFrameHeader(data) {
         if (data.length < 2) {
             throw new Error("WebSocket frame header is too short.");
@@ -150,7 +164,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             if (data.length < payloadStartIndex + 4) {
                 throw new Error("WebSocket frame header is too short for masking key.");
             }
-            mask = data.slice(payloadStartIndex, payloadStartIndex + 4);
+            mask = data.subarray(payloadStartIndex, payloadStartIndex + 4);
             payloadStartIndex += 4;
         }
         return {
@@ -175,6 +189,11 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         buffer.write(reason, 2, "utf8");
         return buffer;
     }
+    sendPing() {
+        if (this.socket) {
+            this.socket.write(Buffer.from([0x89, 0]));
+        }
+    }
     isOpen() {
         return this.socket ? !this.socket.destroyed : false;
     }
@@ -197,7 +216,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     buildUpgradeHeaders() {
         const headers = [
             `GET ${this.url.pathname}${this.url.search} HTTP/1.1`,
-            `Host: ${this.options.host}`,
+            `Host: ${this.url.host}`,
             "Upgrade: websocket",
             "Connection: Upgrade",
             `Sec-WebSocket-Key: ${this.options.keyGenerator()}`,
@@ -209,6 +228,12 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             });
         }
         return headers.join("\r\n");
+    }
+    incrementConnectionCount() {
+        this.connectionCount++;
+    }
+    decrementConnectionCount() {
+        this.connectionCount--;
     }
 }
 exports.MoonlinkWebsocket = MoonlinkWebsocket;
