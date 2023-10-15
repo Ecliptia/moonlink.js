@@ -293,6 +293,7 @@ export class MoonlinkNode {
       case "ready":
         this.sessionId = payload.sessionId;
         this.resume ? this.db.set("sessionId", this.sessionId) : null;
+
         this.resumed = payload.resumed;
         this.manager.map.set("sessionId", payload.sessionId);
         this.rest.setSessionId(this.sessionId);

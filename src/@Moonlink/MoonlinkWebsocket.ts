@@ -1,5 +1,4 @@
 import * as tls from "tls";
-import * as net from "net";
 import * as https from "https";
 import * as http from "http";
 import { URL } from "url";
@@ -12,6 +11,8 @@ interface WebSocketOptions {
   host?: string;
   port?: number;
   keyGenerator?: () => string;
+  pingInterval?: number;
+  maxConnections?: number;
 }
 
 class WebSocketError extends Error {
@@ -29,6 +30,7 @@ export class MoonlinkWebsocket extends EventEmitter {
   public socket: any = null;
   public agent: any;
   public url: URL;
+  public connectionCount = 0;
 
   constructor(url: string, options: WebSocketOptions = {}) {
     super();
@@ -37,24 +39,61 @@ export class MoonlinkWebsocket extends EventEmitter {
       timeout: 1000,
       headers: {},
       keyGenerator: () => this.generateWebSocketKey(),
+      pingInterval: 30000,
+      maxConnections: 100,
       ...options,
     };
     this.agent = this.options.secure ? https : http;
   }
 
   public connect(): void {
-    const requestOptions: any = {
-      hostname: this.options.host,
-      port: this.options.port,
-      method: "GET",
-      timeout: this.options.timeout || 5000,
-      headers: this.buildHeaders(),
-      protocol: this.options.secure ? "https:" : "http:",
-    };
+    if (this.connectionCount < this.options.maxConnections) {
+      const requestOptions: any = {
+        hostname: this.url.hostname,
+        port: this.url.port,
+        method: "GET",
+        timeout: this.options.timeout || 5000,
+        headers: this.buildHeaders(),
+        protocol: this.options.secure ? "https:" : "http:",
+      };
+      this.socket = this.agent.request(requestOptions);
 
-    this.socket = this.agent.request(requestOptions);
+      this.setupSocketListeners();
+      this.incrementConnectionCount();
 
-    this.setupSocketListeners();
+      const pingTimer = setInterval(
+        () => this.sendPing(),
+        this.options.pingInterval,
+      );
+      this.socket.on("close", () => {
+        clearInterval(pingTimer);
+        this.decrementConnectionCount();
+      });
+    } else {
+      console.error("Maximum connection limit reached.");
+    }
+  }
+
+  public send(data: string) {
+    if (this.socket) {
+      this.socket.write(data);
+    } else {
+      console.error("WebSocket is not connected for sending.");
+      this.emit("error", new Error("WebSocket is not connected for sending."));
+    }
+  }
+
+  public close(code?: number, reason?: string) {
+    if (this.socket) {
+      if (code && reason) {
+        const closeFrame = this.createWebSocketCloseFrame(code, reason);
+        this.socket.write(closeFrame);
+      }
+      this.socket.end();
+    } else {
+      console.error("WebSocket is not connected to close.");
+      this.emit("error", new Error("WebSocket is not connected to close."));
+    }
   }
 
   private setupSocketListeners() {
@@ -103,28 +142,6 @@ export class MoonlinkWebsocket extends EventEmitter {
     });
   }
 
-  public send(data: string) {
-    if (this.socket) {
-      this.socket.write(data);
-    } else {
-      console.error("WebSocket is not connected for sending.");
-      this.emit("error", new Error("WebSocket is not connected for sending."));
-    }
-  }
-
-  public close(code?: number, reason?: string) {
-    if (this.socket) {
-      if (code && reason) {
-        const closeFrame = this.createWebSocketCloseFrame(code, reason);
-        this.socket.write(closeFrame);
-      }
-      this.socket.end();
-    } else {
-      console.error("WebSocket is not connected to close.");
-      this.emit("error", new Error("WebSocket is not connected to close."));
-    }
-  }
-
   private parseFrameHeader(data: Buffer) {
     if (data.length < 2) {
       throw new Error("WebSocket frame header is too short.");
@@ -161,7 +178,7 @@ export class MoonlinkWebsocket extends EventEmitter {
       if (data.length < payloadStartIndex + 4) {
         throw new Error("WebSocket frame header is too short for masking key.");
       }
-      mask = data.slice(payloadStartIndex, payloadStartIndex + 4);
+      mask = data.subarray(payloadStartIndex, payloadStartIndex + 4);
       payloadStartIndex += 4;
     }
 
@@ -190,6 +207,12 @@ export class MoonlinkWebsocket extends EventEmitter {
     return buffer;
   }
 
+  private sendPing() {
+    if (this.socket) {
+      this.socket.write(Buffer.from([0x89, 0]));
+    }
+  }
+
   public isOpen(): boolean {
     return this.socket ? !this.socket.destroyed : false;
   }
@@ -216,7 +239,7 @@ export class MoonlinkWebsocket extends EventEmitter {
   private buildUpgradeHeaders(): string {
     const headers = [
       `GET ${this.url.pathname}${this.url.search} HTTP/1.1`,
-      `Host: ${this.options.host}`,
+      `Host: ${this.url.host}`,
       "Upgrade: websocket",
       "Connection: Upgrade",
       `Sec-WebSocket-Key: ${this.options.keyGenerator()}`,
@@ -229,5 +252,13 @@ export class MoonlinkWebsocket extends EventEmitter {
       });
     }
     return headers.join("\r\n");
+  }
+
+  private incrementConnectionCount() {
+    this.connectionCount++;
+  }
+
+  private decrementConnectionCount() {
+    this.connectionCount--;
   }
 }
