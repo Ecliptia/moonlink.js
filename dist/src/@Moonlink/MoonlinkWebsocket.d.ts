@@ -1,34 +1,33 @@
 /// <reference types="node" />
 /// <reference types="node" />
-import { URL } from "url";
+/// <reference types="node" />
+import { Socket } from "net";
 import { EventEmitter } from "events";
+import { URL } from "url";
 interface WebSocketOptions {
     timeout?: number;
     headers?: Record<string, string>;
-    secure?: boolean;
     host?: string;
     port?: number;
     maxConnections?: number;
+    secure?: boolean;
 }
 export declare class MoonlinkWebsocket extends EventEmitter {
     options: WebSocketOptions;
-    socket: any;
-    agent: any;
+    socket: Socket | null;
     url: URL;
     connectionCount: number;
+    private buffers;
     constructor(url: string, options?: WebSocketOptions);
-    connect(): void;
-    send(data: string): void;
-    close(code?: number, reason?: string): void;
-    private setupSocketListeners;
-    private handleSocketError;
-    private handleSocketUpgrade;
-    private handleSocketConnection;
+    private buildRequestOptions;
     private buildHeaders;
+    connect(): void;
+    private handleWebSocketConnection;
+    private handleWebSocketData;
+    private emitMessagesFromBuffers;
+    private findJSONObjects;
     private generateWebSocketKey;
-    private createWebSocketCloseFrame;
-    private parseFrameHeader;
-    private buildUpgradeHeaders;
-    private incrementConnectionCount;
+    close(code: number, reason: string): void;
+    private generateCloseFrame;
 }
 export {};
