@@ -58,9 +58,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     }
     handleWebSocketConnection(socket) {
         this.socket = socket;
-        this.socket.on("connect", () => {
-            this.emit("open");
-        });
+        this.emit("open", socket);
         this.socket.on("data", (data) => {
             this.handleWebSocketData(data);
         });
