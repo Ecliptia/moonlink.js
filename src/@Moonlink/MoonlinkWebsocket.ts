@@ -1,34 +1,24 @@
-import * as tls from "tls";
-import * as https from "https";
-import * as http from "http";
-import { URL } from "url";
+import { Socket } from "net";
 import { EventEmitter } from "events";
+import http, { RequestOptions as HttpRequestOptions } from "http";
+import https, { RequestOptions as HttpsRequestOptions } from "https";
+import { URL } from "url";
 
 interface WebSocketOptions {
   timeout?: number;
   headers?: Record<string, string>;
-  secure?: boolean;
   host?: string;
   port?: number;
   maxConnections?: number;
-}
-
-class WebSocketError extends Error {
-  public innerError: Error;
-  public name: string;
-  constructor(message: string, innerError: Error) {
-    super(message);
-    this.name = "WebSocketError";
-    this.innerError = innerError;
-  }
+  secure?: boolean;
 }
 
 export class MoonlinkWebsocket extends EventEmitter {
   public options: WebSocketOptions;
-  public socket: any = null;
-  public agent: any;
+  public socket: Socket | null = null;
   public url: URL;
   public connectionCount = 0;
+  private buffers: string[] = [];
 
   constructor(url: string, options: WebSocketOptions = {}) {
     super();
@@ -37,184 +27,159 @@ export class MoonlinkWebsocket extends EventEmitter {
       timeout: 1000,
       headers: {},
       maxConnections: 100,
+      secure: false,
       ...options,
     };
-    this.agent = this.options.secure ? https : http;
   }
 
-  public connect(): void {
-    if (this.connectionCount < this.options.maxConnections) {
-      const requestOptions: any = {
-        hostname: this.url.hostname,
-        port: this.url.port,
-        method: "GET",
-        timeout: this.options.timeout || 5000,
-        headers: this.buildHeaders(),
-        protocol: this.options.secure ? "https:" : "http:",
-      };
-      this.socket = this.agent.request(requestOptions);
+  private buildRequestOptions(): HttpsRequestOptions | HttpRequestOptions {
+    const requestOptions: HttpsRequestOptions | HttpRequestOptions = {
+      hostname: this.options.host,
+      port: this.options.port,
+      headers: this.buildHeaders(),
+      method: "GET",
+      path: "/v4/websocket",
+    };
 
-      this.setupSocketListeners();
-      this.incrementConnectionCount();
-    } else {
-      console.error("Maximum connection limit reached.");
-    }
-  }
-
-  public send(data: string) {
-    if (this.socket) {
-      this.socket.write(data);
-    } else {
-      console.error("WebSocket is not connected for sending.");
-      this.emit("error", new Error("WebSocket is not connected for sending."));
-    }
-  }
-
-  public close(code?: number, reason?: string) {
-    if (this.socket) {
-      if (code && reason) {
-        const closeFrame = this.createWebSocketCloseFrame(code, reason);
-        this.socket.write(closeFrame);
-      }
-      this.socket.end();
-    } else {
-      console.error("WebSocket is not connected to close.");
-      this.emit("error", new Error("WebSocket is not connected to close."));
-    }
-  }
-
-  private setupSocketListeners() {
-    this.socket.on("error", this.handleSocketError.bind(this));
-    this.socket.on("upgrade", this.handleSocketUpgrade.bind(this));
-    this.socket.on("socket", this.handleSocketConnection.bind(this));
-  }
-
-  private handleSocketError(err: Error) {
-    console.error("WebSocket error:", err);
-    this.emit("error", new WebSocketError("WebSocket error", err));
-  }
-
-  private handleSocketUpgrade(res: any, socket: any, head: any) {
-    if (res.statusCode !== 101) {
-      this.emit(
-        "error",
-        new Error(
-          `[ @Moonlink/Websocket ]: ${res.statusCode} ${res.statusMessage}`,
-        ),
-      );
-      return;
-    }
-
-    socket.on("data", (data: Buffer) => {
-      const frameHeader = this.parseFrameHeader(data);
-      const payload = data.subarray(frameHeader.payloadStartIndex);
-      this.emit("message", payload.toString());
-    });
-
-    this.emit("open", socket);
-  }
-
-  private handleSocketConnection(req: any) {
-    req.on(this.options.secure ? "secureConnect" : "connect", () => {
-      req.write(this.buildUpgradeHeaders() + "\r\n\r\n");
-    });
+    return this.options.secure
+      ? requestOptions
+      : { ...requestOptions, protocol: "http:" };
   }
 
   private buildHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {
-      "Sec-WebSocket-Key": this.generateWebSocketKey(),
-      "Sec-WebSocket-Version": "13",
-      Upgrade: "websocket",
-      Connection: "Upgrade",
-      ...(this.options.headers || {}),
-    };
+    const headers: Record<string, string> = { ...this.options.headers };
+
+    headers["Host"] = this.url.host;
+    headers["Upgrade"] = "websocket";
+    headers["Connection"] = "Upgrade";
+    headers["Sec-WebSocket-Key"] = this.generateWebSocketKey();
+    headers["Sec-WebSocket-Version"] = "13";
+
     return headers;
   }
 
+  public connect(): void {
+    const requestOptions = this.buildRequestOptions();
+    const req = this.options.secure
+      ? https.request(requestOptions)
+      : http.request(requestOptions);
+
+    req.on("upgrade", (res, socket) => {
+      this.handleWebSocketConnection(socket);
+    });
+
+    req.end();
+  }
+
+  private handleWebSocketConnection(socket: Socket): void {
+    this.socket = socket;
+
+    this.socket.on("connect", () => {
+      this.emit("open");
+    });
+
+    this.socket.on("data", (data) => {
+      this.handleWebSocketData(data);
+    });
+
+    this.socket.on("close", () => {
+      this.emit("close");
+    });
+
+    this.socket.on("error", (error) => {
+      this.emit("error", error);
+    });
+
+    this.socket.setEncoding("utf8");
+  }
+
+  private handleWebSocketData(data: any): void {
+    this.buffers.push(data);
+    this.emitMessagesFromBuffers();
+  }
+
+  private emitMessagesFromBuffers(): void {
+    for (let i = 0; i < this.buffers.length; i++) {
+      const jsonObjects = this.findJSONObjects(this.buffers[i]);
+      if (jsonObjects.length > 0) {
+        for (const jsonObj of jsonObjects) {
+          const buffer = Buffer.from(JSON.stringify(jsonObj));
+          this.emit("message", buffer);
+        }
+      }
+    }
+
+    this.buffers = [];
+  }
+
+  private findJSONObjects(input: string): object[] {
+    const jsonObjects: object[] = [];
+    const objectOpen = "{";
+    const objectClose = "}";
+    let currentObject = "";
+
+    for (let i = 0; i < input.length; i++) {
+      const char = input.charAt(i);
+
+      if (char === objectOpen) {
+        let objectCount = 1;
+        currentObject = char;
+
+        for (let j = i + 1; j < input.length; j++) {
+          currentObject += input.charAt(j);
+          if (input.charAt(j) === objectOpen) {
+            objectCount++;
+          } else if (input.charAt(j) === objectClose) {
+            objectCount--;
+            if (objectCount === 0) {
+              try {
+                const parsedObject = JSON.parse(currentObject);
+                jsonObjects.push(parsedObject);
+              } catch (error) {}
+
+              i = j;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return jsonObjects;
+  }
+
   private generateWebSocketKey(): string {
-    const keyBytes = [];
+    const keyBytes = new Array(16);
     for (let i = 0; i < 16; i++) {
-      keyBytes.push(Math.floor(Math.random() * 256));
+      keyBytes[i] = Math.floor(Math.random() * 256);
     }
-    return Buffer.from(keyBytes).toString("base64");
+    const key = Buffer.from(keyBytes).toString("base64");
+    return key;
   }
 
-  private createWebSocketCloseFrame(code: number, reason: string): Buffer {
-    const buffer = Buffer.alloc(6);
-    buffer.writeUInt16BE(code, 0);
-    buffer.write(reason, 2, "utf8");
-    return buffer;
+  public close(code: number, reason: string): void {
+    if (this.socket) {
+      const closeFrame = this.generateCloseFrame(code, reason);
+      this.socket.write(closeFrame);
+    }
   }
 
-  private parseFrameHeader(data: Buffer) {
-    if (data.length < 2) {
-      throw new Error("WebSocket frame header is too short.");
+  private generateCloseFrame(code: number, reason: string): Buffer {
+    const codeBuffer = Buffer.allocUnsafe(2);
+    codeBuffer.writeUInt16BE(code, 0);
+
+    let reasonBuffer = Buffer.from(reason, "utf8");
+    if (reasonBuffer.length > 123) {
+      reasonBuffer = reasonBuffer.slice(0, 123);
     }
 
-    const isFinalFrame = (data[0] & 0x80) !== 0;
-    const opcode = data[0] & 0x0f;
-    const isMasked = (data[1] & 0x80) !== 0;
-    let payloadStartIndex = 2;
-    let payloadLength = data[1] & 0x7f;
+    const frameBuffer = Buffer.allocUnsafe(2 + reasonBuffer.length);
 
-    if (payloadLength === 126) {
-      if (data.length < 4) {
-        throw new Error(
-          "WebSocket frame header is too short for extended payload length.",
-        );
-      }
-      payloadLength = data.readUInt16BE(2);
-      payloadStartIndex = 4;
-    } else if (payloadLength === 127) {
-      if (data.length < 10) {
-        throw new Error(
-          "WebSocket frame header is too short for extended payload length.",
-        );
-      }
-      const upperPart = data.readUInt32BE(6);
-      const lowerPart = data.readUInt32BE(2);
-      payloadLength = upperPart * Math.pow(2, 32) + lowerPart;
-      payloadStartIndex = 10;
-    }
+    codeBuffer.copy(frameBuffer, 0);
+    reasonBuffer.copy(frameBuffer, 2);
 
-    let mask: any | null = null;
-    if (isMasked) {
-      if (data.length < payloadStartIndex + 4) {
-        throw new Error("WebSocket frame header is too short for masking key.");
-      }
-      mask = data.slice(payloadStartIndex, payloadStartIndex + 4);
-      payloadStartIndex += 4;
-    }
+    frameBuffer[0] = 0x88;
 
-    return {
-      isFinalFrame,
-      opcode,
-      payloadLength,
-      isMasked,
-      mask,
-      payloadStartIndex,
-    };
-  }
-
-  private buildUpgradeHeaders(): string {
-    const headers = [
-      `GET ${this.url.pathname}${this.url.search} HTTP/1.1`,
-      `Host: ${this.url.host}`,
-      "Upgrade: websocket",
-      "Connection: Upgrade",
-      `Sec-WebSocket-Key: ${this.generateWebSocketKey()}`,
-      "Sec-WebSocket-Version: 13",
-    ];
-
-    if (this.options.headers) {
-      Object.keys(this.options.headers).forEach((key) => {
-        headers.push(`${key}: ${this.options.headers[key]}`);
-      });
-    }
-    return headers.join("\r\n");
-  }
-
-  private incrementConnectionCount() {
-    this.connectionCount++;
+    return frameBuffer;
   }
 }
