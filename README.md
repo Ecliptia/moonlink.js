@@ -20,7 +20,7 @@ Moonlink.js offers essential features to create exceptional music bots:
 
 ## Documentation 📚
 
-For comprehensive documentation and more examples, visit our [MoonLink Docs](https://moonlink.js.org) site. 📖
+For comprehensive documentation and more examples, visit [MoonLink Docs](https://moonlink.js.org) site. 📖
 
 obs: the documentation is being redone; it may take a while...
 
