@@ -1,4 +1,3 @@
-import { Socket } from "net";
 import { EventEmitter } from "events";
 import http, { RequestOptions as HttpRequestOptions } from "http";
 import https, { RequestOptions as HttpsRequestOptions } from "https";
@@ -15,7 +14,7 @@ interface WebSocketOptions {
 
 export class MoonlinkWebsocket extends EventEmitter {
   public options: WebSocketOptions;
-  public socket: Socket | null = null;
+  public socket: any = null;
   public url: URL;
   public connectionCount = 0;
   private buffers: string[] = [];
@@ -48,8 +47,8 @@ export class MoonlinkWebsocket extends EventEmitter {
 
   private buildHeaders(): Record<string, string> {
     const headers: Record<string, string> = { ...this.options.headers };
-
-    headers["Host"] = this.url.host;
+    headers["GET"] = `${this.url.pathname}${this.url.search}`;
+    headers["Host"] = this.options.host;
     headers["Upgrade"] = "websocket";
     headers["Connection"] = "Upgrade";
     headers["Sec-WebSocket-Key"] = this.generateWebSocketKey();
@@ -70,7 +69,7 @@ export class MoonlinkWebsocket extends EventEmitter {
     req.end();
   }
 
-  private handleWebSocketConnection(socket: Socket): void {
+  private handleWebSocketConnection(socket: any): void {
     this.socket = socket;
     this.emit("open", socket);
     this.socket.on("data", (data) => {

@@ -17,97 +17,91 @@ class MoonlinkRest {
     }
     async update(data) {
         this.ensureUrlIsSet();
-        return await this.makePatchRequest(`sessions/${this.sessionId}/players/${data.guildId}`, data.data);
+        return this.makePatchRequest(`sessions/${this.sessionId}/players/${data.guildId}`, data.data);
     }
     async destroy(guildId) {
-        return await this.makeDeleteRequest(`sessions/${this.sessionId}/players/${guildId}`);
+        return this.makeDeleteRequest(`sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(endpoint) {
         this.ensureUrlIsSet();
-        return await this.makeGetRequest(endpoint);
+        return this.makeGetRequest(endpoint);
     }
     async post(endpoint, data) {
         this.ensureUrlIsSet();
-        return await this.makePostRequest(endpoint, data);
+        return this.makePostRequest(endpoint, data);
     }
     async patch(endpoint, data) {
         this.ensureUrlIsSet();
-        return await this.makePatchRequest(endpoint, data.data);
+        return this.makePatchRequest(endpoint, data.data);
     }
     async delete(endpoint) {
         this.ensureUrlIsSet();
-        return await this.makeDeleteRequest(endpoint);
+        return this.makeDeleteRequest(endpoint);
+    }
+    async decodeTrack(encodedTrack) {
+        return this.get(`decodetrack?encodedTrack=${encodedTrack}`);
+    }
+    async decodeTracks(data) {
+        return this.post("decodetracks", data);
+    }
+    async getInfo() {
+        return this.get("info");
+    }
+    async getStats() {
+        return this.get("stats");
+    }
+    async getVersion() {
+        return this.get("version");
+    }
+    async routePlannerFreeAddress(data) {
+        return this.post("routeplanner/free/address", data);
+    }
+    async routePlannerFreeAll(data) {
+        return this.post("routeplanner/free/all", data);
     }
     ensureUrlIsSet() {
-        if (!this.url)
+        if (!this.url) {
             this.url = this.node.restUri;
-        if (!this.sessionId)
+        }
+        if (!this.sessionId) {
             this.sessionId = this.node.manager.map.get("sessionId");
+        }
     }
     async makeGetRequest(endpoint) {
         const headers = {
             Authorization: this.node.password,
         };
-        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "GET",
             headers,
-        }).catch((err) => {
-            return err;
-        });
+        }).catch((err) => err);
     }
     async makePostRequest(endpoint, data) {
         const headers = {
             Authorization: this.node.password,
         };
-        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "POST",
             headers,
-        }, data).catch((err) => {
-            return err;
-        });
+        }, data).catch((err) => err);
     }
     async makePatchRequest(endpoint, data) {
         const headers = {
             Authorization: this.node.password,
         };
-        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "PATCH",
             headers,
-        }, data).catch((err) => {
-            return err;
-        });
+        }, data).catch((err) => err);
     }
     async makeDeleteRequest(endpoint) {
         const headers = {
             Authorization: this.node.password,
         };
-        return await (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
             method: "DELETE",
             headers,
-        }).catch((err) => {
-            return err;
-        });
-    }
-    async decodeTrack(encodedTrack) {
-        return await this.get(`decodetrack?encodedTrack=${encodedTrack}`);
-    }
-    async decodeTracks(data) {
-        return await this.post("decodetracks", data);
-    }
-    async getInfo() {
-        return await this.get("info");
-    }
-    async getStats() {
-        return await this.get("stats");
-    }
-    async getVersion() {
-        return await this.get("version");
-    }
-    async routePlannerFreeAddress(data) {
-        return await this.post("routeplanner/free/address", data);
-    }
-    async routePlannerFreeAll(data) {
-        return await this.post("routeplanner/free/all", data);
+        }).catch((err) => err);
     }
 }
 exports.MoonlinkRest = MoonlinkRest;

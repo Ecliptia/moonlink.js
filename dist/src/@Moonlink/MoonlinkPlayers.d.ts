@@ -44,9 +44,9 @@ export declare class MoonlinkPlayer {
     shuffled: boolean | null;
     queue: MoonlinkQueue;
     filters: MoonlinkFilters;
-    current: any;
-    previous: any;
-    data: any;
+    current: Record<string, any>;
+    previous: Record<string, any>;
+    data: Record<string, any>;
     node: MoonlinkNode | any;
     rest: MoonlinkRest;
     /**
