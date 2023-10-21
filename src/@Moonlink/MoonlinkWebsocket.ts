@@ -47,7 +47,6 @@ export class MoonlinkWebsocket extends EventEmitter {
 
   private buildHeaders(): Record<string, string> {
     const headers: Record<string, string> = { ...this.options.headers };
-    headers["GET"] = `${this.url.pathname}${this.url.search}`;
     headers["Host"] = this.options.host;
     headers["Upgrade"] = "websocket";
     headers["Connection"] = "Upgrade";
