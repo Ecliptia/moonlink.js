@@ -37,7 +37,7 @@ export interface PlayerInfos {
  */
 export class MoonlinkPlayer {
   private manager: MoonlinkManager;
-  private infos: object;
+  private infos: PlayerInfos;
   private map: Map<string, any>;
   public payload: Function;
   public guildId: string;
@@ -53,9 +53,9 @@ export class MoonlinkPlayer {
   public shuffled: boolean | null;
   public queue: MoonlinkQueue;
   public filters: MoonlinkFilters;
-  public current: any;
-  public previous: any;
-  public data: any;
+  public current: Record<string, any>;
+  public previous: Record<string, any>;
+  public data: Record<string, any>;
   public node: MoonlinkNode | any;
   public rest: MoonlinkRest;
 

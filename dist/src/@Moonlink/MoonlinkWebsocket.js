@@ -39,7 +39,8 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     }
     buildHeaders() {
         const headers = { ...this.options.headers };
-        headers["Host"] = this.url.host;
+        headers["GET"] = `${this.url.pathname}${this.url.search}`;
+        headers["Host"] = this.options.host;
         headers["Upgrade"] = "websocket";
         headers["Connection"] = "Upgrade";
         headers["Sec-WebSocket-Key"] = this.generateWebSocketKey();

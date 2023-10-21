@@ -1,7 +1,5 @@
 /// <reference types="node" />
 /// <reference types="node" />
-/// <reference types="node" />
-import { Socket } from "net";
 import { EventEmitter } from "events";
 import { URL } from "url";
 interface WebSocketOptions {
@@ -14,7 +12,7 @@ interface WebSocketOptions {
 }
 export declare class MoonlinkWebsocket extends EventEmitter {
     options: WebSocketOptions;
-    socket: Socket | null;
+    socket: any;
     url: URL;
     connectionCount: number;
     private buffers;

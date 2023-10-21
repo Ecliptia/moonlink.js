@@ -32,6 +32,7 @@ export class MoonlinkRest {
   public sessionId: string;
   public node: MoonlinkNode;
   public url: string;
+
   constructor(manager: MoonlinkManager, node: MoonlinkNode) {
     this.manager = manager;
     this.node = node;
@@ -44,26 +45,26 @@ export class MoonlinkRest {
 
   public async update(data: RestOptions): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makePatchRequest(
+    return this.makePatchRequest(
       `sessions/${this.sessionId}/players/${data.guildId}`,
       data.data,
     );
   }
 
   public async destroy(guildId: string): Promise<object> {
-    return await this.makeDeleteRequest(
+    return this.makeDeleteRequest(
       `sessions/${this.sessionId}/players/${guildId}`,
     );
   }
 
   public async get(endpoint: Endpoint): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makeGetRequest(endpoint);
+    return this.makeGetRequest(endpoint);
   }
 
   public async post(endpoint: Endpoint, data: RestOptions): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makePostRequest(endpoint, data);
+    return this.makePostRequest(endpoint, data);
   }
 
   public async patch(
@@ -71,30 +72,59 @@ export class MoonlinkRest {
     data: RestOptions | any,
   ): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makePatchRequest(endpoint, data.data);
+    return this.makePatchRequest(endpoint, data.data);
   }
 
   public async delete(endpoint: Endpoint): Promise<object> {
     this.ensureUrlIsSet();
-    return await this.makeDeleteRequest(endpoint);
+    return this.makeDeleteRequest(endpoint);
+  }
+
+  public async decodeTrack(encodedTrack: string): Promise<object> {
+    return this.get(`decodetrack?encodedTrack=${encodedTrack}`);
+  }
+
+  public async decodeTracks(data: RestOptions): Promise<object> {
+    return this.post("decodetracks", data);
+  }
+
+  public async getInfo(): Promise<object> {
+    return this.get("info");
+  }
+
+  public async getStats(): Promise<object> {
+    return this.get("stats");
+  }
+
+  public async getVersion(): Promise<object> {
+    return this.get("version");
+  }
+
+  public async routePlannerFreeAddress(data: RestOptions): Promise<object> {
+    return this.post("routeplanner/free/address", data);
+  }
+
+  public async routePlannerFreeAll(data: RestOptions): Promise<object> {
+    return this.post("routeplanner/free/all", data);
   }
 
   private ensureUrlIsSet() {
-    if (!this.url) this.url = this.node.restUri;
-    if (!this.sessionId)
+    if (!this.url) {
+      this.url = this.node.restUri;
+    }
+    if (!this.sessionId) {
       this.sessionId = this.node.manager.map.get("sessionId");
+    }
   }
 
   private async makeGetRequest(endpoint: string): Promise<object> {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(this.url + endpoint, {
+    return makeRequest(this.url + endpoint, {
       method: "GET",
       headers,
-    }).catch((err) => {
-      return err;
-    });
+    }).catch((err) => err);
   }
 
   private async makePostRequest(
@@ -104,16 +134,14 @@ export class MoonlinkRest {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(
+    return makeRequest(
       this.url + endpoint,
       {
         method: "POST",
         headers,
       },
       data,
-    ).catch((err) => {
-      return err;
-    });
+    ).catch((err) => err);
   }
 
   private async makePatchRequest(
@@ -123,54 +151,23 @@ export class MoonlinkRest {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(
+    return makeRequest(
       this.url + endpoint,
       {
         method: "PATCH",
         headers,
       },
       data,
-    ).catch((err) => {
-      return err;
-    });
+    ).catch((err) => err);
   }
 
   private async makeDeleteRequest(endpoint: string): Promise<object> {
     const headers = {
       Authorization: this.node.password,
     };
-    return await makeRequest(this.url + endpoint, {
+    return makeRequest(this.url + endpoint, {
       method: "DELETE",
       headers,
-    }).catch((err) => {
-      return err;
-    });
-  }
-  public async decodeTrack(encodedTrack: string): Promise<object> {
-    return await this.get(`decodetrack?encodedTrack=${encodedTrack}`);
-  }
-
-  public async decodeTracks(data: RestOptions): Promise<object> {
-    return await this.post("decodetracks", data);
-  }
-
-  public async getInfo(): Promise<object> {
-    return await this.get("info");
-  }
-
-  public async getStats(): Promise<object> {
-    return await this.get("stats");
-  }
-
-  public async getVersion(): Promise<object> {
-    return await this.get("version");
-  }
-
-  public async routePlannerFreeAddress(data: RestOptions): Promise<object> {
-    return await this.post("routeplanner/free/address", data);
-  }
-
-  public async routePlannerFreeAll(data: RestOptions): Promise<object> {
-    return await this.post("routeplanner/free/all", data);
+    }).catch((err) => err);
   }
 }
