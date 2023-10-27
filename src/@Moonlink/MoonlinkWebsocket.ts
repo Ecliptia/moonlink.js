@@ -18,7 +18,7 @@ export class MoonlinkWebsocket extends EventEmitter {
   public url: URL;
   public connectionCount = 0;
   private buffers: string[] = [];
-
+  private established: boolean = false;
   constructor(url: string, options: WebSocketOptions = {}) {
     super();
     this.url = new URL(url);
@@ -33,11 +33,9 @@ export class MoonlinkWebsocket extends EventEmitter {
 
   private buildRequestOptions(): HttpsRequestOptions | HttpRequestOptions {
     const requestOptions: HttpsRequestOptions | HttpRequestOptions = {
-      hostname: this.options.host,
       port: this.options.port,
       headers: this.buildHeaders(),
       method: "GET",
-      path: "/v4/websocket",
     };
 
     return this.options.secure
@@ -58,25 +56,40 @@ export class MoonlinkWebsocket extends EventEmitter {
 
   public connect(): void {
     const requestOptions = this.buildRequestOptions();
-    const req = this.options.secure
-      ? https.request(requestOptions)
-      : http.request(requestOptions);
+    let url = `${this.options.secure ? "https://" : "http://"}${
+      this.options.host
+    }${this.url.pathname}${this.url.search}`;
+    try {
+      const req = this.options.secure
+        ? https.request(url, requestOptions)
+        : http.request(url, requestOptions);
 
-    req.on("upgrade", (res, socket) => {
-      this.handleWebSocketConnection(socket);
-    });
-    req.end();
+      req.on("error", (error) => {
+        this.emit("error", error);
+        this.emit("close", 1006, "Error");
+      });
+
+      req.on("upgrade", (res, socket) => {
+        this.handleWebSocketConnection(socket);
+      });
+      req.on("close", () => {
+        if (!this.established) this.emit("close", 1006, "Connection Close");
+      });
+      req.end();
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   private handleWebSocketConnection(socket: any): void {
     this.socket = socket;
     this.emit("open", socket);
+    this.established = true;
+    this.socket.on("end", () => {
+      this.emit("close", 1006, "desconnected");
+    });
     this.socket.on("data", (data) => {
       this.handleWebSocketData(data);
-    });
-
-    this.socket.on("close", () => {
-      this.emit("close");
     });
 
     this.socket.on("error", (error) => {
@@ -149,30 +162,14 @@ export class MoonlinkWebsocket extends EventEmitter {
     const key = Buffer.from(keyBytes).toString("base64");
     return key;
   }
-
-  public close(code: number, reason: string): void {
+  public close(code?: number, reason?: string) {
     if (this.socket) {
-      const closeFrame = this.generateCloseFrame(code, reason);
-      this.socket.write(closeFrame);
+      this.socket.end();
+      if (code && reason) {
+        this.emit("close", code || 1000, reason || "WebSocket is closed.");
+      }
+    } else {
+      this.emit("close", 1006, "WebSocket is not connected.");
     }
-  }
-
-  private generateCloseFrame(code: number, reason: string): Buffer {
-    const codeBuffer = Buffer.allocUnsafe(2);
-    codeBuffer.writeUInt16BE(code, 0);
-
-    let reasonBuffer = Buffer.from(reason, "utf8");
-    if (reasonBuffer.length > 123) {
-      reasonBuffer = reasonBuffer.slice(0, 123);
-    }
-
-    const frameBuffer = Buffer.allocUnsafe(2 + reasonBuffer.length);
-
-    codeBuffer.copy(frameBuffer, 0);
-    reasonBuffer.copy(frameBuffer, 2);
-
-    frameBuffer[0] = 0x88;
-
-    return frameBuffer;
   }
 }
