@@ -145,17 +145,22 @@ export class MoonlinkNode {
     this.options.clientName
       ? this.options.clientName
       : (this.options.clientName = `Moonlink/${this.manager.version}`);
-    this.version = await makeRequest(
-      `http${this.secure ? `s` : ``}://${this.host}${
-        this.port ? `:${this.port}` : ``
-      }/version`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: this.password,
+    try {
+      this.version = await makeRequest(
+        `http${this.secure ? `s` : ``}://${this.host}${
+          this.port ? `:${this.port}` : ``
+        }/version`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: this.password,
+          },
         },
-      },
-    );
+      );
+    } catch (err) {
+      console.log("[ @Moonlink/Node ]: Failed to get version: ", err);
+      return;
+    }
     if ((this.version as string).replace(/\./g, "") < "400") {
       console.log("[ @Mooblink ]: the lavalink version is " + this.version);
       console.log(
@@ -371,8 +376,8 @@ export class MoonlinkNode {
           ...current[payload.guildId],
           get position() {
             /* 
-		         @Author: WilsontheWolf
-		        */
+						 @Author: WilsontheWolf
+						*/
             let player = manager.players.get(payload.guildId);
             if (player && player.paused) {
               return payload.state.position;
@@ -411,64 +416,56 @@ export class MoonlinkNode {
     );
   }
   protected async handleEvent(payload: any): Promise<any> {
-    if (
-      !payload ||
-      !payload.guildId ||
-      !this.map.get("players")[payload.guildId]
-    ) {
-      return;
-    }
-
-    const player: MoonlinkPlayer = new MoonlinkPlayer(
+    if (!payload) return;
+    if (!payload.guildId) return;
+    if (!this.map.get("players")[payload.guildId]) return;
+    let player: MoonlinkPlayer = new MoonlinkPlayer(
       this.map.get("players")[payload.guildId],
       this.manager,
       this.map,
     );
-
-    const players: any = this.map.get("players") || {};
-    const currents: any = this.map.get("current") || {};
-    const previousData: any = this.map.get("previous") || {};
-    const queue = this.db.get(`queue.${payload.guildId}`);
-    const track: any = currents[payload.guildId] || null;
-
+    let players: any = this.map.get("players") || {};
     switch (payload.type) {
-      case "TrackStartEvent":
-        if (!track) return;
-
+      case "TrackStartEvent": {
+        let current: any = null;
+        let currents: any = this.map.get("current") || {};
+        current = currents[payload.guildId] || null;
+        if (!current) return;
         players[payload.guildId] = {
           ...players[payload.guildId],
           playing: true,
           paused: false,
         };
         this.map.set("players", players);
-        this.manager.emit("trackStart", player, track);
+        this.manager.emit("trackStart", player, current);
         break;
-
-      case "TrackEndEvent":
+      }
+      case "TrackEndEvent": {
+        let currents: any = this.map.get("current") || {};
+        let previousData: any = this.map.get("previous") || {};
+        let track: any = currents[payload.guildId] || null;
+        let queue = this.db.get(`queue.${payload.guildId}`);
         players[payload.guildId] = {
           ...players[payload.guildId],
           playing: false,
         };
-
-        previousData[payload.guildId] = { ...track };
+        previousData[payload.guildId] = {
+          ...track,
+        };
         this.map.set("players", players);
         this.map.set("previous", previousData);
-
         if (["loadFailed", "cleanup"].includes(payload.reason)) {
           if (!queue) {
             this.db.delete(`queue.${payload.guildId}`);
-            this.manager.emit("queueEnd", player, track);
-            return player.play();
+            return this.manager.emit("queueEnd", player, track);
           }
-
-          return player.play();
+          player.play();
+          return;
         }
-
         if (payload.reason === "replaced") {
           this.manager.emit("trackEnd", player, track, payload);
           return;
         }
-
         if (track && player.loop) {
           if (player.loop == 1) {
             await this.rest.update({
@@ -479,13 +476,10 @@ export class MoonlinkNode {
             });
             return;
           }
-
           if (player.loop == 2) {
             player.queue.add(track);
-            if (!queue || queue.length === 0) {
-              this.manager.emit("trackEnd", player, track, payload);
-              return;
-            }
+            if (!queue || queue.length === 0)
+              return this.manager.emit("trackEnd", player, track, payload);
             player.current = queue.shift();
             player.play();
             return;
@@ -497,9 +491,12 @@ export class MoonlinkNode {
             );
           }
         }
-
+        /* 
+					@Author: PiscesXD
+					Track shuffling logic
+				*/
         if (player.queue.size && player.data.shuffled) {
-          const currentQueue = this.db.get(`queue.${payload.guildId}`);
+          let currentQueue = this.db.get(`queue.${payload.guildId}`);
           const randomIndex = Math.floor(Math.random() * currentQueue.length);
           const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
           currentQueue.unshift(shuffledTrack);
@@ -513,31 +510,29 @@ export class MoonlinkNode {
           player.play();
           return;
         }
-
         if (typeof player.autoPlay === "boolean" && player.autoPlay === true) {
-          const uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
-          const req: SearchResult = await this.manager.search(uri);
-
+          if (payload.reason == "stopped") return;
+          let uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
+          let req: SearchResult = await this.manager.search(uri);
           if (
             !req ||
             !req.tracks ||
             ["loadFailed", "cleanup"].includes(req.loadType)
-          ) {
+          )
             return player.stop();
-          }
-
-          const data: any =
-            req.tracks[Math.floor(Math.random() * req.tracks.length)];
+          let data: any =
+            req.tracks[
+              Math.floor(Math.random() * Math.floor(req.tracks.length))
+            ];
           player.queue.add(data);
           player.play();
           return;
         }
-
+        /* Logic created by PiscesXD */
         if (player.data.autoLeave) {
           player.destroy();
           this.manager.emit("autoLeaved", player, track);
         }
-
         if (!player.queue.size) {
           this.manager.emit("debug", "[ @Moonlink/Nodes ]: The queue is empty");
           this.manager.emit("queueEnd", player);
@@ -546,26 +541,32 @@ export class MoonlinkNode {
           this.db.delete(`queue.${payload.guildId}`);
         }
         break;
+      }
 
-      case "TrackStuckEvent":
+      case "TrackStuckEvent": {
+        let currents: any = this.map.get("current") || {};
+        let track: any = currents[payload.guildId] || null;
         player.stop();
         this.manager.emit("trackStuck", player, track);
         break;
-
-      case "TrackExceptionEvent":
+      }
+      case "TrackExceptionEvent": {
+        let currents: any = this.map.get("current") || {};
+        let track: any = currents[payload.guildId] || null;
         player.stop();
         this.manager.emit("trackError", player, track);
         break;
-
-      case "WebSocketClosedEvent":
+      }
+      case "WebSocketClosedEvent": {
         this.manager.emit("socketClosed", player, payload);
         break;
-
-      default:
+      }
+      default: {
         const error = new Error(
           `[ @Moonlink/Nodes ] unknown event '${payload.type}'.`,
         );
         this.manager.emit("nodeError", this, error);
+      }
     }
   }
 }

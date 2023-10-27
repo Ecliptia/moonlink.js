@@ -16,6 +16,7 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     url: URL;
     connectionCount: number;
     private buffers;
+    private established;
     constructor(url: string, options?: WebSocketOptions);
     private buildRequestOptions;
     private buildHeaders;
@@ -25,7 +26,6 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     private emitMessagesFromBuffers;
     private findJSONObjects;
     private generateWebSocketKey;
-    close(code: number, reason: string): void;
-    private generateCloseFrame;
+    close(code?: number, reason?: string): void;
 }
 export {};
