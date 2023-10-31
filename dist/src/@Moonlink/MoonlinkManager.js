@@ -251,7 +251,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 let query;
                 let source;
                 if (typeof options === "object") {
-                    ({ query, source } = options);
+                    query = options.query;
+                    source = options.source;
                 }
                 else {
                     query = options;
@@ -271,33 +272,25 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 if (this.spotify.isSpotifyUrl(query)) {
                     return resolve(await this.spotify.resolve(query));
                 }
-                let searchIdentifier;
-                if (query &&
-                    !query.startsWith("http://") &&
-                    !query.startsWith("https://")) {
-                    if (source && !sources[source]) {
-                        this.emit("debug", "[ Moonlink/Manager]: no default found, changing to custom source");
-                        searchIdentifier = `${source}:${query}`;
-                    }
-                    else {
-                        searchIdentifier = `ytsearch:${query}`;
-                        if (source && sources[source])
-                            searchIdentifier = `${sources[source]}:${query}`;
-                    }
-                }
-                else {
-                    searchIdentifier = `${query}`;
-                }
+                let searchIdentifier = query.startsWith("http://") || query.startsWith("https://")
+                    ? query
+                    : source && sources[source]
+                        ? `${sources[source]}:${query}`
+                        : `ytsearch:${query}`;
                 const params = new URLSearchParams({ identifier: searchIdentifier });
                 const res = await this.sortByUsage("memory")[0].request("loadtracks", params);
-                if (res.loadType === "error" || res.loadType === "empty") {
+                if (["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)) {
                     this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
                     return resolve(res);
                 }
-                if (res.loadType === "track") {
-                    res.data = [res.data];
+                if (["track", "TRACK_LOADED"].includes(res.loadType)) {
+                    res.data = [res.loadType === "TRACK_LOADED" ? res.tracks : res.data];
                 }
-                if (res.loadType === "playlist") {
+                if (["playlist", "PLAYLIST_LOADED"].includes(res.loadType)) {
+                    res.data = {
+                        tracks: res.tracks,
+                        info: res.playlistInfo,
+                    };
                     res.playlistInfo = {
                         duration: res.data.tracks.reduce((acc, cur) => acc + cur.info.length, 0),
                         name: res.data.info.name,
@@ -306,14 +299,18 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
+                if (res.loadType === "SEARCH_RESULT" && res.tracks) {
+                    res.data = res.tracks;
+                }
+                res.tracks = null;
                 const tracks = res.data.map((x) => new index_1.MoonlinkTrack(x));
-                return resolve({
+                resolve({
                     ...res,
                     tracks,
                 });
             }
             catch (error) {
-                this.emit("debug", `[ @Moonlink/Manager ]: An error occurred: ${error.message}`);
+                this.emit("debug", "[ @Moonlink/Manager ]: An error occurred: " + error.message);
                 reject(error);
             }
         });

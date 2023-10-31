@@ -20,7 +20,7 @@ export class MoonlinkFilters {
     this.player = player;
     this.rest = player.node.rest;
     this.manager = player.manager;
-    this.volume = this.player.get("volume") || null;
+    this.volume = this.player.get("Fvolume") || null;
     this.equalizer = this.player.get("equalizer") || null;
     this.karaoke = this.player.get("karaoke") || null;
     this.timescale = this.player.get("timescale") || null;
@@ -34,7 +34,7 @@ export class MoonlinkFilters {
   }
 
   public setVolume(volume: number | null): this {
-    this.player.set("volume", volume);
+    this.player.set("Fvolume", volume);
     this.volume = volume;
     this.updateFiltersFromRest();
     return this;
