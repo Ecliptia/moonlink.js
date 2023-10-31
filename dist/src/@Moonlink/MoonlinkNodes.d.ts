@@ -7,6 +7,7 @@ export declare interface Node {
     port?: number;
     secure?: boolean;
     identifier?: string;
+    pathVersion?: string;
 }
 export interface NodeStats {
     players: number;
@@ -37,6 +38,7 @@ export declare class MoonlinkNode {
     identifier: string | null;
     secure: boolean | null;
     version: string | number | unknown;
+    pathVersion: string | null;
     options: Options;
     sPayload: Function;
     socketUri: string | null;

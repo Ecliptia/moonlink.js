@@ -16,6 +16,7 @@ export declare interface Node {
   port?: number;
   secure?: boolean;
   identifier?: string;
+  pathVersion?: string;
 }
 export interface NodeStats {
   players: number;
@@ -48,6 +49,7 @@ export class MoonlinkNode {
   public identifier: string | null;
   public secure: boolean | null;
   public version: string | number | unknown;
+  public pathVersion: string | null;
   public options: Options;
   public sPayload: Function;
   public socketUri: string | null;
@@ -161,13 +163,16 @@ export class MoonlinkNode {
       console.log("[ @Moonlink/Node ]: Failed to get version: ", err);
       return;
     }
-    if ((this.version as string).replace(/\./g, "") < "400") {
-      console.log("[ @Mooblink ]: the lavalink version is " + this.version);
-      console.log(
-        "[ @Moonlink ]: Dear programmer, from new versions of moonlink.js it will only support versions above (4.0.0) please upgrade lavalink",
-      );
-      return;
+    if (
+      !this.pathVersion &&
+      (this.version as string).replace(/\./g, "") > "400"
+    ) {
+      this.pathVersion = "v4";
+    } else {
+      this.pathVersion = "v3";
     }
+
+    if (!this.pathVersion) this.pathVersion = this.node.pathVersion;
     let headers: any = {
       Authorization: this.password,
       "User-Id": this.manager.clientId,
@@ -179,10 +184,10 @@ export class MoonlinkNode {
         : null;
     this.socketUri = `ws${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
-    }${this.port ? `:${this.port}` : ":443"}/v4/websocket`;
+    }${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/websocket`;
     this.restUri = `http${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
-    }${this.port ? `:${this.port}` : ":443"}/v4/`;
+    }${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/`;
     this.ws = new MoonlinkWebsocket(this.socketUri, {
       host: this.host,
       port: this.port,

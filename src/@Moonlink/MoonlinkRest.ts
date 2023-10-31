@@ -111,6 +111,7 @@ export class MoonlinkRest {
   private ensureUrlIsSet() {
     if (!this.url) {
       this.url = this.node.restUri;
+      console.log(this.url);
     }
     if (!this.sessionId) {
       this.sessionId = this.node.manager.map.get("sessionId");
