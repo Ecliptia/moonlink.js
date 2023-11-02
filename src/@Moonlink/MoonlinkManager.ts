@@ -530,7 +530,6 @@ export class MoonlinkManager extends EventEmitter {
           youtubemusic: "ytmsearch",
           soundcloud: "scsearch",
           spotify: "spotify",
-          spsearch: "spsearch",
         };
 
         if (this.spotify.isSpotifyUrl(query)) {
@@ -540,8 +539,8 @@ export class MoonlinkManager extends EventEmitter {
         let searchIdentifier =
           query.startsWith("http://") || query.startsWith("https://")
             ? query
-            : source && sources[source]
-            ? `${sources[source]}:${query}`
+            : source
+            ? sources[source] ? `${sources[source]}:${query}` : `${source}:${query}`
             : `ytsearch:${query}`;
 
         const params = new URLSearchParams({ identifier: searchIdentifier });
@@ -549,7 +548,6 @@ export class MoonlinkManager extends EventEmitter {
           "loadtracks",
           params,
         );
-        console.log(res);
         if (
           ["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)
         ) {
