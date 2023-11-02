@@ -8,6 +8,7 @@ export interface Nodes {
     identifier?: string;
     secure?: boolean;
     password?: string | null;
+    pathVersion?: string | null;
 }
 export interface spotifyOptions {
     clientId?: string;

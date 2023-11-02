@@ -268,6 +268,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     youtubemusic: "ytmsearch",
                     soundcloud: "scsearch",
                     spotify: "spotify",
+                    spsearch: "spsearch",
                 };
                 if (this.spotify.isSpotifyUrl(query)) {
                     return resolve(await this.spotify.resolve(query));
@@ -279,6 +280,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                         : `ytsearch:${query}`;
                 const params = new URLSearchParams({ identifier: searchIdentifier });
                 const res = await this.sortByUsage("memory")[0].request("loadtracks", params);
+                console.log(res);
                 if (["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)) {
                     this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
                     return resolve(res);
