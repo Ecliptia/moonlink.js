@@ -1,7 +1,5 @@
 /// <reference types="node" />
-/// <reference types="node" />
 import { EventEmitter } from "events";
-import { URL } from "url";
 interface WebSocketOptions {
     timeout?: number;
     headers?: Record<string, string>;
@@ -13,7 +11,7 @@ interface WebSocketOptions {
 export declare class MoonlinkWebsocket extends EventEmitter {
     options: WebSocketOptions;
     socket: any;
-    url: URL;
+    url: any;
     connectionCount: number;
     private buffers;
     private established;

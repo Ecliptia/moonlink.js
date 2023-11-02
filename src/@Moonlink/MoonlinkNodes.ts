@@ -147,32 +147,10 @@ export class MoonlinkNode {
     this.options.clientName
       ? this.options.clientName
       : (this.options.clientName = `Moonlink/${this.manager.version}`);
-    try {
-      this.version = await makeRequest(
-        `http${this.secure ? `s` : ``}://${this.host}${
-          this.port ? `:${this.port}` : ``
-        }/version`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: this.password,
-          },
-        },
-      );
-    } catch (err) {
-      console.log("[ @Moonlink/Node ]: Failed to get version: ", err);
-      return;
-    }
-    if (
-      !this.pathVersion &&
-      (this.version as string).replace(/\./g, "") > "400"
-    ) {
-      this.pathVersion = "v4";
-    } else {
-      this.pathVersion = "v3";
-    }
-
-    if (!this.pathVersion) this.pathVersion = this.node.pathVersion;
+    this.version = "discontinued";
+    this.node.pathVersion
+      ? (this.pathVersion = this.node.pathVersion)
+      : (this.pathVersion = "v4");
     let headers: any = {
       Authorization: this.password,
       "User-Id": this.manager.clientId,
@@ -182,7 +160,7 @@ export class MoonlinkNode {
       headers["Session-Id"] = this.db.get("sessionId")
         ? this.db.get("sessionId")
         : null;
-    this.socketUri = `ws${this.secure ? "s" : ""}://${
+    this.socketUri = `http${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
     }${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/websocket`;
     this.restUri = `http${this.secure ? "s" : ""}://${

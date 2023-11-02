@@ -17,7 +17,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
     established = false;
     constructor(url, options = {}) {
         super();
-        this.url = new url_1.URL(url);
+        this.url = url;
         this.options = {
             timeout: 1000,
             headers: {},
@@ -46,28 +46,35 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         return headers;
     }
     connect() {
-        const requestOptions = this.buildRequestOptions();
-        let url = `${this.options.secure ? "https://" : "http://"}${this.options.host}${this.url.pathname}${this.url.search}`;
         try {
-            const req = this.options.secure
-                ? https_1.default.request(url, requestOptions)
-                : http_1.default.request(url, requestOptions);
-            req.on("error", (error) => {
-                this.emit("error", error);
-                this.emit("close", 1006, "Error");
-            });
-            req.on("upgrade", (res, socket) => {
-                this.handleWebSocketConnection(socket);
-            });
-            req.on("close", () => {
-                if (!this.established)
-                    this.emit("close", 1006, "Connection Close");
-            });
-            req.end();
+            new url_1.URL(this.url);
         }
-        catch (err) {
-            console.log(err);
+        catch (error) {
+            this.emit("error", error);
+            this.emit("close", 1006, "Invalid URL");
+            return;
         }
+        const requestOptions = this.buildRequestOptions();
+        const protocol = this.options.secure ? https_1.default : http_1.default;
+        const req = protocol.request(this.url, requestOptions, (res) => {
+            if (res.statusCode !== 101) {
+                this.emit("error", new Error(`WebSocket upgrade failed with status code ${res.statusCode}`));
+                this.emit("close", 1006, "Upgrade Failed");
+                return;
+            }
+        });
+        req.on("error", (error) => {
+            this.emit("error", error);
+            this.emit("close", 1006, "Request Error");
+        });
+        req.on("close", () => {
+            if (!this.established)
+                this.emit("close", 1006, "Connection Close");
+        });
+        req.on("upgrade", (res, socket) => {
+            this.handleWebSocketConnection(socket);
+        });
+        req.end();
     }
     handleWebSocketConnection(socket) {
         this.socket = socket;
@@ -82,6 +89,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         this.socket.on("error", (error) => {
             this.emit("error", error);
         });
+        this.socket.on("close", () => this.emit("close", 1006, "close"));
         this.socket.setEncoding("utf8");
     }
     handleWebSocketData(data) {

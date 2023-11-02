@@ -16,6 +16,7 @@ export interface Nodes {
   identifier?: string;
   secure?: boolean;
   password?: string | null;
+  pathVersion?: string | null;
 }
 
 export interface spotifyOptions {
@@ -529,6 +530,7 @@ export class MoonlinkManager extends EventEmitter {
           youtubemusic: "ytmsearch",
           soundcloud: "scsearch",
           spotify: "spotify",
+          spsearch: "spsearch",
         };
 
         if (this.spotify.isSpotifyUrl(query)) {
@@ -547,7 +549,7 @@ export class MoonlinkManager extends EventEmitter {
           "loadtracks",
           params,
         );
-
+        console.log(res);
         if (
           ["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)
         ) {
