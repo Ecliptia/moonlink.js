@@ -540,7 +540,9 @@ export class MoonlinkManager extends EventEmitter {
           query.startsWith("http://") || query.startsWith("https://")
             ? query
             : source
-            ? sources[source] ? `${sources[source]}:${query}` : `${source}:${query}`
+            ? sources[source]
+              ? `${sources[source]}:${query}`
+              : `${source}:${query}`
             : `ytsearch:${query}`;
 
         const params = new URLSearchParams({ identifier: searchIdentifier });
@@ -563,10 +565,11 @@ export class MoonlinkManager extends EventEmitter {
         }
 
         if (["playlist", "PLAYLIST_LOADED"].includes(res.loadType)) {
-          res.data = {
-            tracks: res.tracks,
-            info: res.playlistInfo,
-          };
+          if (res.loadType == "PLAYLIST_LOADED")
+            res.data = {
+              tracks: res.tracks,
+              info: res.playlistInfo,
+            };
           res.playlistInfo = {
             duration: res.data.tracks.reduce(
               (acc, cur) => acc + cur.info.length,
