@@ -268,19 +268,19 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     youtubemusic: "ytmsearch",
                     soundcloud: "scsearch",
                     spotify: "spotify",
-                    spsearch: "spsearch",
                 };
                 if (this.spotify.isSpotifyUrl(query)) {
                     return resolve(await this.spotify.resolve(query));
                 }
                 let searchIdentifier = query.startsWith("http://") || query.startsWith("https://")
                     ? query
-                    : source && sources[source]
-                        ? `${sources[source]}:${query}`
+                    : source
+                        ? sources[source]
+                            ? `${sources[source]}:${query}`
+                            : `${source}:${query}`
                         : `ytsearch:${query}`;
                 const params = new URLSearchParams({ identifier: searchIdentifier });
                 const res = await this.sortByUsage("memory")[0].request("loadtracks", params);
-                console.log(res);
                 if (["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)) {
                     this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
                     return resolve(res);
@@ -289,10 +289,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.data = [res.loadType === "TRACK_LOADED" ? res.tracks : res.data];
                 }
                 if (["playlist", "PLAYLIST_LOADED"].includes(res.loadType)) {
-                    res.data = {
-                        tracks: res.tracks,
-                        info: res.playlistInfo,
-                    };
+                    if (res.loadType == "PLAYLIST_LOADED")
+                        res.data = {
+                            tracks: res.tracks,
+                            info: res.playlistInfo,
+                        };
                     res.playlistInfo = {
                         duration: res.data.tracks.reduce((acc, cur) => acc + cur.info.length, 0),
                         name: res.data.info.name,
