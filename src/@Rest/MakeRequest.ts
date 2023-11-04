@@ -16,7 +16,8 @@ export function makeRequest(
     let url = new URL(uri);
     if (!options.method) options.method = "GET";
     if (!options.headers["User-Agent"])
-      options.headers["User-Agent"] = "Moonlink/Request";
+      options.headers["User-Agent"] =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
     if (!options.headers["Content-Type"])
       options.headers["Content-Type"] = "application/json";
     let request: any;
