@@ -5,6 +5,7 @@ import {
   MoonlinkTrack,
   MoonlinkQueue,
   Spotify,
+  Deezer,
   Plugin,
 } from "../../index";
 
@@ -216,6 +217,7 @@ export class MoonlinkManager extends EventEmitter {
   public options: Options;
   public nodes: Map<string, MoonlinkNode>;
   public spotify: Spotify;
+  public deezer: Deezer;
   public clientId: string;
   public version: string;
   public map: Map<string, any> = new Map();
@@ -255,6 +257,7 @@ export class MoonlinkManager extends EventEmitter {
     this.options = options;
     this.nodes = new Map();
     this.spotify = new Spotify(options.spotify, this);
+    this.deezer = new Deezer(this);
     this.version = require("../../index").version;
   }
 
@@ -530,12 +533,15 @@ export class MoonlinkManager extends EventEmitter {
           youtubemusic: "ytmsearch",
           soundcloud: "scsearch",
           spotify: "spotify",
+          deezer: "deezer",
         };
 
         if (this.spotify.isSpotifyUrl(query)) {
           return resolve(await this.spotify.resolve(query));
         }
-
+        if (this.deezer.check(query)) {
+          return resolve(await this.deezer.resolve(query));
+        }
         let searchIdentifier =
           query.startsWith("http://") || query.startsWith("https://")
             ? query
@@ -544,6 +550,13 @@ export class MoonlinkManager extends EventEmitter {
               ? `${sources[source]}:${query}`
               : `${source}:${query}`
             : `ytsearch:${query}`;
+
+        if (source == "spotify") {
+          resolve(await this.spotify.fetch(query));
+        }
+        if (source == "deezer") {
+          resolve(await this.deezer.fetch(query));
+        }
 
         const params = new URLSearchParams({ identifier: searchIdentifier });
         const res: any = await this.sortByUsage("memory")[0].request(

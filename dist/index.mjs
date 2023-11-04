@@ -1,6 +1,7 @@
 import mod from "./index.js";
 
 export default mod;
+export const Deezer = mod.Deezer;
 export const MoonlinkDatabase = mod.MoonlinkDatabase;
 export const MoonlinkFilters = mod.MoonlinkFilters;
 export const MoonlinkManager = mod.MoonlinkManager;

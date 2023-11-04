@@ -21,6 +21,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     options;
     nodes;
     spotify;
+    deezer;
     clientId;
     version;
     map = new Map();
@@ -52,6 +53,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.options = options;
         this.nodes = new Map();
         this.spotify = new index_1.Spotify(options.spotify, this);
+        this.deezer = new index_1.Deezer(this);
         this.version = require("../../index").version;
     }
     /**
@@ -268,9 +270,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     youtubemusic: "ytmsearch",
                     soundcloud: "scsearch",
                     spotify: "spotify",
+                    deezer: "deezer",
                 };
                 if (this.spotify.isSpotifyUrl(query)) {
                     return resolve(await this.spotify.resolve(query));
+                }
+                if (this.deezer.check(query)) {
+                    return resolve(await this.deezer.resolve(query));
                 }
                 let searchIdentifier = query.startsWith("http://") || query.startsWith("https://")
                     ? query
@@ -279,6 +285,12 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                             ? `${sources[source]}:${query}`
                             : `${source}:${query}`
                         : `ytsearch:${query}`;
+                if (source == "spotify") {
+                    resolve(await this.spotify.fetch(query));
+                }
+                if (source == "deezer") {
+                    resolve(await this.deezer.fetch(query));
+                }
                 const params = new URLSearchParams({ identifier: searchIdentifier });
                 const res = await this.sortByUsage("memory")[0].request("loadtracks", params);
                 if (["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType)) {

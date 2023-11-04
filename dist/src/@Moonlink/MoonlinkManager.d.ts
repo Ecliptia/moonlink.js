@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { MoonlinkNode, MoonlinkPlayer, MoonlinkTrack, MoonlinkQueue, Spotify, Plugin } from "../../index";
+import { MoonlinkNode, MoonlinkPlayer, MoonlinkTrack, MoonlinkQueue, Spotify, Deezer, Plugin } from "../../index";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface Nodes {
     host: string;
@@ -159,6 +159,7 @@ export declare class MoonlinkManager extends EventEmitter {
     options: Options;
     nodes: Map<string, MoonlinkNode>;
     spotify: Spotify;
+    deezer: Deezer;
     clientId: string;
     version: string;
     map: Map<string, any>;
