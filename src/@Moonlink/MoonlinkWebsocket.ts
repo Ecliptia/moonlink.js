@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import http, { RequestOptions as HttpRequestOptions } from "http";
 import https, { RequestOptions as HttpsRequestOptions } from "https";
+import crypto from "crypto";
 import { URL } from "url";
 
 interface WebSocketOptions {
@@ -48,7 +49,7 @@ export class MoonlinkWebsocket extends EventEmitter {
     headers["Host"] = this.options.host;
     headers["Upgrade"] = "websocket";
     headers["Connection"] = "Upgrade";
-    headers["Sec-WebSocket-Key"] = this.generateWebSocketKey();
+    headers["Sec-WebSocket-Key"] = crypto.randomBytes(16).toString("hex");
     headers["Sec-WebSocket-Version"] = "13";
 
     return headers;
@@ -164,14 +165,6 @@ export class MoonlinkWebsocket extends EventEmitter {
     return jsonObjects;
   }
 
-  private generateWebSocketKey(): string {
-    const keyBytes = new Array(16);
-    for (let i = 0; i < 16; i++) {
-      keyBytes[i] = Math.floor(Math.random() * 256);
-    }
-    const key = Buffer.from(keyBytes).toString("base64");
-    return key;
-  }
   public close(code?: number, reason?: string) {
     if (this.socket) {
       this.socket.end();
