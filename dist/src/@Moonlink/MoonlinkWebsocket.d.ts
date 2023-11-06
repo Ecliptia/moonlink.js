@@ -23,7 +23,6 @@ export declare class MoonlinkWebsocket extends EventEmitter {
     private handleWebSocketData;
     private emitMessagesFromBuffers;
     private findJSONObjects;
-    private generateWebSocketKey;
     close(code?: number, reason?: string): void;
 }
 export {};

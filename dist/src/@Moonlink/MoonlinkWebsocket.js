@@ -7,6 +7,7 @@ exports.MoonlinkWebsocket = void 0;
 const events_1 = require("events");
 const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
+const crypto_1 = __importDefault(require("crypto"));
 const url_1 = require("url");
 class MoonlinkWebsocket extends events_1.EventEmitter {
     options;
@@ -41,7 +42,7 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
         headers["Host"] = this.options.host;
         headers["Upgrade"] = "websocket";
         headers["Connection"] = "Upgrade";
-        headers["Sec-WebSocket-Key"] = this.generateWebSocketKey();
+        headers["Sec-WebSocket-Key"] = crypto_1.default.randomBytes(16).toString("hex");
         headers["Sec-WebSocket-Version"] = "13";
         return headers;
     }
@@ -139,14 +140,6 @@ class MoonlinkWebsocket extends events_1.EventEmitter {
             }
         }
         return jsonObjects;
-    }
-    generateWebSocketKey() {
-        const keyBytes = new Array(16);
-        for (let i = 0; i < 16; i++) {
-            keyBytes[i] = Math.floor(Math.random() * 256);
-        }
-        const key = Buffer.from(keyBytes).toString("base64");
-        return key;
     }
     close(code, reason) {
         if (this.socket) {
