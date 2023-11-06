@@ -4,6 +4,9 @@
 
 <img src='https://media.discordapp.net/attachments/979497984481972335/1158871758846316624/48_Sem_Titulo_20231003180223.png?ex=651e7bae&is=651d2a2e&hm=0fe112176d09faadcaf1ea00e3927e8616d0e20d5a3ba170ac05fc2874315cfa&'></img>
 [![NPM](https://nodei.co/npm/moonlink.js.png)](https://nodei.co/npm/moonlink.js)
+
+[![Made with ♥️ in - Brazil](https://img.shields.io/badge/Made_with_♥️_in-Brazil-ED186A?style=for-the-badge)](https://github.com/1Lucas1apk)
+
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dd9288acdc94dacaa11ad80f36a9bd3)](https://www.codacy.com/gh/1Lucas1apk/moonlink.js/dashboard?utm_source=github.com&utm_medium=referral&utm_content=1Lucas1apk/moonlink.js&utm_campaign=Badge_Grade) [![Downloads](https://img.shields.io/npm/dt/moonlink.js.svg?color=3884FF)](https://www.npmjs.com/package/moonlink.js) [![Version](https://img.shields.io/npm/v/moonlink.js.svg?color=3884FF&label=version)](https://www.npmjs.com/package/moonlink.js) [![install size](https://packagephobia.com/badge?p=moonlink.js)](https://packagephobia.com/result?p=moonlink.js) ![node](https://img.shields.io/node/v/moonlink.js) [![Netlify Status](https://api.netlify.com/api/v1/badges/4f4a2a64-a8db-4db3-ad1d-0c4ac7274d0e/deploy-status)](https://app.netlify.com/sites/moonlinkjs/deploys)
 
 Imagine a musical journey where creativity knows no bounds. 🌌 Moonlink.js invites you to unlock your full musical potential, designed exclusively for Lavalink clients. Step into a world of seamless communication and fluid interaction, where Moonlink.js takes your projects to new heights. With full TypeScript support, it empowers your creativity and productivity. 🎵
