@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { MoonlinkWebsocket } from "./MoonlinkWebsocket";
+import { WebSocket } from "./PerforCWebsocket";
 import { MoonlinkManager, Options, MoonlinkDatabase, MoonlinkRest } from "../../index";
 export declare interface Node {
     host: string;
@@ -48,7 +48,7 @@ export declare class MoonlinkNode {
     resumed: boolean;
     sessionId: string;
     isConnected: boolean;
-    ws: MoonlinkWebsocket | null;
+    ws: WebSocket | null;
     stats: NodeStats;
     retryTime: number | null;
     reconnectAtattempts: number | null;

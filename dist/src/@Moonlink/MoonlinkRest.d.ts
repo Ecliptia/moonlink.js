@@ -1,5 +1,4 @@
-import { MoonlinkNode } from "./MoonlinkNodes";
-import { MoonlinkManager } from "./MoonlinkManager";
+import { MoonlinkNode, MoonlinkManager } from "../../index";
 export interface VoiceOptions {
     endpoint: string;
     token: string;
