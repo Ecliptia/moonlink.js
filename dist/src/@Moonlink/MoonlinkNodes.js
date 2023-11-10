@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkNode = void 0;
-const MoonlinkWebsocket_1 = require("./MoonlinkWebsocket");
+const PerforCWebsocket_1 = require("./PerforCWebsocket");
 const index_1 = require("../../index");
 class MoonlinkNode {
     manager;
@@ -109,15 +109,11 @@ class MoonlinkNode {
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : null;
-        this.socketUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/websocket`;
+        this.socketUri = `ws${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/websocket`;
         this.restUri = `http${this.secure ? "s" : ""}://${this.host ? this.host : "localhost"}${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/`;
-        this.ws = new MoonlinkWebsocket_1.MoonlinkWebsocket(this.socketUri, {
-            host: this.host,
-            port: this.port,
-            secure: this.secure,
+        this.ws = new PerforCWebsocket_1.WebSocket(this.socketUri, {
             headers,
         });
-        this.ws.connect();
         this.ws.on("open", this.open.bind(this));
         this.ws.on("close", this.close.bind(this));
         this.ws.on("message", this.message.bind(this));

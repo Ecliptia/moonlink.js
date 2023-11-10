@@ -1,6 +1,4 @@
-import { MoonlinkNode } from "./MoonlinkNodes";
-import { MoonlinkManager } from "./MoonlinkManager";
-import { makeRequest } from "../@Rest/MakeRequest";
+import { MoonlinkNode, MoonlinkManager, makeRequest } from "../../index";
 
 export interface VoiceOptions {
   endpoint: string;

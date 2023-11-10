@@ -7,6 +7,7 @@ export class MoonlinkDatabase {
   constructor(clientId) {
     this.fetch();
     this.id = clientId;
+    console.log(this.getFilePath());
   }
 
   set(key: string, value: any): void {
@@ -81,7 +82,7 @@ export class MoonlinkDatabase {
   }
 
   private getFilePath() {
-    return path.join(__dirname, `database-${this.id}.json`);
+    return path.join(__dirname, "../@Datastore", `database-${this.id}.json`);
   }
 
   private fetch() {

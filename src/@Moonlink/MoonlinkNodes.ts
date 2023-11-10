@@ -1,4 +1,4 @@
-import { MoonlinkWebsocket } from "./MoonlinkWebsocket";
+import { WebSocket } from "./PerforCWebsocket";
 import {
   MoonlinkManager,
   Options,
@@ -59,7 +59,7 @@ export class MoonlinkNode {
   public resumed: boolean;
   public sessionId: string;
   public isConnected: boolean;
-  public ws: MoonlinkWebsocket | null;
+  public ws: WebSocket | null;
   public stats: NodeStats;
   public retryTime: number | null;
   public reconnectAtattempts: number | null;
@@ -160,19 +160,15 @@ export class MoonlinkNode {
       headers["Session-Id"] = this.db.get("sessionId")
         ? this.db.get("sessionId")
         : null;
-    this.socketUri = `http${this.secure ? "s" : ""}://${
+    this.socketUri = `ws${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
     }${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/websocket`;
     this.restUri = `http${this.secure ? "s" : ""}://${
       this.host ? this.host : "localhost"
     }${this.port ? `:${this.port}` : ":443"}/${this.pathVersion}/`;
-    this.ws = new MoonlinkWebsocket(this.socketUri, {
-      host: this.host,
-      port: this.port,
-      secure: this.secure,
+    this.ws = new WebSocket(this.socketUri, {
       headers,
     });
-    this.ws.connect();
     this.ws.on("open", this.open.bind(this));
     this.ws.on("close", this.close.bind(this));
     this.ws.on("message", this.message.bind(this));

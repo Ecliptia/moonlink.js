@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkRest = void 0;
-const MakeRequest_1 = require("../@Rest/MakeRequest");
+const index_1 = require("../../index");
 class MoonlinkRest {
     manager;
     sessionId;
@@ -71,7 +71,7 @@ class MoonlinkRest {
         const headers = {
             Authorization: this.node.password,
         };
-        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "GET",
             headers,
         }).catch((err) => err);
@@ -80,7 +80,7 @@ class MoonlinkRest {
         const headers = {
             Authorization: this.node.password,
         };
-        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "POST",
             headers,
         }, data).catch((err) => err);
@@ -89,7 +89,7 @@ class MoonlinkRest {
         const headers = {
             Authorization: this.node.password,
         };
-        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "PATCH",
             headers,
         }, data).catch((err) => err);
@@ -98,7 +98,7 @@ class MoonlinkRest {
         const headers = {
             Authorization: this.node.password,
         };
-        return (0, MakeRequest_1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "DELETE",
             headers,
         }).catch((err) => err);

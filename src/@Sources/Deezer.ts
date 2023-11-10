@@ -1,6 +1,4 @@
-import { MoonlinkTrack } from "../@Rest/MoonlinkTrack";
-import { makeRequest } from "../@Rest/MakeRequest";
-import { MoonlinkManager } from "../@Moonlink/MoonlinkManager";
+import { MoonlinkTrack, makeRequest, MoonlinkManager } from "../../index";
 
 export class Deezer {
   public manager: MoonlinkManager;

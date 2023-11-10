@@ -1,6 +1,4 @@
-import { MoonlinkDatabase } from "./MoonlinkDatabase";
-import { MoonlinkManager } from "../@Moonlink/MoonlinkManager";
-import { MoonlinkTrack } from "./MoonlinkTrack";
+import { MoonlinkDatabase, MoonlinkManager, MoonlinkTrack } from "../../index";
 
 export class MoonlinkQueue {
   public db: MoonlinkDatabase;
