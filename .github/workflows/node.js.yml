@@ -23,7 +23,10 @@ jobs:
 
     - name: Build TypeScript
       run: npm run build
-
+      
+    - name: Display TypeScript Output
+      run: cat dist/*
+     
     - name: Commit and push changes
       run: |
         git config --local user.email "actions@github.com"
