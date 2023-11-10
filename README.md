@@ -35,121 +35,122 @@ const { MoonlinkManager } = require('moonlink.js');
 
 // Creating an instance of the Discord.js client
 const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.GuildVoiceStates
-	]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates
+  ]
 });
 
 // Moonlink.js package configuration
 client.moon = new MoonlinkManager(
-	[{
-		host: 'localhost',
-		port: 2333,
-		secure: true,
-		password: 'MyPassword'
-	}],
-	{ /* Options */ },
-	(guild, sPayload) => {
-		// Send payload information to the server
-		client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload));
-	}
+  [{
+    host: 'localhost',
+    port: 2333,
+    secure: true,
+    password: 'MyPassword',
+    pathVersion: 'v4' // If Lavalink is in version 3, change this parameter to 'v3'
+  }],
+  { /* Options */ },
+  (guild, sPayload) => {
+    // Send payload information to the server
+    client.guilds.cache.get(guild).shard.send(JSON.parse(sPayload));
+  }
 );
 
 // Event: Node created
 client.moon.on('nodeCreate', (node) => {
-	console.log(`${node.host} was connected`);
+  console.log(`${node.host} was connected`);
 });
 
 // Event: Track start
 client.moon.on('trackStart', async (player, track) => {
-	// Send a message when the track starts playing
-	client.channels.cache.get(player.textChannel).send(`${track.title} is playing now`);
+  // Send a message when the track starts playing
+  client.channels.cache.get(player.textChannel).send(`${track.title} is playing now`);
 });
 
 // Event: Track end
 client.moon.on('trackEnd', async (player, track) => {
-	// Send a message when the track finishes playing
-	client.channels.cache.get(player.textChannel).send(`track is over`);
+  // Send a message when the track finishes playing
+  client.channels.cache.get(player.textChannel).send(`Track is over`);
 });
 
 // Event: Ready
 client.on('ready', () => {
-	// Initialize the Moonlink.js package with the client's user ID
-	client.moon.init(client.user.id);
+  // Initialize the Moonlink.js package with the client's user ID
+  client.moon.init(client.user.id);
 });
 
 // Event: Raw (raw data)
 client.on('raw', (data) => {
-	// Update the Moonlink.js package with the necessary data to function correctly
-	client.moon.packetUpdate(data);
+  // Update the Moonlink.js package with the necessary data to function correctly
+  client.moon.packetUpdate(data);
 });
 
 // Event: Interaction created
 client.on('interactionCreate', async (interaction) => {
-	if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) return;
 
-	if (interaction.commandName === 'play') {
-		if (!interaction.member.voice.channel) {
-			// Respond with a message if the user is not in a voice channel
-			return interaction.reply({
-				content: `you are not in a voice channel`,
-				ephemeral: true,
-			});
-		}
+  if (interaction.commandName === 'play') {
+    if (!interaction.member.voice.channel) {
+      // Respond with a message if the user is not in a voice channel
+      return interaction.reply({
+        content: `You are not in a voice channel`,
+        ephemeral: true,
+      });
+    }
 
-		let query = interaction.options.getString('query');
-		let player = client.moon.players.create({
-			guildId: interaction.guild.id,
-			voiceChannel: interaction.member.voice.channel.id,
-			textChannel: interaction.channel.id,
-			autoPlay: true,
-		});
+    let query = interaction.options.getString('query');
+    let player = client.moon.players.create({
+      guildId: interaction.guild.id,
+      voiceChannel: interaction.member.voice.channel.id,
+      textChannel: interaction.channel.id,
+      autoPlay: true,
+    });
 
-		if (!player.connected) {
-			// Connect to the voice channel if the player is not connected
-			player.connect({
-				setDeaf: true,
-				setMute: false,
-			});
-		}
+    if (!player.connected) {
+      // Connect to the voice channel if the player is not connected
+      player.connect({
+        setDeaf: true,
+        setMute: false,
+      });
+    }
 
-		let res = await client.moon.search(query);
+    let res = await client.moon.search(query);
 
-		if (res.loadType === "loadfailed") {
-			// Respond with an error message if loading fails
-			return interaction.reply({
-				content: `:x: Load failed. `,
-			});
-		} else if (res.loadType === "empty") {
-			// Respond with a message if the search returns no results
-			return interaction.reply({
-				content: `:x: No matches!`,
-			});
-		}
+    if (res.loadType === "loadfailed") {
+      // Respond with an error message if loading fails
+      return interaction.reply({
+        content: `:x: Load failed.`,
+      });
+    } else if (res.loadType === "empty") {
+      // Respond with a message if the search returns no results
+      return interaction.reply({
+        content: `:x: No matches!`,
+      });
+    }
 
-		if (res.loadType === 'playlist') {
-			interaction.reply({
-				content: `${res.playlistInfo.name} this playlist has been added to the waiting list`,
-			});
+    if (res.loadType === 'playlist') {
+      interaction.reply({
+        content: `${res.playlistInfo.name} This playlist has been added to the waiting list`,
+      });
 
-			for (const track of res.tracks) {
-				// Add tracks to the queue if it's a playlist
-				player.queue.add(track);
-			}
-		} else {
-			player.queue.add(res.tracks[0]);
-			interaction.reply({
-				content: `${res.tracks[0].title} was added to the waiting list`,
-			});
-		}
+      for (const track of res.tracks) {
+        // Add tracks to the queue if it's a playlist
+        player.queue.add(track);
+      }
+    } else {
+      player.queue.add(res.tracks[0]);
+      interaction.reply({
+        content: `${res.tracks[0].title} was added to the waiting list`,
+      });
+    }
 
-		if (!player.playing) {
-			// Start playing if it's not already playing
-			player.play();
-		}
-	}
+    if (!player.playing) {
+      // Start playing if it's not already playing
+      player.play();
+    }
+  }
 });
 
 // Log in with the Discord token
@@ -157,19 +158,6 @@ client.login(process.env["DISCORD_TOKEN"]);
 ```
 
 ## Sponsorship
-### Shardux - Unrivalled hosting at an affordable price
-
-Here at Shardux, we aim to help you get your mission-critical
-
- applications running on powerful and scalable infrastructure.
-
-We offer Discord Bot Hosting and Lavalink Hosting from as little as **$1/mo**.
-
-All our servers run on high-quality hardware (**Intel i9-9900K's**) and **NVMe** drives, not to mention free **daily backups** and **outstanding DDOS protection**.
-
-Let's get your bot online today.
-
-https://shardux.com & https://discord.gg/WmBzCPZstv
 
 ## Our Philosophy 💭
 
