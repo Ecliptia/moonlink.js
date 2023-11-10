@@ -22,10 +22,7 @@ jobs:
       run: npm install
 
     - name: Build TypeScript
-      run: npm run build
-      
-    - name: Display TypeScript Output
-      run: cat dist/*
+      run: npx tsc
      
     - name: Commit and push changes
       run: |
