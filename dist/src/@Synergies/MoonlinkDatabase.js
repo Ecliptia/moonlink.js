@@ -12,7 +12,6 @@ class MoonlinkDatabase {
     constructor(clientId) {
         this.fetch();
         this.id = clientId;
-        console.log(this.getFilePath());
     }
     set(key, value) {
         if (!key)
@@ -83,6 +82,10 @@ class MoonlinkDatabase {
     }
     fetch() {
         try {
+            const directory = path_1.default.join(__dirname, "../@Datastore");
+            if (!fs_1.default.existsSync(directory)) {
+                fs_1.default.mkdirSync(directory, { recursive: true });
+            }
             const filePath = this.getFilePath();
             const rawData = fs_1.default.readFileSync(filePath, "utf-8");
             this.data = JSON.parse(rawData) || {};
