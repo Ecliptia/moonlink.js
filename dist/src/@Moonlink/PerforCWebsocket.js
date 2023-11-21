@@ -11,9 +11,11 @@ const node_http_1 = __importDefault(require("node:http"));
 const node_crypto_1 = __importDefault(require("node:crypto"));
 const node_events_1 = __importDefault(require("node:events"));
 const node_url_1 = require("node:url");
-function parsePacket(data) {
+function parseHeaders(data) {
     let payloadStartIndex = 2;
     const opcode = data[0] & 0b00001111;
+    const fin = (data[0] & 0b10000000) == 0b10000000;
+    // Line below is experimental, if it doesn't work, comment it.
     if (opcode == 0x0)
         payloadStartIndex += 2;
     let payloadLength = data[1] & 0b01111111;
@@ -25,17 +27,25 @@ function parsePacket(data) {
         payloadStartIndex += 8;
         payloadLength = Number(data.readBigUInt64BE(2));
     }
-    return data.subarray(payloadStartIndex);
+    return {
+        opcode,
+        fin,
+        payload: data,
+        payloadLength,
+        payloadStartIndex,
+    };
 }
 class WebSocket extends node_events_1.default {
     url;
     options;
     socket;
+    cachedData;
     constructor(url, options) {
         super();
         this.url = url;
         this.options = options;
         this.socket = null;
+        this.cachedData = [];
         this.connect();
         return this;
     }
@@ -48,7 +58,7 @@ class WebSocket extends node_events_1.default {
             parsedUrl.hostname +
             parsedUrl.pathname, {
             port: parsedUrl.port || (isSecure ? 443 : 80),
-            timeout: 5000,
+            timeout: this.options.timeout || 0,
             createConnection: (options) => {
                 if (isSecure) {
                     options.path = undefined;
@@ -78,10 +88,12 @@ class WebSocket extends node_events_1.default {
             this.emit("error", err);
             this.emit("close");
         });
-        request.on("upgrade", (res, socket, _head) => {
-            this.emit("open");
-            if (res.headers.upgrade &&
-                res.headers.upgrade.toLowerCase() != "websocket") {
+        request.on("upgrade", (res, socket, head) => {
+            socket.setNoDelay();
+            socket.setKeepAlive(true);
+            if (head.length != 0)
+                socket.unshift(head);
+            if (res.headers.upgrade.toLowerCase() != "websocket") {
                 socket.destroy();
                 return;
             }
@@ -93,15 +105,56 @@ class WebSocket extends node_events_1.default {
                 socket.destroy();
                 return;
             }
-            socket.on("data", (data) => this.emit("message", parsePacket(data).toString()));
+            socket.on("data", (data) => {
+                const headers = parseHeaders(data);
+                switch (headers.opcode) {
+                    case 0x0: {
+                        this.cachedData.push(data
+                            .subarray(headers.payloadStartIndex)
+                            .subarray(0, headers.payloadLength));
+                        if (headers.fin) {
+                            const parsedData = Buffer.concat(this.cachedData);
+                            this.emit("message", parsedData.toString());
+                            this.cachedData = [];
+                        }
+                        break;
+                    }
+                    case 0x1: {
+                        const parsedData = data
+                            .subarray(headers.payloadStartIndex)
+                            .subarray(0, headers.payloadLength);
+                        this.emit("message", parsedData.toString());
+                        break;
+                    }
+                    case 0x2: {
+                        throw new Error("Binary data is not supported.");
+                        break;
+                    }
+                    case 0x8: {
+                        this.emit("close");
+                        break;
+                    }
+                    case 0x9: {
+                        const pong = Buffer.allocUnsafe(2);
+                        pong[0] = 0x8a;
+                        pong[1] = 0x00;
+                        this.socket.write(pong);
+                        break;
+                    }
+                    case 0x10: {
+                        this.emit("pong");
+                    }
+                }
+                if (data.length > headers.payloadStartIndex + headers.payloadLength)
+                    this.socket.unshift(data.subarray(headers.payloadStartIndex + headers.payloadLength));
+            });
             socket.on("close", () => this.emit("close"));
             this.socket = socket;
+            this.emit("open", socket, res.headers);
         });
         request.end();
     }
     sendFrame(data, options) {
-        if (!this.socket)
-            return false;
         let startIndex = 2;
         if (options.len >= 65536) {
             startIndex += 8;

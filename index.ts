@@ -1,4 +1,4 @@
-export const version: string = "2.15.80";
+export const version: string = "2.16.60";
 export * from "./src/@Moonlink/MoonlinkManager";
 export * from "./src/@Moonlink/PerforCWebsocket";
 export * from "./src/@Moonlink/MoonlinkPlayers";
