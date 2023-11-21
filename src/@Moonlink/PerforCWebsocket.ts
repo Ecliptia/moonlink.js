@@ -4,7 +4,7 @@ import https from "node:https";
 import http from "node:http";
 import crypto from "node:crypto";
 import EventEmitter from "node:events";
-import { URL, UrlObject } from "node:url";
+import { URL } from "node:url";
 
 export type WebSocketOptions = {
   headers?: http.OutgoingHttpHeaders | undefined;
@@ -17,14 +17,16 @@ export type FrameOptions = {
   len: number;
 };
 
-function parsePacket(data: Buffer): Buffer {
-  let payloadStartIndex: number = 2;
+function parseHeaders(data: Buffer) {
+  let payloadStartIndex = 2;
 
-  const opcode: number = data[0] & 0b00001111;
+  const opcode = data[0] & 0b00001111;
+  const fin = (data[0] & 0b10000000) == 0b10000000;
 
+  // Line below is experimental, if it doesn't work, comment it.
   if (opcode == 0x0) payloadStartIndex += 2;
 
-  let payloadLength: number = data[1] & 0b01111111;
+  let payloadLength = data[1] & 0b01111111;
 
   if (payloadLength == 126) {
     payloadStartIndex += 2;
@@ -34,13 +36,20 @@ function parsePacket(data: Buffer): Buffer {
     payloadLength = Number(data.readBigUInt64BE(2));
   }
 
-  return data.subarray(payloadStartIndex);
+  return {
+    opcode,
+    fin,
+    payload: data,
+    payloadLength,
+    payloadStartIndex,
+  };
 }
 
 export class WebSocket extends EventEmitter {
   private url: string;
   private options: WebSocketOptions;
   private socket: net.Socket | null;
+  private cachedData: Array<Buffer>;
 
   constructor(url: string, options: WebSocketOptions) {
     super();
@@ -48,6 +57,7 @@ export class WebSocket extends EventEmitter {
     this.url = url;
     this.options = options;
     this.socket = null;
+    this.cachedData = [];
 
     this.connect();
 
@@ -55,7 +65,7 @@ export class WebSocket extends EventEmitter {
   }
 
   connect(): void {
-    const parsedUrl: UrlObject = new URL(this.url);
+    const parsedUrl: URL = new URL(this.url);
     const isSecure: Boolean = parsedUrl.protocol == "wss:";
     const agent: typeof https | typeof http = isSecure ? https : http;
     const key = crypto.randomBytes(16).toString("base64");
@@ -66,7 +76,7 @@ export class WebSocket extends EventEmitter {
         parsedUrl.pathname,
       {
         port: parsedUrl.port || (isSecure ? 443 : 80),
-        timeout: 5000,
+        timeout: this.options.timeout || 0,
         createConnection: (options: http.ClientRequestArgs) => {
           if (isSecure) {
             options.path = undefined;
@@ -107,12 +117,13 @@ export class WebSocket extends EventEmitter {
 
     request.on(
       "upgrade",
-      (res: http.IncomingMessage, socket: net.Socket, _head: any) => {
-        this.emit("open");
-        if (
-          res.headers.upgrade &&
-          res.headers.upgrade.toLowerCase() != "websocket"
-        ) {
+      (res: http.IncomingMessage, socket: net.Socket, head: Buffer) => {
+        socket.setNoDelay();
+        socket.setKeepAlive(true);
+
+        if (head.length != 0) socket.unshift(head);
+
+        if (res.headers.upgrade.toLowerCase() != "websocket") {
           socket.destroy();
 
           return;
@@ -129,13 +140,71 @@ export class WebSocket extends EventEmitter {
           return;
         }
 
-        socket.on("data", (data: Buffer) =>
-          this.emit("message", parsePacket(data).toString()),
-        );
+        socket.on("data", (data: Buffer) => {
+          const headers = parseHeaders(data);
+
+          switch (headers.opcode) {
+            case 0x0: {
+              this.cachedData.push(
+                data
+                  .subarray(headers.payloadStartIndex)
+                  .subarray(0, headers.payloadLength),
+              );
+
+              if (headers.fin) {
+                const parsedData = Buffer.concat(this.cachedData);
+
+                this.emit("message", parsedData.toString());
+
+                this.cachedData = [];
+              }
+
+              break;
+            }
+            case 0x1: {
+              const parsedData = data
+                .subarray(headers.payloadStartIndex)
+                .subarray(0, headers.payloadLength);
+
+              this.emit("message", parsedData.toString());
+
+              break;
+            }
+            case 0x2: {
+              throw new Error("Binary data is not supported.");
+
+              break;
+            }
+            case 0x8: {
+              this.emit("close");
+
+              break;
+            }
+            case 0x9: {
+              const pong = Buffer.allocUnsafe(2);
+              pong[0] = 0x8a;
+              pong[1] = 0x00;
+
+              this.socket.write(pong);
+
+              break;
+            }
+            case 0x10: {
+              this.emit("pong");
+            }
+          }
+
+          if (data.length > headers.payloadStartIndex + headers.payloadLength)
+            this.socket.unshift(
+              data.subarray(headers.payloadStartIndex + headers.payloadLength),
+            );
+        });
 
         socket.on("close", () => this.emit("close"));
 
         this.socket = socket;
+
+        this.emit("open", socket, res.headers);
       },
     );
 
@@ -143,8 +212,6 @@ export class WebSocket extends EventEmitter {
   }
 
   sendFrame(data: Uint8Array, options: FrameOptions): boolean {
-    if (!this.socket) return false;
-
     let startIndex = 2;
 
     if (options.len >= 65536) {

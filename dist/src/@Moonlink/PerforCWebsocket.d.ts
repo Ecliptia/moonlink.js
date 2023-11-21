@@ -15,6 +15,7 @@ export declare class WebSocket extends EventEmitter {
     private url;
     private options;
     private socket;
+    private cachedData;
     constructor(url: string, options: WebSocketOptions);
     connect(): void;
     sendFrame(data: Uint8Array, options: FrameOptions): boolean;

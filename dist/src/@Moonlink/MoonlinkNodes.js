@@ -160,51 +160,7 @@ class MoonlinkNode {
             data = Buffer.concat(data);
         else if (data instanceof ArrayBuffer)
             data = Buffer.from(data);
-        let payload;
-        try {
-            payload = JSON.parse(data.toString("utf8"));
-        }
-        catch (error) {
-            payload = data.toString();
-            function findJSONObjects(input) {
-                const objetosJSON = [];
-                const objetoAberto = "{";
-                const objetoFechado = "}";
-                let objetoContador = 0;
-                let objetoAtual = "";
-                for (let i = 0; i < input.length; i++) {
-                    const char = input.charAt(i);
-                    if (char === objetoAberto) {
-                        objetoContador++;
-                    }
-                    else if (char === objetoFechado) {
-                        objetoContador--;
-                        if (objetoContador === 0) {
-                            objetoAtual += char;
-                            try {
-                                const parsedObject = JSON.parse(objetoAtual);
-                                objetosJSON.push(parsedObject);
-                            }
-                            catch (error) { }
-                            objetoAtual = "";
-                        }
-                    }
-                    if (objetoContador > 0) {
-                        objetoAtual += char;
-                    }
-                }
-                return objetosJSON;
-            }
-            const objetsJSON = findJSONObjects(payload);
-            if (objetsJSON.length > 0) {
-                objetsJSON.forEach(async (object) => {
-                    const jsonString = JSON.stringify(object);
-                    const buffer = Buffer.from(jsonString, "utf8");
-                    await this.message(buffer);
-                });
-            }
-            return;
-        }
+        let payload = JSON.parse(data.toString("utf8"));
         if (!payload.op)
             return;
         this.manager.emit("nodeRaw", this, payload);

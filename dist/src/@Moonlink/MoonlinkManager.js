@@ -418,7 +418,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 paused: false,
                 shuffled: false,
                 loop: null,
-                autoPlay: data.autoPlay !== undefined ? data.autoPlay : true,
+                autoPlay: data.autoPlay !== undefined ? data.autoPlay : true, // Default to true if not provided
                 node: data.node || nodeSorted?.identifier || nodeSorted?.host,
             };
             this.map.set("players", players_map);

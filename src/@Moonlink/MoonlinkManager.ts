@@ -546,10 +546,10 @@ export class MoonlinkManager extends EventEmitter {
           query.startsWith("http://") || query.startsWith("https://")
             ? query
             : source
-            ? sources[source]
-              ? `${sources[source]}:${query}`
-              : `${source}:${query}`
-            : `ytsearch:${query}`;
+              ? sources[source]
+                ? `${sources[source]}:${query}`
+                : `${source}:${query}`
+              : `ytsearch:${query}`;
 
         if (source == "spotify") {
           resolve(await this.spotify.fetch(query));
