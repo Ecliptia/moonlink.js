@@ -2,7 +2,7 @@
 
 # Moonlink.js - Awaken Your Musical Creativity with Holiday Magic 🚀
 
-<img src='https://media.discordapp.net/attachments/979497984481972335/1158871758846316624/48_Sem_Titulo_20231003180223.png?ex=651e7bae&is=651d2a2e&hm=0fe112176d09faadcaf1ea00e3927e8616d0e20d5a3ba170ac05fc2874315cfa&'></img>
+<img src='https://media.discordapp.net/attachments/987017309325492275/1178469144480469162/IMG_20221121_083735.png?ex=657641ea&is=6563ccea&hm=73fe8252eebed251ef5f6c486ff52a06e6ece9abae7e1cc566306922ef73b185&'></img>
 [![NPM](https://nodei.co/npm/moonlink.js.png)](https://nodei.co/npm/moonlink.js)
 
 [![Made with ♥️ in - Brazil](https://img.shields.io/badge/Made_with_♥️_in-Brazil-ED186A?style=for-the-badge)](https://github.com/1Lucas1apk)
