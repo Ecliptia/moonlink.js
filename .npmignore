@@ -14,7 +14,5 @@ main.sh
 .gitignore
 .prettierignore
 .github
-/src
 /docs
 /testBot
-index.ts
