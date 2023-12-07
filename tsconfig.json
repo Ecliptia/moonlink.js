@@ -5,6 +5,10 @@
     "moduleResolution": "node",
     "target": "ESNext",
     "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "package.json": ["./package.json"]
+    },
     "sourceMap": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -12,7 +16,10 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "alwaysStrict": true,
+    "resolveJsonModule": true,
+    "removeComments": true
   },
-  "include": ["src", "index.ts"]
+  "include": ["src","index.ts"]
 }
