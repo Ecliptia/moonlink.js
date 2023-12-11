@@ -1,21 +1,24 @@
-import { INodes } from "../@Typings";
+import { INode } from "../@Typings";
+import { MoonlinkManager } from "../../index";
 export class Players {
     public _manager: MoonlinkManager;
     public map: Map<any, any>;
-    constructor(manager) {
+    constructor() {
         this.map = new Map();
-        this.manager = manager;
+    }
+    public init(): void {
+        this._manager = Structure.manager;
     }
 }
 export class Nodes {
     public readonly initiated: boolean = false;
     public _manager: MoonlinkManager;
     public map: Map<any, any>;
-    constructor(manager) {
+    constructor() {
         this.map = new Map();
-        this.manager = manager;
     }
     public init(): void {
+        this._manager = Structure.manager;
         this.check();
         this.initiated = true;
     }
@@ -32,13 +35,15 @@ export class Nodes {
             );
         this._manager?._nodes.forEach(node => this.add(node));
     }
-    public add(node: INodes): INodes {
-        this.map.set();
-    }
+    public add(node: INodes): void {}
 }
 
-const structures = {};
+const structures = {
+    Players,
+    Nodes
+};
 export abstract class Structure {
+    public static manager: Manager;
     public static extend<K extends keyof Extendable, T extends Extendable[K]>(
         name: K,
         extender: (target: Extendable[K]) => T
@@ -51,7 +56,9 @@ export abstract class Structure {
         structures[name] = extended;
         return extended;
     }
-
+    public static init(manager: MoonlinkManager): void {
+        this.manager = manager;
+    }
     public static get<K extends keyof Extendable>(name: K): Extendable[K] {
         const structure = structures[name];
         if (!structure) {

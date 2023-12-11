@@ -1,9 +1,10 @@
 import { EventEmitter } from "node:events";
+import { Structure } from "../../index";
 import { Players, Nodes } from "../@Utils/Structure";
-import { INodes, IOptions } from "../@Typings";
+import { INode, IOptions } from "../@Typings";
 
 export class MoonlinkManager extends EventEmittir {
-    public readonly _nodes: INodes[];
+    public readonly _nodes: INode[];
     public readonly _SPayload: Function;
     public readonly players: Players;
     public readonly nodes: Nodes;
@@ -11,21 +12,23 @@ export class MoonlinkManager extends EventEmittir {
     public options: IOptions;
     public initiated: boolean = false;
 
-    constructor(nodes: INodes[], options: IOptions, SPayload: Function) {
+    constructor(nodes: INode[], options: IOptions, SPayload: Function) {
         this._nodes = nodes;
         this._SPayload = SPayload;
-        this.players = new Players(this);
-        this.nodes = new Nodes(this);
+        this.players = new Structure.get("Players");
+        this.nodes = new Structure.get("Nodes");
         this.options = options;
     }
     public init(clientId?: number): this {
         if (this.initiated) return this;
-        if (!clientId && this.options.clientId)
+        if (!clientId && !this.options.clientId)
             throw new TypeError(
                 '[ @Moonlink/Manager ]: "clientId" option is required.'
             );
         this.clientId = this.options.clientId;
+        Structure.init(this);
         this.nodes.init();
+        this.players.init();
         this.initated = true;
         return this;
     }
