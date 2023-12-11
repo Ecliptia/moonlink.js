@@ -13,6 +13,7 @@ export class MoonlinkManager extends EventEmittir {
     public initiated: boolean = false;
 
     constructor(nodes: INode[], options: IOptions, SPayload: Function) {
+        super();
         this._nodes = nodes;
         this._SPayload = SPayload;
         this.players = new Structure.get("Players");

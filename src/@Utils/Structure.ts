@@ -35,7 +35,7 @@ export class Nodes {
             );
         this._manager?._nodes.forEach(node => this.add(node));
     }
-    public add(node: INodes): void {}
+    public add(node: INode): void {}
 }
 
 const structures = {
