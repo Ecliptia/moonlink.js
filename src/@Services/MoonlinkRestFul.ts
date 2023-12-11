@@ -1,6 +1,6 @@
-import { MoonlinkManager, MoonlinkNode, Structure } from "../../index";
+import { makeRequest, MoonlinkManager, MoonlinkNode, Structure } from "../../index";
 import {} from "../@Typings";
-export class MoonlinkRest {
+export class MoonlinkRestFul {
     public manager: MoonlinkManager;
     public sessionId: string;
     public node: MoonlinkNode;
@@ -83,10 +83,7 @@ export class MoonlinkRest {
 
     private ensureUrlIsSet() {
         if (!this.url) {
-            this.url = this.node.restUri;
-        }
-        if (!this.sessionId) {
-            this.sessionId = this.node.manager.map.get("sessionId");
+            this.url = this.node.http;
         }
     }
 

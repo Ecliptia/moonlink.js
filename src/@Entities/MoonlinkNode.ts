@@ -66,6 +66,7 @@ export class MoonlinkNode {
                 deficit: 0
             }
         };
+        this.restFul = new MoonlinkRestFul(this);
     }
     public init(): void {
         this.connect();
@@ -109,6 +110,12 @@ export class MoonlinkNode {
                 '[ @Moonlink/Node ]: the "retryDelay" option is not set correctly'
             );
     }
+
+    public request(endpoint: string, params: any): Promise<object> {
+        this.calls++;
+        return this.rest.get(`${endpoint}?${params}`);
+    }
+
     public async connect(): Promise<void | never> {
         if (this.connected) return;
         let headers: IHeaders = {
@@ -125,6 +132,25 @@ export class MoonlinkNode {
         this.socket.on("error", this.error.bind(this));
     }
     public open(): void {
+        if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
         this.connect = true;
+    }
+    private reconnect(): void {
+        if (this.reconnectAtattempts >= this.retryAmount) {
+            this.socket.close(1000, "destroy");
+            this.socket.removeAllListeners();
+        } else {
+            this.reconnectTimeout = setTimeout(() => {
+                this.socket.removeAllListeners();
+                this.socket = null;
+                this.connected = false;
+                this.connect();
+                this.reconnectAtattempts++;
+            }, this.retryTime);
+        }
+    }
+    protected close(code: number, reason: any): void {
+        if (code !== 1000 || reason !== "destroy") this.reconnect();
+        this.connected = false;
     }
 }

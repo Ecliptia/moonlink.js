@@ -31,3 +31,9 @@ export interface INode {
 export interface IOptions {
     clientId?: string;
 }
+
+export interface IHeaders {
+  Authorization: string;
+  "User-Id": string;
+  "Client-Name": string;
+}
