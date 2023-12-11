@@ -1,8 +1,13 @@
 import { INodeStats } from "../../@Typings";
-import { MoonlinkManager, MoonlinkRestFul, Structure } from "../../index";
+import {
+    MoonlinkManager,
+    MoonlinkRestFul,
+    Structure,
+    WebSocket
+} from "../../index";
 
 export class MoonlinkNode {
-    private static _manage: MoonlinkManager;
+    private static _manager: MoonlinkManager;
     private reconnectTimeout?: NodeJS.Timeout;
     private reconnectAttempts: number = 1;
     private retryAmount: number;
@@ -18,6 +23,7 @@ export class MoonlinkNode {
     public connected: boolean;
     public resume?: boolean;
     public resumed?: boolean;
+    public sessionId: string;
     public socket: WebSocket | null;
     public stats: INodeStats;
     public calls: number;
@@ -38,30 +44,32 @@ export class MoonlinkNode {
             : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${address}/v4/`;
-        
-            this.stats = {
-      players: 0,
-      playingPlayers: 0,
-      uptime: 0,
-      memory: {
-        free: 0,
-        used: 0,
-        allocated: 0,
-        reservable: 0,
-      },
-      cpu: {
-        cores: 0,
-        systemLoad: 0,
-        lavalinkLoad: 0,
-      },
-      frameStats: {
-        sent: 0,
-        nulled: 0,
-        deficit: 0,
-      },
-    };
-  }
-    
+
+        this.stats = {
+            players: 0,
+            playingPlayers: 0,
+            uptime: 0,
+            memory: {
+                free: 0,
+                used: 0,
+                allocated: 0,
+                reservable: 0
+            },
+            cpu: {
+                cores: 0,
+                systemLoad: 0,
+                lavalinkLoad: 0
+            },
+            frameStats: {
+                sent: 0,
+                nulled: 0,
+                deficit: 0
+            }
+        };
+    }
+    public init(): void {
+        this.connect();
+    }
     public get address(): string {
         return `${this.host}:${this.port}`;
     }
@@ -100,5 +108,23 @@ export class MoonlinkNode {
             throw new Error(
                 '[ @Moonlink/Node ]: the "retryDelay" option is not set correctly'
             );
+    }
+    public async connect(): Promise<void | never> {
+        if (this.connected) return;
+        let headers: IHeaders = {
+            Authorization: this.password,
+            "User-Id": this._manager.options.clientId,
+            "Client-Name": this._manager.options.clientName
+        };
+        this.socket = new WebSocket(
+            `ws${this.secure ? "s" : ""}://${address}/v4/websocket`
+        );
+        this.socket.on("open", this.open.bind(this));
+        this.socket.on("close", this.close.bind(this));
+        this.socket.on("message", this.message.bind(this));
+        this.socket.on("error", this.error.bind(this));
+    }
+    public open(): void {
+        this.connect = true;
     }
 }
