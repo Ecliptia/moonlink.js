@@ -1,16 +1,5 @@
-import {
-    MoonlinkManager,
-    MoonlinkPlayer,
-    MoonlinkDatabase,
-    MoonlinkQueue,
-    MoonlinkNode,
-    MoonlinkTrack,
-    Players,
-    Nodes
-} from "../..";
-
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, Players, Nodes } from "../..";
 export type Constructor<T> = new (...args: any[]) => T;
-
 export interface createOptions {
     guildId: string;
     textChannel: string;
@@ -19,48 +8,34 @@ export interface createOptions {
     volume?: number;
     node?: string;
 }
-
-export type SortType =
-    | "memory"
-    | "cpuLavalink"
-    | "cpuSystem"
-    | "calls"
-    | "playingPlayers"
-    | "players";
-
+export type SortType = "memory" | "cpuLavalink" | "cpuSystem" | "calls" | "playingPlayers" | "players";
 export interface VoiceState {
     op: "voiceUpdate";
     guildId: string;
     event: VoiceServer;
     sessionId?: string;
 }
-
 export interface VoiceServer {
     token: string;
     guild_id: string;
     endpoint: string;
 }
-
 export interface VoiceState {
     guild_id: string;
     user_id: string;
     session_id: string;
     channel_id: string;
 }
-
 export interface VoicePacket {
     t?: "VOICE_SERVER_UPDATE" | "VOICE_STATE_UPDATE";
     d: VoiceState | VoiceServer;
 }
-
 export type LoadType = "track" | "playlist" | "search" | "empty" | "error";
-
 export interface TrackData {
     encoded?: string;
     info: TrackDataInfo;
     pluginInfo: object;
 }
-
 export interface TrackDataInfo {
     title: string;
     identifier: string;
@@ -71,14 +46,11 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-
 export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
-
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;
 }
-
 export interface SearchResult {
     loadType: LoadType;
     tracks: MoonlinkTrack[];
@@ -88,7 +60,6 @@ export interface SearchResult {
         severity: string;
     };
 }
-
 export interface INodeStats {
     players: number;
     playingPlayers: number;
@@ -117,17 +88,14 @@ export interface INode {
     port: number;
     secure: boolean;
 }
-
 export interface IOptions {
     clientId?: string;
 }
-
 export interface IHeaders {
     Authorization: string;
     "User-Id": string;
     "Client-Name": string;
 }
-
 export interface Extendable {
     MoonlinkManager: typeof MoonlinkManager;
     MoonlinkPlayer: typeof MoonlinkPlayer;
@@ -137,13 +105,11 @@ export interface Extendable {
     Players: typeof Players;
     Nodes: typeof Nodes;
 }
-
 export interface PlaylistInfo {
     name: string;
     selectedTrack?: MoonlinkTrack;
     duration: number;
 }
-
 export interface LavalinkResult {
     data: TrackData[];
     loadType: LoadType;
@@ -156,9 +122,7 @@ export interface LavalinkResult {
         selectedTrack?: number;
     };
 }
-
 export interface MoonlinkEvents {
-    /* Logic created by PiscesXD */
     autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
     debug: (...args: any) => void;
     nodeCreate: (node: MoonlinkNode) => void;
@@ -175,33 +139,15 @@ export interface MoonlinkEvents {
     playerCreated: (guildId: string) => void;
     playerDisconnect: (player: MoonlinkPlayer) => void;
     playerResume: (player: MoonlinkPlayer) => void;
-    playerMove: (
-        player: MoonlinkPlayer,
-        newVoiceChannel: string,
-        oldVoiceChannel: string
-    ) => void;
+    playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
-
 export declare interface MoonlinkManager {
-    on<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
-    once<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
-    emit<K extends keyof MoonlinkEvents>(
-        event: K,
-        ...args: Parameters<MoonlinkEvents[K]>
-    ): boolean;
-    off<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
+    on<K extends keyof MoonlinkEvents>(event: K, listener: MoonlinkEvents[K]): this;
+    once<K extends keyof MoonlinkEvents>(event: K, listener: MoonlinkEvents[K]): this;
+    emit<K extends keyof MoonlinkEvents>(event: K, ...args: Parameters<MoonlinkEvents[K]>): boolean;
+    off<K extends keyof MoonlinkEvents>(event: K, listener: MoonlinkEvents[K]): this;
 }
-
 export interface VoiceOptions {
     endpoint: string;
     token: string;
@@ -209,7 +155,6 @@ export interface VoiceOptions {
     connected?: boolean;
     ping?: number;
 }
-
 export interface RestOptions {
     guildId: string;
     data: {
@@ -224,18 +169,10 @@ export interface RestOptions {
         voice?: VoiceOptions;
     };
 }
-
-/**
- * Interface for optional connection options.
- */
 export interface connectOptions {
     setMute?: boolean;
     setDeaf?: boolean;
 }
-
-/**
- * Interface for player information.
- */
 export interface PlayerInfos {
     guildId: string;
     textChannel: string | null;

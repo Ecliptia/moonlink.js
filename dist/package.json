@@ -1,0 +1,45 @@
+{
+    "name": "moonlink.js",
+    "version": "3.0.0",
+    "description": "Imagine a Music... 🌙✨ Welcome to Moonlink.js! We invite you to create your own music bot on Discord using Lavalink, in a simple and easy way! 🎶🤖",
+    "keywords": [
+        "bot",
+        "discord.js",
+        "moonlink",
+        "discord",
+        "easy",
+        "lavalink",
+        "music"
+    ],
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {},
+    "homepage": "https://moonlink.js.org",
+    "bugs": {
+        "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
+        "email": "1Lucas1apk@gmail.com"
+    },
+    "license": {
+        "type": "Apache-2.0",
+        "url": "https://opensource.org/licenses/apache2.0.php"
+    },
+    "contributors": [
+        "1Lucas1.apk"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/1Lucas1apk/moonlink.js"
+    },
+    "engines": {},
+    "devDependencies": {
+        "@types/node": "^18.15.11"
+    }
+}
