@@ -1,9 +1,15 @@
 import { EventEmitter } from "node:events";
-import { Structure } from "../../index";
+import { Structure } from "../..";
 import { Players, Nodes } from "../@Utils/Structure";
-import { INode, IOptions } from "../@Typings";
+import {
+    INode,
+    IOptions,
+    VoicePacket,
+    SearchResult,
+    SearchQuery
+} from "../@Typings";
 
-export class MoonlinkManager extends EventEmittir {
+export class MoonlinkManager extends EventEmitter {
     public readonly _nodes: INode[];
     public readonly _SPayload: Function;
     public readonly players: Players;
@@ -33,8 +39,102 @@ export class MoonlinkManager extends EventEmittir {
         Structure.init(this);
         this.nodes.init();
         this.players.init();
-        this.initated = true;
+        this.initiated = true;
         return this;
+    }
+    public async search(options: string | SearchQuery): Promise<SearchResult> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (!options) {
+                    throw new Error(
+                        "[ @Moonlink/Manager ]: the search option has to be in string format or in an array"
+                    );
+                }
+
+                let query;
+                let source;
+
+                if (typeof options === "object") {
+                    query = options.query;
+                    source = options.source;
+                } else {
+                    query = options;
+                }
+
+                if (source && typeof source !== "string") {
+                    throw new Error(
+                        "[ @Moonlink/Manager ]: the source option has to be in string format"
+                    );
+                }
+
+                if (typeof query !== "string" && typeof query !== "object") {
+                    throw new Error(
+                        "[ @Moonlink/Manager ]: (search) the search option has to be in string or array format"
+                    );
+                }
+
+                const sources = {
+                    youtube: "ytsearch",
+                    youtubemusic: "ytmsearch",
+                    soundcloud: "scsearch"
+                };
+
+                let searchIdentifier =
+                    query.startsWith("http://") || query.startsWith("https://")
+                        ? query
+                        : source
+                        ? sources[source]
+                            ? `${sources[source]}:${query}`
+                            : `${source}:${query}`
+                        : `ytsearch:${query}`;
+
+                const params = new URLSearchParams({
+                    identifier: searchIdentifier
+                });
+                const res: any = await this.nodes
+                    .sortByUsage("memory")[0]
+                    .request("loadtracks", params);
+                if (["error", "empty"].includes(res.loadType)) {
+                    this.emit(
+                        "debug",
+                        "[ @Moonlink/Manager ]: not found or there was an error loading the track"
+                    );
+                    return resolve(res);
+                }
+
+                if (["track"].includes(res.loadType)) {
+                    res.data = [res.data];
+                }
+
+                if (["playlist"].includes(res.loadType)) {
+                    res.playlistInfo = {
+                        duration: res.data.tracks.reduce(
+                            (acc, cur) => acc + cur.info.length,
+                            0
+                        ),
+                        name: res.data.info.name,
+                        selectedTrack: res.data.info.selectedTrack
+                    };
+                    res.pluginInfo = res.data.pluginInfo;
+                    res.data = [...res.data.tracks];
+                }
+
+                const tracks = res.data.map(
+                    x => new (Structure.get("MoonlinkTrack"))(x)
+                );
+
+                resolve({
+                    ...res,
+                    tracks
+                });
+            } catch (error) {
+                this.emit(
+                    "debug",
+                    "[ @Moonlink/Manager ]: An error occurred: " + error.message
+                );
+                reject(error);
+            }
+        });
     }
     public packetUpdate(packet: VoicePacket): void {
         const { t, d } = packet;

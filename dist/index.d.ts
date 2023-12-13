@@ -1,6 +1,4 @@
-import packageJson from "./package.json";
-
-export const version: string = packageJson.version as string;
+export declare const version: string;
 export * from "./@Managers/MoonlinkManager";
 export * from "./@Entities/MoonlinkNode";
 export * from "./@Entities/MoonlinkPlayer";

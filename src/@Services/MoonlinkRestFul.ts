@@ -1,5 +1,5 @@
-import { makeRequest, MoonlinkManager, MoonlinkNode, Structure } from "../../index";
-import {} from "../@Typings";
+import { makeRequest, MoonlinkManager, MoonlinkNode, Structure } from "../..";
+import { RestOptions, Endpoint} from "../@Typings";
 export class MoonlinkRestFul {
     public manager: MoonlinkManager;
     public sessionId: string;

@@ -1,13 +1,8 @@
-import { INodeStats } from "../../@Typings";
-import {
-    MoonlinkManager,
-    MoonlinkRestFul,
-    Structure,
-    WebSocket
-} from "../../index";
+import { INodeStats, INode } from "../@Typings";
+import { MoonlinkManager, MoonlinkRestFul, Structure, WebSocket } from "../..";
 
 export class MoonlinkNode {
-    private static _manager: MoonlinkManager;
+    private _manager: MoonlinkManager;
     private reconnectTimeout?: NodeJS.Timeout;
     private reconnectAttempts: number = 1;
     private retryAmount: number;
@@ -43,7 +38,7 @@ export class MoonlinkNode {
                 : 80
             : null;
         this.secure = node.secure || false;
-        this.http = `http${node.secure ? "s" : ""}://${address}/v4/`;
+        this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
 
         this.stats = {
             players: 0,
@@ -116,7 +111,7 @@ export class MoonlinkNode {
         return this.rest.get(`${endpoint}?${params}`);
     }
 
-    public async connect(): Promise<void | never> {
+    public async connect(): Promise<any> {
         if (this.connected) return;
         let headers: IHeaders = {
             Authorization: this.password,
@@ -136,7 +131,7 @@ export class MoonlinkNode {
         this.connect = true;
     }
     private reconnect(): void {
-        if (this.reconnectAtattempts >= this.retryAmount) {
+        if (this.reconnectAttempts >= this.retryAmount) {
             this.socket.close(1000, "destroy");
             this.socket.removeAllListeners();
         } else {
@@ -145,7 +140,7 @@ export class MoonlinkNode {
                 this.socket = null;
                 this.connected = false;
                 this.connect();
-                this.reconnectAtattempts++;
+                this.reconnectAttempts++;
             }, this.retryTime);
         }
     }
