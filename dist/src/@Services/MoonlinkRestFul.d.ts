@@ -1,4 +1,4 @@
-import { MoonlinkManager, MoonlinkNode } from "../..";
+import { MoonlinkManager, MoonlinkNode } from "../../index";
 import { RestOptions, Endpoint } from "../@Typings";
 export declare class MoonlinkRestFul {
     manager: MoonlinkManager;

@@ -1,5 +1,5 @@
 import { INodeStats, INode } from "../@Typings";
-import { MoonlinkRestFul, WebSocket } from "../..";
+import { MoonlinkRestFul, WebSocket } from "../../index";
 export declare class MoonlinkNode {
     private _manager;
     private reconnectTimeout?;
@@ -12,7 +12,7 @@ export declare class MoonlinkNode {
     port: number | null;
     secure: boolean;
     http: string;
-    restFul: MoonlinkRestFul;
+    rest: MoonlinkRestFul;
     connected: boolean;
     resume?: boolean;
     resumed?: boolean;

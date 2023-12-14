@@ -5,7 +5,8 @@ import {
     MoonlinkDatabase,
     MoonlinkQueue,
     MoonlinkNode
-} from "../..";
+} from "../../index";
+
 export class Players {
     public _manager: MoonlinkManager;
     public map: Map<any, any>;
@@ -28,7 +29,6 @@ export class Players {
         player: MoonlinkPlayer,
         guildId: string
     ): void {
-        this.emit("playerDisconnect", player);
         const players = this.map.get("players") || {};
         players[guildId] = {
             ...players[guildId],
@@ -162,7 +162,7 @@ export class Players {
 
         return new (Structure.get("MoonlinkPlayer"))(
             players_map[data.guildId],
-            this,
+            this._manager,
             this.map
         );
     }
@@ -272,11 +272,13 @@ export class Nodes {
     }
 }
 
-const structures: any = {
+const structures: Extendable = {
+    MoonlinkManager: require("../@Managers/MoonlinkManager").MoonlinkManager,
     MoonlinkNode: require("../@Entities/MoonlinkNode").MoonlinkNode,
     MoonlinkPlayer: require("../@Entities/MoonlinkPlayer").MoonlinkPlayer,
-    MoonlinkDatabase: require("../MoonlinkDatabase").MoonlinkDatabase,
+    MoonlinkDatabase: require("./MoonlinkDatabase").MoonlinkDatabase,
     MoonlinkQueue: require("../@Entities/MoonlinkQueue").MoonlinkQueue,
+    MoonlinkTrack: require("../MoonlinkTrack").MoonlinkTrack,
     Players,
     Nodes
 };

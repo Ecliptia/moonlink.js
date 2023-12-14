@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkRestFul = void 0;
-const __1 = require("../..");
+const index_1 = require("../../index");
 class MoonlinkRestFul {
     manager;
     sessionId;
     node;
     url;
     constructor(node) {
-        this.manager = __1.Structure.manager;
+        this.manager = index_1.Structure.manager;
         this.node = node;
     }
     setSessionId(sessionId) {
@@ -68,7 +68,7 @@ class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return (0, __1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "GET",
             headers
         }).catch(err => err);
@@ -77,7 +77,7 @@ class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return (0, __1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "POST",
             headers
         }, data).catch(err => err);
@@ -86,7 +86,7 @@ class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return (0, __1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "PATCH",
             headers
         }, data).catch(err => err);
@@ -95,7 +95,7 @@ class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return (0, __1.makeRequest)(this.url + endpoint, {
+        return (0, index_1.makeRequest)(this.url + endpoint, {
             method: "DELETE",
             headers
         }).catch(err => err);

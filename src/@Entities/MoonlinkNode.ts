@@ -1,5 +1,10 @@
-import { INodeStats, INode } from "../@Typings";
-import { MoonlinkManager, MoonlinkRestFul, Structure, WebSocket } from "../..";
+import { INodeStats, INode, IHeaders } from "../@Typings";
+import {
+    MoonlinkManager,
+    MoonlinkRestFul,
+    Structure,
+    WebSocket
+} from "../../index";
 
 export class MoonlinkNode {
     private _manager: MoonlinkManager;
@@ -14,7 +19,7 @@ export class MoonlinkNode {
     public port: number | null;
     public secure: boolean;
     public http: string;
-    public restFul: MoonlinkRestFul;
+    public rest: MoonlinkRestFul;
     public connected: boolean;
     public resume?: boolean;
     public resumed?: boolean;
@@ -61,7 +66,7 @@ export class MoonlinkNode {
                 deficit: 0
             }
         };
-        this.restFul = new MoonlinkRestFul(this);
+        this.rest = new MoonlinkRestFul(this);
     }
     public init(): void {
         this.connect();
@@ -119,7 +124,8 @@ export class MoonlinkNode {
             "Client-Name": this._manager.options.clientName
         };
         this.socket = new WebSocket(
-            `ws${this.secure ? "s" : ""}://${address}/v4/websocket`
+            `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
+            { headers }
         );
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -128,7 +134,7 @@ export class MoonlinkNode {
     }
     public open(): void {
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-        this.connect = true;
+        this.connected = true;
     }
     private reconnect(): void {
         if (this.reconnectAttempts >= this.retryAmount) {
@@ -141,7 +147,7 @@ export class MoonlinkNode {
                 this.connected = false;
                 this.connect();
                 this.reconnectAttempts++;
-            }, this.retryTime);
+            }, this.retryDelay);
         }
     }
     protected close(code: number, reason: any): void {

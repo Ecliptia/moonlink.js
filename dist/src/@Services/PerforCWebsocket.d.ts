@@ -1,9 +1,7 @@
 /// <reference types="node" />
-/// <reference types="node" />
-import http from "node:http";
 import EventEmitter from "node:events";
 export type WebSocketOptions = {
-    headers?: http.OutgoingHttpHeaders | undefined;
+    headers?: any;
     timeout?: number;
 };
 export type FrameOptions = {

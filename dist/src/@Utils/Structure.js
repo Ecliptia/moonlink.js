@@ -18,7 +18,6 @@ class Players {
         this.attemptConnection(guildId);
     }
     handlePlayerDisconnect(player, guildId) {
-        this.emit("playerDisconnect", player);
         const players = this.map.get("players") || {};
         players[guildId] = {
             ...players[guildId],
@@ -125,7 +124,7 @@ class Players {
             node: data.node || nodeSorted?.identifier || nodeSorted?.host
         };
         this.map.set("players", players_map);
-        return new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this, this.map);
+        return new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
     }
     get all() {
         return this.map.get("players") ? this.map.get("players") : null;
@@ -212,10 +211,12 @@ class Nodes {
 }
 exports.Nodes = Nodes;
 const structures = {
+    MoonlinkManager: require("../@Managers/MoonlinkManager").MoonlinkManager,
     MoonlinkNode: require("../@Entities/MoonlinkNode").MoonlinkNode,
     MoonlinkPlayer: require("../@Entities/MoonlinkPlayer").MoonlinkPlayer,
-    MoonlinkDatabase: require("../MoonlinkDatabase").MoonlinkDatabase,
+    MoonlinkDatabase: require("./MoonlinkDatabase").MoonlinkDatabase,
     MoonlinkQueue: require("../@Entities/MoonlinkQueue").MoonlinkQueue,
+    MoonlinkTrack: require("../MoonlinkTrack").MoonlinkTrack,
     Players,
     Nodes
 };

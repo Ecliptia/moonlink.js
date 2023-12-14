@@ -1,5 +1,5 @@
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkNode } from "../..";
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkNode } from "../../index";
 export declare class Players {
     _manager: MoonlinkManager;
     map: Map<any, any>;

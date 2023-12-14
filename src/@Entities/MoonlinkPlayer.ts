@@ -1,11 +1,10 @@
 import {
-    MoonlinkRest,
+    MoonlinkRestFul,
     MoonlinkManager,
     MoonlinkQueue,
-    MoonlinkFilters,
     MoonlinkNode,
     Structure
-} from "../..";
+} from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export class MoonlinkPlayer {
     private manager: MoonlinkManager;
@@ -23,12 +22,11 @@ export class MoonlinkPlayer {
     public volume: number;
     public shuffled: boolean | null;
     public queue: MoonlinkQueue;
-    public filters: MoonlinkFilters;
     public current: Record<string, any>;
     public previous: Record<string, any>;
     public data: Record<string, any>;
     public node: MoonlinkNode | any;
-    public rest: MoonlinkRest;
+    public rest: MoonlinkRestFul;
 
     /**
      * Creates an instance of MoonlinkPlayer.
@@ -176,7 +174,7 @@ export class MoonlinkPlayer {
         options = options || { setDeaf: false, setMute: false };
         const { setDeaf, setMute } = options;
         this.set("connected", true);
-        this.manager.SPayload(
+        this.manager._SPayload(
             this.guildId,
             JSON.stringify({
                 op: 4,
@@ -198,7 +196,7 @@ export class MoonlinkPlayer {
     public disconnect(): boolean {
         this.set("connected", false);
         this.set("voiceChannel", null);
-        this.manager.SPayload(
+        this.manager._SPayload(
             this.guildId,
             JSON.stringify({
                 op: 4,
@@ -218,7 +216,7 @@ export class MoonlinkPlayer {
      */
     public async restart(): Promise<void> {
         if (!this.current) return;
-        await this.manager.attemptConnection(this.guildId);
+        await this.manager.players.attemptConnection(this.guildId);
         await this.rest.update({
             guildId: this.guildId,
             data: {
