@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkManager = void 0;
 const node_events_1 = require("node:events");
-const __1 = require("../..");
+const index_1 = require("../../index");
 class MoonlinkManager extends node_events_1.EventEmitter {
+    clientId;
     _nodes;
     _SPayload;
     players;
@@ -15,11 +16,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         super();
         this._nodes = nodes;
         this._SPayload = SPayload;
-        this.players = new __1.Structure.get("Players");
-        this.nodes = new __1.Structure.get("Nodes");
+        this.players = new (index_1.Structure.get("Players"))();
+        this.nodes = new (index_1.Structure.get("Nodes"))();
         this.options = options;
         this.options.clientName
-            ? (this.options.clientName = `Moonlink/${this.manager.version}`)
+            ? (this.options.clientName = `Moonlink/${this.version}`)
             : null;
     }
     init(clientId) {
@@ -28,7 +29,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         if (!clientId && !this.options.clientId)
             throw new TypeError('[ @Moonlink/Manager ]: "clientId" option is required.');
         this.clientId = this.options.clientId;
-        __1.Structure.init(this);
+        index_1.Structure.init(this);
         this.nodes.init();
         this.players.init();
         this.initiated = true;
@@ -89,7 +90,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
-                const tracks = res.data.map(x => new (__1.Structure.get("MoonlinkTrack"))(x));
+                const tracks = res.data.map(x => new (index_1.Structure.get("MoonlinkTrack"))(x));
                 resolve({
                     ...res,
                     tracks

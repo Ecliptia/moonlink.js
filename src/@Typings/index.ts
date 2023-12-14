@@ -116,10 +116,14 @@ export interface INode {
     password: string;
     port: number;
     secure: boolean;
+    retryAmount?: number;
+    retryDelay?: number;
 }
 
 export interface IOptions {
     clientId?: string;
+    clientName?: string;
+    sortNode?: SortType;
 }
 
 export interface IHeaders {
@@ -134,6 +138,7 @@ export interface Extendable {
     MoonlinkDatabase: typeof MoonlinkDatabase;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
+    MoonlinkTrack: typeof MoonlinkTrack
     Players: typeof Players;
     Nodes: typeof Nodes;
 }
@@ -183,25 +188,6 @@ export interface MoonlinkEvents {
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 
-export declare interface MoonlinkManager {
-    on<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
-    once<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
-    emit<K extends keyof MoonlinkEvents>(
-        event: K,
-        ...args: Parameters<MoonlinkEvents[K]>
-    ): boolean;
-    off<K extends keyof MoonlinkEvents>(
-        event: K,
-        listener: MoonlinkEvents[K]
-    ): this;
-}
-
 export interface VoiceOptions {
     endpoint: string;
     token: string;
@@ -209,7 +195,7 @@ export interface VoiceOptions {
     connected?: boolean;
     ping?: number;
 }
-
+export type Endpoint = string;
 export interface RestOptions {
     guildId: string;
     data: {
@@ -249,4 +235,23 @@ export interface PlayerInfos {
     loop?: number | null;
     volume?: number | null;
     node?: string;
+}
+
+export interface TrackInfo {
+    identifier: string;
+    isSeekable: boolean;
+    author: string;
+    isStream: boolean;
+    length: number;
+    position: number;
+    title: string;
+    uri?: string;
+    artworkUrl?: string | null;
+    sourceName: string;
+    isrc?: string;
+}
+export interface MoonlinkTrackOptions {
+    info: TrackInfo;
+    encoded?: string;
+    pluginInfo?: object;
 }

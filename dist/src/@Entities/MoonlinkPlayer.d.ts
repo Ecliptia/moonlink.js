@@ -1,4 +1,4 @@
-import { MoonlinkRest, MoonlinkManager, MoonlinkQueue, MoonlinkFilters, MoonlinkNode } from "../..";
+import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     private manager;
@@ -16,12 +16,11 @@ export declare class MoonlinkPlayer {
     volume: number;
     shuffled: boolean | null;
     queue: MoonlinkQueue;
-    filters: MoonlinkFilters;
     current: Record<string, any>;
     previous: Record<string, any>;
     data: Record<string, any>;
     node: MoonlinkNode | any;
-    rest: MoonlinkRest;
+    rest: MoonlinkRestFul;
     constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>);
     private updatePlayers;
     set(key: string, value: unknown): void;

@@ -1,15 +1,34 @@
 import { EventEmitter } from "node:events";
-import { Structure } from "../..";
+import { Structure, MoonlinkPlayer, MoonlinkTrack } from "../../index";
 import { Players, Nodes } from "../@Utils/Structure";
 import {
     INode,
     IOptions,
     VoicePacket,
     SearchResult,
-    SearchQuery
+    SearchQuery,
+    MoonlinkEvents
 } from "../@Typings";
-
+export declare interface MoonlinkManager {
+    on<K extends keyof MoonlinkEvents>(
+        event: K,
+        listener: MoonlinkEvents[K]
+    ): this;
+    once<K extends keyof MoonlinkEvents>(
+        event: K,
+        listener: MoonlinkEvents[K]
+    ): this;
+    emit<K extends keyof MoonlinkEvents>(
+        event: K,
+        ...args: Parameters<MoonlinkEvents[K]>
+    ): boolean;
+    off<K extends keyof MoonlinkEvents>(
+        event: K,
+        listener: MoonlinkEvents[K]
+    ): this;
+}
 export class MoonlinkManager extends EventEmitter {
+    public clientId: string;
     public readonly _nodes: INode[];
     public readonly _SPayload: Function;
     public readonly players: Players;
@@ -22,11 +41,11 @@ export class MoonlinkManager extends EventEmitter {
         super();
         this._nodes = nodes;
         this._SPayload = SPayload;
-        this.players = new Structure.get("Players");
-        this.nodes = new Structure.get("Nodes");
+        this.players = new (Structure.get("Players"))();
+        this.nodes = new (Structure.get("Nodes"))();
         this.options = options;
         this.options.clientName
-            ? (this.options.clientName = `Moonlink/${this.manager.version}`)
+            ? (this.options.clientName = `Moonlink/${this.version}`)
             : null;
     }
     public init(clientId?: number): this {
@@ -120,7 +139,7 @@ export class MoonlinkManager extends EventEmitter {
                 }
 
                 const tracks = res.data.map(
-                    x => new (Structure.get("MoonlinkTrack"))(x)
+                    x => new (Structure.get("MoonlinkTrack"))(x) as MoonlinkTrack
                 );
 
                 resolve({
@@ -142,7 +161,7 @@ export class MoonlinkManager extends EventEmitter {
 
         const update: any = d;
         const guildId = update.guild_id;
-        const player: MoonlinkPlayers = this.players.get(guildId);
+        const player: MoonlinkPlayer = this.players.get(guildId);
 
         if (!update || (!update.token && !update.session_id)) return;
 

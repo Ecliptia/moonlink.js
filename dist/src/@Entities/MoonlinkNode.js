@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkNode = void 0;
-const __1 = require("../..");
+const index_1 = require("../../index");
 class MoonlinkNode {
     _manager;
     reconnectTimeout;
@@ -14,7 +14,7 @@ class MoonlinkNode {
     port;
     secure;
     http;
-    restFul;
+    rest;
     connected;
     resume;
     resumed;
@@ -24,7 +24,7 @@ class MoonlinkNode {
     calls;
     constructor(node) {
         this.check(node);
-        this._manager = __1.Structure.manager;
+        this._manager = index_1.Structure.manager;
         this.host = node.host;
         this.identifier = node.identifier || null;
         this.password = node.password || "youshallnotpass";
@@ -58,7 +58,7 @@ class MoonlinkNode {
                 deficit: 0
             }
         };
-        this.restFul = new __1.MoonlinkRestFul(this);
+        this.rest = new index_1.MoonlinkRestFul(this);
     }
     init() {
         this.connect();
@@ -95,7 +95,7 @@ class MoonlinkNode {
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
         };
-        this.socket = new __1.WebSocket(`ws${this.secure ? "s" : ""}://${address}/v4/websocket`);
+        this.socket = new index_1.WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
@@ -104,7 +104,7 @@ class MoonlinkNode {
     open() {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
-        this.connect = true;
+        this.connected = true;
     }
     reconnect() {
         if (this.reconnectAttempts >= this.retryAmount) {
@@ -118,7 +118,7 @@ class MoonlinkNode {
                 this.connected = false;
                 this.connect();
                 this.reconnectAttempts++;
-            }, this.retryTime);
+            }, this.retryDelay);
         }
     }
     close(code, reason) {

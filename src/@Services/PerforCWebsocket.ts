@@ -7,7 +7,7 @@ import EventEmitter from "node:events";
 import { URL } from "node:url";
 
 export type WebSocketOptions = {
-    headers?: http.OutgoingHttpHeaders | undefined;
+    headers?: any
     timeout?: number;
 };
 

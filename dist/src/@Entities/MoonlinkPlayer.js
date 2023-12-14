@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkPlayer = void 0;
-const __1 = require("../..");
+const index_1 = require("../../index");
 class MoonlinkPlayer {
     manager;
     infos;
@@ -18,7 +18,6 @@ class MoonlinkPlayer {
     volume;
     shuffled;
     queue;
-    filters;
     current;
     previous;
     data;
@@ -36,7 +35,7 @@ class MoonlinkPlayer {
         this.loop = infos.loop || null;
         this.volume = infos.volume || 90;
         this.shuffled = infos.shuffled || false;
-        this.queue = new (__1.Structure.get("MoonlinkQueue"))(manager, this);
+        this.queue = new (index_1.Structure.get("MoonlinkQueue"))(manager, this);
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];
         this.previous = map.get("previous") || {};
@@ -104,7 +103,7 @@ class MoonlinkPlayer {
         options = options || { setDeaf: false, setMute: false };
         const { setDeaf, setMute } = options;
         this.set("connected", true);
-        this.manager.SPayload(this.guildId, JSON.stringify({
+        this.manager._SPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -118,7 +117,7 @@ class MoonlinkPlayer {
     disconnect() {
         this.set("connected", false);
         this.set("voiceChannel", null);
-        this.manager.SPayload(this.guildId, JSON.stringify({
+        this.manager._SPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -132,7 +131,7 @@ class MoonlinkPlayer {
     async restart() {
         if (!this.current)
             return;
-        await this.manager.attemptConnection(this.guildId);
+        await this.manager.players.attemptConnection(this.guildId);
         await this.rest.update({
             guildId: this.guildId,
             data: {
