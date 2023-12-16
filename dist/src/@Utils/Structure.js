@@ -168,6 +168,9 @@ class Nodes {
         const removed = this.map.delete(name);
         return removed;
     }
+    get(name) {
+        return this.map.get(name) ? this.map.get(name) : null;
+    }
     sortByUsage(sortType) {
         const connectedNodes = [...this.map.values()].filter(node => node.connected);
         if (connectedNodes.length == 0)

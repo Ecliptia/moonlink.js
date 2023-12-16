@@ -204,6 +204,7 @@ export class Nodes {
         NodeInstance.init();
         return;
     }
+
     public remove(name: string): boolean {
         if (!name) {
             throw new Error('[ @Moonlink/Manager ]: option "name" is empty');
@@ -211,7 +212,9 @@ export class Nodes {
         const removed = this.map.delete(name);
         return removed;
     }
-
+    public get(name) {
+        return this.map.get(name) ? this.map.get(name) : null;
+    }
     public sortByUsage(sortType: SortType): MoonlinkNode[] {
         const connectedNodes = [...this.map.values()].filter(
             node => node.connected

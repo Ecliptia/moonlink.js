@@ -24,6 +24,7 @@ export declare class Nodes {
     check(): void;
     add(node: INode): void;
     remove(name: string): boolean;
+    get(name: any): any;
     sortByUsage(sortType: SortType): MoonlinkNode[];
     private sortNodesByMemoryUsage;
     private sortNodesByLavalinkCpuLoad;
