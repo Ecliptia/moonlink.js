@@ -15,7 +15,7 @@ export class MoonlinkNode {
     private retryAmount: number;
     private retryDelay: number;
     private resumeStatus: boolean = false;
-    
+
     public host: string;
     public identifier?: string;
     public password: string;
@@ -33,12 +33,12 @@ export class MoonlinkNode {
     public calls: number;
     public db: MoonlinkDatabase;
     constructor(node: INode) {
+        this._manager = Structure.manager;
         this.check(node);
 
-        this._manager = Structure.manager;
         this.host = node.host;
         this.identifier = node.identifier || null;
-        this.password = node.password || "youshallnotpass";
+        this.password = node.password ? node.password : "youshallnotpass";
         this.port = node.port
             ? node.port
             : node.secure
@@ -74,10 +74,10 @@ export class MoonlinkNode {
         this.db = new (Structure.get("MoonlinkDatabase"))(
             this._manager.options.clientId
         );
-    }
-    public init(): void {
+        
         this.connect();
     }
+    public init(): void {}
     public get address(): string {
         return `${this.host}:${this.port}`;
     }
@@ -297,8 +297,8 @@ export class MoonlinkNode {
         this._manager.emit("nodeError", this, error);
         this._manager.emit(
             "debug",
-            "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s)",
-            error
+            "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s): " +
+                error
         );
     }
     protected async handleEvent(payload: any): Promise<any> {

@@ -7,7 +7,7 @@ import EventEmitter from "node:events";
 import { URL } from "node:url";
 
 export type WebSocketOptions = {
-    headers?: any
+    headers?: any;
     timeout?: number;
 };
 
@@ -106,6 +106,7 @@ export class WebSocket extends EventEmitter {
                 method: "GET"
             }
         );
+        console.log(this.options);
 
         request.on("error", (err: Error) => {
             this.emit("error", err);

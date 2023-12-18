@@ -125,6 +125,7 @@ export interface IOptions {
     clientName?: string;
     sortNode?: SortType;
     autoResume?: boolean;
+    http2?: boolean;
 }
 
 export interface IHeaders {

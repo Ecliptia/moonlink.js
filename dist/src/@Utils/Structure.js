@@ -220,6 +220,7 @@ const structures = {
     MoonlinkDatabase: index_1.MoonlinkDatabase,
     MoonlinkQueue: index_1.MoonlinkQueue,
     MoonlinkNode: index_1.MoonlinkNode,
+    MoonlinkTrack: index_1.MoonlinkTrack,
     Players,
     Nodes
 };

@@ -26,11 +26,11 @@ class MoonlinkNode {
     calls;
     db;
     constructor(node) {
-        this.check(node);
         this._manager = index_1.Structure.manager;
+        this.check(node);
         this.host = node.host;
         this.identifier = node.identifier || null;
-        this.password = node.password || "youshallnotpass";
+        this.password = node.password ? node.password : "youshallnotpass";
         this.port = node.port
             ? node.port
             : node.secure
@@ -63,10 +63,9 @@ class MoonlinkNode {
         };
         this.rest = new index_1.MoonlinkRestFul(this);
         this.db = new (index_1.Structure.get("MoonlinkDatabase"))(this._manager.options.clientId);
-    }
-    init() {
         this.connect();
     }
+    init() { }
     get address() {
         return `${this.host}:${this.port}`;
     }
@@ -235,7 +234,8 @@ class MoonlinkNode {
         if (!error)
             return;
         this._manager.emit("nodeError", this, error);
-        this._manager.emit("debug", "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s)", error);
+        this._manager.emit("debug", "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s): " +
+            error);
     }
     async handleEvent(payload) {
         if (!payload)

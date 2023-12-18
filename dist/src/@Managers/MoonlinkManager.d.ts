@@ -39,7 +39,7 @@ export declare class MoonlinkManager extends EventEmitter {
     options: IOptions;
     initiated: boolean;
     constructor(nodes: INode[], options: IOptions, SPayload: Function);
-    init(clientId?: number): this;
+    init(clientId?: string): this;
     search(options: string | SearchQuery): Promise<SearchResult>;
     packetUpdate(packet: VoicePacket): void;
 }

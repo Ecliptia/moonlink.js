@@ -30,22 +30,31 @@ exports.makeRequest = void 0;
 const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
 const http2 = __importStar(require("http2"));
+const index_1 = require("../../index");
 function makeRequest(uri, options, data) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const url = new URL(uri);
         if (!options.method) {
             options.method = "GET";
         }
         let requestModule;
         if (url.protocol === "https:") {
-            requestModule = http2.constants === undefined ? https_1.default : http2;
+            requestModule = https_1.default;
+            if (index_1.Structure.manager.options.http2 !== undefined &&
+                typeof index_1.Structure.manager.options.http2 == "boolean" &&
+                index_1.Structure.manager.options.http2 == true)
+                requestModule = http2;
         }
         else {
             requestModule = http_1.default;
         }
+        options.headers = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
         const opts = {
             port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
-            ...options,
+            ...options
         };
         const req = requestModule.request(url, opts, async (res) => {
             const chunks = [];

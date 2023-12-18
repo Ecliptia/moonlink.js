@@ -40,6 +40,8 @@
   },
   "engines": {},
   "devDependencies": {
-    "@types/node": "^18.15.11"
+    "@types/node": "^18.15.11",
+    "discord.js": "^14.14.1",
+    "get-image-colors": "^4.0.1"
   }
 }

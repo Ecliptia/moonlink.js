@@ -28,7 +28,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             return this;
         if (!clientId && !this.options.clientId)
             throw new TypeError('[ @Moonlink/Manager ]: "clientId" option is required.');
-        this.clientId = this.options.clientId;
+        this.options.clientId = clientId;
+        this.clientId = clientId;
         index_1.Structure.init(this);
         this.nodes.init();
         this.players.init();
@@ -90,6 +91,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
+                console.log(res);
                 const tracks = res.data.map(x => new (index_1.Structure.get("MoonlinkTrack"))(x));
                 resolve({
                     ...res,

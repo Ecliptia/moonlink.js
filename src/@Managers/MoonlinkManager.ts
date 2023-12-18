@@ -1,5 +1,10 @@
 import { EventEmitter } from "node:events";
-import { Structure, MoonlinkPlayer, MoonlinkTrack, MoonlinkNode } from "../../index";
+import {
+    Structure,
+    MoonlinkPlayer,
+    MoonlinkTrack,
+    MoonlinkNode
+} from "../../index";
 import { Players, Nodes } from "../@Utils/Structure";
 import {
     INode,
@@ -75,13 +80,14 @@ export class MoonlinkManager extends EventEmitter {
             ? (this.options.clientName = `Moonlink/${this.version}`)
             : null;
     }
-    public init(clientId?: number): this {
+    public init(clientId?: string): this {
         if (this.initiated) return this;
         if (!clientId && !this.options.clientId)
             throw new TypeError(
                 '[ @Moonlink/Manager ]: "clientId" option is required.'
             );
-        this.clientId = this.options.clientId;
+        this.options.clientId = clientId;
+        this.clientId = clientId;
         Structure.init(this);
         this.nodes.init();
         this.players.init();
@@ -164,7 +170,6 @@ export class MoonlinkManager extends EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
-
                 const tracks = res.data.map(
                     x =>
                         new (Structure.get("MoonlinkTrack"))(x) as MoonlinkTrack
