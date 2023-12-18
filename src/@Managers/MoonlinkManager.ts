@@ -105,14 +105,23 @@ export class MoonlinkManager extends EventEmitter {
 
                 let query;
                 let source;
-
+                let requester: any = null;
                 if (typeof options === "object") {
                     query = options.query;
                     source = options.source;
+                    requester = options.requester;
                 } else {
                     query = options;
                 }
-
+                if (
+                    requester &&
+                    typeof requester !== "object" &&
+                    requester !== "string"
+                ) {
+                    throw new Error(
+                        '[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format'
+                    );
+                }
                 if (source && typeof source !== "string") {
                     throw new Error(
                         "[ @Moonlink/Manager ]: the source option has to be in string format"
@@ -171,8 +180,11 @@ export class MoonlinkManager extends EventEmitter {
                     res.data = [...res.data.tracks];
                 }
                 const tracks = res.data.map(
-                    x =>
-                        new (Structure.get("MoonlinkTrack"))(x) as MoonlinkTrack
+                    track =>
+                        new (Structure.get("MoonlinkTrack"))(
+                            track,
+                            requester
+                        ) as MoonlinkTrack
                 );
 
                 resolve({

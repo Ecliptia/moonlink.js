@@ -50,6 +50,7 @@ export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;
+    requester?: string | object | any;
 }
 export interface SearchResult {
     loadType: LoadType;

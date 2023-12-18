@@ -13,7 +13,7 @@ export class MoonlinkTrack {
   public requester: any;
   public artworkUrl: string;
   public isrc: string;
-  constructor(data: MoonlinkTrackOptions) {
+  constructor(data: MoonlinkTrackOptions, requester?: string | any) {
     this.encoded = data.encoded;
     this.title = data.info.title;
     this.author = data.info.author;
@@ -24,6 +24,7 @@ export class MoonlinkTrack {
     this.isSeekable = Boolean(data.info.isSeekable);
     this.isStream = Boolean(data.info.isStream);
     this.sourceName = data.info.sourceName || null;
+    this.requester = requester;
     this.artworkUrl = data.info.artworkUrl;
     this.isrc = data.info.isrc;
   }

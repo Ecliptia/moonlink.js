@@ -16,6 +16,10 @@ export class Players {
     }
     public init(): void {
         this._manager = Structure.manager;
+        this._manager.emit(
+            "debug",
+            "@Moonlink(Players) - Structure(Players) has been initialized, and assigned the value of the main class "
+        );
     }
     public handleVoiceServerUpdate(update: any, guildId: string): void {
         const voiceServerData = { event: update };
@@ -181,28 +185,37 @@ export class Nodes {
     public init(): void {
         this._manager = Structure.manager;
         this.check();
+        this._manager.emit(
+            "debug",
+            "@Moonlink(Nodes) - Structure(Nodes) was successfully initialized and assigned the value of the main class and checked the nodes"
+        );
         this.initiated = true;
     }
     public check(): void {
         if (!this._manager?._nodes)
-            throw new Error('[ @Moonlink/Manager ]: "nodes" option is empty');
+            throw new Error('@Moonlink(Nodes) - "nodes" option is empty');
         if (this._manager?._nodes && !Array.isArray(this._manager?._nodes))
             throw new Error(
-                '[ @Moonlink/Manager ]: the "nodes" option has to be in an array'
+                '@Moonlink(Nodes) - the "nodes" option has to be in an array'
             );
         if (this._manager?._nodes && this._manager?._nodes.length == 0)
             throw new Error(
-                '[ @Moonlink/Manager ]: there are no parameters with "node(s)" information in the object'
+                '@Moonlink(Nodes) - there are no parameters with "node(s)" information in the object'
             );
         this._manager?._nodes.forEach(node => this.add(node));
     }
     public add(node: INode): void {
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Nodes) - The node ${
+                node.host || node.identifier
+            } has been added, and is starting its initialization process`
+        );
         const NodeInstance: MoonlinkNode = new (Structure.get("MoonlinkNode"))(
             node
         );
         if (node.identifier) this.map.set(node.identifier, NodeInstance);
         else this.map.set(node.host, NodeInstance);
-        NodeInstance.init();
         return;
     }
 
@@ -211,12 +224,29 @@ export class Nodes {
             throw new Error('[ @Moonlink/Manager ]: option "name" is empty');
         }
         const removed = this.map.delete(name);
+
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Nodes) - The node ${name} has been successfully deleted`
+        );
         return removed;
     }
     public get(name) {
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Nodes) - ${
+                this.map.get(name)
+                    ? `the node ${name} is getting its information `
+                    : `No node with name ${name} was found, returning null value`
+            }`
+        );
         return this.map.get(name) ? this.map.get(name) : null;
     }
     public sortByUsage(sortType: SortType): MoonlinkNode[] {
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`
+        );
         const connectedNodes = [...this.map.values()].filter(
             node => node.connected
         );
@@ -304,6 +334,10 @@ export abstract class Structure {
 
     public static init(manager: MoonlinkManager): void {
         this.manager = manager;
+        this.manager.emit(
+            "debug",
+            `@Moonlink(Structure) - the main class is assigned to the class responsible for the others :)`
+        );
     }
 
     public static get<K extends keyof Extendable>(name: K): Extendable[K] {
