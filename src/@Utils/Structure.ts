@@ -4,7 +4,8 @@ import {
     MoonlinkPlayer,
     MoonlinkDatabase,
     MoonlinkQueue,
-    MoonlinkNode
+    MoonlinkNode,
+    MoonlinkTrack
 } from "../../index";
 
 export class Players {
@@ -275,12 +276,13 @@ export class Nodes {
     }
 }
 
-const structures: any = {
+const structures: Extendable = {
     MoonlinkManager,
     MoonlinkPlayer,
     MoonlinkDatabase,
     MoonlinkQueue,
     MoonlinkNode,
+    MoonlinkTrack,
     Players,
     Nodes
 };
