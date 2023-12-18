@@ -275,13 +275,12 @@ export class Nodes {
     }
 }
 
-const structures: Extendable = {
-    MoonlinkManager: require("../@Managers/MoonlinkManager").MoonlinkManager,
-    MoonlinkNode: require("../@Entities/MoonlinkNode").MoonlinkNode,
-    MoonlinkPlayer: require("../@Entities/MoonlinkPlayer").MoonlinkPlayer,
-    MoonlinkDatabase: require("./MoonlinkDatabase").MoonlinkDatabase,
-    MoonlinkQueue: require("../@Entities/MoonlinkQueue").MoonlinkQueue,
-    MoonlinkTrack: require("../MoonlinkTrack").MoonlinkTrack,
+const structures: any = {
+    MoonlinkManager,
+    MoonlinkPlayer,
+    MoonlinkDatabase,
+    MoonlinkQueue,
+    MoonlinkNode,
     Players,
     Nodes
 };
