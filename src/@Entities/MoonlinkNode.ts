@@ -1,8 +1,9 @@
-import { INodeStats, INode, IHeaders } from "../@Typings";
+import { INodeStats, INode, IHeaders, SearchResult } from "../@Typings";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
     MoonlinkRestFul,
+    MoonlinkDatabase,
     Structure,
     WebSocket
 } from "../../index";
@@ -13,7 +14,8 @@ export class MoonlinkNode {
     private reconnectAttempts: number = 1;
     private retryAmount: number;
     private retryDelay: number;
-
+    private resumeStatus: boolean = false;
+    
     public host: string;
     public identifier?: string;
     public password: string;
@@ -24,6 +26,7 @@ export class MoonlinkNode {
     public connected: boolean;
     public resume?: boolean;
     public resumed?: boolean;
+    public resumeTimeout?: number = 30000;
     public sessionId: string;
     public socket: WebSocket | null;
     public stats: INodeStats;

@@ -7,7 +7,7 @@ import {
     MoonlinkTrack,
     Players,
     Nodes
-} from "../..";
+} from "../../index";
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -124,6 +124,7 @@ export interface IOptions {
     clientId?: string;
     clientName?: string;
     sortNode?: SortType;
+    autoResume?: boolean;
 }
 
 export interface IHeaders {
@@ -138,7 +139,7 @@ export interface Extendable {
     MoonlinkDatabase: typeof MoonlinkDatabase;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
-    MoonlinkTrack: typeof MoonlinkTrack
+    MoonlinkTrack: typeof MoonlinkTrack;
     Players: typeof Players;
     Nodes: typeof Nodes;
 }
@@ -160,32 +161,6 @@ export interface LavalinkResult {
         name: string;
         selectedTrack?: number;
     };
-}
-
-export interface MoonlinkEvents {
-    /* Logic created by PiscesXD */
-    autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
-    debug: (...args: any) => void;
-    nodeCreate: (node: MoonlinkNode) => void;
-    nodeDestroy: (node: MoonlinkNode) => void;
-    nodeReconnect: (node: MoonlinkNode) => void;
-    nodeClose: (node: MoonlinkNode, code: number, reason: any) => void;
-    nodeRaw: (node: MoonlinkNode, payload: object) => void;
-    nodeError: (node: MoonlinkNode, error: Error) => void;
-    trackStart: (player: MoonlinkPlayer, current: any) => void;
-    trackEnd: (player: MoonlinkPlayer, track: any, payload?: any) => void;
-    trackStuck: (player: MoonlinkPlayer, track: any) => void;
-    trackError: (player: MoonlinkPlayer, track: any) => void;
-    queueEnd: (player: MoonlinkPlayer, track?: any) => void;
-    playerCreated: (guildId: string) => void;
-    playerDisconnect: (player: MoonlinkPlayer) => void;
-    playerResume: (player: MoonlinkPlayer) => void;
-    playerMove: (
-        player: MoonlinkPlayer,
-        newVoiceChannel: string,
-        oldVoiceChannel: string
-    ) => void;
-    socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 
 export interface VoiceOptions {

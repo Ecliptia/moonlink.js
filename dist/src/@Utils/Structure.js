@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Plugin = exports.Structure = exports.Nodes = exports.Players = void 0;
+const index_1 = require("../../index");
 class Players {
     _manager;
     map;
@@ -214,12 +215,11 @@ class Nodes {
 }
 exports.Nodes = Nodes;
 const structures = {
-    MoonlinkManager: require("../@Managers/MoonlinkManager").MoonlinkManager,
-    MoonlinkNode: require("../@Entities/MoonlinkNode").MoonlinkNode,
-    MoonlinkPlayer: require("../@Entities/MoonlinkPlayer").MoonlinkPlayer,
-    MoonlinkDatabase: require("./MoonlinkDatabase").MoonlinkDatabase,
-    MoonlinkQueue: require("../@Entities/MoonlinkQueue").MoonlinkQueue,
-    MoonlinkTrack: require("../MoonlinkTrack").MoonlinkTrack,
+    MoonlinkManager: index_1.MoonlinkManager,
+    MoonlinkPlayer: index_1.MoonlinkPlayer,
+    MoonlinkDatabase: index_1.MoonlinkDatabase,
+    MoonlinkQueue: index_1.MoonlinkQueue,
+    MoonlinkNode: index_1.MoonlinkNode,
     Players,
     Nodes
 };

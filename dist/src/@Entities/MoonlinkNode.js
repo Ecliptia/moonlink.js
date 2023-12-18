@@ -8,6 +8,7 @@ class MoonlinkNode {
     reconnectAttempts = 1;
     retryAmount;
     retryDelay;
+    resumeStatus = false;
     host;
     identifier;
     password;
@@ -18,6 +19,7 @@ class MoonlinkNode {
     connected;
     resume;
     resumed;
+    resumeTimeout = 30000;
     sessionId;
     socket;
     stats;
