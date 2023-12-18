@@ -13,5 +13,5 @@ export declare class MoonlinkTrack {
     requester: any;
     artworkUrl: string;
     isrc: string;
-    constructor(data: MoonlinkTrackOptions);
+    constructor(data: MoonlinkTrackOptions, requester?: string | any);
 }
