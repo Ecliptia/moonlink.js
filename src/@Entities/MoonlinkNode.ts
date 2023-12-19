@@ -74,10 +74,9 @@ export class MoonlinkNode {
         this.db = new (Structure.get("MoonlinkDatabase"))(
             this._manager.options.clientId
         );
-        
+
         this.connect();
     }
-    public init(): void {}
     public get address(): string {
         return `${this.host}:${this.port}`;
     }
@@ -141,10 +140,23 @@ export class MoonlinkNode {
     }
     public open(): void {
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+        this.manager.emit(
+            "debug",
+            `@Moonlink(Node) - The Node ${
+                this.identifier ? this.identifier : this.host
+            } has been connected successfully`
+        );
         this.connected = true;
     }
     private reconnect(): void {
         if (this.reconnectAttempts >= this.retryAmount) {
+            this._manager.emit(
+                "debug",
+                `@Moonlink(Node) - Node ${
+                    this.identifier ? this.identifier : this.host
+                } was destroyed due to inactivity, attempts to reconnect were failed`
+            );
+            this._manager.emit("nodeDestroy", this);
             this.socket.close(1000, "destroy");
             this.socket.removeAllListeners();
         } else {
@@ -152,13 +164,26 @@ export class MoonlinkNode {
                 this.socket.removeAllListeners();
                 this.socket = null;
                 this.connected = false;
+                this._manager.emit("nodeReconnect", this);
                 this.connect();
+                this.manager.emit(
+                    "debug",
+                    `@Moonlink(Node) - we are trying to reconnect node ${
+                        this.identifier ? this.identifier : this.host
+                    }, attempted number ${this.reconnectAtattempts}
+                `
+                );
                 this.reconnectAttempts++;
             }, this.retryDelay);
         }
     }
     protected close(code: number, reason: any): void {
         if (code !== 1000 || reason !== "destroy") this.reconnect();
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Node) - The node connection ${this.identifier ? this.identifier : this.host} has been closed`
+        );
+        this._manager.emit("nodeClose", this, code, reason);
         this.connected = false;
     }
     protected async message(data: Buffer | string): Promise<void> {

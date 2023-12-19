@@ -173,9 +173,6 @@ class Nodes {
         return removed;
     }
     get(name) {
-        this._manager.emit("debug", `@Moonlink(Nodes) - ${this.map.get(name)
-            ? `the node ${name} is getting its information `
-            : `No node with name ${name} was found, returning null value`}`);
         return this.map.get(name) ? this.map.get(name) : null;
     }
     sortByUsage(sortType) {
