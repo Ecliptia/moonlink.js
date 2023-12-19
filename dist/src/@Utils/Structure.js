@@ -21,6 +21,7 @@ class Players {
     }
     handlePlayerDisconnect(player, guildId) {
         const players = this.map.get("players") || {};
+        this._manager.emit("playerDisconnect", player);
         players[guildId] = {
             ...players[guildId],
             connected: false,
@@ -34,6 +35,7 @@ class Players {
     }
     handlePlayerMove(player, newChannelId, oldChannelId, guildId) {
         const players = this.map.get("players") || {};
+        this._manager.emit("playerMove", player, newChannelId, oldChannelId);
         players[guildId] = {
             ...players[guildId],
             voiceChannel: newChannelId
@@ -126,6 +128,8 @@ class Players {
             node: data.node || nodeSorted?.identifier || nodeSorted?.host
         };
         this.map.set("players", players_map);
+        this._manager.emit("debug", `@Moonlink(Players) - A server player was created (${data.guildId})`);
+        this._manager.emit("playerCreated", data.guildId);
         return new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
     }
     get all() {
@@ -221,6 +225,7 @@ exports.Nodes = Nodes;
 const structures = {
     MoonlinkManager: index_1.MoonlinkManager,
     MoonlinkPlayer: index_1.MoonlinkPlayer,
+    MoonlinkFilters: index_1.MoonlinkFilters,
     MoonlinkDatabase: index_1.MoonlinkDatabase,
     MoonlinkQueue: index_1.MoonlinkQueue,
     MoonlinkNode: index_1.MoonlinkNode,

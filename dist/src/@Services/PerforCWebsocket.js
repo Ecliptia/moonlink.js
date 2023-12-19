@@ -82,7 +82,6 @@ class WebSocket extends node_events_1.default {
             },
             method: "GET"
         });
-        console.log(this.options);
         request.on("error", (err) => {
             this.emit("error", err);
             this.emit("close");

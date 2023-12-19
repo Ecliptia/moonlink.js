@@ -140,7 +140,7 @@ export class MoonlinkNode {
     }
     public open(): void {
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-        this.manager.emit(
+        this._manager.emit(
             "debug",
             `@Moonlink(Node) - The Node ${
                 this.identifier ? this.identifier : this.host
@@ -166,11 +166,11 @@ export class MoonlinkNode {
                 this.connected = false;
                 this._manager.emit("nodeReconnect", this);
                 this.connect();
-                this.manager.emit(
+                this._manager.emit(
                     "debug",
                     `@Moonlink(Node) - we are trying to reconnect node ${
                         this.identifier ? this.identifier : this.host
-                    }, attempted number ${this.reconnectAtattempts}
+                    }, attempted number ${this.reconnectAttempts}
                 `
                 );
                 this.reconnectAttempts++;
@@ -181,7 +181,9 @@ export class MoonlinkNode {
         if (code !== 1000 || reason !== "destroy") this.reconnect();
         this._manager.emit(
             "debug",
-            `@Moonlink(Node) - The node connection ${this.identifier ? this.identifier : this.host} has been closed`
+            `@Moonlink(Node) - The node connection ${
+                this.identifier ? this.identifier : this.host
+            } has been closed`
         );
         this._manager.emit("nodeClose", this, code, reason);
         this.connected = false;

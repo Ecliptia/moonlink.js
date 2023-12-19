@@ -25,7 +25,6 @@ export declare class MoonlinkNode {
     calls: number;
     db: MoonlinkDatabase;
     constructor(node: INode);
-    init(): void;
     get address(): string;
     check(node: INode): void | never;
     request(endpoint: string, params: any): Promise<object>;

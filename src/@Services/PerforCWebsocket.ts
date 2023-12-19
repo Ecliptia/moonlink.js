@@ -106,7 +106,6 @@ export class WebSocket extends EventEmitter {
                 method: "GET"
             }
         );
-        console.log(this.options);
 
         request.on("error", (err: Error) => {
             this.emit("error", err);
