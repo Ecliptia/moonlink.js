@@ -30,7 +30,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: | 
              npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-             npm publish
+             npm login
+             npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
           NPM_CONFIG_PROVENANCE: true
