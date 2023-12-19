@@ -49,8 +49,8 @@ function makeRequest(uri, options, data) {
             requestModule = http_1.default;
         }
         options.headers = {
-            'Content-Type': 'application/json',
-            ...options.headers,
+            "Content-Type": "application/json",
+            ...options.headers
         };
         const opts = {
             port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
