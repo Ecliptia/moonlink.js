@@ -1,5 +1,7 @@
 const getColors = require("get-image-colors");
-const { EmbedBuilder } = require("discord.js");
+const {
+  EmbedBuilder
+} = require("discord.js");
 
 function convertMsToTime(ms) {
   const seconds = Math.floor(ms / 1000);
@@ -45,7 +47,9 @@ module.exports = {
     }
 
     const query = args.join(" ");
-    const searchResult = await client.moon.search(query);
+    const searchResult = await client.moon.search({
+      query, search: "spsearch"
+    });
 
     if (searchResult.loadType === "loadfailed") {
       return message.reply(":x: Failed to load the requested song.");
@@ -59,12 +63,12 @@ module.exports = {
     const embedColor = colors[0].hex();
 
     const embed = new EmbedBuilder()
-      .setColor(embedColor)
-      .setTitle("<:discordlogo:968651006177079326>・Adding Music.")
-      .setImage(searchResult.tracks[0].artworkUrl)
-      .setFooter({
-        text: `Request for: ${message.author.username}`,
-      });
+    .setColor(embedColor)
+    .setTitle("<:discordlogo:968651006177079326>・Adding Music.")
+    .setImage(searchResult.tracks[0].artworkUrl)
+    .setFooter({
+      text: `Request for: ${message.author.username}`,
+    });
 
     if (searchResult.loadType === "playlist") {
       embed.setTitle(`<:discordlogo:968651006177079326>・Adding Playlist.`);
@@ -77,13 +81,13 @@ module.exports = {
         {
           name: `<:emoji_23:967837516558393365>╺╸*\`Duration:\`*`,
           value: `${
-            convertMsToTime(searchResult.playlistInfo.duration).days
+          convertMsToTime(searchResult.playlistInfo.duration).days
           } Days, ${
-            convertMsToTime(searchResult.playlistInfo.duration).hours
+          convertMsToTime(searchResult.playlistInfo.duration).hours
           } Hours, ${
-            convertMsToTime(searchResult.playlistInfo.duration).minutes
+          convertMsToTime(searchResult.playlistInfo.duration).minutes
           } Minutes, ${
-            convertMsToTime(searchResult.playlistInfo.duration).seconds
+          convertMsToTime(searchResult.playlistInfo.duration).seconds
           } Seconds`,
           inline: true,
         },
