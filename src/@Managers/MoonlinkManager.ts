@@ -77,11 +77,15 @@ export class MoonlinkManager extends EventEmitter {
         this.nodes = new (Structure.get("Nodes"))();
         this.options = options;
         this.options.clientName
-            ? (this.options.clientName = `Moonlink/${this.version}`)
+            ? (this.options.clientName = `@Moonlink/${this.version}`)
             : null;
     }
     public init(clientId?: string): this {
         if (this.initiated) return this;
+        this.emit(
+            "debug",
+            "@Moonlink - moonlink.js has started the initialization process, do not attempt to use functions until everything is initialized correctly "
+        );
         if (!clientId && !this.options.clientId)
             throw new TypeError(
                 '[ @Moonlink/Manager ]: "clientId" option is required.'

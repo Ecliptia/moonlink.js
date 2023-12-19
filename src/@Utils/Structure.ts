@@ -2,6 +2,7 @@ import { INode, Extendable, SortType, createOptions } from "../@Typings";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
+    MoonlinkFilters,
     MoonlinkDatabase,
     MoonlinkQueue,
     MoonlinkNode,
@@ -35,7 +36,7 @@ export class Players {
         guildId: string
     ): void {
         const players = this.map.get("players") || {};
-        this.emit("playerDisconnect", player);
+        this._manager.emit("playerDisconnect", player);
         players[guildId] = {
             ...players[guildId],
             connected: false,
@@ -55,7 +56,7 @@ export class Players {
         guildId: string
     ): void {
         const players: any = this.map.get("players") || {};
-        this.emit("playerMove", player, newChannelId, oldChannelId);
+        this._manager.emit("playerMove", player, newChannelId, oldChannelId);
         players[guildId] = {
             ...players[guildId],
             voiceChannel: newChannelId
@@ -307,6 +308,7 @@ export class Nodes {
 const structures: Extendable = {
     MoonlinkManager,
     MoonlinkPlayer,
+    MoonlinkFilters,
     MoonlinkDatabase,
     MoonlinkQueue,
     MoonlinkNode,

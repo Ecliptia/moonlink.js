@@ -1,4 +1,4 @@
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, Players, Nodes } from "../../index";
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkFilters, MoonlinkDatabase, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, Players, Nodes } from "../../index";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface createOptions {
     guildId: string;
@@ -107,6 +107,7 @@ export interface Extendable {
     MoonlinkManager: typeof MoonlinkManager;
     MoonlinkPlayer: typeof MoonlinkPlayer;
     MoonlinkDatabase: typeof MoonlinkDatabase;
+    MoonlinkFilters: typeof MoonlinkFilters;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
@@ -187,4 +188,49 @@ export interface MoonlinkTrackOptions {
     info: TrackInfo;
     encoded?: string;
     pluginInfo?: object;
+}
+export interface Equalizer {
+    band: number;
+    gain: number;
+}
+export interface Karaoke {
+    level?: number;
+    monoLevel?: number;
+    filterBand?: number;
+    filterWidth?: number;
+}
+export interface Timescale {
+    speed?: number;
+    pitch?: number;
+    rate?: number;
+}
+export interface Tremolo {
+    frequency?: number;
+    depth?: number;
+}
+export interface Vibrato {
+    frequency?: number;
+    depth?: number;
+}
+export interface Rotation {
+    rotationHz?: number;
+}
+export interface Distortion {
+    sinOffset?: number;
+    sinScale?: number;
+    cosOffset?: number;
+    cosScale?: number;
+    tanOffset?: number;
+    tanScale?: number;
+    offset?: number;
+    scale?: number;
+}
+export interface ChannelMix {
+    leftToLeft?: number;
+    leftToRight?: number;
+    rightToLeft?: number;
+    rightToRight?: number;
+}
+export interface LowPass {
+    smoothing?: number;
 }
