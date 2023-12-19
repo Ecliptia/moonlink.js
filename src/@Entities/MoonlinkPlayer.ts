@@ -230,6 +230,7 @@ export class MoonlinkPlayer {
      * Play the next track in the queue.
      */
     public async play(): Promise<void> {
+        // modified by PiscesXD
         if (!this.queue.size) return;
 
         let queue: any = this.queue.db.get(`queue.${this.guildId}`);
@@ -238,9 +239,19 @@ export class MoonlinkPlayer {
         if (!data) return;
 
         let current = this.map.get("current") || {};
+
+        if (this.loop && Object.keys(current).length != 0) {
+            current[this.guildId].time
+                ? delete current[this.guildId].time
+                : false;
+            current[this.guildId].ping
+                ? delete current[this.guildId].ping
+                : false;
+            queue.push(current[this.guildId]);
+        }
+
         current[this.guildId] = {
-            ...data,
-            requester: data.requester
+            ...data
         };
 
         this.current = current[this.guildId];

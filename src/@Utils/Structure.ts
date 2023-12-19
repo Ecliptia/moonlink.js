@@ -35,6 +35,7 @@ export class Players {
         guildId: string
     ): void {
         const players = this.map.get("players") || {};
+        this.emit("playerDisconnect", player);
         players[guildId] = {
             ...players[guildId],
             connected: false,
@@ -54,6 +55,7 @@ export class Players {
         guildId: string
     ): void {
         const players: any = this.map.get("players") || {};
+        this.emit("playerMove", player, newChannelId, oldChannelId);
         players[guildId] = {
             ...players[guildId],
             voiceChannel: newChannelId
@@ -164,7 +166,11 @@ export class Players {
             node: data.node || nodeSorted?.identifier || nodeSorted?.host
         };
         this.map.set("players", players_map);
-
+        this._manager.emit(
+            "debug",
+            `@Moonlink(Players) - A server player was created (${data.guildId})`
+        );
+        this._manager.emit("playerCreated", data.guildId);
         return new (Structure.get("MoonlinkPlayer"))(
             players_map[data.guildId],
             this._manager,
@@ -232,14 +238,6 @@ export class Nodes {
         return removed;
     }
     public get(name) {
-        this._manager.emit(
-            "debug",
-            `@Moonlink(Nodes) - ${
-                this.map.get(name)
-                    ? `the node ${name} is getting its information `
-                    : `No node with name ${name} was found, returning null value`
-            }`
-        );
         return this.map.get(name) ? this.map.get(name) : null;
     }
     public sortByUsage(sortType: SortType): MoonlinkNode[] {
