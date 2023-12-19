@@ -29,10 +29,10 @@ export function makeRequest(
         } else {
             requestModule = http;
         }
-       options.headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-};
+        options.headers = {
+            "Content-Type": "application/json",
+            ...options.headers
+        };
         const opts = {
             port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
             ...options

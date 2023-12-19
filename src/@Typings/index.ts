@@ -140,7 +140,7 @@ export interface Extendable {
     MoonlinkManager: typeof MoonlinkManager;
     MoonlinkPlayer: typeof MoonlinkPlayer;
     MoonlinkDatabase: typeof MoonlinkDatabase;
-    MoonlinkFilters: typeof MoonlinkFilters
+    MoonlinkFilters: typeof MoonlinkFilters;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
