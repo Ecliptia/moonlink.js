@@ -34,16 +34,45 @@ const index_1 = require("../../index");
 function makeRequest(uri, options, data) {
     return new Promise(resolve => {
         const url = new URL(uri);
-        if (!options.method) {
-            options.method = "GET";
-        }
         let requestModule;
         if (url.protocol === "https:") {
+            if (index_1.Structure.manager.options.http2 === true) {
+                let client = http2.connect(url.origin, {
+                    protocol: url.protocol,
+                    rejectUnauthorized: false
+                });
+                const reqOptions = {
+                    ":method": options.method,
+                    ":path": url.pathname + url.search,
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
+                    DNT: "1",
+                    "Content-Type": "application/json",
+                    ...(options.headers || {})
+                };
+                const chunks = [];
+                const req = client.request(reqOptions);
+                req.on("error", error => {
+                    index_1.Structure.manager.emit("debug", `@Moonlink(MakeRequest[HTTP/2]) - An error occurred when requesting the ${url}: ${error}`);
+                    client.close();
+                    resolve(error);
+                });
+                req.on("response", headers => {
+                    req.setEncoding("utf8");
+                    req.on("data", chunk => chunks.push(chunk));
+                    req.on("end", () => {
+                        client.close();
+                        const responseData = Buffer.concat(chunks).toString();
+                        resolve(JSON.parse(responseData));
+                    });
+                    req.on("error", error => {
+                        index_1.Structure.manager.emit("debug", `@Moonlink(MakeRequest[HTTP/2]) - An error occurred when requesting the ${url}: ${error}`);
+                        client.close();
+                        resolve(error);
+                    });
+                });
+                data ? req.end(JSON.stringify(data)) : req.end();
+            }
             requestModule = https_1.default;
-            if (index_1.Structure.manager.options.http2 !== undefined &&
-                typeof index_1.Structure.manager.options.http2 == "boolean" &&
-                index_1.Structure.manager.options.http2 == true)
-                requestModule = http2;
         }
         else {
             requestModule = http_1.default;
@@ -52,11 +81,12 @@ function makeRequest(uri, options, data) {
             "Content-Type": "application/json",
             ...options.headers
         };
-        const opts = {
+        const reqOptions = {
             port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
+            method: "GET",
             ...options
         };
-        const req = requestModule.request(url, opts, async (res) => {
+        const req = requestModule.request(url, reqOptions, async (res) => {
             const chunks = [];
             res.on("data", async (chunk) => {
                 chunks.push(chunk);
