@@ -41,9 +41,12 @@ client.moon = new MoonlinkManager(
     port: 443,
     secure: true,
     password: require("../config.json").password,
-  },
+  } /*{
+    host: "localhost", port: 2333, secure: false, password: require("../config.json").password
+  }*/,
   ],
   {
+    //http2: true,
     autoResume: true,
     clientName: "Moonlink/Blio",
   },
@@ -101,7 +104,7 @@ const server = http.createServer((req, res) => {
 server.listen(80, () => {
   log(`[ Server ]: Server running;`);
 });
-*/ 
+*/
 const token = require ("../config.json").token;
 if (!token) {
   console.error(

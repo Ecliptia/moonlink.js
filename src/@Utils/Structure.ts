@@ -318,7 +318,7 @@ const structures: Extendable = {
 };
 export abstract class Structure {
     public static manager: MoonlinkManager;
-
+    public static db: MoonlinkDatabase;
     public static extend<K extends keyof Extendable, T extends Extendable[K]>(
         name: K,
         extender: (target: Extendable[K]) => T
@@ -334,9 +334,10 @@ export abstract class Structure {
 
     public static init(manager: MoonlinkManager): void {
         this.manager = manager;
+        this.db = new (Structure.get("MoonlinkDatabase"))(manager.clientId);
         this.manager.emit(
             "debug",
-            `@Moonlink(Structure) - the main class is assigned to the class responsible for the others :)`
+            `@Moonlink(Structure) - The main class and database are assigned to structure :)`
         );
     }
 

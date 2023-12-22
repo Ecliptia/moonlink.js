@@ -235,6 +235,7 @@ const structures = {
 };
 class Structure {
     static manager;
+    static db;
     static extend(name, extender) {
         if (!(name in structures)) {
             throw new TypeError(`"${name}" is not a valid structure`);
@@ -245,7 +246,8 @@ class Structure {
     }
     static init(manager) {
         this.manager = manager;
-        this.manager.emit("debug", `@Moonlink(Structure) - the main class is assigned to the class responsible for the others :)`);
+        this.db = new (Structure.get("MoonlinkDatabase"))(manager.clientId);
+        this.manager.emit("debug", `@Moonlink(Structure) - The main class and database are assigned to structure :)`);
     }
     static get(name) {
         const structure = structures[name];
