@@ -3,14 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkQueue = void 0;
 const __1 = require("../..");
 class MoonlinkQueue {
-    db;
+    db = __1.Structure.db;
     guildId;
     manager;
     constructor(manager, data) {
         if (!manager || !data || !data.guildId) {
             throw new Error("[ @Moonlink/Queue ]: Invalid constructor arguments");
         }
-        this.db = new (__1.Structure.get("MoonlinkDatabase"))(manager.clientId);
         this.guildId = data.guildId;
         this.manager = __1.Structure.manager;
     }

@@ -13,14 +13,13 @@ export class MoonlinkDatabase {
         if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
 
         const keys: string[] = key.split(".");
-        if (keys.length === 0) return; // Key is invalid
+        if (keys.length === 0) return;
 
         this.updateData(this.data, keys, value);
         this.save();
     }
 
     get(key: string): any {
-        this.fetch();
         if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
 
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);

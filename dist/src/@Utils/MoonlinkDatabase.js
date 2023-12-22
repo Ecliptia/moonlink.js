@@ -23,7 +23,6 @@ class MoonlinkDatabase {
         this.save();
     }
     get(key) {
-        this.fetch();
         if (!key)
             throw new Error('[ @Moonlink/Database ]: "key" is empty');
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);

@@ -1,7 +1,7 @@
 import { MoonlinkDatabase, MoonlinkManager, MoonlinkTrack, Structure } from "../..";
 
 export class MoonlinkQueue {
-    public db: MoonlinkDatabase;
+    public db: MoonlinkDatabase = Structure.db;
     private guildId: string;
     private manager: MoonlinkManager;
 
@@ -12,7 +12,6 @@ export class MoonlinkQueue {
             );
         }
 
-        this.db = new (Structure.get("MoonlinkDatabase"))(manager.clientId);
         this.guildId = data.guildId;
         this.manager = Structure.manager;
     }
