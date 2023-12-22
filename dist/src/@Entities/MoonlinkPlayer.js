@@ -135,7 +135,9 @@ class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: this.current.encoded,
+                track: {
+                    encoded: this.current.encoded
+                },
                 position: this.current.position,
                 volume: this.volume
             }
@@ -167,7 +169,9 @@ class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: data.encoded,
+                track: {
+                    encoded: data.encoded
+                },
                 volume: this.volume
             }
         });
@@ -196,7 +200,7 @@ class MoonlinkPlayer {
         if (!this.queue.size) {
             await this.rest.update({
                 guildId: this.guildId,
-                data: { encodedTrack: null }
+                data: { track: { encoded: null } }
             });
         }
         destroy ? this.destroy() : this.queue.clear();
@@ -289,8 +293,8 @@ class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: data.encoded,
-                volume: 90
+                track: { encoded: data.encoded },
+                volume: 80
             }
         });
         return true;

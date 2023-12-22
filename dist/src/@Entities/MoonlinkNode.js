@@ -24,7 +24,7 @@ class MoonlinkNode {
     socket;
     stats;
     calls;
-    db;
+    db = index_1.Structure.db;
     constructor(node) {
         this._manager = index_1.Structure.manager;
         this.check(node);
@@ -62,7 +62,6 @@ class MoonlinkNode {
             }
         };
         this.rest = new index_1.MoonlinkRestFul(this);
-        this.db = new (index_1.Structure.get("MoonlinkDatabase"))(this._manager.options.clientId);
         this.connect();
     }
     get address() {
@@ -217,7 +216,7 @@ class MoonlinkNode {
                         if (player && player.paused) {
                             return payload.state.position;
                         }
-                        if (player && !player.node.isConnected) {
+                        if (player && !player.node.connected) {
                             return payload.state.position;
                         }
                         if (!player)
@@ -299,9 +298,7 @@ class MoonlinkNode {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: {
-                                encodedTrack: track.encoded
-                            }
+                            data: { track: { encoded: track.encoded } }
                         });
                         return;
                     }

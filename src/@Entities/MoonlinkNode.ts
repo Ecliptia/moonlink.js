@@ -31,7 +31,7 @@ export class MoonlinkNode {
     public socket: WebSocket | null;
     public stats: INodeStats;
     public calls: number;
-    public db: MoonlinkDatabase;
+    public db: MoonlinkDatabase = Structure.db;
     constructor(node: INode) {
         this._manager = Structure.manager;
         this.check(node);
@@ -71,9 +71,6 @@ export class MoonlinkNode {
             }
         };
         this.rest = new MoonlinkRestFul(this);
-        this.db = new (Structure.get("MoonlinkDatabase"))(
-            this._manager.options.clientId
-        );
 
         this.connect();
     }
@@ -292,7 +289,7 @@ export class MoonlinkNode {
                         if (player && player.paused) {
                             return payload.state.position;
                         }
-                        if (player && !player.node.isConnected) {
+                        if (player && !player.node.connected) {
                             return payload.state.position;
                         }
                         if (!player) return payload.state.position;
@@ -386,9 +383,7 @@ export class MoonlinkNode {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: {
-                                encodedTrack: track.encoded
-                            }
+                            data: { track: { encoded: track.encoded } }
                         });
                         return;
                     }

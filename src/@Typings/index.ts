@@ -175,10 +175,13 @@ export interface VoiceOptions {
     ping?: number;
 }
 export type Endpoint = string;
+export interface objectTrack {
+    encoded: string;
+}
 export interface RestOptions {
     guildId: string;
     data: {
-        encodedTrack?: string;
+        track?: objectTrack;
         identifier?: string;
         startTime?: number;
         endTime?: number;

@@ -43,10 +43,11 @@ client.moon = new MoonlinkManager(
     password: require("../config.json").password,
   } /*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
-  }*/,
-  ],
+  }*/ /* {
+    host: "fbfcdd0d-e644-4b03-a632-1237cb5b6077-00-1ecqthk8a8ux8.kirk.replit.dev", secure: true, port: 443, identifier: "NODELINK"
+  } */],
   {
-    //http2: true,
+   // http2: true,
     autoResume: true,
     clientName: "Moonlink/Blio",
   },
