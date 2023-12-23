@@ -3,6 +3,7 @@ import {
     MoonlinkManager,
     MoonlinkQueue,
     MoonlinkNode,
+    Receive,
     Structure
 } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
@@ -24,6 +25,7 @@ export class MoonlinkPlayer {
     public queue: MoonlinkQueue;
     public current: Record<string, any>;
     public previous: Record<string, any>;
+    public receive: Receive;
     public data: Record<string, any>;
     public node: MoonlinkNode | any;
     public rest: MoonlinkRestFul;
@@ -62,6 +64,7 @@ export class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get("node"));
         this.rest = this.node.rest;
         this.manager = manager;
+        this.receive = new (Structure.get("Receive"))(this)
     }
 
     /**
@@ -265,8 +268,8 @@ export class MoonlinkPlayer {
             guildId: this.guildId,
             data: {
                 track: {
-                  encoded: data.encoded
-                  },
+                    encoded: data.encoded
+                },
                 volume: this.volume
             }
         });
@@ -313,7 +316,7 @@ export class MoonlinkPlayer {
         if (!this.queue.size) {
             await this.rest.update({
                 guildId: this.guildId,
-                data: { track: { encoded:  null } }
+                data: { track: { encoded: null } }
             });
         }
         destroy ? this.destroy() : this.queue.clear();
@@ -483,7 +486,7 @@ export class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                track: {encoded: data.encoded },
+                track: { encoded: data.encoded },
                 volume: 80
             }
         });

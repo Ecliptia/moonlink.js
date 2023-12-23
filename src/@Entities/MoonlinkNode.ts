@@ -21,6 +21,7 @@ export class MoonlinkNode {
     public password: string;
     public port: number | null;
     public secure: boolean;
+    public isNodeLink: boolean = false;
     public http: string;
     public rest: MoonlinkRestFul;
     public connected: boolean;
@@ -30,12 +31,12 @@ export class MoonlinkNode {
     public sessionId: string;
     public socket: WebSocket | null;
     public stats: INodeStats;
-    public calls: number;
+    public calls: number = 0;
     public db: MoonlinkDatabase = Structure.db;
+
     constructor(node: INode) {
         this._manager = Structure.manager;
         this.check(node);
-
         this.host = node.host;
         this.identifier = node.identifier || null;
         this.password = node.password ? node.password : "youshallnotpass";
@@ -48,7 +49,8 @@ export class MoonlinkNode {
             : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
-
+        this.isNodeLink = node.isNodeLink ? node.isNodeLink : false;
+        
         this.stats = {
             players: 0,
             playingPlayers: 0,
@@ -143,6 +145,7 @@ export class MoonlinkNode {
                 this.identifier ? this.identifier : this.host
             } has been connected successfully`
         );
+
         this.connected = true;
     }
     private reconnect(): void {
@@ -197,7 +200,6 @@ export class MoonlinkNode {
             case "ready":
                 this.sessionId = payload.sessionId;
                 this.resume ? this.db.set("sessionId", this.sessionId) : null;
-
                 this.resumed = payload.resumed;
                 this._manager.nodes.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
