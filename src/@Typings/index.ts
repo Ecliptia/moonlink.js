@@ -6,6 +6,7 @@ import {
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
+    Receive,
     Players,
     Nodes
 } from "../../index";
@@ -120,6 +121,7 @@ export interface INode {
     secure: boolean;
     retryAmount?: number;
     retryDelay?: number;
+    isNodeLink?: boolean;
 }
 
 export interface IOptions {
@@ -144,6 +146,7 @@ export interface Extendable {
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
+    Receive: typeof Receive;
     Players: typeof Players;
     Nodes: typeof Nodes;
 }

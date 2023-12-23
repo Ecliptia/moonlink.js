@@ -14,6 +14,7 @@ class MoonlinkNode {
     password;
     port;
     secure;
+    isNodeLink = false;
     http;
     rest;
     connected;
@@ -23,7 +24,7 @@ class MoonlinkNode {
     sessionId;
     socket;
     stats;
-    calls;
+    calls = 0;
     db = index_1.Structure.db;
     constructor(node) {
         this._manager = index_1.Structure.manager;
@@ -40,6 +41,7 @@ class MoonlinkNode {
                 : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
+        this.isNodeLink = node.isNodeLink ? node.isNodeLink : false;
         this.stats = {
             players: 0,
             playingPlayers: 0,

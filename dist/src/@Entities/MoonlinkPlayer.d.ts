@@ -1,4 +1,4 @@
-import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode } from "../../index";
+import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode, Receive } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     private manager;
@@ -18,6 +18,7 @@ export declare class MoonlinkPlayer {
     queue: MoonlinkQueue;
     current: Record<string, any>;
     previous: Record<string, any>;
+    receive: Receive;
     data: Record<string, any>;
     node: MoonlinkNode | any;
     rest: MoonlinkRestFul;
