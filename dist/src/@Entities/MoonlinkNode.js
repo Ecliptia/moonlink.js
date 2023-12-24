@@ -6,15 +6,14 @@ class MoonlinkNode {
     _manager;
     reconnectTimeout;
     reconnectAttempts = 1;
-    retryAmount;
-    retryDelay;
+    retryAmount = 6;
+    retryDelay = 30e8;
     resumeStatus = false;
     host;
     identifier;
     password;
     port;
     secure;
-    isNodeLink = false;
     http;
     rest;
     connected;
@@ -41,7 +40,6 @@ class MoonlinkNode {
                 : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
-        this.isNodeLink = node.isNodeLink ? node.isNodeLink : false;
         this.stats = {
             players: 0,
             playingPlayers: 0,

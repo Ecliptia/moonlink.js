@@ -1,7 +1,5 @@
-/// <reference types="node" />
-import { EventEmitter } from "node:events";
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode, WebSocket } from "../../index";
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode } from "../../index";
 export declare class Players {
     _manager: MoonlinkManager;
     map: Map<any, any>;
@@ -39,24 +37,10 @@ export declare class Nodes {
 export interface ReceiveEvents {
     startSpeaking: (data: any) => void;
     endSpeaking: (data: any) => void;
+    audioChunk: (data: any) => void;
     open: () => void;
     close: () => void;
     error: (err: any) => void;
-}
-export declare interface Receive {
-    on<K extends keyof ReceiveEvents>(event: K, listener: ReceiveEvents[K]): this;
-    once<K extends keyof ReceiveEvents>(event: K, listener: ReceiveEvents[K]): this;
-    emit<K extends keyof ReceiveEvents>(event: K, ...args: Parameters<ReceiveEvents[K]>): boolean;
-    off<K extends keyof ReceiveEvents>(event: K, listener: ReceiveEvents[K]): this;
-}
-export declare class Receive extends EventEmitter {
-    player: MoonlinkPlayer;
-    socket: WebSocket | null;
-    canBeUsed: boolean;
-    constructor(player: MoonlinkPlayer);
-    check(): void;
-    start(): void;
-    stop(): boolean;
 }
 export declare abstract class Structure {
     static manager: MoonlinkManager;

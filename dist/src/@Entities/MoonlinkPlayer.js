@@ -20,7 +20,6 @@ class MoonlinkPlayer {
     queue;
     current;
     previous;
-    receive;
     data;
     node;
     rest;
@@ -47,7 +46,6 @@ class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get("node"));
         this.rest = this.node.rest;
         this.manager = manager;
-        this.receive = new (index_1.Structure.get("Receive"))(this);
     }
     updatePlayers() {
         let players = this.map.get("players") || {};

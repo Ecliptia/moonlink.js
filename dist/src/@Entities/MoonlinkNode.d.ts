@@ -13,7 +13,6 @@ export declare class MoonlinkNode {
     password: string;
     port: number | null;
     secure: boolean;
-    isNodeLink: boolean;
     http: string;
     rest: MoonlinkRestFul;
     connected: boolean;

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.Structure = exports.Receive = exports.Nodes = exports.Players = void 0;
-const node_events_1 = require("node:events");
+exports.Plugin = exports.Structure = exports.Nodes = exports.Players = void 0;
 const index_1 = require("../../index");
 class Players {
     _manager;
@@ -229,71 +228,6 @@ class Nodes {
     }
 }
 exports.Nodes = Nodes;
-class Receive extends node_events_1.EventEmitter {
-    player;
-    socket = null;
-    canBeUsed = false;
-    constructor(player) {
-        super();
-        this.player = player;
-    }
-    check() {
-        if (this.player.node.isNodeLink) {
-            this.canBeUsed = true;
-        }
-        else {
-            if (Structure.manager.nodes.getNodeLinks() == null) {
-                this.canBeUsed = false;
-                throw new TypeError(`@Moonlink(Receive) - This function cannot be used by lavalinks, only with nodelinks https://github.com/PerformanC/NodeLink`);
-            }
-            else {
-                this.canBeUsed = true;
-                let NodeLink = Structure.manager.nodes.getNodeLinks()[0];
-                this.player.set("node", NodeLink.identifier ? NodeLink.identifier : NodeLink.host);
-                this.player.node = NodeLink;
-                Structure.manager.players.attemptConnection(this.player.guildId);
-                this.player.restart();
-            }
-        }
-    }
-    start() {
-        if (this.canBeUsed == false)
-            this.check();
-        this.socket = new index_1.WebSocket(`ws${this.player.node.secure ? "s" : ""}://${this.player.node.address}:${this.player.node.port}/connection/data`, {
-            headers: {
-                Authorization: this.player.node.password,
-                "user-id": Structure.manager.clientId,
-                "guild-id": this.player.guildId
-            }
-        });
-        this.socket.on("open", () => {
-            this.emit("open");
-        });
-        this.socket.on("message", data => {
-            data = JSON.parse(data);
-            if (data.op == "startSpeakingEvent") {
-                this.emit("startSpeaking", data.data);
-            }
-            if (data.op == "endSpeakingEvent") {
-                this.emit("endSpeaking", data.data);
-            }
-        });
-        this.socket.on("close", () => {
-            this.emit("close");
-        });
-        this.socket.on("error", err => {
-            this.emit("error", err);
-        });
-    }
-    stop() {
-        if (!this.socket)
-            return false;
-        this.socket.close();
-        this.socket = null;
-        return true;
-    }
-}
-exports.Receive = Receive;
 const structures = {
     MoonlinkManager: index_1.MoonlinkManager,
     MoonlinkPlayer: index_1.MoonlinkPlayer,
@@ -302,7 +236,6 @@ const structures = {
     MoonlinkQueue: index_1.MoonlinkQueue,
     MoonlinkNode: index_1.MoonlinkNode,
     MoonlinkTrack: index_1.MoonlinkTrack,
-    Receive,
     Players,
     Nodes
 };
