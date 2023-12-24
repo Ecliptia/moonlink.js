@@ -12,8 +12,8 @@ export class MoonlinkNode {
     private _manager: MoonlinkManager;
     private reconnectTimeout?: NodeJS.Timeout;
     private reconnectAttempts: number = 1;
-    private retryAmount: number;
-    private retryDelay: number;
+    private retryAmount: number = 6;
+    private retryDelay: number = 30e8;
     private resumeStatus: boolean = false;
 
     public host: string;
@@ -21,7 +21,6 @@ export class MoonlinkNode {
     public password: string;
     public port: number | null;
     public secure: boolean;
-    public isNodeLink: boolean = false;
     public http: string;
     public rest: MoonlinkRestFul;
     public connected: boolean;
@@ -49,8 +48,7 @@ export class MoonlinkNode {
             : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
-        this.isNodeLink = node.isNodeLink ? node.isNodeLink : false;
-        
+
         this.stats = {
             players: 0,
             playingPlayers: 0,
