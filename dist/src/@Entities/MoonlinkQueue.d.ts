@@ -7,6 +7,7 @@ export declare class MoonlinkQueue {
         guildId: string;
     });
     add(data: MoonlinkTrack, position?: number): void;
+    has(identifier: string): boolean;
     first(): any;
     clear(): boolean;
     get size(): number;
