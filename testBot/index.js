@@ -36,18 +36,19 @@ for (const folder of commandFolders) {
 }
 
 client.moon = new MoonlinkManager(
-  [/*{
+  [{
     host: require("../config.json").host,
     port: 443,
     secure: true,
     password: require("../config.json").password,
-  }*//*{
+  }, /*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
   }*/ {
     host: "fbfcdd0d-e644-4b03-a632-1237cb5b6077-00-1ecqthk8a8ux8.kirk.replit.dev", secure: true, port: 443, identifier: "NODELINK", isNodeLink: true
   }],
   {
     // http2: true,
+    movePlayersToNextNode: true,
     autoResume: true,
     clientName: "Moonlink/Blio",
   },
