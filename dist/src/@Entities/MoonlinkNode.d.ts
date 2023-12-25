@@ -30,6 +30,7 @@ export declare class MoonlinkNode {
     request(endpoint: string, params: any): Promise<object>;
     connect(): Promise<any>;
     open(): void;
+    private movePlayersToNextNode;
     private reconnect;
     protected close(code: number, reason: any): void;
     protected message(data: Buffer | string): Promise<void>;

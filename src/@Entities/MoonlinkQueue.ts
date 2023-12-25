@@ -1,4 +1,9 @@
-import { MoonlinkDatabase, MoonlinkManager, MoonlinkTrack, Structure } from "../..";
+import {
+    MoonlinkDatabase,
+    MoonlinkManager,
+    MoonlinkTrack,
+    Structure
+} from "../..";
 
 export class MoonlinkQueue {
     public db: MoonlinkDatabase = Structure.db;
@@ -27,13 +32,20 @@ export class MoonlinkQueue {
                 : queue.length;
 
         if (position < 0 || position > queue.length) {
-            throw new Error("[ @Moonlink/Queue ]: Invalid position specified");
+            throw new Error("@Moonlink(Queue) - Invalid position specified");
         }
 
         queue.splice(position, 0, data);
         this.setQueue(queue);
     }
+    public has(identifier: string): boolean {
+        if (!identifier || typeof identifier !== "string") {
+            throw new Error("@Moonlink(Queue) - Invalid identifier specified");
+        }
 
+        const queue = this.getQueue();
+        return queue.some(track => track.identifier === identifier);
+    }
     public first(): any {
         const queue = this.getQueue();
         return queue.length > 0 ? queue[0] : null;

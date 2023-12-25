@@ -7,7 +7,7 @@ class MoonlinkNode {
     reconnectTimeout;
     reconnectAttempts = 1;
     retryAmount = 6;
-    retryDelay = 30e8;
+    retryDelay = 120000;
     resumeStatus = false;
     host;
     identifier;
@@ -96,6 +96,10 @@ class MoonlinkNode {
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
         };
+        if (this.resume)
+            headers["Session-Id"] = this.db.get("sessionId")
+                ? this.db.get("sessionId")
+                : "";
         this.socket = new index_1.WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -108,12 +112,40 @@ class MoonlinkNode {
         this._manager.emit("debug", `@Moonlink(Node) - The Node ${this.identifier ? this.identifier : this.host} has been connected successfully`);
         this.connected = true;
     }
+    async movePlayersToNextNode() {
+        if (!this._manager.options.movePlayersToNextNode)
+            return;
+        try {
+            let obj = this._manager.players.map.get("players") || [];
+            const players = Object.keys(obj);
+            for (const player of players) {
+                if (obj[player].host.node == this.host &&
+                    obj[player].host.node == this.identifier) {
+                    let nextNode = this._manager.nodes.sortByUsage("players")[0];
+                    let playerClass = this._manager.players.get(obj[player].guildId);
+                    this._manager.emit("debug", `@Moonlink(Node) - Moving player ${obj[player].guildId} to ${nextNode.identifier
+                        ? nextNode.identifier
+                        : nextNode.host}`);
+                    playerClass.set("node", nextNode.identifier
+                        ? nextNode.identifier
+                        : nextNode.host);
+                    playerClass.node = nextNode;
+                    await this._manager.players.attemptConnection(obj[player].guildId);
+                    await playerClass.restart();
+                }
+            }
+        }
+        catch (err) {
+            throw new Error("@Moonlink(Node) - not to other connected lavalinks");
+        }
+    }
     reconnect() {
         if (this.reconnectAttempts >= this.retryAmount) {
             this._manager.emit("debug", `@Moonlink(Node) - Node ${this.identifier ? this.identifier : this.host} was destroyed due to inactivity, attempts to reconnect were failed`);
             this._manager.emit("nodeDestroy", this);
             this.socket.close(1000, "destroy");
             this.socket.removeAllListeners();
+            this.movePlayersToNextNode();
         }
         else {
             this.reconnectTimeout = setTimeout(() => {

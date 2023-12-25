@@ -128,6 +128,7 @@ export interface IOptions {
     sortNode?: SortType;
     autoResume?: boolean;
     http2?: boolean;
+    movePlayersToNextNode?: boolean;
 }
 
 export interface IHeaders {

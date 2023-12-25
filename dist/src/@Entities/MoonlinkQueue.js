@@ -22,10 +22,17 @@ class MoonlinkQueue {
                 ? position - 1
                 : queue.length;
         if (position < 0 || position > queue.length) {
-            throw new Error("[ @Moonlink/Queue ]: Invalid position specified");
+            throw new Error("@Moonlink(Queue) - Invalid position specified");
         }
         queue.splice(position, 0, data);
         this.setQueue(queue);
+    }
+    has(identifier) {
+        if (!identifier || typeof identifier !== "string") {
+            throw new Error("@Moonlink(Queue) - Invalid identifier specified");
+        }
+        const queue = this.getQueue();
+        return queue.some(track => track.identifier === identifier);
     }
     first() {
         const queue = this.getQueue();
