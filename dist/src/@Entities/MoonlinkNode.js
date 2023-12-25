@@ -119,24 +119,23 @@ class MoonlinkNode {
             let obj = this._manager.players.map.get("players") || [];
             const players = Object.keys(obj);
             for (const player of players) {
-                if (obj[player].host.node == this.host &&
-                    obj[player].host.node == this.identifier) {
+                if (obj[player].node == this.host ||
+                    obj[player].node == this.identifier) {
                     let nextNode = this._manager.nodes.sortByUsage("players")[0];
                     let playerClass = this._manager.players.get(obj[player].guildId);
                     this._manager.emit("debug", `@Moonlink(Node) - Moving player ${obj[player].guildId} to ${nextNode.identifier
                         ? nextNode.identifier
                         : nextNode.host}`);
-                    playerClass.set("node", nextNode.identifier
+                    await playerClass.set("node", nextNode.identifier
                         ? nextNode.identifier
                         : nextNode.host);
-                    playerClass.node = nextNode;
-                    await this._manager.players.attemptConnection(obj[player].guildId);
+                    playerClass = this._manager.players.get(obj[player].guildId);
                     await playerClass.restart();
                 }
             }
         }
         catch (err) {
-            throw new Error("@Moonlink(Node) - not to other connected lavalinks");
+            throw new Error("@Moonlink(Node) - not to other connected lavalinks " + err);
         }
     }
     reconnect() {
