@@ -1,0 +1,9 @@
+.gitignore
+.npmignore
+.github
+package-lock.json
+/src
+index.ts
+testBot
+CODE_OF_CONDUCT.md
+yarn.lock
