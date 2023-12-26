@@ -46,7 +46,7 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | string;
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;

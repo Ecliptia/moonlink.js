@@ -1,5 +1,16 @@
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
 import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode } from "../../index";
+export declare const State: {
+    READY: string;
+    CONNECTED: string;
+    CONNECTING: string;
+    DISCONNECTING: string;
+    DISCONNECTED: string;
+    RECONNECTING: string;
+    AUTORESUMING: string;
+    RESUMING: string;
+    MOVING: string;
+};
 export declare class Players {
     _manager: MoonlinkManager;
     map: Map<any, any>;
@@ -25,7 +36,6 @@ export declare class Nodes {
     add(node: INode): void;
     remove(name: string): boolean;
     get(name: any): any;
-    getNodeLinks(): MoonlinkNode[];
     sortByUsage(sortType: SortType): MoonlinkNode[];
     private sortNodesByMemoryUsage;
     private sortNodesByLavalinkCpuLoad;
@@ -33,14 +43,6 @@ export declare class Nodes {
     private sortNodesByCalls;
     private sortNodesByPlayingPlayers;
     private sortNodesByPlayers;
-}
-export interface ReceiveEvents {
-    startSpeaking: (data: any) => void;
-    endSpeaking: (data: any) => void;
-    audioChunk: (data: any) => void;
-    open: () => void;
-    close: () => void;
-    error: (err: any) => void;
 }
 export declare abstract class Structure {
     static manager: MoonlinkManager;

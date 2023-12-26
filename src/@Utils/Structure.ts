@@ -1,5 +1,11 @@
 import { EventEmitter } from "node:events";
-import { INode, Extendable, SortType, createOptions } from "../@Typings";
+import {
+    INode,
+    Extendable,
+    SortType,
+    createOptions
+} from "../@Typings";
+
 import {
     MoonlinkManager,
     MoonlinkPlayer,
@@ -10,6 +16,18 @@ import {
     MoonlinkTrack,
     WebSocket
 } from "../../index";
+
+export const State = {
+    READY: "READY",
+    CONNECTED: "CONNECTED",
+    CONNECTING: "CONNECTING",
+    DISCONNECTING: "DISCONNECTING",
+    DISCONNECTED: "DISCONNECTED",
+    RECONNECTING: "RECONNECTING",
+    AUTORESUMING: "AUTORESUMING",
+    RESUMING: "RESUMING",
+    MOVING: "MOVING"
+};
 
 export class Players {
     public _manager: MoonlinkManager;
@@ -243,23 +261,13 @@ export class Nodes {
     public get(name) {
         return this.map.get(name) ? this.map.get(name) : null;
     }
-    public getNodeLinks(): MoonlinkNode[] {
-        const connectedNodes = [...this.map.values()].filter(
-            node => node.connected && node.isNodeLink
-        );
-        if (connectedNodes.length == 0) return null;
-        return connectedNodes.sort(
-            (a, b) =>
-                (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)
-        );
-    }
     public sortByUsage(sortType: SortType): MoonlinkNode[] {
         this._manager.emit(
             "debug",
             `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`
         );
         const connectedNodes = [...this.map.values()].filter(
-            node => node.connected
+            node => node.state == State.READY
         );
         if (connectedNodes.length == 0)
             throw new TypeError(
@@ -317,14 +325,6 @@ export class Nodes {
     }
 }
 
-export interface ReceiveEvents {
-    startSpeaking: (data: any) => void;
-    endSpeaking: (data: any) => void;
-    audioChunk: (data: any) => void;
-    open: () => void;
-    close: () => void;
-    error: (err: any) => void;
-}
 
 const structures: Extendable = {
     MoonlinkManager,

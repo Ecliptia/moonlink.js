@@ -1,7 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.Structure = exports.Nodes = exports.Players = void 0;
+exports.Plugin = exports.Structure = exports.Nodes = exports.Players = exports.State = void 0;
 const index_1 = require("../../index");
+exports.State = {
+    READY: "READY",
+    CONNECTED: "CONNECTED",
+    CONNECTING: "CONNECTING",
+    DISCONNECTING: "DISCONNECTING",
+    DISCONNECTED: "DISCONNECTED",
+    RECONNECTING: "RECONNECTING",
+    AUTORESUMING: "AUTORESUMING",
+    RESUMING: "RESUMING",
+    MOVING: "MOVING"
+};
 class Players {
     _manager;
     map;
@@ -179,15 +190,9 @@ class Nodes {
     get(name) {
         return this.map.get(name) ? this.map.get(name) : null;
     }
-    getNodeLinks() {
-        const connectedNodes = [...this.map.values()].filter(node => node.connected && node.isNodeLink);
-        if (connectedNodes.length == 0)
-            return null;
-        return connectedNodes.sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0));
-    }
     sortByUsage(sortType) {
         this._manager.emit("debug", `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`);
-        const connectedNodes = [...this.map.values()].filter(node => node.connected);
+        const connectedNodes = [...this.map.values()].filter(node => node.state == exports.State.READY);
         if (connectedNodes.length == 0)
             throw new TypeError("[ @Moonlink/Manager ]: No lavalink server connected");
         switch (sortType) {
