@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { INodeStats, INode } from "../@Typings";
+import { INode, INodeStats } from "../@Typings";
 import { MoonlinkRestFul, MoonlinkDatabase, WebSocket } from "../../index";
 export declare class MoonlinkNode {
     private _manager;
@@ -15,12 +15,12 @@ export declare class MoonlinkNode {
     secure: boolean;
     http: string;
     rest: MoonlinkRestFul;
-    connected: boolean;
     resume?: boolean;
     resumed?: boolean;
     resumeTimeout?: number;
     sessionId: string;
     socket: WebSocket | null;
+    state: string;
     stats: INodeStats;
     calls: number;
     db: MoonlinkDatabase;
@@ -30,6 +30,7 @@ export declare class MoonlinkNode {
     request(endpoint: string, params: any): Promise<object>;
     connect(): Promise<any>;
     open(): void;
+    private movePlayersToNextNode;
     private reconnect;
     protected close(code: number, reason: any): void;
     protected message(data: Buffer | string): Promise<void>;

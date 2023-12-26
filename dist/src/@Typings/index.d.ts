@@ -46,7 +46,7 @@ export interface TrackDataInfo {
     isStream: boolean;
     uri: string;
 }
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | string;
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string;
@@ -97,6 +97,7 @@ export interface IOptions {
     sortNode?: SortType;
     autoResume?: boolean;
     http2?: boolean;
+    movePlayersToNextNode?: boolean;
 }
 export interface IHeaders {
     Authorization: string;
@@ -139,10 +140,13 @@ export interface VoiceOptions {
     ping?: number;
 }
 export type Endpoint = string;
+export interface objectTrack {
+    encoded: string;
+}
 export interface RestOptions {
     guildId: string;
     data: {
-        encodedTrack?: string;
+        track?: objectTrack;
         identifier?: string;
         startTime?: number;
         endTime?: number;

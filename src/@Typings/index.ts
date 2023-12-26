@@ -73,7 +73,7 @@ export interface TrackDataInfo {
     uri: string;
 }
 
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | string;
 
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
@@ -112,6 +112,7 @@ export interface INodeStats {
         lavalinkLoad: number;
     };
 }
+
 export interface INode {
     host: string;
     identifier?: string;
@@ -128,6 +129,7 @@ export interface IOptions {
     sortNode?: SortType;
     autoResume?: boolean;
     http2?: boolean;
+    movePlayersToNextNode?: boolean;
 }
 
 export interface IHeaders {
@@ -174,11 +176,17 @@ export interface VoiceOptions {
     connected?: boolean;
     ping?: number;
 }
+
 export type Endpoint = string;
+
+export interface objectTrack {
+    encoded: string;
+}
+
 export interface RestOptions {
     guildId: string;
     data: {
-        encodedTrack?: string;
+        track?: objectTrack;
         identifier?: string;
         startTime?: number;
         endTime?: number;
@@ -190,17 +198,11 @@ export interface RestOptions {
     };
 }
 
-/**
- * Interface for optional connection options.
- */
 export interface connectOptions {
     setMute?: boolean;
     setDeaf?: boolean;
 }
 
-/**
- * Interface for player information.
- */
 export interface PlayerInfos {
     guildId: string;
     textChannel: string | null;
@@ -229,6 +231,7 @@ export interface TrackInfo {
     sourceName: string;
     isrc?: string;
 }
+
 export interface MoonlinkTrackOptions {
     info: TrackInfo;
     encoded?: string;

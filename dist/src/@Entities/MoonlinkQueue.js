@@ -3,14 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkQueue = void 0;
 const __1 = require("../..");
 class MoonlinkQueue {
-    db;
+    db = __1.Structure.db;
     guildId;
     manager;
     constructor(manager, data) {
         if (!manager || !data || !data.guildId) {
             throw new Error("[ @Moonlink/Queue ]: Invalid constructor arguments");
         }
-        this.db = new (__1.Structure.get("MoonlinkDatabase"))(manager.clientId);
         this.guildId = data.guildId;
         this.manager = __1.Structure.manager;
     }
@@ -23,10 +22,17 @@ class MoonlinkQueue {
                 ? position - 1
                 : queue.length;
         if (position < 0 || position > queue.length) {
-            throw new Error("[ @Moonlink/Queue ]: Invalid position specified");
+            throw new Error("@Moonlink(Queue) - Invalid position specified");
         }
         queue.splice(position, 0, data);
         this.setQueue(queue);
+    }
+    has(identifier) {
+        if (!identifier || typeof identifier !== "string") {
+            throw new Error("@Moonlink(Queue) - Invalid identifier specified");
+        }
+        const queue = this.getQueue();
+        return queue.some(track => track.identifier === identifier);
     }
     first() {
         const queue = this.getQueue();

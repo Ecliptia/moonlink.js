@@ -6,8 +6,8 @@ class MoonlinkNode {
     _manager;
     reconnectTimeout;
     reconnectAttempts = 1;
-    retryAmount;
-    retryDelay;
+    retryAmount = 6;
+    retryDelay = 120000;
     resumeStatus = false;
     host;
     identifier;
@@ -16,15 +16,15 @@ class MoonlinkNode {
     secure;
     http;
     rest;
-    connected;
     resume;
     resumed;
     resumeTimeout = 30000;
     sessionId;
     socket;
+    state = index_1.State.DISCONNECTED;
     stats;
-    calls;
-    db;
+    calls = 0;
+    db = index_1.Structure.db;
     constructor(node) {
         this._manager = index_1.Structure.manager;
         this.check(node);
@@ -62,7 +62,6 @@ class MoonlinkNode {
             }
         };
         this.rest = new index_1.MoonlinkRestFul(this);
-        this.db = new (index_1.Structure.get("MoonlinkDatabase"))(this._manager.options.clientId);
         this.connect();
     }
     get address() {
@@ -90,13 +89,18 @@ class MoonlinkNode {
         return this.rest.get(`${endpoint}?${params}`);
     }
     async connect() {
-        if (this.connected)
+        if (this.state == index_1.State.CONNECTED || this.state == index_1.State.READY)
             return;
+        this.state = index_1.State.CONNECTING;
         let headers = {
             Authorization: this.password,
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
         };
+        if (this.resume)
+            headers["Session-Id"] = this.db.get("sessionId")
+                ? this.db.get("sessionId")
+                : "";
         this.socket = new index_1.WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -107,7 +111,36 @@ class MoonlinkNode {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this._manager.emit("debug", `@Moonlink(Node) - The Node ${this.identifier ? this.identifier : this.host} has been connected successfully`);
-        this.connected = true;
+        this.state = index_1.State.CONNECTED;
+    }
+    async movePlayersToNextNode() {
+        if (!this._manager.options.movePlayersToNextNode)
+            return;
+        const state = this.state;
+        this.state = index_1.State.MOVING;
+        try {
+            let obj = this._manager.players.map.get("players") || [];
+            const players = Object.keys(obj);
+            for (const player of players) {
+                if (obj[player].node == this.host ||
+                    obj[player].node == this.identifier) {
+                    let nextNode = this._manager.nodes.sortByUsage("players")[0];
+                    let playerClass = this._manager.players.get(obj[player].guildId);
+                    this._manager.emit("debug", `@Moonlink(Node) - Moving player ${obj[player].guildId} to ${nextNode.identifier
+                        ? nextNode.identifier
+                        : nextNode.host}`);
+                    await playerClass.set("node", nextNode.identifier
+                        ? nextNode.identifier
+                        : nextNode.host);
+                    playerClass = this._manager.players.get(obj[player].guildId);
+                    await playerClass.restart();
+                }
+            }
+            this.state = state;
+        }
+        catch (err) {
+            throw new Error("@Moonlink(Node) - not to other connected lavalinks " + err);
+        }
     }
     reconnect() {
         if (this.reconnectAttempts >= this.retryAmount) {
@@ -115,12 +148,13 @@ class MoonlinkNode {
             this._manager.emit("nodeDestroy", this);
             this.socket.close(1000, "destroy");
             this.socket.removeAllListeners();
+            this.movePlayersToNextNode();
         }
         else {
             this.reconnectTimeout = setTimeout(() => {
                 this.socket.removeAllListeners();
                 this.socket = null;
-                this.connected = false;
+                this.state = index_1.State.RECONNECTING;
                 this._manager.emit("nodeReconnect", this);
                 this.connect();
                 this._manager.emit("debug", `@Moonlink(Node) - we are trying to reconnect node ${this.identifier ? this.identifier : this.host}, attempted number ${this.reconnectAttempts}
@@ -134,7 +168,7 @@ class MoonlinkNode {
             this.reconnect();
         this._manager.emit("debug", `@Moonlink(Node) - The node connection ${this.identifier ? this.identifier : this.host} has been closed`);
         this._manager.emit("nodeClose", this, code, reason);
-        this.connected = false;
+        this.state = index_1.State.DISCONNECTED;
     }
     async message(data) {
         if (Array.isArray(data))
@@ -167,6 +201,7 @@ class MoonlinkNode {
                     this._manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
                 }
                 if (this._manager.options.autoResume) {
+                    this.state = index_1.State.AUTORESUMING;
                     let obj = this._manager.players.map.get("players") || [];
                     const players = Object.keys(obj);
                     for (const player of players) {
@@ -180,6 +215,7 @@ class MoonlinkNode {
                     }
                 }
                 if (this.resumed) {
+                    this.state = index_1.State.RESUMING;
                     let players = await this.rest.get(`sessions/${this.sessionId}/players`);
                     for (const player of players) {
                         let previousInfosPlayer = this.db.get(`players.${player.guildId}`) || {};
@@ -201,6 +237,7 @@ class MoonlinkNode {
                         this._manager.players.map.set("current", current);
                     }
                 }
+                this.state = index_1.State.READY;
                 break;
             case "stats":
                 delete payload.op;
@@ -217,7 +254,7 @@ class MoonlinkNode {
                         if (player && player.paused) {
                             return payload.state.position;
                         }
-                        if (player && !player.node.isConnected) {
+                        if (player && !player.node.connected) {
                             return payload.state.position;
                         }
                         if (!player)
@@ -299,9 +336,7 @@ class MoonlinkNode {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: {
-                                encodedTrack: track.encoded
-                            }
+                            data: { track: { encoded: track.encoded } }
                         });
                         return;
                     }
