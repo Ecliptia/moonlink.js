@@ -38,7 +38,9 @@
     "type": "git",
     "url": "https://github.com/Ecliptia/moonlink.js"
   },
-  "engines": {},
+  "engines": {
+    "node": ">=16.6.0"
+  },
   "devDependencies": {
     "@types/node": "^18.15.11",
     "discord.js": "^14.14.1",
