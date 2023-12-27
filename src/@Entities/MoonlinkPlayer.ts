@@ -7,7 +7,7 @@ import {
 } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export class MoonlinkPlayer {
-    private manager: MoonlinkManager;
+    public manager: MoonlinkManager;
     private infos: PlayerInfos;
     private map: Map<string, any>;
     public guildId: string;

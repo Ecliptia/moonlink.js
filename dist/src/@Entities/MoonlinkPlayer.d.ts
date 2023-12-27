@@ -1,7 +1,7 @@
 import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
-    private manager;
+    manager: MoonlinkManager;
     private infos;
     private map;
     guildId: string;
