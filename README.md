@@ -47,7 +47,7 @@ bun install moonlink.js
 ## How to Use
 
 ```javascript
-// Creating an instance of the Discord.js client
+// Creating an instance of the Discord.js clien
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
