@@ -19,9 +19,13 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.players = new (index_1.Structure.get("Players"))();
         this.nodes = new (index_1.Structure.get("Nodes"))();
         this.options = options;
-        this.options.clientName
-            ? (this.options.clientName = `@Moonlink/${this.version}`)
-            : null;
+        if (options.plugins) {
+            options.plugins.forEach(plugin => {
+                plugin.load(this);
+            });
+        }
+        if (!this.options.clientName)
+            this.options.clientName = `@Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
     }
     init(clientId) {
         if (this.initiated)

@@ -235,6 +235,7 @@ class Nodes {
 exports.Nodes = Nodes;
 const structures = {
     MoonlinkManager: index_1.MoonlinkManager,
+    MoonlinkRestFul: index_1.MoonlinkRestFul,
     MoonlinkPlayer: index_1.MoonlinkPlayer,
     MoonlinkFilters: index_1.MoonlinkFilters,
     MoonlinkDatabase: index_1.MoonlinkDatabase,

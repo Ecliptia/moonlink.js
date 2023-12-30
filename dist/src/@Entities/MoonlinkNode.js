@@ -61,7 +61,7 @@ class MoonlinkNode {
                 deficit: 0
             }
         };
-        this.rest = new index_1.MoonlinkRestFul(this);
+        this.rest = new (index_1.Structure.get("MoonlinkRestFul"))(this);
         this.connect();
     }
     get address() {
