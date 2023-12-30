@@ -70,8 +70,7 @@ export class MoonlinkNode {
                 deficit: 0
             }
         };
-        this.rest = new MoonlinkRestFul(this);
-
+        this.rest = new (Structure.get("MoonlinkRestFul"))(this);
         this.connect();
     }
     public get address(): string {

@@ -3,8 +3,12 @@ const {
   Collection
 } = require("discord.js");
 const {
-  MoonlinkManager
+  MoonlinkManager,
+  Plugin
 } = require("../dist/index.js");
+const {
+  Lyrics
+} = require("../../moonlink.js-lyrics/index.js")
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
@@ -12,7 +16,7 @@ const log = (message) => {
   const coloredMessage = message.replace(/\[(.*?)\]/g, "\x1b[34m[$1]\x1b[0m");
   console.log(coloredMessage);
 };
-
+console.log(Lyrics, !(Lyrics instanceof Plugin))
 const client = new Client({
   intents: 131071,
 });
@@ -43,14 +47,15 @@ client.moon = new MoonlinkManager(
     password: require("../config.json").password,
   }, /*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
-  }*/ {
+  } {
     host: "fbfcdd0d-e644-4b03-a632-1237cb5b6077-00-1ecqthk8a8ux8.kirk.replit.dev", secure: true, port: 443, identifier: "NODELINK", isNodeLink: true
-  }],
+  }*/],
   {
     // http2: true,
     movePlayersToNextNode: true,
     autoResume: true,
     clientName: "Moonlink/Blio",
+    plugins: [new Lyrics()],
   },
   (id, data) => {
     let guild = client.guilds.cache.get(id);

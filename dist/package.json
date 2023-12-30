@@ -1,6 +1,6 @@
 {
     "name": "moonlink.js",
-    "version": "3.0.2",
+    "version": "3.0.3"
     "description": "Imagine a Music... 🌙✨ Welcome to Moonlink.js! We invite you to create your own music bot on Discord using Lavalink, in a simple and easy way! 🎶🤖",
     "keywords": [
         "bot",
@@ -42,6 +42,8 @@
     "devDependencies": {
         "@types/node": "^18.15.11",
         "discord.js": "^14.14.1",
-        "get-image-colors": "^4.0.1"
+        "get-image-colors": "^4.0.1",
+        "typedoc": "^0.25.4",
+        "typedoc-plugin-markdown": "^3.17.1"
     }
 }

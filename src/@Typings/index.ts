@@ -3,10 +3,12 @@ import {
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,
+    MoonlinkRestFul,
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
     Players,
+    Plugin,
     Nodes
 } from "../../index";
 
@@ -128,6 +130,7 @@ export interface IOptions {
     clientName?: string;
     sortNode?: SortType;
     autoResume?: boolean;
+    plugins?: Plugin[];
     http2?: boolean;
     movePlayersToNextNode?: boolean;
 }
@@ -143,6 +146,7 @@ export interface Extendable {
     MoonlinkPlayer: typeof MoonlinkPlayer;
     MoonlinkDatabase: typeof MoonlinkDatabase;
     MoonlinkFilters: typeof MoonlinkFilters;
+    MoonlinkRestFul: typeof MoonlinkRestFul;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
