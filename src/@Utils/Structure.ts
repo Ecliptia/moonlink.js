@@ -8,6 +8,7 @@ import {
 
 import {
     MoonlinkManager,
+    MoonlinkRestFul,
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,
@@ -328,6 +329,7 @@ export class Nodes {
 
 const structures: Extendable = {
     MoonlinkManager,
+    MoonlinkRestFul,
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,

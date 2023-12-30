@@ -35,7 +35,7 @@ class MoonlinkPlayer {
         this.loop = infos.loop || null;
         this.volume = infos.volume || 90;
         this.shuffled = infos.shuffled || false;
-        this.queue = new (index_1.Structure.get("MoonlinkQueue"))(index_1.Structure.manager, this);
+        this.queue = new (index_1.Structure.get("MoonlinkQueue"))(manager, this);
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];
         this.previous = map.get("previous") || {};
