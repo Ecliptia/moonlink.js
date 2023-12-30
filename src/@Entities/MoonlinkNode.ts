@@ -71,7 +71,6 @@ export class MoonlinkNode {
             }
         };
         this.rest = new (Structure.get("MoonlinkRestFul"))(this);
-
         this.connect();
     }
     public get address(): string {
