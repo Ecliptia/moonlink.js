@@ -145,6 +145,10 @@ export type Endpoint = string;
 export interface objectTrack {
     encoded: string;
 }
+export interface PreviousInfosPlayer {
+    voiceChannel?: string;
+    textChannel?: string;
+}
 export interface RestOptions {
     guildId: string;
     data: {
