@@ -1,4 +1,10 @@
-import { INode, INodeStats, IHeaders, SearchResult } from "../@Typings";
+import {
+    INode,
+    INodeStats,
+    IHeaders,
+    SearchResult,
+    PreviousInfosPlayer
+} from "../@Typings";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
@@ -302,8 +308,10 @@ export class MoonlinkNode {
                         `sessions/${this.sessionId}/players`
                     );
                     for (const player of players) {
-                        let previousInfosPlayer =
-                            this.db.get(`players.${player.guildId}`) || {};
+                        let previousInfosPlayer: PreviousInfosPlayer =
+                            this.db.get<PreviousInfosPlayer>(
+                                `players.${player.guildId}`
+                            ) || {};
                         let playerClass = this._manager.players.create({
                             guildId: player.guildId,
                             voiceChannel: previousInfosPlayer.voiceChannel,
@@ -414,7 +422,7 @@ export class MoonlinkNode {
                 let previousData: any =
                     this._manager.players.map.get("previous") || {};
                 let track: any = currents[payload.guildId] || null;
-                let queue = this.db.get(`queue.${payload.guildId}`);
+                let queue: string[] = this.db.get(`queue.${payload.guildId}`);
                 players[payload.guildId] = {
                     ...players[payload.guildId],
                     playing: false
@@ -453,7 +461,10 @@ export class MoonlinkNode {
                                 track,
                                 payload
                             );
-                        player.current = queue.shift();
+
+                        player.current = JSON.parse(
+                            queue.shift() as string
+                        ) as Record<string, any>;
                         player.play();
                         return;
                     } else {
@@ -469,7 +480,7 @@ export class MoonlinkNode {
                                         Track shuffling logic
                                 */
                 if (player.queue.size && player.data.shuffled) {
-                    let currentQueue = this.db.get(`queue.${payload.guildId}`);
+                    let currentQueue: string[] = this.db.get(`queue.${payload.guildId}`);
                     const randomIndex = Math.floor(
                         Math.random() * currentQueue.length
                     );

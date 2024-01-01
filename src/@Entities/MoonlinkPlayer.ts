@@ -331,7 +331,9 @@ export class MoonlinkPlayer {
           */
 
         if (this.queue.size && this.data.shuffled) {
-            let currentQueue = this.queue.db.get(`queue.${this.guildId}`);
+            let currentQueue: string[] = this.queue.db.get(
+                `queue.${this.guildId}`
+            );
             const randomIndex = Math.floor(Math.random() * currentQueue.length);
             const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
             currentQueue.unshift(shuffledTrack);
@@ -467,7 +469,7 @@ export class MoonlinkPlayer {
             );
         }
 
-        let queue = this.queue.db.get(`queue.${this.guildId}`);
+        let queue: string[] = this.queue.db.get(`queue.${this.guildId}`);
         if (!queue[position - 1]) {
             throw new Error(
                 `[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`
