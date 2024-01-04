@@ -22,13 +22,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeRequest = void 0;
-const http_1 = __importDefault(require("http"));
-const https_1 = __importDefault(require("https"));
+const http = __importStar(require("http"));
+const https = __importStar(require("https"));
 const http2 = __importStar(require("http2"));
 const index_1 = require("../../index");
 function makeRequest(uri, options, data) {
@@ -36,7 +33,7 @@ function makeRequest(uri, options, data) {
         const url = new URL(uri);
         if (index_1.Structure.manager.options.http2 === true) {
             let client = http2.connect(url.origin, {
-                protocol: url.protocol == "https:" ? "https:" : "http:",
+                protocol: url.protocol === "https:" ? "https:" : "http:",
                 rejectUnauthorized: false
             });
             const reqOptions = {
@@ -59,7 +56,13 @@ function makeRequest(uri, options, data) {
                 req.on("data", chunk => (chunks += chunk));
                 req.on("end", () => {
                     client.close();
-                    resolve(JSON.parse(chunks));
+                    try {
+                        const parsedData = JSON.parse(chunks);
+                        resolve(parsedData);
+                    }
+                    catch (parseError) {
+                        resolve(parseError);
+                    }
                 });
                 req.on("error", error => {
                     index_1.Structure.manager.emit("debug", `@Moonlink(MakeRequest[HTTP/2]) - An error occurred when requesting the ${url}: ${error}`);
@@ -67,48 +70,52 @@ function makeRequest(uri, options, data) {
                     resolve(error);
                 });
             });
-            console.log(data);
             data ? req.end(JSON.stringify(data)) : req.end();
         }
-        let requestModule;
-        if (url.protocol === "https:") {
-            requestModule = https_1.default;
-        }
         else {
-            requestModule = http_1.default;
-        }
-        options.headers = {
-            "Content-Type": "application/json",
-            ...options.headers
-        };
-        const reqOptions = {
-            port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
-            method: "GET",
-            ...options
-        };
-        const req = requestModule.request(url, reqOptions, async (res) => {
-            const chunks = [];
-            res.on("data", async (chunk) => {
-                chunks.push(chunk);
-            });
-            res.on("end", async () => {
-                try {
-                    const responseData = Buffer.concat(chunks).toString();
-                    resolve(JSON.parse(responseData));
-                }
-                catch (err) {
+            let requestModule = http;
+            if (url.protocol === "https:") {
+                requestModule = https;
+            }
+            options.headers = {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            };
+            const reqOptions = {
+                host: url.hostname,
+                port: url.port
+                    ? parseInt(url.port)
+                    : url.protocol === "https:"
+                        ? 443
+                        : 80,
+                path: url.pathname + url.search,
+                method: options.method || "GET",
+                ...options
+            };
+            const req = requestModule.request(url, reqOptions, async (res) => {
+                const chunks = [];
+                res.on("data", async (chunk) => {
+                    chunks.push(chunk);
+                });
+                res.on("end", async () => {
+                    try {
+                        const responseData = Buffer.concat(chunks).toString();
+                        const parsedData = JSON.parse(responseData);
+                        resolve(parsedData);
+                    }
+                    catch (err) {
+                        resolve(err);
+                    }
+                });
+                res.on("error", (err) => {
                     resolve(err);
-                }
+                });
             });
-            res.on("error", (err) => {
-                resolve(err);
-            });
-        });
-        if (data) {
-            req.write(JSON.stringify(data));
+            if (data) {
+                req.write(JSON.stringify(data));
+            }
+            req.end();
         }
-        req.end();
     });
 }
 exports.makeRequest = makeRequest;
-//# sourceMappingURL=MoonlinkMakeRequest.js.map

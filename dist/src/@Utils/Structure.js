@@ -274,4 +274,3 @@ class Plugin {
     load(manager) { }
 }
 exports.Plugin = Plugin;
-//# sourceMappingURL=Structure.js.map

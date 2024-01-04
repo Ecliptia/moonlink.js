@@ -14,8 +14,7 @@ import {
     MoonlinkDatabase,
     MoonlinkQueue,
     MoonlinkNode,
-    MoonlinkTrack,
-    WebSocket
+    MoonlinkTrack
 } from "../../index";
 
 export const State = {

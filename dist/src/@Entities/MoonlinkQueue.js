@@ -72,4 +72,3 @@ class MoonlinkQueue {
     }
 }
 exports.MoonlinkQueue = MoonlinkQueue;
-//# sourceMappingURL=MoonlinkQueue.js.map

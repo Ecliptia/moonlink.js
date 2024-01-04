@@ -21,7 +21,9 @@
       "require": "./dist/index.js"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "start": "rm -r dist && tsc && mv ./dist/index.js ./"
+  },
   "homepage": "https://moonlink.js.org",
   "bugs": {
     "url": "https://github.com/1Lucas1apk/moonlink.js/issues",
@@ -38,12 +40,17 @@
     "type": "git",
     "url": "https://github.com/1Lucas1apk/moonlink.js"
   },
-  "engines": {},
+  "engines": {
+    "node": ">=16.6.0"
+  },
   "devDependencies": {
     "@types/node": "^18.15.11",
     "discord.js": "^14.14.1",
     "get-image-colors": "^4.0.1",
     "typedoc": "^0.25.4",
     "typedoc-plugin-markdown": "^3.17.1"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
   }
 }
