@@ -22,7 +22,9 @@ jobs:
       - name: "print version"
         run: npm --v
       - name: "Install packages"
-        run: npm ci
+        run: |
+          npm i
+          npm ci
       - name: "publish package"
         uses: JS-DevTools/npm-publish@v3
         with:
