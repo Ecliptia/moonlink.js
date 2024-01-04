@@ -5,9 +5,9 @@ import {
     MoonlinkNode,
     Structure
 } from "../../index";
-import { PlayerInfos, connectOptions } from "../@Typings";
+import { PlayerInfos, connectOptions, PreviousInfosPlayer } from "../@Typings";
 export class MoonlinkPlayer {
-    private manager: MoonlinkManager;
+    public manager: MoonlinkManager;
     private infos: PlayerInfos;
     private map: Map<string, any>;
     public guildId: string;
@@ -62,6 +62,37 @@ export class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get("node"));
         this.rest = this.node.rest;
         this.manager = manager;
+
+        const existingData =
+            this.queue.db.get<PreviousInfosPlayer>(`players.${this.guildId}`) ||
+            {};
+
+        if (
+            this.voiceChannel &&
+            this.voiceChannel !==
+                (existingData.voiceChannel && existingData.voiceChannel)
+        ) {
+            existingData.voiceChannel = this.voiceChannel;
+        }
+
+        if (
+            this.textChannel &&
+            this.textChannel !==
+                (existingData.textChannel && existingData.textChannel)
+        ) {
+            existingData.textChannel = this.textChannel;
+        }
+        if (
+            existingData !==
+            (this.queue.db.get<PreviousInfosPlayer>(
+                `players.${this.guildId}`
+            ) || {})
+        ) {
+            this.queue.db.set<PreviousInfosPlayer>(
+                `players.${this.guildId}`,
+                existingData
+            );
+        }
     }
 
     /**
@@ -220,7 +251,9 @@ export class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: this.current.encoded,
+                track: {
+                    encoded: this.current.encoded
+                },
                 position: this.current.position,
                 volume: this.volume
             }
@@ -262,7 +295,9 @@ export class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: data.encoded,
+                track: {
+                    encoded: data.encoded
+                },
                 volume: this.volume
             }
         });
@@ -309,7 +344,7 @@ export class MoonlinkPlayer {
         if (!this.queue.size) {
             await this.rest.update({
                 guildId: this.guildId,
-                data: { encodedTrack: null }
+                data: { track: { encoded: null } }
             });
         }
         destroy ? this.destroy() : this.queue.clear();
@@ -327,7 +362,9 @@ export class MoonlinkPlayer {
           */
 
         if (this.queue.size && this.data.shuffled) {
-            let currentQueue = this.queue.db.get(`queue.${this.guildId}`);
+            let currentQueue: string[] = this.queue.db.get(
+                `queue.${this.guildId}`
+            );
             const randomIndex = Math.floor(Math.random() * currentQueue.length);
             const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
             currentQueue.unshift(shuffledTrack);
@@ -463,7 +500,7 @@ export class MoonlinkPlayer {
             );
         }
 
-        let queue = this.queue.db.get(`queue.${this.guildId}`);
+        let queue: string[] = this.queue.db.get(`queue.${this.guildId}`);
         if (!queue[position - 1]) {
             throw new Error(
                 `[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`
@@ -479,8 +516,8 @@ export class MoonlinkPlayer {
         await this.rest.update({
             guildId: this.guildId,
             data: {
-                encodedTrack: data.encoded,
-                volume: 90
+                track: { encoded: data.encoded },
+                volume: 80
             }
         });
 

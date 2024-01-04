@@ -9,7 +9,6 @@
     "paths": {
       "package.json": ["./package.json"]
     },
-    "sourceMap": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -19,7 +18,9 @@
     "declaration": true,
     "alwaysStrict": true,
     "resolveJsonModule": true,
-    "removeComments": true
+    "removeComments": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src","index.ts"]
+  "include": ["src",
+    "index.ts"]
 }

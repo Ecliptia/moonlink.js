@@ -1,4 +1,7 @@
-export type Headers = {
-    Authorization?: string | null;
-};
-export declare function makeRequest(uri: string, options: any, data?: any): Promise<any>;
+/// <reference types="node" />
+/// <reference types="node" />
+import * as http from "http";
+import * as https from "https";
+export declare function makeRequest<T>(uri: string, options: http.RequestOptions | (https.RequestOptions & {
+    method?: string;
+}), data?: Record<string, any>): Promise<T>;

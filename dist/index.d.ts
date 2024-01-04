@@ -5,7 +5,6 @@ export * from "./src/@Entities/MoonlinkPlayer";
 export * from "./src/@Entities/MoonlinkQueue";
 export * from "./src/@Services/MoonlinkMakeRequest";
 export * from "./src/@Services/MoonlinkRestFul";
-export * from "./src/@Services/PerforCWebsocket";
 export * from "./src/@Typings/";
 export * from "./src/@Utils/MoonlinkDatabase";
 export * from "./src/@Utils/MoonlinkFilters";

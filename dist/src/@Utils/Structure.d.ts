@@ -1,5 +1,16 @@
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkNode } from "../../index";
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode } from "../../index";
+export declare const State: {
+    READY: string;
+    CONNECTED: string;
+    CONNECTING: string;
+    DISCONNECTING: string;
+    DISCONNECTED: string;
+    RECONNECTING: string;
+    AUTORESUMING: string;
+    RESUMING: string;
+    MOVING: string;
+};
 export declare class Players {
     _manager: MoonlinkManager;
     map: Map<any, any>;
@@ -35,6 +46,7 @@ export declare class Nodes {
 }
 export declare abstract class Structure {
     static manager: MoonlinkManager;
+    static db: MoonlinkDatabase;
     static extend<K extends keyof Extendable, T extends Extendable[K]>(name: K, extender: (target: Extendable[K]) => T): T;
     static init(manager: MoonlinkManager): void;
     static get<K extends keyof Extendable>(name: K): Extendable[K];

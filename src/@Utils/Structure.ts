@@ -1,6 +1,14 @@
-import { INode, Extendable, SortType, createOptions } from "../@Typings";
+import { EventEmitter } from "node:events";
+import {
+    INode,
+    Extendable,
+    SortType,
+    createOptions
+} from "../@Typings";
+
 import {
     MoonlinkManager,
+    MoonlinkRestFul,
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,
@@ -8,6 +16,18 @@ import {
     MoonlinkNode,
     MoonlinkTrack
 } from "../../index";
+
+export const State = {
+    READY: "READY",
+    CONNECTED: "CONNECTED",
+    CONNECTING: "CONNECTING",
+    DISCONNECTING: "DISCONNECTING",
+    DISCONNECTED: "DISCONNECTED",
+    RECONNECTING: "RECONNECTING",
+    AUTORESUMING: "AUTORESUMING",
+    RESUMING: "RESUMING",
+    MOVING: "MOVING"
+};
 
 export class Players {
     public _manager: MoonlinkManager;
@@ -247,7 +267,7 @@ export class Nodes {
             `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`
         );
         const connectedNodes = [...this.map.values()].filter(
-            node => node.connected
+            node => node.state == State.READY
         );
         if (connectedNodes.length == 0)
             throw new TypeError(
@@ -305,8 +325,10 @@ export class Nodes {
     }
 }
 
+
 const structures: Extendable = {
     MoonlinkManager,
+    MoonlinkRestFul,
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,
@@ -318,7 +340,7 @@ const structures: Extendable = {
 };
 export abstract class Structure {
     public static manager: MoonlinkManager;
-
+    public static db: MoonlinkDatabase;
     public static extend<K extends keyof Extendable, T extends Extendable[K]>(
         name: K,
         extender: (target: Extendable[K]) => T
@@ -334,9 +356,10 @@ export abstract class Structure {
 
     public static init(manager: MoonlinkManager): void {
         this.manager = manager;
+        this.db = new (Structure.get("MoonlinkDatabase"))(manager.clientId);
         this.manager.emit(
             "debug",
-            `@Moonlink(Structure) - the main class is assigned to the class responsible for the others :)`
+            `@Moonlink(Structure) - The main class and database are assigned to structure :)`
         );
     }
 
