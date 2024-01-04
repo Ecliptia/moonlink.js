@@ -3,7 +3,8 @@ import {
     Structure,
     MoonlinkPlayer,
     MoonlinkTrack,
-    MoonlinkNode
+    MoonlinkNode,
+    Plugin
 } from "../../index";
 import { Players, Nodes } from "../@Utils/Structure";
 import {
@@ -76,9 +77,13 @@ export class MoonlinkManager extends EventEmitter {
         this.players = new (Structure.get("Players"))();
         this.nodes = new (Structure.get("Nodes"))();
         this.options = options;
-        this.options.clientName
-            ? (this.options.clientName = `@Moonlink/${this.version}`)
-            : null;
+        if (options.plugins) {
+            options.plugins.forEach(plugin => {
+                plugin.load(this);
+            });
+        }
+        if (!this.options.clientName)
+            this.options.clientName = `@Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
     }
     public init(clientId?: string): this {
         if (this.initiated) return this;

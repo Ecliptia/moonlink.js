@@ -1,60 +1,62 @@
 import fs from "fs";
 import path from "path";
 
+type Data = Record<string, any>;
+
 export class MoonlinkDatabase {
-    private data: object = {};
-    private id: any;
-    constructor(clientId) {
+    private data: Data = {};
+    private id: string;
+
+    constructor(clientId: string) {
         this.fetch();
         this.id = clientId;
     }
 
-    set(key: string, value: any): void {
-        if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    set<T>(key: string, value: T): void {
+        if (!key) throw new Error('@Moonlink(Database) - "key" is empty');
 
         const keys: string[] = key.split(".");
-        if (keys.length === 0) return; // Key is invalid
+        if (keys.length === 0) return;
 
         this.updateData(this.data, keys, value);
         this.save();
     }
 
-    get(key: string): any {
-        this.fetch();
-        if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    get<T>(key: string): T | undefined {
+        if (!key) throw new Error('[ @Moonlink(Database) - "key" is empty');
 
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
     }
 
-    push(key: string, value: any): void {
-        if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+    push<T>(key: string, value: T): void {
+        if (!key) throw new Error('@Moonlink(Database) - "key" is empty');
 
-        const oldArray = this.get(key) ?? [];
+        const oldArray = this.get<T[]>(key) || [];
         if (Array.isArray(oldArray)) {
             oldArray.push(value);
             this.set(key, oldArray);
         } else {
             throw new Error(
-                "[ @Moonlink/Database ]: Key does not point to an array"
+                "@Moonlink(Database) - Key does not point to an array"
             );
         }
     }
 
     delete(key: string): boolean {
-        if (!key) throw new Error('[ @Moonlink/Database ]: "key" is empty');
+        if (!key) throw new Error('@Moonlink(Database) - "key" is empty');
 
         const keys: string[] = key.split(".");
         if (keys.length === 0) return false;
 
         const lastKey: string = keys.pop() || "";
-        let currentObj: any = this.data;
+        let currentObj: Data = this.data;
 
         keys.forEach(k => {
             if (typeof currentObj[k] === "object") {
                 currentObj = currentObj[k];
             } else {
                 throw new Error(
-                    `[ @Moonlink/Database ]: Key path "${key}" does not exist`
+                    `@Moonlink(Database) - Key path "${key}" does not exist`
                 );
             }
         });
@@ -67,8 +69,8 @@ export class MoonlinkDatabase {
         return false;
     }
 
-    private updateData(data: object, keys: string[], value: any): void {
-        let currentObj: any = data;
+    private updateData(data: Data, keys: string[], value: any): void {
+        let currentObj: Data = data;
 
         keys.forEach((key, index) => {
             if (index === keys.length - 1) {
@@ -105,7 +107,7 @@ export class MoonlinkDatabase {
             if (err.code === "ENOENT") {
                 this.data = {};
             } else {
-                throw new Error("[ @Moonlink/Database ]: Failed to fetch data");
+                throw new Error("@Moonlink(Database) - Failed to fetch data");
             }
         }
     }
@@ -115,7 +117,7 @@ export class MoonlinkDatabase {
             const filePath = this.getFilePath();
             fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         } catch (error) {
-            throw new Error("[ @Moonlink/Database ]: Failed to save data");
+            throw new Error("@Moonlink(Database) - Failed to save data");
         }
     }
 }

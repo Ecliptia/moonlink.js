@@ -3,10 +3,12 @@ import {
     MoonlinkPlayer,
     MoonlinkFilters,
     MoonlinkDatabase,
+    MoonlinkRestFul,
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
     Players,
+    Plugin,
     Nodes
 } from "../../index";
 
@@ -73,7 +75,7 @@ export interface TrackDataInfo {
     uri: string;
 }
 
-export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud";
+export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | string;
 
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
@@ -112,6 +114,7 @@ export interface INodeStats {
         lavalinkLoad: number;
     };
 }
+
 export interface INode {
     host: string;
     identifier?: string;
@@ -127,7 +130,9 @@ export interface IOptions {
     clientName?: string;
     sortNode?: SortType;
     autoResume?: boolean;
+    plugins?: Plugin[];
     http2?: boolean;
+    movePlayersToNextNode?: boolean;
 }
 
 export interface IHeaders {
@@ -141,6 +146,7 @@ export interface Extendable {
     MoonlinkPlayer: typeof MoonlinkPlayer;
     MoonlinkDatabase: typeof MoonlinkDatabase;
     MoonlinkFilters: typeof MoonlinkFilters;
+    MoonlinkRestFul: typeof MoonlinkRestFul;
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
@@ -174,11 +180,22 @@ export interface VoiceOptions {
     connected?: boolean;
     ping?: number;
 }
+
 export type Endpoint = string;
+
+export interface objectTrack {
+    encoded: string;
+}
+
+export interface PreviousInfosPlayer {
+    voiceChannel?: string;
+    textChannel?: string;
+}
+
 export interface RestOptions {
     guildId: string;
     data: {
-        encodedTrack?: string;
+        track?: objectTrack;
         identifier?: string;
         startTime?: number;
         endTime?: number;
@@ -190,17 +207,11 @@ export interface RestOptions {
     };
 }
 
-/**
- * Interface for optional connection options.
- */
 export interface connectOptions {
     setMute?: boolean;
     setDeaf?: boolean;
 }
 
-/**
- * Interface for player information.
- */
 export interface PlayerInfos {
     guildId: string;
     textChannel: string | null;
@@ -229,6 +240,7 @@ export interface TrackInfo {
     sourceName: string;
     isrc?: string;
 }
+
 export interface MoonlinkTrackOptions {
     info: TrackInfo;
     encoded?: string;

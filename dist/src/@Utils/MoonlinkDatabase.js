@@ -15,7 +15,7 @@ class MoonlinkDatabase {
     }
     set(key, value) {
         if (!key)
-            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+            throw new Error('@Moonlink(Database) - "key" is empty');
         const keys = key.split(".");
         if (keys.length === 0)
             return;
@@ -23,26 +23,25 @@ class MoonlinkDatabase {
         this.save();
     }
     get(key) {
-        this.fetch();
         if (!key)
-            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+            throw new Error('[ @Moonlink(Database) - "key" is empty');
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
     }
     push(key, value) {
         if (!key)
-            throw new Error('[ @Moonlink/Database ]: "key" is empty');
-        const oldArray = this.get(key) ?? [];
+            throw new Error('@Moonlink(Database) - "key" is empty');
+        const oldArray = this.get(key) || [];
         if (Array.isArray(oldArray)) {
             oldArray.push(value);
             this.set(key, oldArray);
         }
         else {
-            throw new Error("[ @Moonlink/Database ]: Key does not point to an array");
+            throw new Error("@Moonlink(Database) - Key does not point to an array");
         }
     }
     delete(key) {
         if (!key)
-            throw new Error('[ @Moonlink/Database ]: "key" is empty');
+            throw new Error('@Moonlink(Database) - "key" is empty');
         const keys = key.split(".");
         if (keys.length === 0)
             return false;
@@ -53,7 +52,7 @@ class MoonlinkDatabase {
                 currentObj = currentObj[k];
             }
             else {
-                throw new Error(`[ @Moonlink/Database ]: Key path "${key}" does not exist`);
+                throw new Error(`@Moonlink(Database) - Key path "${key}" does not exist`);
             }
         });
         if (currentObj && lastKey in currentObj) {
@@ -95,7 +94,7 @@ class MoonlinkDatabase {
                 this.data = {};
             }
             else {
-                throw new Error("[ @Moonlink/Database ]: Failed to fetch data");
+                throw new Error("@Moonlink(Database) - Failed to fetch data");
             }
         }
     }
@@ -105,9 +104,8 @@ class MoonlinkDatabase {
             fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
         catch (error) {
-            throw new Error("[ @Moonlink/Database ]: Failed to save data");
+            throw new Error("@Moonlink(Database) - Failed to save data");
         }
     }
 }
 exports.MoonlinkDatabase = MoonlinkDatabase;
-//# sourceMappingURL=MoonlinkDatabase.js.map

@@ -1,7 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.Structure = exports.Nodes = exports.Players = void 0;
+exports.Plugin = exports.Structure = exports.Nodes = exports.Players = exports.State = void 0;
 const index_1 = require("../../index");
+exports.State = {
+    READY: "READY",
+    CONNECTED: "CONNECTED",
+    CONNECTING: "CONNECTING",
+    DISCONNECTING: "DISCONNECTING",
+    DISCONNECTED: "DISCONNECTED",
+    RECONNECTING: "RECONNECTING",
+    AUTORESUMING: "AUTORESUMING",
+    RESUMING: "RESUMING",
+    MOVING: "MOVING"
+};
 class Players {
     _manager;
     map;
@@ -181,7 +192,7 @@ class Nodes {
     }
     sortByUsage(sortType) {
         this._manager.emit("debug", `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`);
-        const connectedNodes = [...this.map.values()].filter(node => node.connected);
+        const connectedNodes = [...this.map.values()].filter(node => node.state == exports.State.READY);
         if (connectedNodes.length == 0)
             throw new TypeError("[ @Moonlink/Manager ]: No lavalink server connected");
         switch (sortType) {
@@ -224,6 +235,7 @@ class Nodes {
 exports.Nodes = Nodes;
 const structures = {
     MoonlinkManager: index_1.MoonlinkManager,
+    MoonlinkRestFul: index_1.MoonlinkRestFul,
     MoonlinkPlayer: index_1.MoonlinkPlayer,
     MoonlinkFilters: index_1.MoonlinkFilters,
     MoonlinkDatabase: index_1.MoonlinkDatabase,
@@ -235,6 +247,7 @@ const structures = {
 };
 class Structure {
     static manager;
+    static db;
     static extend(name, extender) {
         if (!(name in structures)) {
             throw new TypeError(`"${name}" is not a valid structure`);
@@ -245,7 +258,8 @@ class Structure {
     }
     static init(manager) {
         this.manager = manager;
-        this.manager.emit("debug", `@Moonlink(Structure) - the main class is assigned to the class responsible for the others :)`);
+        this.db = new (Structure.get("MoonlinkDatabase"))(manager.clientId);
+        this.manager.emit("debug", `@Moonlink(Structure) - The main class and database are assigned to structure :)`);
     }
     static get(name) {
         const structure = structures[name];
@@ -260,4 +274,3 @@ class Plugin {
     load(manager) { }
 }
 exports.Plugin = Plugin;
-//# sourceMappingURL=Structure.js.map

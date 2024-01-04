@@ -7,3 +7,6 @@ index.ts
 testBot
 CODE_OF_CONDUCT.md
 yarn.lock
+/docs
+yarn.lock
+tsconfig.json
