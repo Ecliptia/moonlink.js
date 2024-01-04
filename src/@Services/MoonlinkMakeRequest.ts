@@ -1,24 +1,22 @@
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 import * as http2 from "http2";
 import { Structure } from "../../index";
-export type Headers = {
-    Authorization?: string | null;
-};
 
-export function makeRequest(
+export function makeRequest<T>(
     uri: string,
-    options: any,
-    data?: any
-): Promise<any> {
-    return new Promise(resolve => {
+    options: http.RequestOptions | (https.RequestOptions & { method?: string }),
+    data?: Record<string, any>
+): Promise<T> {
+    return new Promise<T>(resolve => {
         const url = new URL(uri);
         if (Structure.manager.options.http2 === true) {
             let client = http2.connect(url.origin, {
-                protocol: url.protocol == "https:" ? "https:" : "http:",
+                protocol: url.protocol === "https:" ? "https:" : "http:",
                 rejectUnauthorized: false
             });
-            const reqOptions = {
+
+            const reqOptions: http2.OutgoingHttpHeaders = {
                 ":method": options.method,
                 ":path": url.pathname + url.search,
                 "User-Agent":
@@ -27,7 +25,8 @@ export function makeRequest(
                 "Content-Type": "application/json",
                 ...(options.headers || {})
             };
-            let chunks: any = "";
+            let chunks: string = "";
+
             const req = client.request(reqOptions);
 
             req.on("error", error => {
@@ -36,14 +35,20 @@ export function makeRequest(
                     `@Moonlink(MakeRequest[HTTP/2]) - An error occurred when requesting the ${url}: ${error}`
                 );
                 client.close();
-                resolve(error);
+                resolve(error as T);
             });
+
             req.on("response", headers => {
                 req.setEncoding("utf8");
                 req.on("data", chunk => (chunks += chunk));
                 req.on("end", () => {
                     client.close();
-                    resolve(JSON.parse(chunks));
+                    try {
+                        const parsedData = JSON.parse(chunks) as T;
+                        resolve(parsedData);
+                    } catch (parseError) {
+                        resolve(parseError as T);
+                    }
                 });
 
                 req.on("error", error => {
@@ -52,55 +57,67 @@ export function makeRequest(
                         `@Moonlink(MakeRequest[HTTP/2]) - An error occurred when requesting the ${url}: ${error}`
                     );
                     client.close();
-                    resolve(error);
+                    resolve(error as T);
                 });
             });
-            console.log(data);
+
             data ? req.end(JSON.stringify(data)) : req.end();
-        }
-
-        let requestModule;
-
-        if (url.protocol === "https:") {
-            requestModule = https;
         } else {
-            requestModule = http;
-        }
-        options.headers = {
-            "Content-Type": "application/json",
-            ...options.headers
-        };
-        const reqOptions = {
-            port: url.port ? url.port : url.protocol === "https:" ? 443 : 80,
-            method: "GET",
-            ...options
-        };
+            let requestModule: typeof http | typeof https = http;
 
-        const req = requestModule.request(url, reqOptions, async (res: any) => {
-            const chunks: Uint8Array[] = [];
+            if (url.protocol === "https:") {
+                requestModule = https;
+            }
 
-            res.on("data", async (chunk: any) => {
-                chunks.push(chunk);
-            });
+            options.headers = {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            };
 
-            res.on("end", async () => {
-                try {
-                    const responseData: any = Buffer.concat(chunks).toString();
-                    resolve(JSON.parse(responseData));
-                } catch (err) {
-                    resolve(err);
+            const reqOptions: http.RequestOptions = {
+                host: url.hostname,
+                port: url.port
+                    ? parseInt(url.port)
+                    : url.protocol === "https:"
+                    ? 443
+                    : 80,
+                path: url.pathname + url.search,
+                method: options.method || "GET",
+                ...options
+            };
+
+            const req: http.ClientRequest = requestModule.request(
+                url,
+                reqOptions,
+                async (res: http.IncomingMessage) => {
+                    const chunks: Uint8Array[] = [];
+
+                    res.on("data", async (chunk: Uint8Array) => {
+                        chunks.push(chunk);
+                    });
+
+                    res.on("end", async () => {
+                        try {
+                            const responseData: string =
+                                Buffer.concat(chunks).toString();
+                            const parsedData = JSON.parse(responseData) as T;
+                            resolve(parsedData);
+                        } catch (err) {
+                            resolve(err as T);
+                        }
+                    });
+
+                    res.on("error", (err: Error) => {
+                        resolve(err as T);
+                    });
                 }
-            });
+            );
 
-            res.on("error", (err: Error) => {
-                resolve(err);
-            });
-        });
+            if (data) {
+                req.write(JSON.stringify(data));
+            }
 
-        if (data) {
-            req.write(JSON.stringify(data));
+            req.end();
         }
-
-        req.end();
     });
 }

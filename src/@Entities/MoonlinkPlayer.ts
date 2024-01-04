@@ -5,7 +5,7 @@ import {
     MoonlinkNode,
     Structure
 } from "../../index";
-import { PlayerInfos, connectOptions } from "../@Typings";
+import { PlayerInfos, connectOptions, PreviousInfosPlayer } from "../@Typings";
 export class MoonlinkPlayer {
     public manager: MoonlinkManager;
     private infos: PlayerInfos;
@@ -62,6 +62,37 @@ export class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get("node"));
         this.rest = this.node.rest;
         this.manager = manager;
+
+        const existingData =
+            this.queue.db.get<PreviousInfosPlayer>(`players.${this.guildId}`) ||
+            {};
+
+        if (
+            this.voiceChannel &&
+            this.voiceChannel !==
+                (existingData.voiceChannel && existingData.voiceChannel)
+        ) {
+            existingData.voiceChannel = this.voiceChannel;
+        }
+
+        if (
+            this.textChannel &&
+            this.textChannel !==
+                (existingData.textChannel && existingData.textChannel)
+        ) {
+            existingData.textChannel = this.textChannel;
+        }
+        if (
+            existingData !==
+            (this.queue.db.get<PreviousInfosPlayer>(
+                `players.${this.guildId}`
+            ) || {})
+        ) {
+            this.queue.db.set<PreviousInfosPlayer>(
+                `players.${this.guildId}`,
+                existingData
+            );
+        }
     }
 
     /**

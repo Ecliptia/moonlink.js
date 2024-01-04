@@ -143,4 +143,3 @@ class MoonlinkManager extends node_events_1.EventEmitter {
     }
 }
 exports.MoonlinkManager = MoonlinkManager;
-//# sourceMappingURL=MoonlinkManager.js.map

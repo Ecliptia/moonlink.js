@@ -46,6 +46,22 @@ class MoonlinkPlayer {
         this.node = manager.nodes.get(this.get("node"));
         this.rest = this.node.rest;
         this.manager = manager;
+        const existingData = this.queue.db.get(`players.${this.guildId}`) ||
+            {};
+        if (this.voiceChannel &&
+            this.voiceChannel !==
+                (existingData.voiceChannel && existingData.voiceChannel)) {
+            existingData.voiceChannel = this.voiceChannel;
+        }
+        if (this.textChannel &&
+            this.textChannel !==
+                (existingData.textChannel && existingData.textChannel)) {
+            existingData.textChannel = this.textChannel;
+        }
+        if (existingData !==
+            (this.queue.db.get(`players.${this.guildId}`) || {})) {
+            this.queue.db.set(`players.${this.guildId}`, existingData);
+        }
     }
     updatePlayers() {
         let players = this.map.get("players") || {};
@@ -311,4 +327,3 @@ class MoonlinkPlayer {
     }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;
-//# sourceMappingURL=MoonlinkPlayer.js.map

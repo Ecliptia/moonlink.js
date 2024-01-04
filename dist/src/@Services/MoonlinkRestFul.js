@@ -102,4 +102,3 @@ class MoonlinkRestFul {
     }
 }
 exports.MoonlinkRestFul = MoonlinkRestFul;
-//# sourceMappingURL=MoonlinkRestFul.js.map

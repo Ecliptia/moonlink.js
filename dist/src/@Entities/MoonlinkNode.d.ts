@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { INode, INodeStats } from "../@Typings";
-import { MoonlinkRestFul, MoonlinkDatabase, WebSocket } from "../../index";
+import WebSocket from "ws";
+import { MoonlinkRestFul, MoonlinkDatabase } from "../../index";
 export declare class MoonlinkNode {
     private _manager;
     private reconnectTimeout?;

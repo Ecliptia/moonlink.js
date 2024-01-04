@@ -1,17 +1,16 @@
 import {
     INode,
     INodeStats,
-    IHeaders,
     SearchResult,
     PreviousInfosPlayer
 } from "../@Typings";
+import WebSocket from "ws";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
     MoonlinkRestFul,
     MoonlinkDatabase,
     Structure,
-    WebSocket,
     State
 } from "../../index";
 
@@ -129,7 +128,7 @@ export class MoonlinkNode {
         if (this.state == State.CONNECTED || this.state == State.READY) return;
         this.state = State.CONNECTING;
 
-        let headers: IHeaders = {
+        let headers = {
             Authorization: this.password,
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
@@ -140,6 +139,7 @@ export class MoonlinkNode {
                 : "";
         this.socket = new WebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
+            undefined,
             { headers }
         );
         this.socket.on("open", this.open.bind(this));
@@ -480,7 +480,9 @@ export class MoonlinkNode {
                                         Track shuffling logic
                                 */
                 if (player.queue.size && player.data.shuffled) {
-                    let currentQueue: string[] = this.db.get(`queue.${payload.guildId}`);
+                    let currentQueue: string[] = this.db.get(
+                        `queue.${payload.guildId}`
+                    );
                     const randomIndex = Math.floor(
                         Math.random() * currentQueue.length
                     );

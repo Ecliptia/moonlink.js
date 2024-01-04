@@ -109,4 +109,3 @@ class MoonlinkDatabase {
     }
 }
 exports.MoonlinkDatabase = MoonlinkDatabase;
-//# sourceMappingURL=MoonlinkDatabase.js.map
