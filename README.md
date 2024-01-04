@@ -178,10 +178,6 @@ client.on("interactionCreate", async interaction => {
 client.login(process.env["DISCORD_TOKEN"]);
 ```
 
-## Attributions
-
-Code: [PerforWebsocket](https://github.com/1Lucas1apk/moonlink.js/blob/v3/src/@Services/PerforWebsocket.ts) - Copyright for the PerformanC organization, more specifically to the [Fastlink](https://github.com/PerformanC/FastLink) package, from [ws.js](https://github.com/PerformanC/FastLink/blob/main/src/ws.js) code; Owner of the organization "Pedro.js".
-
 ## Contributors
 
 We would like to express our gratitude to the amazing individuals who contributed to this project. Their hard work and dedication have been instrumental in making it a success. 🎉
