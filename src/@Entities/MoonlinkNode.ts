@@ -137,9 +137,9 @@ export class MoonlinkNode {
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : "";
+
         this.socket = new WebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
-            undefined,
             { headers }
         );
         this.socket.on("open", this.open.bind(this));
@@ -347,14 +347,15 @@ export class MoonlinkNode {
                 current[payload.guildId] = {
                     ...current[payload.guildId],
                     get position() {
-                        /* 
-                                                 @Author: WilsontheWolf
-                                                */
+                        /*@Author: WilsontheWolf*/
                         let player = _manager.players.get(payload.guildId);
                         if (player && player.paused) {
                             return payload.state.position;
                         }
-                        if (player && !player.node.connected) {
+                        if (
+                            player &&
+                            player.node.state !== State.READY
+                        ) {
                             return payload.state.position;
                         }
                         if (!player) return payload.state.position;

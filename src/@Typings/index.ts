@@ -79,7 +79,7 @@ export type SearchPlatform = "youtube" | "youtubemusic" | "soundcloud" | string;
 
 export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
-    query: string;
+    query: string | string[];
     requester?: string | object | any;
 }
 
