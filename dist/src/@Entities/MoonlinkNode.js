@@ -105,7 +105,7 @@ class MoonlinkNode {
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : "";
-        this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, undefined, { headers });
+        this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
@@ -258,7 +258,8 @@ class MoonlinkNode {
                         if (player && player.paused) {
                             return payload.state.position;
                         }
-                        if (player && !player.node.connected) {
+                        if (player &&
+                            player.node.state !== index_1.State.READY) {
                             return payload.state.position;
                         }
                         if (!player)
