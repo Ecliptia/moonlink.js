@@ -1,7 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { MoonlinkPlayer, MoonlinkNode } from "../../index";
-import { Players, Nodes } from "../@Utils/Structure";
+import { MoonlinkPlayer, MoonlinkNode, Players, Nodes } from "../../index";
 import { INode, IOptions, VoicePacket, SearchResult, SearchQuery } from "../@Typings";
 export interface MoonlinkEvents {
     autoLeaved: (player: MoonlinkPlayer, track?: any) => void;

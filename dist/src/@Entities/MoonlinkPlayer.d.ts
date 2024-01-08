@@ -15,6 +15,7 @@ export declare class MoonlinkPlayer {
     loop: number | null;
     volume: number;
     shuffled: boolean | null;
+    ping: number;
     queue: MoonlinkQueue;
     current: Record<string, any>;
     previous: Record<string, any>;

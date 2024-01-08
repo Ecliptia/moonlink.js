@@ -3,10 +3,10 @@ import {
     Structure,
     MoonlinkPlayer,
     MoonlinkTrack,
-    MoonlinkNode,
+    MoonlinkNode,Players, Nodes,
     Plugin
 } from "../../index";
-import { Players, Nodes } from "../@Utils/Structure";
+
 import {
     INode,
     IOptions,
