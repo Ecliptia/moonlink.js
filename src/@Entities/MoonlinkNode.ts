@@ -243,6 +243,20 @@ export class MoonlinkNode {
             } has been closed`
         );
         this._manager.emit("nodeClose", this, code, reason);
+        if (
+            this.state !== State.DISCONNECTED ||
+            this.state !== State.RECONNECTING
+        ) {
+            let obj = this._manager.players.map.get("players") || [];
+            if (obj.length !== 0) {
+                const players = Object.keys(obj);
+                for (const player of players) {
+                    if (obj[player].host == this.host || obj[player].host == this.identifier) {
+                      this._manager.players.get(obj[player].guildId).set("playing", false);
+                    }
+                }
+            }
+        }
         this.state = State.DISCONNECTED;
     }
     protected async message(data: Buffer | string): Promise<void> {
