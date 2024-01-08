@@ -343,30 +343,10 @@ export class MoonlinkNode {
                 let current: any =
                     this._manager.players.map.get(`current`) || {};
                 let player = this._manager.players.get(payload.guildId);
-                const _manager = this._manager;
-                current[payload.guildId] = {
-                    ...current[payload.guildId],
-                    get position() {
-                        /*@Author: WilsontheWolf*/
-                        let player = _manager.players.get(payload.guildId);
-                        if (player && player.paused) {
-                            return payload.state.position;
-                        }
-                        if (
-                            player &&
-                            player.node.state !== State.READY
-                        ) {
-                            return payload.state.position;
-                        }
-                        if (!player) return payload.state.position;
-                        return (
-                            payload.state.position +
-                            (Date.now() - payload.state.time)
-                        );
-                    },
-                    time: payload.state.time,
-                    ping: payload.state.ping
-                };
+                player.set("ping", payload.state.ping);
+                current[payload.guildId]
+                    .setPosition(payload.state.position)
+                    .setTime(payload.state.time);
                 this._manager.players.map.set("current", current);
                 break;
             case "event":

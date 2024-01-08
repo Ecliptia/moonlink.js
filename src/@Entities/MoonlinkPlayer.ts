@@ -21,6 +21,7 @@ export class MoonlinkPlayer {
     public loop: number | null;
     public volume: number;
     public shuffled: boolean | null;
+    public ping: number;
     public queue: MoonlinkQueue;
     public current: Record<string, any>;
     public previous: Record<string, any>;
@@ -51,6 +52,7 @@ export class MoonlinkPlayer {
         this.loop = infos.loop || null;
         this.volume = infos.volume || 90;
         this.shuffled = infos.shuffled || false;
+        this.ping = infos.ping || 0;
         this.queue = new (Structure.get("MoonlinkQueue"))(manager, this);
         this.current = map.get("current") || {};
         this.current = this.current[this.guildId];

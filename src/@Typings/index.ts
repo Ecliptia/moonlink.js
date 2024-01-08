@@ -224,6 +224,7 @@ export interface PlayerInfos {
     shuffled?: boolean | null;
     loop?: number | null;
     volume?: number | null;
+    ping?: number;
     node?: string;
 }
 
