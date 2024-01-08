@@ -15,6 +15,7 @@ class MoonlinkTrack {
     requester;
     artworkUrl;
     isrc;
+    time;
     constructor(data, requester) {
         this.encoded = data.encoded;
         this.title = data.info.title;
@@ -29,6 +30,28 @@ class MoonlinkTrack {
         this.requester = requester;
         this.artworkUrl = data.info.artworkUrl;
         this.isrc = data.info.isrc;
+    }
+    get calculateRealTimePosition() {
+        if (this.position >= this.duration) {
+            return this.duration;
+        }
+        if (this.time) {
+            const elapsed = Date.now() - this.time;
+            const calculatedPosition = this.position + elapsed / 1000;
+            if (calculatedPosition >= this.duration) {
+                return this.duration;
+            }
+            return calculatedPosition;
+        }
+        return this.position;
+    }
+    setPosition(data) {
+        this.position = data;
+        return this;
+    }
+    setTime(data) {
+        this.time = data;
+        return this;
     }
 }
 exports.MoonlinkTrack = MoonlinkTrack;
