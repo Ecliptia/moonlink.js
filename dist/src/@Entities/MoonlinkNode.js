@@ -172,6 +172,18 @@ class MoonlinkNode {
             this.reconnect();
         this._manager.emit("debug", `@Moonlink(Node) - The node connection ${this.identifier ? this.identifier : this.host} has been closed`);
         this._manager.emit("nodeClose", this, code, reason);
+        if (this.state !== index_1.State.DISCONNECTED ||
+            this.state !== index_1.State.RECONNECTING) {
+            let obj = this._manager.players.map.get("players") || [];
+            if (obj.length !== 0) {
+                const players = Object.keys(obj);
+                for (const player of players) {
+                    if (obj[player].host == this.host || obj[player].host == this.identifier) {
+                        this._manager.players.get(obj[player].guildId).set("playing", false);
+                    }
+                }
+            }
+        }
         this.state = index_1.State.DISCONNECTED;
     }
     async message(data) {
