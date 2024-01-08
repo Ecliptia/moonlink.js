@@ -55,7 +55,7 @@
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:14](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L14)
+[src/@Services/MoonlinkRestFul.ts:15](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L15)
 
 ## Properties
 
@@ -65,7 +65,7 @@
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:9](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L9)
+[src/@Services/MoonlinkRestFul.ts:10](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L10)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:11](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L11)
+[src/@Services/MoonlinkRestFul.ts:12](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L12)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:10](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L10)
+[src/@Services/MoonlinkRestFul.ts:11](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L11)
 
 ___
 
@@ -95,13 +95,13 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:12](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L12)
+[src/@Services/MoonlinkRestFul.ts:13](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L13)
 
 ## Methods
 
 ### decodeTrack
 
-▸ **decodeTrack**(`encodedTrack`): `Promise`\<`object`\>
+▸ **decodeTrack**(`encodedTrack`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -111,17 +111,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:61](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L61)
+[src/@Services/MoonlinkRestFul.ts:59](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L59)
 
 ___
 
 ### decodeTracks
 
-▸ **decodeTracks**(`data`): `Promise`\<`object`\>
+▸ **decodeTracks**(`data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -131,17 +131,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:65](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L65)
+[src/@Services/MoonlinkRestFul.ts:63](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L63)
 
 ___
 
 ### delete
 
-▸ **delete**(`endpoint`): `Promise`\<`object`\>
+▸ **delete**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -151,17 +151,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:56](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L56)
+[src/@Services/MoonlinkRestFul.ts:54](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L54)
 
 ___
 
 ### destroy
 
-▸ **destroy**(`guildId`): `Promise`\<`object`\>
+▸ **destroy**(`guildId`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -171,11 +171,11 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:32](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L32)
+[src/@Services/MoonlinkRestFul.ts:33](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L33)
 
 ___
 
@@ -189,13 +189,13 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:89](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L89)
+[src/@Services/MoonlinkRestFul.ts:87](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L87)
 
 ___
 
 ### get
 
-▸ **get**(`endpoint`): `Promise`\<`object`\>
+▸ **get**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -205,59 +205,59 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:38](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L38)
+[src/@Services/MoonlinkRestFul.ts:39](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L39)
 
 ___
 
 ### getInfo
 
-▸ **getInfo**(): `Promise`\<`object`\>
+▸ **getInfo**(): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:69](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L69)
+[src/@Services/MoonlinkRestFul.ts:67](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L67)
 
 ___
 
 ### getStats
 
-▸ **getStats**(): `Promise`\<`object`\>
+▸ **getStats**(): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:73](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L73)
+[src/@Services/MoonlinkRestFul.ts:71](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L71)
 
 ___
 
 ### getVersion
 
-▸ **getVersion**(): `Promise`\<`object`\>
+▸ **getVersion**(): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:77](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L77)
+[src/@Services/MoonlinkRestFul.ts:75](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L75)
 
 ___
 
 ### makeDeleteRequest
 
-▸ **makeDeleteRequest**(`endpoint`): `Promise`\<`object`\>
+▸ **makeDeleteRequest**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -267,17 +267,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:139](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L139)
+[src/@Services/MoonlinkRestFul.ts:137](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L137)
 
 ___
 
 ### makeGetRequest
 
-▸ **makeGetRequest**(`endpoint`): `Promise`\<`object`\>
+▸ **makeGetRequest**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -287,17 +287,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:95](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L95)
+[src/@Services/MoonlinkRestFul.ts:93](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L93)
 
 ___
 
 ### makePatchRequest
 
-▸ **makePatchRequest**(`endpoint`, `data`): `Promise`\<`object`\>
+▸ **makePatchRequest**(`endpoint`, `data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -308,17 +308,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:122](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L122)
+[src/@Services/MoonlinkRestFul.ts:120](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L120)
 
 ___
 
 ### makePostRequest
 
-▸ **makePostRequest**(`endpoint`, `data`): `Promise`\<`object`\>
+▸ **makePostRequest**(`endpoint`, `data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -329,17 +329,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:105](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L105)
+[src/@Services/MoonlinkRestFul.ts:103](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L103)
 
 ___
 
 ### patch
 
-▸ **patch**(`endpoint`, `data`): `Promise`\<`object`\>
+▸ **patch**(`endpoint`, `data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -350,17 +350,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:48](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L48)
+[src/@Services/MoonlinkRestFul.ts:49](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L49)
 
 ___
 
 ### post
 
-▸ **post**(`endpoint`, `data`): `Promise`\<`object`\>
+▸ **post**(`endpoint`, `data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -371,17 +371,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:43](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L43)
+[src/@Services/MoonlinkRestFul.ts:44](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L44)
 
 ___
 
 ### routePlannerFreeAddress
 
-▸ **routePlannerFreeAddress**(`data`): `Promise`\<`object`\>
+▸ **routePlannerFreeAddress**(`data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -391,17 +391,17 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:81](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L81)
+[src/@Services/MoonlinkRestFul.ts:79](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L79)
 
 ___
 
 ### routePlannerFreeAll
 
-▸ **routePlannerFreeAll**(`data`): `Promise`\<`object`\>
+▸ **routePlannerFreeAll**(`data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -411,11 +411,11 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:85](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L85)
+[src/@Services/MoonlinkRestFul.ts:83](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L83)
 
 ___
 
@@ -435,13 +435,13 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:19](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L19)
+[src/@Services/MoonlinkRestFul.ts:20](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L20)
 
 ___
 
 ### update
 
-▸ **update**(`data`): `Promise`\<`object`\>
+▸ **update**(`data`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Parameters
 
@@ -451,8 +451,8 @@ ___
 
 #### Returns
 
-`Promise`\<`object`\>
+`Promise`\<`Record`\<`string`, `unknown`\>\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:24](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkRestFul.ts#L24)
+[src/@Services/MoonlinkRestFul.ts:25](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkRestFul.ts#L25)

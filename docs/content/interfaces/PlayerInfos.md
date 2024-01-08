@@ -13,6 +13,7 @@
 - [loop](PlayerInfos.md#loop)
 - [node](PlayerInfos.md#node)
 - [paused](PlayerInfos.md#paused)
+- [ping](PlayerInfos.md#ping)
 - [playing](PlayerInfos.md#playing)
 - [shuffled](PlayerInfos.md#shuffled)
 - [textChannel](PlayerInfos.md#textchannel)
@@ -27,7 +28,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:211](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L211)
+[src/@Typings/index.ts:220](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L220)
 
 ___
 
@@ -37,7 +38,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:210](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L210)
+[src/@Typings/index.ts:219](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L219)
 
 ___
 
@@ -47,7 +48,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:212](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L212)
+[src/@Typings/index.ts:221](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L221)
 
 ___
 
@@ -57,7 +58,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:207](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L207)
+[src/@Typings/index.ts:216](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L216)
 
 ___
 
@@ -67,7 +68,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:216](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L216)
+[src/@Typings/index.ts:225](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L225)
 
 ___
 
@@ -77,7 +78,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:218](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L218)
+[src/@Typings/index.ts:228](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L228)
 
 ___
 
@@ -87,7 +88,17 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:214](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L214)
+[src/@Typings/index.ts:223](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L223)
+
+___
+
+### ping
+
+• `Optional` **ping**: `number`
+
+#### Defined in
+
+[src/@Typings/index.ts:227](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L227)
 
 ___
 
@@ -97,7 +108,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:213](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L213)
+[src/@Typings/index.ts:222](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L222)
 
 ___
 
@@ -107,7 +118,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:215](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L215)
+[src/@Typings/index.ts:224](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L224)
 
 ___
 
@@ -117,7 +128,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:208](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L208)
+[src/@Typings/index.ts:217](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L217)
 
 ___
 
@@ -127,7 +138,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:209](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L209)
+[src/@Typings/index.ts:218](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L218)
 
 ___
 
@@ -137,4 +148,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:217](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L217)
+[src/@Typings/index.ts:226](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L226)

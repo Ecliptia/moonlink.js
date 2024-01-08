@@ -18,7 +18,6 @@
 - [Players](classes/Players.md)
 - [Plugin](classes/Plugin.md)
 - [Structure](classes/Structure.md)
-- [WebSocket](classes/WebSocket.md)
 
 ### Interfaces
 
@@ -37,6 +36,7 @@
 - [MoonlinkTrackOptions](interfaces/MoonlinkTrackOptions.md)
 - [PlayerInfos](interfaces/PlayerInfos.md)
 - [PlaylistInfo](interfaces/PlaylistInfo.md)
+- [PreviousInfosPlayer](interfaces/PreviousInfosPlayer.md)
 - [RestOptions](interfaces/RestOptions.md)
 - [Rotation](interfaces/Rotation.md)
 - [SearchQuery](interfaces/SearchQuery.md)
@@ -59,12 +59,9 @@
 
 - [Constructor](modules.md#constructor)
 - [Endpoint](modules.md#endpoint)
-- [FrameOptions](modules.md#frameoptions)
-- [Headers](modules.md#headers)
 - [LoadType](modules.md#loadtype)
 - [SearchPlatform](modules.md#searchplatform)
 - [SortType](modules.md#sorttype)
-- [WebSocketOptions](modules.md#websocketoptions)
 
 ### Variables
 
@@ -103,7 +100,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:13](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L13)
+[src/@Typings/index.ts:15](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L15)
 
 ___
 
@@ -113,41 +110,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:180](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L180)
-
-___
-
-### FrameOptions
-
-Ƭ **FrameOptions**: `Object`
-
-#### Type declaration
-
-| Name | Type |
-| :------ | :------ |
-| `fin` | `boolean` |
-| `len` | `number` |
-| `opcode` | `number` |
-
-#### Defined in
-
-[src/@Services/PerforCWebsocket.ts:14](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/PerforCWebsocket.ts#L14)
-
-___
-
-### Headers
-
-Ƭ **Headers**: `Object`
-
-#### Type declaration
-
-| Name | Type |
-| :------ | :------ |
-| `Authorization?` | `string` \| ``null`` |
-
-#### Defined in
-
-[src/@Services/MoonlinkMakeRequest.ts:5](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkMakeRequest.ts#L5)
+[src/@Typings/index.ts:184](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L184)
 
 ___
 
@@ -157,7 +120,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:57](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L57)
+[src/@Typings/index.ts:59](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L59)
 
 ___
 
@@ -167,7 +130,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:76](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L76)
+[src/@Typings/index.ts:78](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L78)
 
 ___
 
@@ -177,24 +140,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:24](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L24)
-
-___
-
-### WebSocketOptions
-
-Ƭ **WebSocketOptions**: `Object`
-
-#### Type declaration
-
-| Name | Type |
-| :------ | :------ |
-| `headers?` | `any` |
-| `timeout?` | `number` |
-
-#### Defined in
-
-[src/@Services/PerforCWebsocket.ts:9](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/PerforCWebsocket.ts#L9)
+[src/@Typings/index.ts:26](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L26)
 
 ## Variables
 
@@ -218,7 +164,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:20](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/Structure.ts#L20)
+[src/@Utils/Structure.ts:20](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L20)
 
 ___
 
@@ -228,26 +174,32 @@ ___
 
 #### Defined in
 
-[index.ts:3](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/index.ts#L3)
+[index.ts:1](https://github.com/Ecliptia/moonlink.js/blob/694fece/index.ts#L1)
 
 ## Functions
 
 ### makeRequest
 
-▸ **makeRequest**(`uri`, `options`, `data?`): `Promise`\<`any`\>
+▸ **makeRequest**\<`T`\>(`uri`, `options`, `data?`): `Promise`\<`T`\>
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `uri` | `string` |
-| `options` | `any` |
-| `data?` | `any` |
+| `options` | `RequestOptions` \| `RequestOptions` & `SecureContextOptions` & \{ `checkServerIdentity?`: (`hostname`: `string`, `cert`: `PeerCertificate`) => `Error` \| `undefined` ; `rejectUnauthorized?`: `boolean` ; `servername?`: `string`  } & \{ `method?`: `string`  } |
+| `data?` | `Record`\<`string`, `any`\> |
 
 #### Returns
 
-`Promise`\<`any`\>
+`Promise`\<`T`\>
 
 #### Defined in
 
-[src/@Services/MoonlinkMakeRequest.ts:9](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Services/MoonlinkMakeRequest.ts#L9)
+[src/@Services/MoonlinkMakeRequest.ts:6](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkMakeRequest.ts#L6)

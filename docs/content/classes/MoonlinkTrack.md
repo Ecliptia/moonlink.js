@@ -21,8 +21,18 @@
 - [position](MoonlinkTrack.md#position)
 - [requester](MoonlinkTrack.md#requester)
 - [sourceName](MoonlinkTrack.md#sourcename)
+- [time](MoonlinkTrack.md#time)
 - [title](MoonlinkTrack.md#title)
 - [url](MoonlinkTrack.md#url)
+
+### Accessors
+
+- [calculateRealTimePosition](MoonlinkTrack.md#calculaterealtimeposition)
+
+### Methods
+
+- [setPosition](MoonlinkTrack.md#setposition)
+- [setTime](MoonlinkTrack.md#settime)
 
 ## Constructors
 
@@ -43,7 +53,7 @@
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:16](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L16)
+[src/@Utils/MoonlinkTrack.ts:17](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L17)
 
 ## Properties
 
@@ -53,7 +63,7 @@
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:14](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L14)
+[src/@Utils/MoonlinkTrack.ts:14](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L14)
 
 ___
 
@@ -63,7 +73,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:6](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L6)
+[src/@Utils/MoonlinkTrack.ts:6](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L6)
 
 ___
 
@@ -73,7 +83,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:8](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L8)
+[src/@Utils/MoonlinkTrack.ts:8](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L8)
 
 ___
 
@@ -83,7 +93,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:3](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L3)
+[src/@Utils/MoonlinkTrack.ts:3](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L3)
 
 ___
 
@@ -93,7 +103,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:4](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L4)
+[src/@Utils/MoonlinkTrack.ts:4](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L4)
 
 ___
 
@@ -103,7 +113,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:10](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L10)
+[src/@Utils/MoonlinkTrack.ts:10](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L10)
 
 ___
 
@@ -113,7 +123,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:11](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L11)
+[src/@Utils/MoonlinkTrack.ts:11](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L11)
 
 ___
 
@@ -123,7 +133,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:15](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L15)
+[src/@Utils/MoonlinkTrack.ts:15](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L15)
 
 ___
 
@@ -133,7 +143,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:9](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L9)
+[src/@Utils/MoonlinkTrack.ts:9](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L9)
 
 ___
 
@@ -143,7 +153,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:13](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L13)
+[src/@Utils/MoonlinkTrack.ts:13](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L13)
 
 ___
 
@@ -153,7 +163,17 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:12](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L12)
+[src/@Utils/MoonlinkTrack.ts:12](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L12)
+
+___
+
+### time
+
+• `Optional` **time**: `number`
+
+#### Defined in
+
+[src/@Utils/MoonlinkTrack.ts:16](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L16)
 
 ___
 
@@ -163,7 +183,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:5](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L5)
+[src/@Utils/MoonlinkTrack.ts:5](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L5)
 
 ___
 
@@ -173,4 +193,58 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkTrack.ts:7](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkTrack.ts#L7)
+[src/@Utils/MoonlinkTrack.ts:7](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L7)
+
+## Accessors
+
+### calculateRealTimePosition
+
+• `get` **calculateRealTimePosition**(): `number`
+
+#### Returns
+
+`number`
+
+#### Defined in
+
+[src/@Utils/MoonlinkTrack.ts:33](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L33)
+
+## Methods
+
+### setPosition
+
+▸ **setPosition**(`data`): [`MoonlinkTrack`](MoonlinkTrack.md)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `data` | `number` |
+
+#### Returns
+
+[`MoonlinkTrack`](MoonlinkTrack.md)
+
+#### Defined in
+
+[src/@Utils/MoonlinkTrack.ts:52](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L52)
+
+___
+
+### setTime
+
+▸ **setTime**(`data`): [`MoonlinkTrack`](MoonlinkTrack.md)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `data` | `number` |
+
+#### Returns
+
+[`MoonlinkTrack`](MoonlinkTrack.md)
+
+#### Defined in
+
+[src/@Utils/MoonlinkTrack.ts:56](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkTrack.ts#L56)

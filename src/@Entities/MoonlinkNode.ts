@@ -243,6 +243,20 @@ export class MoonlinkNode {
             } has been closed`
         );
         this._manager.emit("nodeClose", this, code, reason);
+        if (
+            this.state !== State.DISCONNECTED ||
+            this.state !== State.RECONNECTING
+        ) {
+            let obj = this._manager.players.map.get("players") || [];
+            if (obj.length !== 0) {
+                const players = Object.keys(obj);
+                for (const player of players) {
+                    if (obj[player].host == this.host || obj[player].host == this.identifier) {
+                      this._manager.players.get(obj[player].guildId).set("playing", false);
+                    }
+                }
+            }
+        }
         this.state = State.DISCONNECTED;
     }
     protected async message(data: Buffer | string): Promise<void> {
@@ -343,30 +357,10 @@ export class MoonlinkNode {
                 let current: any =
                     this._manager.players.map.get(`current`) || {};
                 let player = this._manager.players.get(payload.guildId);
-                const _manager = this._manager;
-                current[payload.guildId] = {
-                    ...current[payload.guildId],
-                    get position() {
-                        /*@Author: WilsontheWolf*/
-                        let player = _manager.players.get(payload.guildId);
-                        if (player && player.paused) {
-                            return payload.state.position;
-                        }
-                        if (
-                            player &&
-                            player.node.state !== State.READY
-                        ) {
-                            return payload.state.position;
-                        }
-                        if (!player) return payload.state.position;
-                        return (
-                            payload.state.position +
-                            (Date.now() - payload.state.time)
-                        );
-                    },
-                    time: payload.state.time,
-                    ping: payload.state.ping
-                };
+                player.set("ping", payload.state.ping);
+                current[payload.guildId]
+                    .setPosition(payload.state.position)
+                    .setTime(payload.state.time);
                 this._manager.players.map.set("current", current);
                 break;
             case "event":

@@ -19,7 +19,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:160](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L160)
+[src/@Typings/index.ts:164](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L164)
 
 ___
 
@@ -36,7 +36,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:162](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L162)
+[src/@Typings/index.ts:166](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L166)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:161](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L161)
+[src/@Typings/index.ts:165](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L165)
 
 ___
 
@@ -63,4 +63,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:166](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L166)
+[src/@Typings/index.ts:170](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L170)

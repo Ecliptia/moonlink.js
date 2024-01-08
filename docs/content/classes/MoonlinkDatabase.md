@@ -34,7 +34,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `clientId` | `any` |
+| `clientId` | `string` |
 
 #### Returns
 
@@ -42,27 +42,27 @@
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:7](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L7)
+[src/@Utils/MoonlinkDatabase.ts:10](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L10)
 
 ## Properties
 
 ### data
 
-• `Private` **data**: `object` = `{}`
+• `Private` **data**: `Data` = `{}`
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:5](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L5)
+[src/@Utils/MoonlinkDatabase.ts:7](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L7)
 
 ___
 
 ### id
 
-• `Private` **id**: `any`
+• `Private` **id**: `string`
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:6](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L6)
+[src/@Utils/MoonlinkDatabase.ts:8](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L8)
 
 ## Methods
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:42](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L42)
+[src/@Utils/MoonlinkDatabase.ts:45](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L45)
 
 ___
 
@@ -96,13 +96,19 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:92](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L92)
+[src/@Utils/MoonlinkDatabase.ts:95](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L95)
 
 ___
 
 ### get
 
-▸ **get**(`key`): `any`
+▸ **get**\<`T`\>(`key`): `T`
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
 
 #### Parameters
 
@@ -112,11 +118,11 @@ ___
 
 #### Returns
 
-`any`
+`T`
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:22](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L22)
+[src/@Utils/MoonlinkDatabase.ts:25](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L25)
 
 ___
 
@@ -130,20 +136,26 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:84](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L84)
+[src/@Utils/MoonlinkDatabase.ts:87](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L87)
 
 ___
 
 ### push
 
-▸ **push**(`key`, `value`): `void`
+▸ **push**\<`T`\>(`key`, `value`): `void`
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `key` | `string` |
-| `value` | `any` |
+| `value` | `T` |
 
 #### Returns
 
@@ -151,7 +163,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:28](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L28)
+[src/@Utils/MoonlinkDatabase.ts:31](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L31)
 
 ___
 
@@ -165,20 +177,26 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:112](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L112)
+[src/@Utils/MoonlinkDatabase.ts:115](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L115)
 
 ___
 
 ### set
 
-▸ **set**(`key`, `value`): `void`
+▸ **set**\<`T`\>(`key`, `value`): `void`
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `key` | `string` |
-| `value` | `any` |
+| `value` | `T` |
 
 #### Returns
 
@@ -186,7 +204,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:12](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L12)
+[src/@Utils/MoonlinkDatabase.ts:15](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L15)
 
 ___
 
@@ -198,7 +216,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `data` | `object` |
+| `data` | `Data` |
 | `keys` | `string`[] |
 | `value` | `any` |
 
@@ -208,4 +226,4 @@ ___
 
 #### Defined in
 
-[src/@Utils/MoonlinkDatabase.ts:69](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Utils/MoonlinkDatabase.ts#L69)
+[src/@Utils/MoonlinkDatabase.ts:72](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/MoonlinkDatabase.ts#L72)

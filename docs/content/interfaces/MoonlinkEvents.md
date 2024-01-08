@@ -48,7 +48,7 @@
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:19](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L19)
+[src/@Managers/MoonlinkManager.ts:20](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L20)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:20](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L20)
+[src/@Managers/MoonlinkManager.ts:21](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L21)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:24](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L24)
+[src/@Managers/MoonlinkManager.ts:25](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L25)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:21](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L21)
+[src/@Managers/MoonlinkManager.ts:22](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L22)
 
 ___
 
@@ -146,7 +146,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:22](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L22)
+[src/@Managers/MoonlinkManager.ts:23](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L23)
 
 ___
 
@@ -171,7 +171,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:26](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L26)
+[src/@Managers/MoonlinkManager.ts:27](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L27)
 
 ___
 
@@ -196,7 +196,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:25](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L25)
+[src/@Managers/MoonlinkManager.ts:26](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L26)
 
 ___
 
@@ -220,7 +220,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:23](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L23)
+[src/@Managers/MoonlinkManager.ts:24](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L24)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:32](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L32)
+[src/@Managers/MoonlinkManager.ts:33](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L33)
 
 ___
 
@@ -268,7 +268,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:33](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L33)
+[src/@Managers/MoonlinkManager.ts:34](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L34)
 
 ___
 
@@ -294,7 +294,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:35](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L35)
+[src/@Managers/MoonlinkManager.ts:36](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L36)
 
 ___
 
@@ -318,7 +318,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:34](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L34)
+[src/@Managers/MoonlinkManager.ts:35](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L35)
 
 ___
 
@@ -343,7 +343,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:31](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L31)
+[src/@Managers/MoonlinkManager.ts:32](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L32)
 
 ___
 
@@ -368,7 +368,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:40](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L40)
+[src/@Managers/MoonlinkManager.ts:41](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L41)
 
 ___
 
@@ -394,7 +394,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:28](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L28)
+[src/@Managers/MoonlinkManager.ts:29](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L29)
 
 ___
 
@@ -419,7 +419,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:30](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L30)
+[src/@Managers/MoonlinkManager.ts:31](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L31)
 
 ___
 
@@ -444,7 +444,7 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:27](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L27)
+[src/@Managers/MoonlinkManager.ts:28](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L28)
 
 ___
 
@@ -469,4 +469,4 @@ ___
 
 #### Defined in
 
-[src/@Managers/MoonlinkManager.ts:29](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Managers/MoonlinkManager.ts#L29)
+[src/@Managers/MoonlinkManager.ts:30](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Managers/MoonlinkManager.ts#L30)

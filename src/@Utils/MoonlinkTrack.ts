@@ -13,6 +13,7 @@ export class MoonlinkTrack {
     public requester: any;
     public artworkUrl: string;
     public isrc: string;
+    public time?: number;
     constructor(data: MoonlinkTrackOptions, requester?: string | any) {
         this.encoded = data.encoded;
         this.title = data.info.title;
@@ -27,5 +28,33 @@ export class MoonlinkTrack {
         this.requester = requester;
         this.artworkUrl = data.info.artworkUrl;
         this.isrc = data.info.isrc;
+    }
+
+    get calculateRealTimePosition(): number {
+        if (this.position >= this.duration) {
+            return this.duration;
+        }
+
+        if (this.time) {
+            const elapsed = Date.now() - this.time;
+            const calculatedPosition = this.position + elapsed / 1000;
+
+            if (calculatedPosition >= this.duration) {
+                return this.duration;
+            }
+
+            return calculatedPosition;
+        }
+
+        return this.position;
+    }
+
+    public setPosition(data: number): this {
+        this.position = data;
+        return this;
+    }
+    public setTime(data: number): this {
+        this.time = data;
+        return this
     }
 }

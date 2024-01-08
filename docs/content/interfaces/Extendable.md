@@ -12,6 +12,7 @@
 - [MoonlinkNode](Extendable.md#moonlinknode)
 - [MoonlinkPlayer](Extendable.md#moonlinkplayer)
 - [MoonlinkQueue](Extendable.md#moonlinkqueue)
+- [MoonlinkRestFul](Extendable.md#moonlinkrestful)
 - [MoonlinkTrack](Extendable.md#moonlinktrack)
 - [Nodes](Extendable.md#nodes)
 - [Players](Extendable.md#players)
@@ -24,7 +25,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:144](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L144)
+[src/@Typings/index.ts:147](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L147)
 
 ___
 
@@ -34,7 +35,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:145](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L145)
+[src/@Typings/index.ts:148](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L148)
 
 ___
 
@@ -44,7 +45,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:142](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L142)
+[src/@Typings/index.ts:145](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L145)
 
 ___
 
@@ -54,7 +55,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:147](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L147)
+[src/@Typings/index.ts:151](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L151)
 
 ___
 
@@ -64,7 +65,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:143](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L143)
+[src/@Typings/index.ts:146](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L146)
 
 ___
 
@@ -74,7 +75,17 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:146](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L146)
+[src/@Typings/index.ts:150](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L150)
+
+___
+
+### MoonlinkRestFul
+
+• **MoonlinkRestFul**: typeof [`MoonlinkRestFul`](../classes/MoonlinkRestFul.md)
+
+#### Defined in
+
+[src/@Typings/index.ts:149](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L149)
 
 ___
 
@@ -84,7 +95,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:148](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L148)
+[src/@Typings/index.ts:152](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L152)
 
 ___
 
@@ -94,7 +105,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:150](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L150)
+[src/@Typings/index.ts:154](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L154)
 
 ___
 
@@ -104,4 +115,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:149](https://github.com/Ecliptia/moonlink.js/blob/ab259c6/src/@Typings/index.ts#L149)
+[src/@Typings/index.ts:153](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L153)
