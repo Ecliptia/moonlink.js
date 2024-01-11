@@ -1,10 +1,5 @@
 import { EventEmitter } from "node:events";
-import {
-    INode,
-    Extendable,
-    SortType,
-    createOptions
-} from "../@Typings";
+import { INode, Extendable, SortType, createOptions } from "../@Typings";
 
 import {
     MoonlinkManager,
@@ -43,32 +38,26 @@ export class Players {
         );
     }
     public handleVoiceServerUpdate(update: any, guildId: string): void {
-        const voiceServerData = { event: update };
         const existingVoiceServer = this.map.get("voiceServer") || {};
-        existingVoiceServer[guildId] = voiceServerData;
+        existingVoiceServer[guildId] = { event: update };
 
         this.map.set("voiceServer", existingVoiceServer);
         this.attemptConnection(guildId);
     }
+public handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void {
+    const players = this.map.get("players") || {};
+    this._manager.emit("playerDisconnect", player);
 
-    public handlePlayerDisconnect(
-        player: MoonlinkPlayer,
-        guildId: string
-    ): void {
-        const players = this.map.get("players") || {};
-        this._manager.emit("playerDisconnect", player);
-        players[guildId] = {
-            ...players[guildId],
-            connected: false,
-            voiceChannel: null,
-            playing: false
-        };
-        player.connected = false;
-        player.voiceChannel = null;
-        player.playing = false;
-        player.stop();
-    }
+    players[guildId] = {
+        ...players[guildId],
+        connected: false,
+        voiceChannel: null,
+        playing: false,
+    };
 
+    Object.assign(player, { connected: false, voiceChannel: null, playing: false });
+    player.stop();
+}
     public handlePlayerMove(
         player: MoonlinkPlayer,
         newChannelId: string,
@@ -91,28 +80,27 @@ export class Players {
         this.map.set("voiceStates", voiceStates);
     }
     public async attemptConnection(guildId: string): Promise<boolean> {
-        let voiceServer = this.map.get("voiceServer") || {};
-        let voiceStates = this.map.get("voiceStates") || {};
-        let players = this.map.get("players") || {};
-        if (!players[guildId]) return false;
-        if (!voiceServer[guildId]) return false;
+        const voiceServer = this.map.get("voiceServer") || {};
+        const voiceStates = this.map.get("voiceStates") || {};
+        const players = this.map.get("players") || {};
+
+        if (!players[guildId] || !voiceServer[guildId]) return false;
+
         await this._manager.nodes.get(players[guildId].node).rest.update({
             guildId,
             data: {
                 voice: {
-                    sessionId: voiceStates[guildId].session_id,
+                    sessionId: voiceStates[guildId]?.session_id,
                     endpoint: voiceServer[guildId].event.endpoint,
                     token: voiceServer[guildId].event.token
                 }
             }
         });
+
         return true;
     }
     public has(guildId: string): boolean {
-        let players = this.map.get("players") || {};
-        if (players[guildId]) players = true;
-        else players = false;
-        return players;
+        return !!this.map.get("players")?.[guildId];
     }
     public get(guildId: string): MoonlinkPlayer | null {
         if (!guildId && typeof guildId !== "string")
@@ -198,8 +186,8 @@ export class Players {
             this.map
         );
     }
-    public get all(): Record<string, any> {
-        return this.map.get("players") ? this.map.get("players") : null;
+    public get all(): Record<string, any> | null {
+        return this.map.get("players") ?? null;
     }
 }
 export class Nodes {
@@ -324,7 +312,6 @@ export class Nodes {
         );
     }
 }
-
 
 const structures: Extendable = {
     MoonlinkManager,

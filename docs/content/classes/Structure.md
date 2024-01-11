@@ -37,7 +37,7 @@
 
 #### Defined in
 
-[src/@Utils/Structure.ts:343](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L343)
+[src/@Utils/Structure.ts:330](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L330)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:342](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L342)
+[src/@Utils/Structure.ts:329](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L329)
 
 ## Methods
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:344](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L344)
+[src/@Utils/Structure.ts:331](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L331)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:366](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L366)
+[src/@Utils/Structure.ts:353](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L353)
 
 ___
 
@@ -121,4 +121,4 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:357](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L357)
+[src/@Utils/Structure.ts:344](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L344)

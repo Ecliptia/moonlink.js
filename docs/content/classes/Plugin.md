@@ -40,4 +40,4 @@
 
 #### Defined in
 
-[src/@Utils/Structure.ts:376](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L376)
+[src/@Utils/Structure.ts:363](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L363)

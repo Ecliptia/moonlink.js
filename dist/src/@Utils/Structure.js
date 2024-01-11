@@ -24,9 +24,8 @@ class Players {
         this._manager.emit("debug", "@Moonlink(Players) - Structure(Players) has been initialized, and assigned the value of the main class ");
     }
     handleVoiceServerUpdate(update, guildId) {
-        const voiceServerData = { event: update };
         const existingVoiceServer = this.map.get("voiceServer") || {};
-        existingVoiceServer[guildId] = voiceServerData;
+        existingVoiceServer[guildId] = { event: update };
         this.map.set("voiceServer", existingVoiceServer);
         this.attemptConnection(guildId);
     }
@@ -37,11 +36,9 @@ class Players {
             ...players[guildId],
             connected: false,
             voiceChannel: null,
-            playing: false
+            playing: false,
         };
-        player.connected = false;
-        player.voiceChannel = null;
-        player.playing = false;
+        Object.assign(player, { connected: false, voiceChannel: null, playing: false });
         player.stop();
     }
     handlePlayerMove(player, newChannelId, oldChannelId, guildId) {
@@ -60,18 +57,16 @@ class Players {
         this.map.set("voiceStates", voiceStates);
     }
     async attemptConnection(guildId) {
-        let voiceServer = this.map.get("voiceServer") || {};
-        let voiceStates = this.map.get("voiceStates") || {};
-        let players = this.map.get("players") || {};
-        if (!players[guildId])
-            return false;
-        if (!voiceServer[guildId])
+        const voiceServer = this.map.get("voiceServer") || {};
+        const voiceStates = this.map.get("voiceStates") || {};
+        const players = this.map.get("players") || {};
+        if (!players[guildId] || !voiceServer[guildId])
             return false;
         await this._manager.nodes.get(players[guildId].node).rest.update({
             guildId,
             data: {
                 voice: {
-                    sessionId: voiceStates[guildId].session_id,
+                    sessionId: voiceStates[guildId]?.session_id,
                     endpoint: voiceServer[guildId].event.endpoint,
                     token: voiceServer[guildId].event.token
                 }
@@ -80,12 +75,7 @@ class Players {
         return true;
     }
     has(guildId) {
-        let players = this.map.get("players") || {};
-        if (players[guildId])
-            players = true;
-        else
-            players = false;
-        return players;
+        return !!this.map.get("players")?.[guildId];
     }
     get(guildId) {
         if (!guildId && typeof guildId !== "string")
@@ -144,7 +134,7 @@ class Players {
         return new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
     }
     get all() {
-        return this.map.get("players") ? this.map.get("players") : null;
+        return this.map.get("players") ?? null;
     }
 }
 exports.Players = Players;
