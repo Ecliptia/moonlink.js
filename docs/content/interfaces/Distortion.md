@@ -23,7 +23,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:286](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L286)
+[src/@Typings/index.ts:286](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L286)
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:287](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L287)
+[src/@Typings/index.ts:287](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L287)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:290](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L290)
+[src/@Typings/index.ts:290](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L290)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:291](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L291)
+[src/@Typings/index.ts:291](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L291)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:284](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L284)
+[src/@Typings/index.ts:284](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L284)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:285](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L285)
+[src/@Typings/index.ts:285](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L285)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:288](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L288)
+[src/@Typings/index.ts:288](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L288)
 
 ___
 
@@ -93,4 +93,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:289](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L289)
+[src/@Typings/index.ts:289](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L289)

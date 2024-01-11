@@ -100,7 +100,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:15](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L15)
+[src/@Typings/index.ts:15](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L15)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:184](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L184)
+[src/@Typings/index.ts:184](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L184)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:59](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L59)
+[src/@Typings/index.ts:59](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L59)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:78](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L78)
+[src/@Typings/index.ts:78](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L78)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:26](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L26)
+[src/@Typings/index.ts:26](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L26)
 
 ## Variables
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[src/@Utils/Structure.ts:20](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Utils/Structure.ts#L20)
+[src/@Utils/Structure.ts:15](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Utils/Structure.ts#L15)
 
 ___
 
@@ -174,7 +174,7 @@ ___
 
 #### Defined in
 
-[index.ts:1](https://github.com/Ecliptia/moonlink.js/blob/694fece/index.ts#L1)
+[index.ts:1](https://github.com/Ecliptia/moonlink.js/blob/695a75b/index.ts#L1)
 
 ## Functions
 
@@ -202,4 +202,4 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkMakeRequest.ts:6](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Services/MoonlinkMakeRequest.ts#L6)
+[src/@Services/MoonlinkMakeRequest.ts:6](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Services/MoonlinkMakeRequest.ts#L6)
