@@ -171,16 +171,12 @@ class MoonlinkPlayer {
         let current = this.map.get("current") || {};
         if (this.loop && Object.keys(current).length != 0) {
             current[this.guildId].time
-                ? delete current[this.guildId].time
+                ? (current[this.guildId].time = 0)
                 : false;
-            current[this.guildId].ping
-                ? delete current[this.guildId].ping
-                : false;
+            this.set("ping", undefined);
             queue.push(current[this.guildId]);
         }
-        current[this.guildId] = {
-            ...data
-        };
+        current[this.guildId] = data;
         this.current = current[this.guildId];
         this.map.set("current", current);
         await this.queue.db.set(`queue.${this.guildId}`, queue);

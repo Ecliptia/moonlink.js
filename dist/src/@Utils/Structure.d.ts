@@ -24,7 +24,7 @@ export declare class Players {
     has(guildId: string): boolean;
     get(guildId: string): MoonlinkPlayer | null;
     create(data: createOptions): MoonlinkPlayer;
-    get all(): Record<string, any>;
+    get all(): Record<string, any> | null;
 }
 export declare class Nodes {
     initiated: boolean;

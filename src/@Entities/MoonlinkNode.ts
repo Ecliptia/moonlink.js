@@ -4,7 +4,7 @@ import {
     SearchResult,
     PreviousInfosPlayer
 } from "../@Typings";
-import WebSocket from "ws";
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
@@ -33,11 +33,16 @@ export class MoonlinkNode {
     public resumed?: boolean;
     public resumeTimeout?: number = 30000;
     public sessionId: string;
-    public socket: WebSocket | null;
+    public socket: MoonlinkWebSocket | null;
     public state: string = State.DISCONNECTED;
     public stats: INodeStats;
     public calls: number = 0;
     public db: MoonlinkDatabase = Structure.db;
+
+    /**
+     * Initializes a new MoonlinkNode instance with the provided configuration.
+     * @param node - The configuration object for the Lavalink node.
+     */
 
     constructor(node: INode) {
         this._manager = Structure.manager;
@@ -79,9 +84,21 @@ export class MoonlinkNode {
 
         this.connect();
     }
+
+    /**
+     * Returns the formatted address string composed of the host and port.
+     * @returns The formatted address string.
+     */
+
     public get address(): string {
         return `${this.host}:${this.port}`;
     }
+
+    /**
+     * Validates the correctness of essential configuration options for the node.
+     * @param node - The configuration object for the Lavalink node.
+     */
+
     public check(node: INode): void | never {
         if (typeof node.host !== "string" && typeof node.host !== "undefined")
             throw new Error(
@@ -119,10 +136,22 @@ export class MoonlinkNode {
             );
     }
 
+    /**
+     * Sends a request to the specified endpoint with parameters and returns a promise that resolves to the response object.
+     * @param endpoint - The endpoint to send the request to.
+     * @param params - The parameters for the request.
+     * @returns A promise resolving to the response object.
+     */
+
     public request(endpoint: string, params: any): Promise<object> {
         this.calls++;
         return this.rest.get(`${endpoint}?${params}`);
     }
+
+    /**
+     * Establishes a WebSocket connection to the Lavalink server.
+     * @returns A promise representing the connection process.
+     */
 
     public async connect(): Promise<any> {
         if (this.state == State.CONNECTED || this.state == State.READY) return;
@@ -138,7 +167,7 @@ export class MoonlinkNode {
                 ? this.db.get("sessionId")
                 : "";
 
-        this.socket = new WebSocket(
+        this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
         );
@@ -251,8 +280,13 @@ export class MoonlinkNode {
             if (obj.length !== 0) {
                 const players = Object.keys(obj);
                 for (const player of players) {
-                    if (obj[player].host == this.host || obj[player].host == this.identifier) {
-                      this._manager.players.get(obj[player].guildId).set("playing", false);
+                    if (
+                        obj[player].host == this.host ||
+                        obj[player].host == this.identifier
+                    ) {
+                        this._manager.players
+                            .get(obj[player].guildId)
+                            .set("playing", false);
                     }
                 }
             }
@@ -423,10 +457,11 @@ export class MoonlinkNode {
                     playing: false
                 };
                 previousData[payload.guildId] = {
-                    ...track
+                    track
                 };
                 this._manager.players.map.set("players", players);
                 this._manager.players.map.set("previous", previousData);
+                
                 if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
                         this.db.delete(`queue.${payload.guildId}`);
