@@ -111,8 +111,8 @@ client.on("raw", data => {
 // Event: Interaction created
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
-
-    if (interaction.commandName === "play") {
+    let commandName = interaction.commandName;
+    if (commandName === "play") {
         if (!interaction.member.voice.channel) {
             // Responding with a message if the user is not in a voice channel
             return interaction.reply({
@@ -137,7 +137,11 @@ client.on("interactionCreate", async interaction => {
             });
         }
 
-        let res = await client.moon.search(query);
+        let res = await client.moon.search({
+            query,
+            source: "youtube",
+            requester: interaction.user.id
+        });
 
         if (res.loadType === "loadfailed") {
             // Responding with an error message if loading fails
@@ -171,6 +175,8 @@ client.on("interactionCreate", async interaction => {
             // Starting playback if not already playing
             player.play();
         }
+    } else if (commandName == "pause") {
+      
     }
 });
 

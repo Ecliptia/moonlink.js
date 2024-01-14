@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:82](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L82)
+[src/@Typings/index.ts:82](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L82)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:83](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L83)
+[src/@Typings/index.ts:83](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L83)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:81](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Typings/index.ts#L81)
+[src/@Typings/index.ts:81](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Typings/index.ts#L81)

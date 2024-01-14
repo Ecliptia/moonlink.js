@@ -56,11 +56,13 @@
 
 • **new MoonlinkNode**(`node`): [`MoonlinkNode`](MoonlinkNode.md)
 
+Initializes a new MoonlinkNode instance with the provided configuration.
+
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `node` | [`INode`](../interfaces/INode.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `node` | [`INode`](../interfaces/INode.md) | The configuration object for the Lavalink node. |
 
 #### Returns
 
@@ -68,7 +70,7 @@
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:42](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L42)
+[src/@Entities/MoonlinkNode.ts:47](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L47)
 
 ## Properties
 
@@ -78,7 +80,7 @@
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:18](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L18)
+[src/@Entities/MoonlinkNode.ts:18](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L18)
 
 ___
 
@@ -88,7 +90,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:39](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L39)
+[src/@Entities/MoonlinkNode.ts:39](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L39)
 
 ___
 
@@ -98,7 +100,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:40](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L40)
+[src/@Entities/MoonlinkNode.ts:40](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L40)
 
 ___
 
@@ -108,7 +110,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:25](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L25)
+[src/@Entities/MoonlinkNode.ts:25](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L25)
 
 ___
 
@@ -118,7 +120,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:30](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L30)
+[src/@Entities/MoonlinkNode.ts:30](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L30)
 
 ___
 
@@ -128,7 +130,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:26](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L26)
+[src/@Entities/MoonlinkNode.ts:26](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L26)
 
 ___
 
@@ -138,7 +140,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:27](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L27)
+[src/@Entities/MoonlinkNode.ts:27](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L27)
 
 ___
 
@@ -148,7 +150,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:28](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L28)
+[src/@Entities/MoonlinkNode.ts:28](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L28)
 
 ___
 
@@ -158,7 +160,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:20](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L20)
+[src/@Entities/MoonlinkNode.ts:20](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L20)
 
 ___
 
@@ -168,7 +170,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:19](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L19)
+[src/@Entities/MoonlinkNode.ts:19](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L19)
 
 ___
 
@@ -178,7 +180,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:31](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L31)
+[src/@Entities/MoonlinkNode.ts:31](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L31)
 
 ___
 
@@ -188,7 +190,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:32](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L32)
+[src/@Entities/MoonlinkNode.ts:32](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L32)
 
 ___
 
@@ -198,7 +200,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:23](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L23)
+[src/@Entities/MoonlinkNode.ts:23](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L23)
 
 ___
 
@@ -208,7 +210,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:34](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L34)
+[src/@Entities/MoonlinkNode.ts:34](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L34)
 
 ___
 
@@ -218,7 +220,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:33](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L33)
+[src/@Entities/MoonlinkNode.ts:33](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L33)
 
 ___
 
@@ -228,7 +230,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:21](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L21)
+[src/@Entities/MoonlinkNode.ts:21](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L21)
 
 ___
 
@@ -238,7 +240,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:22](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L22)
+[src/@Entities/MoonlinkNode.ts:22](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L22)
 
 ___
 
@@ -248,7 +250,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:29](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L29)
+[src/@Entities/MoonlinkNode.ts:29](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L29)
 
 ___
 
@@ -258,7 +260,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:35](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L35)
+[src/@Entities/MoonlinkNode.ts:35](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L35)
 
 ___
 
@@ -268,7 +270,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:36](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L36)
+[src/@Entities/MoonlinkNode.ts:36](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L36)
 
 ___
 
@@ -278,7 +280,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:37](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L37)
+[src/@Entities/MoonlinkNode.ts:37](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L37)
 
 ___
 
@@ -288,7 +290,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:38](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L38)
+[src/@Entities/MoonlinkNode.ts:38](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L38)
 
 ## Accessors
 
@@ -296,13 +298,17 @@ ___
 
 • `get` **address**(): `string`
 
+Returns the formatted address string composed of the host and port.
+
 #### Returns
 
 `string`
 
+The formatted address string.
+
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:82](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L82)
+[src/@Entities/MoonlinkNode.ts:93](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L93)
 
 ## Methods
 
@@ -310,11 +316,13 @@ ___
 
 ▸ **check**(`node`): `void`
 
+Validates the correctness of essential configuration options for the node.
+
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `node` | [`INode`](../interfaces/INode.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `node` | [`INode`](../interfaces/INode.md) | The configuration object for the Lavalink node. |
 
 #### Returns
 
@@ -322,7 +330,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:85](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L85)
+[src/@Entities/MoonlinkNode.ts:102](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L102)
 
 ___
 
@@ -343,7 +351,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:237](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L237)
+[src/@Entities/MoonlinkNode.ts:266](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L266)
 
 ___
 
@@ -351,13 +359,17 @@ ___
 
 ▸ **connect**(): `Promise`\<`any`\>
 
+Establishes a WebSocket connection to the Lavalink server.
+
 #### Returns
 
 `Promise`\<`any`\>
 
+A promise representing the connection process.
+
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:127](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L127)
+[src/@Entities/MoonlinkNode.ts:156](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L156)
 
 ___
 
@@ -377,7 +389,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:365](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L365)
+[src/@Entities/MoonlinkNode.ts:413](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L413)
 
 ___
 
@@ -397,7 +409,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:374](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L374)
+[src/@Entities/MoonlinkNode.ts:422](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L422)
 
 ___
 
@@ -417,7 +429,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:248](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L248)
+[src/@Entities/MoonlinkNode.ts:296](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L296)
 
 ___
 
@@ -431,7 +443,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:161](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L161)
+[src/@Entities/MoonlinkNode.ts:190](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L190)
 
 ___
 
@@ -445,7 +457,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:150](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L150)
+[src/@Entities/MoonlinkNode.ts:179](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L179)
 
 ___
 
@@ -459,7 +471,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:207](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L207)
+[src/@Entities/MoonlinkNode.ts:236](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L236)
 
 ___
 
@@ -467,17 +479,21 @@ ___
 
 ▸ **request**(`endpoint`, `params`): `Promise`\<`object`\>
 
+Sends a request to the specified endpoint with parameters and returns a promise that resolves to the response object.
+
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `endpoint` | `string` |
-| `params` | `any` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `endpoint` | `string` | The endpoint to send the request to. |
+| `params` | `any` | The parameters for the request. |
 
 #### Returns
 
 `Promise`\<`object`\>
 
+A promise resolving to the response object.
+
 #### Defined in
 
-[src/@Entities/MoonlinkNode.ts:122](https://github.com/Ecliptia/moonlink.js/blob/694fece/src/@Entities/MoonlinkNode.ts#L122)
+[src/@Entities/MoonlinkNode.ts:146](https://github.com/Ecliptia/moonlink.js/blob/695a75b/src/@Entities/MoonlinkNode.ts#L146)
