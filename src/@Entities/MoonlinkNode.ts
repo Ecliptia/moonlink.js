@@ -4,7 +4,7 @@ import {
     SearchResult,
     PreviousInfosPlayer
 } from "../@Typings";
-import WebSocket from "ws";
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
 import {
     MoonlinkManager,
     MoonlinkPlayer,
@@ -33,7 +33,7 @@ export class MoonlinkNode {
     public resumed?: boolean;
     public resumeTimeout?: number = 30000;
     public sessionId: string;
-    public socket: WebSocket | null;
+    public socket: MoonlinkWebSocket | null;
     public state: string = State.DISCONNECTED;
     public stats: INodeStats;
     public calls: number = 0;
@@ -148,10 +148,10 @@ export class MoonlinkNode {
         return this.rest.get(`${endpoint}?${params}`);
     }
 
-/**
- * Establishes a WebSocket connection to the Lavalink server.
- * @returns A promise representing the connection process.
- */
+    /**
+     * Establishes a WebSocket connection to the Lavalink server.
+     * @returns A promise representing the connection process.
+     */
 
     public async connect(): Promise<any> {
         if (this.state == State.CONNECTED || this.state == State.READY) return;
@@ -167,7 +167,7 @@ export class MoonlinkNode {
                 ? this.db.get("sessionId")
                 : "";
 
-        this.socket = new WebSocket(
+        this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
         );
@@ -457,10 +457,11 @@ export class MoonlinkNode {
                     playing: false
                 };
                 previousData[payload.guildId] = {
-                    ...track
+                    track
                 };
                 this._manager.players.map.set("players", players);
                 this._manager.players.map.set("previous", previousData);
+                
                 if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
                         this.db.delete(`queue.${payload.guildId}`);
