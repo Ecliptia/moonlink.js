@@ -263,9 +263,15 @@ class MoonlinkNode {
                 let current = this._manager.players.map.get(`current`) || {};
                 let player = this._manager.players.get(payload.guildId);
                 player.set("ping", payload.state.ping);
-                current[payload.guildId]
-                    .setPosition(payload.state.position)
-                    .setTime(payload.state.time);
+                if (current[payload.guildId] instanceof index_1.MoonlinkTrack) {
+                    current[payload.guildId]
+                        .setPosition(payload.state.position)
+                        .setTime(payload.state.time);
+                }
+                else if (current[payload.guildId]) {
+                    current[payload.guildId].position = payload.state.position;
+                    current[payload.guildId].time = payload.state.time;
+                }
                 this._manager.players.map.set("current", current);
                 break;
             case "event":
