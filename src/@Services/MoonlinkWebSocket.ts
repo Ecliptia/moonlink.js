@@ -3,7 +3,6 @@ import https from "https";
 import crypto from "crypto";
 import { EventEmitter } from "events";
 
-import { Structure } from "../../index";
 // @Author: 1Lucas1apk
 // Code made entirely by me, the code can be used as inspiration for your own RFC 6455 Protocol
 
@@ -29,8 +28,14 @@ export class MoonlinkWebSocket extends EventEmitter {
             secure: this.url.protocol === "wss:",
             ...options
         };
-
-        require("net").setDefaultAutoSelectFamily(false); // https://nodejs.org/api/errors.html#err_socket_connection_timeout
+        // https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
+        if (
+            process.versions &&
+            process.versions.node &&
+            process.versions.node.match(/20\.[0-2]\.0/)
+        ) {
+            require("net").setDefaultAutoSelectFamily(false);
+        } // https://nodejs.org/api/errors.html#err_socket_connection_timeout
         this.options.debug !== undefined && this.options.debug == true
             ? (this.debug = true)
             : null;
@@ -70,14 +75,14 @@ export class MoonlinkWebSocket extends EventEmitter {
             if (this.closing) return;
 
             const frame = this.parseSingleWebSocketFrame(data);
-            
+
             if (this.debug)
                 console.log(
-                    "@Moonlink(WebSocket) - ",
+                    "@Moonlink(WebSocket) -",
                     frame,
                     frame.payload.toString("utf-8")
                 );
-                
+
             this.emit("message", frame.payload.toString("utf-8"));
         });
 

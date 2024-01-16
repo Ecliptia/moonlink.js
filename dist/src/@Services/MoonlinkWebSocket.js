@@ -29,7 +29,11 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             secure: this.url.protocol === "wss:",
             ...options
         };
-        require("net").setDefaultAutoSelectFamily(false);
+        if (process.versions &&
+            process.versions.node &&
+            process.versions.node.match(/20\.[0-2]\.0/)) {
+            require("net").setDefaultAutoSelectFamily(false);
+        }
         this.options.debug !== undefined && this.options.debug == true
             ? (this.debug = true)
             : null;
@@ -64,7 +68,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                 return;
             const frame = this.parseSingleWebSocketFrame(data);
             if (this.debug)
-                console.log("@Moonlink(WebSocket) - ", frame, frame.payload.toString("utf-8"));
+                console.log("@Moonlink(WebSocket) -", frame, frame.payload.toString("utf-8"));
             this.emit("message", frame.payload.toString("utf-8"));
         });
         this.socket.on("close", hadError => {
