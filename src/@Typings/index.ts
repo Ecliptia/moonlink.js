@@ -133,6 +133,7 @@ export interface IOptions {
     plugins?: Plugin[];
     http2?: boolean;
     movePlayersToNextNode?: boolean;
+    WebSocketDebug?: boolean;
 }
 
 export interface IHeaders {
