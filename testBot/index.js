@@ -46,6 +46,11 @@ client.moon = new MoonlinkManager(
     secure: true,
     password: require("../config.json").password,
     identifier: "LAVALINK"
+  }, {
+    host: "5.9.8.124",
+    port: 34953,
+    secure: false,
+    identifier: "LAVALINK-2"
   }, /*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
   }*/ {
@@ -56,6 +61,7 @@ client.moon = new MoonlinkManager(
     movePlayersToNextNode: true,
     autoResume: true,
     clientName: "Moonlink/Blio",
+    WebSocketDebug: true,
     plugins: [new Lyrics()],
   },
   (id, data) => {

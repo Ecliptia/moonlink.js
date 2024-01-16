@@ -170,7 +170,7 @@ export class MoonlinkNode {
 
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
-            { headers }
+            { debug: this._manager.options.WebSocketDebug, headers }
         );
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -397,7 +397,7 @@ export class MoonlinkNode {
                     current[payload.guildId]
                         .setPosition(payload.state.position)
                         .setTime(payload.state.time);
-                } else if(current[payload.guildId]){
+                } else if (current[payload.guildId]) {
                     current[payload.guildId].position = payload.state.position;
                     current[payload.guildId].time = payload.state.time;
                 }
