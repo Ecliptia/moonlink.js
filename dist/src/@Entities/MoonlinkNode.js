@@ -102,7 +102,7 @@ class MoonlinkNode {
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : "";
-        this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
+        this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { debug: this._manager.options.WebSocketDebug, headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
