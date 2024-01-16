@@ -3,15 +3,18 @@ import https from "https";
 import crypto from "crypto";
 import { EventEmitter } from "events";
 
+import { Structure } from "../../index";
 // @Author: 1Lucas1apk
 // Code made entirely by me, the code can be used as inspiration for your own RFC 6455 Protocol
-// Gravei a criação desse código pro precaução :)
+
 export class MoonlinkWebSocket extends EventEmitter {
     private url: URL;
     private options: any;
     private socket: any;
     private established: boolean;
     private closing: boolean = false;
+    private debug: boolean = false;
+
     constructor(uri: string, options: any) {
         super();
         this.url = new URL(uri);
@@ -26,6 +29,12 @@ export class MoonlinkWebSocket extends EventEmitter {
             secure: this.url.protocol === "wss:",
             ...options
         };
+
+        require("net").setDefaultAutoSelectFamily(false); // https://nodejs.org/api/errors.html#err_socket_connection_timeout
+        this.options.debug !== undefined && this.options.debug == true
+            ? (this.debug = true)
+            : null;
+
         this.connect();
     }
 
@@ -58,7 +67,18 @@ export class MoonlinkWebSocket extends EventEmitter {
     private configureSocketEvents(): void {
         this.established = true;
         this.socket.on("data", data => {
-            if (!this.closing) this.parseWebSocketFrames(data);
+            if (this.closing) return;
+
+            const frame = this.parseSingleWebSocketFrame(data);
+            
+            if (this.debug)
+                console.log(
+                    "@Moonlink(WebSocket) - ",
+                    frame,
+                    frame.payload.toString("utf-8")
+                );
+                
+            this.emit("message", frame.payload.toString("utf-8"));
         });
 
         this.socket.on("close", hadError => {
@@ -67,11 +87,6 @@ export class MoonlinkWebSocket extends EventEmitter {
         });
 
         this.socket.on("error", error => this.emit("error", error));
-
-        this.socket.on("lookup", () => {});
-        this.socket.once("drain", () => {
-            this.socket.end();
-        });
     }
 
     public connect(): void {
@@ -101,57 +116,45 @@ export class MoonlinkWebSocket extends EventEmitter {
 
         req.end();
     }
-    private parseWebSocketFrames(data: Buffer): void {
-        let offset = 0;
-
-        while (offset < data.length) {
-            const frameLength = this.readFrameLength(data, offset);
-            const frameData = data.slice(offset, offset + frameLength);
-            this.parseSingleWebSocketFrame(frameData);
-            offset += frameLength;
-        }
-    }
-
-    private readFrameLength(data: Buffer, offset: number): number {
-        const payloadLength = data.readUInt8(offset + 1) & 0b01111111;
-
-        if (payloadLength === 126) {
-            return data.readUInt16BE(offset + 2) + 8;
-        } else if (payloadLength === 127) {
-            return data.readUInt32BE(offset + 6) + 14;
-        }
-
-        return payloadLength + 6;
-    }
-
-    private parseSingleWebSocketFrame(frameData: Buffer): void {
-        const FIN = (frameData[0] & 0b10000000) !== 0;
-        const opcode = frameData[0] & 0b00001111;
-        const masked = (frameData[1] & 0b10000000) !== 0;
-        let payloadLength = frameData[1] & 0b01111111;
+    private parseSingleWebSocketFrame(data: Buffer): any {
+        const opcode = data[0] & 0x0f; // 15
+        const fin = (data[0] & 0x80) === 0x80; // 128
+        const mask = (data[1] & 0x80) === 0x80;
         let payloadOffset = 2;
+        let payloadLength = data[1] & 0x7f;
 
         if (payloadLength === 126) {
-            payloadLength = frameData.readUInt16BE(payloadOffset);
+            payloadLength = data.readUInt16BE(2);
             payloadOffset += 2;
         } else if (payloadLength === 127) {
-            payloadLength = frameData.readUInt32BE(payloadOffset + 4);
+            payloadLength = data.readUInt32BE(2);
             payloadOffset += 8;
         }
 
-        const maskingKey = masked
-            ? frameData.slice(payloadOffset, payloadOffset + 4)
+        const maskingKey = mask
+            ? data.slice(payloadOffset, payloadOffset + 4)
             : null;
-        const payload = frameData.slice(payloadOffset + (masked ? 4 : 0));
+        payloadOffset += mask ? 4 : 0;
 
-        if (masked && maskingKey) {
+        const payload = data.slice(
+            payloadOffset,
+            payloadOffset + payloadLength
+        );
+
+        if (mask && maskingKey) {
             for (let i = 0; i < payload.length; i++) {
-                payload[i] = payload[i] ^ maskingKey[i % 4];
+                payload[i] ^= maskingKey[i % 4];
             }
         }
-
-        const parsedData = payload.toString("utf-8");
-        this.emit("message", parsedData);
+        return {
+            opcode,
+            fin,
+            mask,
+            maskingKey,
+            payloadLength,
+            payloadOffset,
+            payload
+        };
     }
 
     public close(code = 1000, reason = "closed"): void {
