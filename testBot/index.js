@@ -4,7 +4,8 @@ const {
 } = require("discord.js");
 const {
   MoonlinkManager,
-  Plugin
+  Plugin,
+  makeRequest
 } = require("../dist/index.js");
 const {
   Lyrics
@@ -12,6 +13,23 @@ const {
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
+
+
+(async () => {
+  setInterval(() => {
+    makeRequest('https://google.com', {}).then((res) => {
+      console.log('+1')
+
+      console.log(
+        "Memory usage: ",
+        Math.trunc(process.memoryUsage.rss() / 1024 / 1024),
+        "MB"
+      );
+    })
+  },
+    250)
+})()
+
 const log = (message) => {
   const coloredMessage = message.replace(/\[(.*?)\]/g, "\x1b[34m[$1]\x1b[0m");
   console.log(coloredMessage);
@@ -40,7 +58,7 @@ for (const folder of commandFolders) {
 }
 
 client.moon = new MoonlinkManager(
-  [{
+  [/*{
     host: require("../config.json").host,
     port: 443,
     secure: true,
@@ -53,8 +71,13 @@ client.moon = new MoonlinkManager(
     identifier: "LAVALINK-2"
   }, /*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
-  }*/ {
+  }*/ /*{
     host: "fbfcdd0d-e644-4b03-a632-1237cb5b6077-00-1ecqthk8a8ux8.kirk.replit.dev", secure: true, port: 443, identifier: "NODELINK", isNodeLink: true
+  },*/ {
+    host: "185.174.136.205",
+    password: "123123123",
+    port: 2333,
+    secure: false
   }],
   {
     // http2: true,
@@ -124,6 +147,7 @@ if (!token) {
   console.error(
     "[ System ]: Please provide a valid TOKEN in the environment variables.",
   );
+
 } else {
   client.login(token);
 }
