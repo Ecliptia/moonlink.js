@@ -498,9 +498,7 @@ export class MoonlinkNode {
                                 payload
                             );
 
-                        player.current = JSON.parse(
-                            queue.shift() as string
-                        ) as Record<string, any>;
+                        player.current = queue.shift() as MoonlinkTrack | any;
                         player.play();
                         return;
                     } else {
