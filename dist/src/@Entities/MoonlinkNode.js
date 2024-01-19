@@ -351,7 +351,7 @@ class MoonlinkNode {
                         player.queue.add(track);
                         if (!queue || queue.length === 0)
                             return this._manager.emit("trackEnd", player, track, payload);
-                        player.current = JSON.parse(queue.shift());
+                        player.current = queue.shift();
                         player.play();
                         return;
                     }

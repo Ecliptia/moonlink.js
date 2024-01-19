@@ -3,7 +3,9 @@ import {
     Structure,
     MoonlinkPlayer,
     MoonlinkTrack,
-    MoonlinkNode,Players, Nodes,
+    MoonlinkNode,
+    Players,
+    Nodes,
     Plugin
 } from "../../index";
 
@@ -123,9 +125,8 @@ export class MoonlinkManager extends EventEmitter {
                     query = options;
                 }
                 if (
-                    requester &&
-                    typeof requester !== "object" &&
-                    requester !== "string"
+                    (requester && typeof requester !== "object") &&
+                    typeof requester !== "string"
                 ) {
                     throw new Error(
                         '[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format'

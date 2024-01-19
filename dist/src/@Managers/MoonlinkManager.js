@@ -58,9 +58,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 else {
                     query = options;
                 }
-                if (requester &&
-                    typeof requester !== "object" &&
-                    requester !== "string") {
+                if ((requester && typeof requester !== "object") &&
+                    typeof requester !== "string") {
                     throw new Error('[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format');
                 }
                 if (source && typeof source !== "string") {
