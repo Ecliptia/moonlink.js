@@ -3,9 +3,7 @@ Welcome to the comprehensive documentation of Moonlink.js, your gateway to navig
 
 ## What is moonlink.js?
 
-Moonlink.js is a [lavalink](https://lavalink.dev/) client to work together with a [discord client](https://discord.com/developers/docs) library or wrapper to be a discord client
-
-It's an npmjs package, very simple and easy to use it.
+Moonlink.js is a [Lavalink](https://lavalink.dev/) client designed to collaborate seamlessly with a Discord client library or [wrapper](https://discord.com/developers/docs), effectively functioning as a Discord client. It is an npmjs package, characterized by its simplicity and ease of use.
 
 ## What is lavalink?
 
