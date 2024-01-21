@@ -26,8 +26,10 @@
 - [first](MoonlinkQueue.md#first)
 - [getQueue](MoonlinkQueue.md#getqueue)
 - [has](MoonlinkQueue.md#has)
+- [push](MoonlinkQueue.md#push)
 - [remove](MoonlinkQueue.md#remove)
 - [setQueue](MoonlinkQueue.md#setqueue)
+- [shift](MoonlinkQueue.md#shift)
 
 ## Constructors
 
@@ -49,7 +51,7 @@
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:13](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L13)
+[src/@Entities/MoonlinkQueue.ts:13](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L13)
 
 ## Properties
 
@@ -59,7 +61,7 @@
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:9](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L9)
+[src/@Entities/MoonlinkQueue.ts:9](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L9)
 
 ___
 
@@ -69,7 +71,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:10](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L10)
+[src/@Entities/MoonlinkQueue.ts:10](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L10)
 
 ___
 
@@ -79,7 +81,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:11](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L11)
+[src/@Entities/MoonlinkQueue.ts:11](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L11)
 
 ## Accessors
 
@@ -93,7 +95,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:85](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L85)
+[src/@Entities/MoonlinkQueue.ts:100](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L100)
 
 ___
 
@@ -107,7 +109,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:63](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L63)
+[src/@Entities/MoonlinkQueue.ts:78](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L78)
 
 ## Methods
 
@@ -128,7 +130,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:24](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L24)
+[src/@Entities/MoonlinkQueue.ts:24](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L24)
 
 ___
 
@@ -142,7 +144,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:54](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L54)
+[src/@Entities/MoonlinkQueue.ts:69](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L69)
 
 ___
 
@@ -156,7 +158,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:49](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L49)
+[src/@Entities/MoonlinkQueue.ts:49](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L49)
 
 ___
 
@@ -170,7 +172,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:89](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L89)
+[src/@Entities/MoonlinkQueue.ts:104](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L104)
 
 ___
 
@@ -190,7 +192,27 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:41](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L41)
+[src/@Entities/MoonlinkQueue.ts:41](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L41)
+
+___
+
+### push
+
+▸ **push**(`data`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `data` | `any` |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[src/@Entities/MoonlinkQueue.ts:63](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L63)
 
 ___
 
@@ -210,7 +232,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:67](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L67)
+[src/@Entities/MoonlinkQueue.ts:82](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L82)
 
 ___
 
@@ -230,4 +252,18 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkQueue.ts:93](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkQueue.ts#L93)
+[src/@Entities/MoonlinkQueue.ts:108](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L108)
+
+___
+
+### shift
+
+▸ **shift**(): `any`
+
+#### Returns
+
+`any`
+
+#### Defined in
+
+[src/@Entities/MoonlinkQueue.ts:54](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkQueue.ts#L54)

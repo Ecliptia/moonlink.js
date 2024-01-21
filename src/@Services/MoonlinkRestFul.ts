@@ -36,17 +36,23 @@ export class MoonlinkRestFul {
         );
     }
 
-    public async get(endpoint: Endpoint): Promise<Record<string, unknown>> {
+    public async get(endpoint: Endpoint): Promise<any> {
         this.ensureUrlIsSet();
         return this.makeGetRequest(endpoint);
     }
 
-    public async post(endpoint: Endpoint, data: RestOptions): Promise<Record<string, unknown>> {
+    public async post(
+        endpoint: Endpoint,
+        data: RestOptions
+    ): Promise<Record<string, unknown>> {
         this.ensureUrlIsSet();
         return this.makePostRequest(endpoint, data);
     }
 
-    public async patch(endpoint: Endpoint, data: RestOptions | any): Promise<Record<string, unknown>> {
+    public async patch(
+        endpoint: Endpoint,
+        data: RestOptions | any
+    ): Promise<Record<string, unknown>> {
         this.ensureUrlIsSet();
         return this.makePatchRequest(endpoint, data.data);
     }
@@ -56,11 +62,15 @@ export class MoonlinkRestFul {
         return this.makeDeleteRequest(endpoint);
     }
 
-    public async decodeTrack(encodedTrack: string): Promise<Record<string, unknown>> {
+    public async decodeTrack(
+        encodedTrack: string
+    ): Promise<Record<string, unknown>> {
         return this.get(`decodetrack?encodedTrack=${encodedTrack}`);
     }
 
-    public async decodeTracks(data: RestOptions): Promise<Record<string, unknown>> {
+    public async decodeTracks(
+        data: RestOptions
+    ): Promise<Record<string, unknown>> {
         return this.post("decodetracks", data);
     }
 
@@ -72,15 +82,29 @@ export class MoonlinkRestFul {
         return this.get("stats");
     }
 
-    public async getVersion(): Promise<Record<string, unknown>> {
-        return this.get("version");
+    public async getVersion(): Promise<any> {
+      const headers = {
+            Authorization: this.node.password
+        };
+        return makeRequest<Record<string, unknown> | any>(
+            this.url.replace("/v4", "") + "version",
+            {
+                method: "GET",
+                headers
+            }
+        ).catch(err => err);
+
     }
 
-    public async routePlannerFreeAddress(data: RestOptions): Promise<Record<string, unknown>> {
+    public async routePlannerFreeAddress(
+        data: RestOptions
+    ): Promise<Record<string, unknown>> {
         return this.post("routeplanner/free/address", data);
     }
 
-    public async routePlannerFreeAll(data: RestOptions): Promise<Record<string, unknown>> {
+    public async routePlannerFreeAll(
+        data: RestOptions
+    ): Promise<Record<string, unknown>> {
         return this.post("routeplanner/free/all", data);
     }
 
@@ -90,14 +114,19 @@ export class MoonlinkRestFul {
         }
     }
 
-    private async makeGetRequest(endpoint: string): Promise<Record<string, unknown>> {
+    private async makeGetRequest(
+        endpoint: string
+    ): Promise<Record<string, unknown> | any> {
         const headers = {
             Authorization: this.node.password
         };
-        return makeRequest<Record<string, unknown>>(this.url + endpoint, {
-            method: "GET",
-            headers
-        }).catch(err => err);
+        return makeRequest<Record<string, unknown> | any>(
+            this.url + endpoint,
+            {
+                method: "GET",
+                headers
+            }
+        ).catch(err => err);
     }
 
     private async makePostRequest(
@@ -134,7 +163,9 @@ export class MoonlinkRestFul {
         ).catch(err => err);
     }
 
-    private async makeDeleteRequest(endpoint: string): Promise<Record<string, unknown>> {
+    private async makeDeleteRequest(
+        endpoint: string
+    ): Promise<Record<string, unknown>> {
         const headers = {
             Authorization: this.node.password
         };

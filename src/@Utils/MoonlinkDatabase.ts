@@ -41,7 +41,7 @@ export class MoonlinkDatabase {
             );
         }
     }
-
+    
     delete(key: string): boolean {
         if (!key) throw new Error('@Moonlink(Database) - "key" is empty');
 
@@ -107,7 +107,7 @@ export class MoonlinkDatabase {
             if (err.code === "ENOENT") {
                 this.data = {};
             } else {
-                throw new Error("@Moonlink(Database) - Failed to fetch data");
+                throw new Error("@Moonlink(Database) - Failed to fetch data (Error):", err);
             }
         }
     }

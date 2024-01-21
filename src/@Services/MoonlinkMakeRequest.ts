@@ -19,8 +19,7 @@ export function makeRequest<T>(
             const reqOptions: http2.OutgoingHttpHeaders = {
                 ":method": options.method,
                 ":path": url.pathname + url.search,
-                "User-Agent":
-                    "Moonlink(Bot)",
+                "User-Agent": "Moonlink(Bot)",
                 "Content-Type": "application/json",
                 ...(options.headers || {})
             };
@@ -97,8 +96,8 @@ export function makeRequest<T>(
 
                     res.on("end", async () => {
                         try {
-                            const responseData: string =
-                                Buffer.concat(chunks).toString();
+                            const responseData: string = Buffer.concat(chunks).toString();
+
                             const parsedData = JSON.parse(responseData) as T;
                             resolve(parsedData);
                         } catch (err) {

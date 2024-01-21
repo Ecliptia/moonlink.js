@@ -16,12 +16,15 @@ exports.State = {
 class Players {
     _manager;
     map;
+    cache;
     constructor() {
         this.map = new Map();
     }
     init() {
         this._manager = Structure.manager;
         this._manager.emit("debug", "@Moonlink(Players) - Structure(Players) has been initialized, and assigned the value of the main class ");
+        if (this._manager.options?.playersOnCache)
+            this.cache = new Map();
     }
     handleVoiceServerUpdate(update, guildId) {
         const existingVoiceServer = this.map.get("voiceServer") || {};
@@ -36,9 +39,13 @@ class Players {
             ...players[guildId],
             connected: false,
             voiceChannel: null,
-            playing: false,
+            playing: false
         };
-        Object.assign(player, { connected: false, voiceChannel: null, playing: false });
+        Object.assign(player, {
+            connected: false,
+            voiceChannel: null,
+            playing: false
+        });
         player.stop();
     }
     handlePlayerMove(player, newChannelId, oldChannelId, guildId) {
@@ -78,6 +85,8 @@ class Players {
         return !!this.map.get("players")?.[guildId];
     }
     get(guildId) {
+        if (this.cache && this.cache.get(guildId))
+            return this.cache.get(guildId);
         if (!guildId && typeof guildId !== "string")
             throw new Error('[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string');
         if (!this.has(guildId))
@@ -85,6 +94,8 @@ class Players {
         return new (Structure.get("MoonlinkPlayer"))(this.map.get("players")[guildId], this._manager, this.map);
     }
     create(data) {
+        if (this.cache && data?.guildId && this.cache.get(data?.guildId))
+            return this.cache.get(data?.guildId);
         if (typeof data !== "object" ||
             !data.guildId ||
             typeof data.guildId !== "string" ||
@@ -131,7 +142,10 @@ class Players {
         this.map.set("players", players_map);
         this._manager.emit("debug", `@Moonlink(Players) - A server player was created (${data.guildId})`);
         this._manager.emit("playerCreated", data.guildId);
-        return new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
+        let instance = new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
+        if (this.cache)
+            this.cache.set(data.guildId, instance);
+        return instance;
     }
     get all() {
         return this.map.get("players") ?? null;

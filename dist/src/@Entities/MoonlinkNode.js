@@ -22,8 +22,10 @@ class MoonlinkNode {
     resumeTimeout = 30000;
     sessionId;
     socket;
+    version = "";
     state = index_1.State.DISCONNECTED;
     stats;
+    info = {};
     calls = 0;
     db = index_1.Structure.db;
     constructor(node) {
@@ -206,7 +208,7 @@ class MoonlinkNode {
                     this.db.delete("queue");
                     this.db.delete("players");
                 }
-                this._manager.emit("debug", `[ @Moonlink/Node ]:${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
+                this._manager.emit("debug", `@Moonlink(Node) - ${this.resumed ? ` session was resumed, ` : ``} session is currently ${this.sessionId}`);
                 if (this.resume && this.resumeStatus) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
@@ -293,17 +295,16 @@ class MoonlinkNode {
             return;
         if (!payload.guildId)
             return;
-        if (!this._manager.players.map.get("players")[payload.guildId])
+        if (!this._manager.players.has(payload.guildId))
             return;
-        let player = new (index_1.Structure.get("MoonlinkPlayer"))(this._manager.players.map.get("players")[payload.guildId], this._manager, this._manager.players.map);
+        let player = this._manager.players.get(payload.guildId);
         let players = this._manager.players.map.get("players") || {};
         switch (payload.type) {
             case "TrackStartEvent": {
-                let current = null;
-                let currents = this._manager.players.map.get("current") || {};
-                current = currents[payload.guildId] || null;
+                let current = player.current;
                 if (!current)
                     return;
+                let currents = this._manager.players.map.get("current") || {};
                 players[payload.guildId] = {
                     ...players[payload.guildId],
                     playing: true,
@@ -351,7 +352,7 @@ class MoonlinkNode {
                         player.queue.add(track);
                         if (!queue || queue.length === 0)
                             return this._manager.emit("trackEnd", player, track, payload);
-                        player.current = JSON.parse(queue.shift());
+                        player.current = queue.shift();
                         player.play();
                         return;
                     }

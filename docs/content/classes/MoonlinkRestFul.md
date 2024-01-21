@@ -55,7 +55,7 @@
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:15](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L15)
+[src/@Services/MoonlinkRestFul.ts:15](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L15)
 
 ## Properties
 
@@ -65,7 +65,7 @@
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:10](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L10)
+[src/@Services/MoonlinkRestFul.ts:10](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L10)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:12](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L12)
+[src/@Services/MoonlinkRestFul.ts:12](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L12)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:11](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L11)
+[src/@Services/MoonlinkRestFul.ts:11](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L11)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:13](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L13)
+[src/@Services/MoonlinkRestFul.ts:13](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L13)
 
 ## Methods
 
@@ -115,7 +115,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:59](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L59)
+[src/@Services/MoonlinkRestFul.ts:65](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L65)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:63](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L63)
+[src/@Services/MoonlinkRestFul.ts:71](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L71)
 
 ___
 
@@ -155,7 +155,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:54](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L54)
+[src/@Services/MoonlinkRestFul.ts:60](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L60)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:33](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L33)
+[src/@Services/MoonlinkRestFul.ts:33](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L33)
 
 ___
 
@@ -189,13 +189,13 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:87](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L87)
+[src/@Services/MoonlinkRestFul.ts:111](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L111)
 
 ___
 
 ### get
 
-▸ **get**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
+▸ **get**(`endpoint`): `Promise`\<`any`\>
 
 #### Parameters
 
@@ -205,11 +205,11 @@ ___
 
 #### Returns
 
-`Promise`\<`Record`\<`string`, `unknown`\>\>
+`Promise`\<`any`\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:39](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L39)
+[src/@Services/MoonlinkRestFul.ts:39](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L39)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:67](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L67)
+[src/@Services/MoonlinkRestFul.ts:77](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L77)
 
 ___
 
@@ -237,21 +237,21 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:71](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L71)
+[src/@Services/MoonlinkRestFul.ts:81](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L81)
 
 ___
 
 ### getVersion
 
-▸ **getVersion**(): `Promise`\<`Record`\<`string`, `unknown`\>\>
+▸ **getVersion**(): `Promise`\<`any`\>
 
 #### Returns
 
-`Promise`\<`Record`\<`string`, `unknown`\>\>
+`Promise`\<`any`\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:75](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L75)
+[src/@Services/MoonlinkRestFul.ts:85](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L85)
 
 ___
 
@@ -271,13 +271,13 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:137](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L137)
+[src/@Services/MoonlinkRestFul.ts:166](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L166)
 
 ___
 
 ### makeGetRequest
 
-▸ **makeGetRequest**(`endpoint`): `Promise`\<`Record`\<`string`, `unknown`\>\>
+▸ **makeGetRequest**(`endpoint`): `Promise`\<`any`\>
 
 #### Parameters
 
@@ -287,11 +287,11 @@ ___
 
 #### Returns
 
-`Promise`\<`Record`\<`string`, `unknown`\>\>
+`Promise`\<`any`\>
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:93](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L93)
+[src/@Services/MoonlinkRestFul.ts:117](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L117)
 
 ___
 
@@ -312,7 +312,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:120](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L120)
+[src/@Services/MoonlinkRestFul.ts:149](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L149)
 
 ___
 
@@ -333,7 +333,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:103](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L103)
+[src/@Services/MoonlinkRestFul.ts:132](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L132)
 
 ___
 
@@ -354,7 +354,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:49](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L49)
+[src/@Services/MoonlinkRestFul.ts:52](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L52)
 
 ___
 
@@ -375,7 +375,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:44](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L44)
+[src/@Services/MoonlinkRestFul.ts:44](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L44)
 
 ___
 
@@ -395,7 +395,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:79](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L79)
+[src/@Services/MoonlinkRestFul.ts:99](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L99)
 
 ___
 
@@ -415,7 +415,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:83](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L83)
+[src/@Services/MoonlinkRestFul.ts:105](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L105)
 
 ___
 
@@ -435,7 +435,7 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:20](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L20)
+[src/@Services/MoonlinkRestFul.ts:20](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L20)
 
 ___
 
@@ -455,4 +455,4 @@ ___
 
 #### Defined in
 
-[src/@Services/MoonlinkRestFul.ts:25](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Services/MoonlinkRestFul.ts#L25)
+[src/@Services/MoonlinkRestFul.ts:25](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Services/MoonlinkRestFul.ts#L25)
