@@ -3,7 +3,9 @@ import {
     Structure,
     MoonlinkPlayer,
     MoonlinkTrack,
-    MoonlinkNode,Players, Nodes,
+    MoonlinkNode,
+    Players,
+    Nodes,
     Plugin
 } from "../../index";
 
@@ -108,7 +110,7 @@ export class MoonlinkManager extends EventEmitter {
             try {
                 if (!options) {
                     throw new Error(
-                        "[ @Moonlink/Manager ]: the search option has to be in string format or in an array"
+                        "@Moonlink(Manager) - the search option has to be in string format or in an array"
                     );
                 }
 
@@ -125,7 +127,7 @@ export class MoonlinkManager extends EventEmitter {
                 if (
                     requester &&
                     typeof requester !== "object" &&
-                    requester !== "string"
+                    typeof requester !== "string"
                 ) {
                     throw new Error(
                         '[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format'
@@ -139,7 +141,7 @@ export class MoonlinkManager extends EventEmitter {
 
                 if (typeof query !== "string" && typeof query !== "object") {
                     throw new Error(
-                        "[ @Moonlink/Manager ]: (search) the search option has to be in string or array format"
+                        "@Moonlink(Manager) - (search) the search option has to be in string or array format"
                     );
                 }
 
@@ -167,7 +169,7 @@ export class MoonlinkManager extends EventEmitter {
                 if (["error", "empty"].includes(res.loadType)) {
                     this.emit(
                         "debug",
-                        "[ @Moonlink/Manager ]: not found or there was an error loading the track"
+                        "@Moonlink(Manager) - not found or there was an error loading the track"
                     );
                     return resolve(res);
                 }
@@ -203,7 +205,7 @@ export class MoonlinkManager extends EventEmitter {
             } catch (error) {
                 this.emit(
                     "debug",
-                    "[ @Moonlink/Manager ]: An error occurred: " + error.message
+                    "@Moonlink(Manager) - An error occurred: " + error
                 );
                 reject(error);
             }

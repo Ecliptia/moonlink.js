@@ -48,7 +48,7 @@ module.exports = {
 
     const query = args.join(" ");
     const searchResult = await client.moon.search({
-      query, search: "spsearch"
+      query
     });
 
     if (searchResult.loadType === "loadfailed") {
@@ -124,7 +124,9 @@ module.exports = {
           inline: true,
         },
       );
-
+      
+      if (player.queue.has(searchResult.tracks[0].identifier)) return message.reply("<:hi:1176345748405768252> | Has track in queue");
+      
       player.queue.add(searchResult.tracks[0]);
       message.reply({
         embeds: [embed],

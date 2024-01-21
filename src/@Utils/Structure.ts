@@ -1,4 +1,4 @@
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
 
 import {
@@ -27,6 +27,7 @@ export const State = {
 export class Players {
     public _manager: MoonlinkManager;
     public map: Map<any, any>;
+    public cache?: Map<any, any>;
     constructor() {
         this.map = new Map();
     }
@@ -36,6 +37,7 @@ export class Players {
             "debug",
             "@Moonlink(Players) - Structure(Players) has been initialized, and assigned the value of the main class "
         );
+        if (this._manager.options?.playersOnCache) this.cache = new Map();
     }
     public handleVoiceServerUpdate(update: any, guildId: string): void {
         const existingVoiceServer = this.map.get("voiceServer") || {};
@@ -44,20 +46,27 @@ export class Players {
         this.map.set("voiceServer", existingVoiceServer);
         this.attemptConnection(guildId);
     }
-public handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void {
-    const players = this.map.get("players") || {};
-    this._manager.emit("playerDisconnect", player);
+    public handlePlayerDisconnect(
+        player: MoonlinkPlayer,
+        guildId: string
+    ): void {
+        const players = this.map.get("players") || {};
+        this._manager.emit("playerDisconnect", player);
 
-    players[guildId] = {
-        ...players[guildId],
-        connected: false,
-        voiceChannel: null,
-        playing: false,
-    };
+        players[guildId] = {
+            ...players[guildId],
+            connected: false,
+            voiceChannel: null,
+            playing: false
+        };
 
-    Object.assign(player, { connected: false, voiceChannel: null, playing: false });
-    player.stop();
-}
+        Object.assign(player, {
+            connected: false,
+            voiceChannel: null,
+            playing: false
+        });
+        player.stop();
+    }
     public handlePlayerMove(
         player: MoonlinkPlayer,
         newChannelId: string,
@@ -103,6 +112,8 @@ public handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void {
         return !!this.map.get("players")?.[guildId];
     }
     public get(guildId: string): MoonlinkPlayer | null {
+        if (this.cache && this.cache.get(guildId))
+            return this.cache.get(guildId);
         if (!guildId && typeof guildId !== "string")
             throw new Error(
                 '[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string'
@@ -115,6 +126,8 @@ public handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void {
         );
     }
     public create(data: createOptions): MoonlinkPlayer {
+        if (this.cache && data?.guildId && this.cache.get(data?.guildId))
+            return this.cache.get(data?.guildId);
         if (
             typeof data !== "object" ||
             !data.guildId ||
@@ -180,11 +193,14 @@ public handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void {
             `@Moonlink(Players) - A server player was created (${data.guildId})`
         );
         this._manager.emit("playerCreated", data.guildId);
-        return new (Structure.get("MoonlinkPlayer"))(
+        let instance = new (Structure.get("MoonlinkPlayer"))(
             players_map[data.guildId],
             this._manager,
             this.map
         );
+        if (this.cache) this.cache.set(data.guildId, instance);
+
+        return instance;
     }
     public get all(): Record<string, any> | null {
         return this.map.get("players") ?? null;

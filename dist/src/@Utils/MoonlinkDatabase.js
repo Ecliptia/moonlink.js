@@ -94,7 +94,7 @@ class MoonlinkDatabase {
                 this.data = {};
             }
             else {
-                throw new Error("@Moonlink(Database) - Failed to fetch data");
+                throw new Error("@Moonlink(Database) - Failed to fetch data (Error):", err);
             }
         }
     }

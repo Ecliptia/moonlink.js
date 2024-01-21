@@ -9,10 +9,12 @@ export declare class MoonlinkQueue {
     add(data: MoonlinkTrack, position?: number): void;
     has(identifier: string): boolean;
     first(): any;
+    shift(): any;
+    push(data: any): void;
     clear(): boolean;
     get size(): number;
     remove(position: number): boolean;
     get all(): any;
-    private getQueue;
-    private setQueue;
+    getQueue(): MoonlinkTrack[];
+    setQueue(queue: MoonlinkTrack[]): void;
 }

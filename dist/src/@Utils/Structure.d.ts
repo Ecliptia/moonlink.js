@@ -14,6 +14,7 @@ export declare const State: {
 export declare class Players {
     _manager: MoonlinkManager;
     map: Map<any, any>;
+    cache?: Map<any, any>;
     constructor();
     init(): void;
     handleVoiceServerUpdate(update: any, guildId: string): void;

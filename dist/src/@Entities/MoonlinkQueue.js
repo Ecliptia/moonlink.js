@@ -38,6 +38,19 @@ class MoonlinkQueue {
         const queue = this.getQueue();
         return queue.length > 0 ? queue[0] : null;
     }
+    shift() {
+        let queue = this.getQueue();
+        if (!queue.length)
+            return null;
+        let track = queue.shift();
+        this.setQueue(queue);
+        return track;
+    }
+    push(data) {
+        let queue = this.getQueue();
+        queue.push(data);
+        this.setQueue(queue);
+    }
     clear() {
         const queue = this.getQueue();
         if (queue.length > 0) {
