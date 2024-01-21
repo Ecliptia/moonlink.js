@@ -1,0 +1,2 @@
+# Welcome
+Welcome to the comprehensive documentation of Moonlink.js, your gateway to navigating the intricate paths of digital melody. Here, we will delve into the features, functionalities, and best practices for integrating this Lavalink client package, offering an immersive and personalized auditory experience. Get ready to dive into the documented universe of Moonlink.js, where precision meets harmony.
