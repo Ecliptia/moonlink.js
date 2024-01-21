@@ -51,6 +51,21 @@ export class MoonlinkQueue {
         return queue.length > 0 ? queue[0] : null;
     }
 
+    public shift(): any {
+        let queue = this.getQueue();
+        if (!queue.length) return null;
+        let track = queue.shift();
+        this.setQueue(queue);
+
+        return track;
+    }
+
+    public push(data: any): void {
+        let queue = this.getQueue();
+        queue.push(data);
+        this.setQueue(queue);
+    }
+
     public clear(): boolean {
         const queue = this.getQueue();
         if (queue.length > 0) {
@@ -86,11 +101,11 @@ export class MoonlinkQueue {
         return this.getQueue();
     }
 
-    private getQueue(): MoonlinkTrack[] {
+    public getQueue(): MoonlinkTrack[] {
         return this.db.get(`queue.${this.guildId}`) || [];
     }
 
-    private setQueue(queue: MoonlinkTrack[]): void {
+    public setQueue(queue: MoonlinkTrack[]): void {
         this.db.set(`queue.${this.guildId}`, queue);
     }
 }

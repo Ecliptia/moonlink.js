@@ -51,7 +51,13 @@ class MoonlinkRestFul {
         return this.get("stats");
     }
     async getVersion() {
-        return this.get("version");
+        const headers = {
+            Authorization: this.node.password
+        };
+        return (0, index_1.makeRequest)(this.url.replace("/v4", "") + "version", {
+            method: "GET",
+            headers
+        }).catch(err => err);
     }
     async routePlannerFreeAddress(data) {
         return this.post("routeplanner/free/address", data);

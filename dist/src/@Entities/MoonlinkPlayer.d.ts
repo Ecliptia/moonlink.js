@@ -1,4 +1,4 @@
-import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode } from "../../index";
+import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack } from "../../index";
 import { PlayerInfos, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     manager: MoonlinkManager;
@@ -33,17 +33,16 @@ export declare class MoonlinkPlayer {
     connect(options: connectOptions): boolean | null;
     disconnect(): boolean;
     restart(): Promise<void>;
-    play(): Promise<void>;
+    play(track?: MoonlinkTrack | string): Promise<boolean>;
     pause(): Promise<boolean>;
     resume(): Promise<boolean>;
     private updatePlaybackStatus;
     stop(destroy?: boolean): Promise<boolean>;
-    skip(): Promise<boolean>;
+    skip(position?: number): Promise<boolean>;
     setVolume(percent: number): Promise<number>;
-    setLoop(mode: number | null): number | null;
+    setLoop(mode: number | string | null): number | string | null;
     destroy(): Promise<boolean>;
     private validateNumberParam;
     seek(position: number): Promise<number | null>;
-    skipTo(position: number): Promise<boolean | void>;
     shuffle(mode?: boolean | null): boolean | null;
 }

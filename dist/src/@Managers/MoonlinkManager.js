@@ -45,7 +45,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         return new Promise(async (resolve, reject) => {
             try {
                 if (!options) {
-                    throw new Error("[ @Moonlink/Manager ]: the search option has to be in string format or in an array");
+                    throw new Error("@Moonlink(Manager) - the search option has to be in string format or in an array");
                 }
                 let query;
                 let source;
@@ -58,7 +58,8 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 else {
                     query = options;
                 }
-                if ((requester && typeof requester !== "object") &&
+                if (requester &&
+                    typeof requester !== "object" &&
                     typeof requester !== "string") {
                     throw new Error('[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format');
                 }
@@ -66,7 +67,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     throw new Error("[ @Moonlink/Manager ]: the source option has to be in string format");
                 }
                 if (typeof query !== "string" && typeof query !== "object") {
-                    throw new Error("[ @Moonlink/Manager ]: (search) the search option has to be in string or array format");
+                    throw new Error("@Moonlink(Manager) - (search) the search option has to be in string or array format");
                 }
                 const sources = {
                     youtube: "ytsearch",
@@ -87,7 +88,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     .sortByUsage("memory")[0]
                     .request("loadtracks", params);
                 if (["error", "empty"].includes(res.loadType)) {
-                    this.emit("debug", "[ @Moonlink/Manager ]: not found or there was an error loading the track");
+                    this.emit("debug", "@Moonlink(Manager) - not found or there was an error loading the track");
                     return resolve(res);
                 }
                 if (["track"].includes(res.loadType)) {
@@ -109,7 +110,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 });
             }
             catch (error) {
-                this.emit("debug", "[ @Moonlink/Manager ]: An error occurred: " + error.message);
+                this.emit("debug", "@Moonlink(Manager) - An error occurred: " + error);
                 reject(error);
             }
         });
