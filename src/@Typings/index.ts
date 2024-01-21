@@ -133,6 +133,8 @@ export interface IOptions {
     plugins?: Plugin[];
     http2?: boolean;
     movePlayersToNextNode?: boolean;
+    destroyPlayersStopped?: boolean
+    playersOnCache?: boolean;
     WebSocketDebug?: boolean;
 }
 

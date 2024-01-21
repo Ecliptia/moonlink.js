@@ -35,8 +35,10 @@ export class MoonlinkNode {
     public resumeTimeout?: number = 30000;
     public sessionId: string;
     public socket: MoonlinkWebSocket | null;
+    public version: string = "";
     public state: string = State.DISCONNECTED;
     public stats: INodeStats;
+    public info: any = {};
     public calls: number = 0;
     public db: MoonlinkDatabase = Structure.db;
 
@@ -307,16 +309,16 @@ export class MoonlinkNode {
                 this.sessionId = payload.sessionId;
                 this.resume ? this.db.set("sessionId", this.sessionId) : null;
                 this.resumed = payload.resumed;
-
                 this._manager.nodes.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
                 if (!this._manager.initiated && !this.resumed) {
                     this.db.delete("queue");
                     this.db.delete("players");
                 }
+
                 this._manager.emit(
                     "debug",
-                    `[ @Moonlink/Node ]:${
+                    `@Moonlink(Node) - ${
                         this.resumed ? ` session was resumed, ` : ``
                     } session is currently ${this.sessionId}`
                 );
@@ -428,20 +430,16 @@ export class MoonlinkNode {
     protected async handleEvent(payload: any): Promise<any> {
         if (!payload) return;
         if (!payload.guildId) return;
-        if (!this._manager.players.map.get("players")[payload.guildId]) return;
-        let player: MoonlinkPlayer = new (Structure.get("MoonlinkPlayer"))(
-            this._manager.players.map.get("players")[payload.guildId],
-            this._manager,
-            this._manager.players.map
-        );
+        if (!this._manager.players.has(payload.guildId)) return;
+        let player: MoonlinkPlayer = this._manager.players.get(payload.guildId);
         let players: any = this._manager.players.map.get("players") || {};
         switch (payload.type) {
             case "TrackStartEvent": {
-                let current: any = null;
+                let current: MoonlinkTrack | Record<string, any> | null =
+                    player.current;
+                if (!current) return;
                 let currents: any =
                     this._manager.players.map.get("current") || {};
-                current = currents[payload.guildId] || null;
-                if (!current) return;
                 players[payload.guildId] = {
                     ...players[payload.guildId],
                     playing: true,

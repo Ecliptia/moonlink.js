@@ -10,8 +10,10 @@
 - [autoResume](IOptions.md#autoresume)
 - [clientId](IOptions.md#clientid)
 - [clientName](IOptions.md#clientname)
+- [destroyPlayersStopped](IOptions.md#destroyplayersstopped)
 - [http2](IOptions.md#http2)
 - [movePlayersToNextNode](IOptions.md#moveplayerstonextnode)
+- [playersOnCache](IOptions.md#playersoncache)
 - [plugins](IOptions.md#plugins)
 - [sortNode](IOptions.md#sortnode)
 
@@ -23,7 +25,7 @@
 
 #### Defined in
 
-[src/@Typings/index.ts:136](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L136)
+[src/@Typings/index.ts:138](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L138)
 
 ___
 
@@ -33,7 +35,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:132](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L132)
+[src/@Typings/index.ts:132](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L132)
 
 ___
 
@@ -43,7 +45,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:129](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L129)
+[src/@Typings/index.ts:129](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L129)
 
 ___
 
@@ -53,7 +55,17 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:130](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L130)
+[src/@Typings/index.ts:130](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L130)
+
+___
+
+### destroyPlayersStopped
+
+• `Optional` **destroyPlayersStopped**: `boolean`
+
+#### Defined in
+
+[src/@Typings/index.ts:136](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L136)
 
 ___
 
@@ -63,7 +75,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:134](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L134)
+[src/@Typings/index.ts:134](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L134)
 
 ___
 
@@ -73,7 +85,17 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:135](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L135)
+[src/@Typings/index.ts:135](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L135)
+
+___
+
+### playersOnCache
+
+• `Optional` **playersOnCache**: `boolean`
+
+#### Defined in
+
+[src/@Typings/index.ts:137](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L137)
 
 ___
 
@@ -83,7 +105,7 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:133](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L133)
+[src/@Typings/index.ts:133](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L133)
 
 ___
 
@@ -93,4 +115,4 @@ ___
 
 #### Defined in
 
-[src/@Typings/index.ts:131](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Typings/index.ts#L131)
+[src/@Typings/index.ts:131](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Typings/index.ts#L131)

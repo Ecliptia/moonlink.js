@@ -42,13 +42,13 @@ for (const folder of commandFolders) {
 }
 
 client.moon = new MoonlinkManager(
-  [/*{
+  [{
     host: require("../config.json").host,
     port: 443,
     secure: true,
     password: require("../config.json").password,
     identifier: "LAVALINK"
-  }, */ {
+  }, {
     host: "5.9.8.124",
     port: 34953,
     secure: false,

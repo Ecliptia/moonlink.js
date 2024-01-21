@@ -52,7 +52,6 @@
 - [setVolume](MoonlinkPlayer.md#setvolume)
 - [shuffle](MoonlinkPlayer.md#shuffle)
 - [skip](MoonlinkPlayer.md#skip)
-- [skipTo](MoonlinkPlayer.md#skipto)
 - [stop](MoonlinkPlayer.md#stop)
 - [updatePlaybackStatus](MoonlinkPlayer.md#updateplaybackstatus)
 - [updatePlayers](MoonlinkPlayer.md#updateplayers)
@@ -80,7 +79,7 @@ Creates an instance of MoonlinkPlayer.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:38](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L38)
+[src/@Entities/MoonlinkPlayer.ts:39](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L39)
 
 ## Properties
 
@@ -90,7 +89,7 @@ Creates an instance of MoonlinkPlayer.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:17](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L17)
+[src/@Entities/MoonlinkPlayer.ts:18](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L18)
 
 ___
 
@@ -100,7 +99,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:16](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L16)
+[src/@Entities/MoonlinkPlayer.ts:17](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L17)
 
 ___
 
@@ -110,7 +109,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:18](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L18)
+[src/@Entities/MoonlinkPlayer.ts:19](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L19)
 
 ___
 
@@ -120,7 +119,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:26](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L26)
+[src/@Entities/MoonlinkPlayer.ts:27](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L27)
 
 ___
 
@@ -130,7 +129,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:28](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L28)
+[src/@Entities/MoonlinkPlayer.ts:29](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L29)
 
 ___
 
@@ -140,7 +139,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:13](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L13)
+[src/@Entities/MoonlinkPlayer.ts:14](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L14)
 
 ___
 
@@ -150,7 +149,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:11](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L11)
+[src/@Entities/MoonlinkPlayer.ts:12](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L12)
 
 ___
 
@@ -160,7 +159,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:21](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L21)
+[src/@Entities/MoonlinkPlayer.ts:22](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L22)
 
 ___
 
@@ -170,7 +169,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:10](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L10)
+[src/@Entities/MoonlinkPlayer.ts:11](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L11)
 
 ___
 
@@ -180,7 +179,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:12](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L12)
+[src/@Entities/MoonlinkPlayer.ts:13](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L13)
 
 ___
 
@@ -190,7 +189,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:29](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L29)
+[src/@Entities/MoonlinkPlayer.ts:30](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L30)
 
 ___
 
@@ -200,7 +199,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:20](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L20)
+[src/@Entities/MoonlinkPlayer.ts:21](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L21)
 
 ___
 
@@ -210,7 +209,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:24](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L24)
+[src/@Entities/MoonlinkPlayer.ts:25](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L25)
 
 ___
 
@@ -220,7 +219,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:19](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L19)
+[src/@Entities/MoonlinkPlayer.ts:20](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L20)
 
 ___
 
@@ -230,7 +229,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:27](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L27)
+[src/@Entities/MoonlinkPlayer.ts:28](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L28)
 
 ___
 
@@ -240,7 +239,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:25](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L25)
+[src/@Entities/MoonlinkPlayer.ts:26](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L26)
 
 ___
 
@@ -250,7 +249,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:30](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L30)
+[src/@Entities/MoonlinkPlayer.ts:31](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L31)
 
 ___
 
@@ -260,7 +259,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:23](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L23)
+[src/@Entities/MoonlinkPlayer.ts:24](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L24)
 
 ___
 
@@ -270,7 +269,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:14](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L14)
+[src/@Entities/MoonlinkPlayer.ts:15](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L15)
 
 ___
 
@@ -280,7 +279,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:15](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L15)
+[src/@Entities/MoonlinkPlayer.ts:16](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L16)
 
 ___
 
@@ -290,7 +289,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:22](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L22)
+[src/@Entities/MoonlinkPlayer.ts:23](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L23)
 
 ## Methods
 
@@ -314,7 +313,7 @@ True if the connection was successful.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:206](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L206)
+[src/@Entities/MoonlinkPlayer.ts:203](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L203)
 
 ___
 
@@ -332,7 +331,7 @@ True if the player was successfully destroyed.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:433](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L433)
+[src/@Entities/MoonlinkPlayer.ts:487](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L487)
 
 ___
 
@@ -350,7 +349,7 @@ True if the disconnection was successful.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:229](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L229)
+[src/@Entities/MoonlinkPlayer.ts:226](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L226)
 
 ___
 
@@ -380,7 +379,7 @@ The value associated with the key.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:124](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L124)
+[src/@Entities/MoonlinkPlayer.ts:125](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L125)
 
 ___
 
@@ -398,23 +397,29 @@ True if paused successfully.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:308](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L308)
+[src/@Entities/MoonlinkPlayer.ts:330](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L330)
 
 ___
 
 ### play
 
-▸ **play**(): `Promise`\<`void`\>
+▸ **play**(`track?`): `Promise`\<`boolean`\>
 
 Play the next track in the queue.
 
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `track?` | `string` \| [`MoonlinkTrack`](MoonlinkTrack.md) |
+
 #### Returns
 
-`Promise`\<`void`\>
+`Promise`\<`boolean`\>
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:267](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L267)
+[src/@Entities/MoonlinkPlayer.ts:276](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L276)
 
 ___
 
@@ -430,7 +435,7 @@ Restart the player by reconnecting and updating its state.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:250](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L250)
+[src/@Entities/MoonlinkPlayer.ts:247](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L247)
 
 ___
 
@@ -448,7 +453,7 @@ True if resumed successfully.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:318](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L318)
+[src/@Entities/MoonlinkPlayer.ts:340](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L340)
 
 ___
 
@@ -476,7 +481,7 @@ Error if the position is greater than the track duration or seek is not allowed.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:463](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L463)
+[src/@Entities/MoonlinkPlayer.ts:522](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L522)
 
 ___
 
@@ -499,7 +504,7 @@ Set a key-value pair in the player's data and update the map.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:114](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L114)
+[src/@Entities/MoonlinkPlayer.ts:115](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L115)
 
 ___
 
@@ -519,7 +524,7 @@ ___
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:173](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L173)
+[src/@Entities/MoonlinkPlayer.ts:170](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L170)
 
 ___
 
@@ -547,13 +552,13 @@ Error if mode is not a boolean.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:190](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L190)
+[src/@Entities/MoonlinkPlayer.ts:187](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L187)
 
 ___
 
 ### setLoop
 
-▸ **setLoop**(`mode`): `number`
+▸ **setLoop**(`mode`): `string` \| `number`
 
 Set the loop mode for the player.
 
@@ -561,11 +566,11 @@ Set the loop mode for the player.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `mode` | `number` | Loop mode (0 for no loop, 1 for single track, 2 for entire queue). |
+| `mode` | `string` \| `number` | Loop mode (0 for no loop, 1 for single track, 2 for entire queue). |
 
 #### Returns
 
-`number`
+`string` \| `number`
 
 The new loop mode.
 
@@ -575,7 +580,7 @@ Error if the mode is not a valid number or out of range.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:415](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L415)
+[src/@Entities/MoonlinkPlayer.ts:459](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L459)
 
 ___
 
@@ -603,7 +608,7 @@ Error if channelId is empty or not a string.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:135](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L135)
+[src/@Entities/MoonlinkPlayer.ts:136](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L136)
 
 ___
 
@@ -631,7 +636,7 @@ Error if channelId is empty or not a string.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:157](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L157)
+[src/@Entities/MoonlinkPlayer.ts:156](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L156)
 
 ___
 
@@ -659,7 +664,7 @@ Error if the volume is not a valid number or player is not playing.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:389](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L389)
+[src/@Entities/MoonlinkPlayer.ts:433](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L433)
 
 ___
 
@@ -687,15 +692,21 @@ Error if the queue is empty.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:530](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L530)
+[src/@Entities/MoonlinkPlayer.ts:550](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L550)
 
 ___
 
 ### skip
 
-▸ **skip**(): `Promise`\<`boolean`\>
+▸ **skip**(`position?`): `Promise`\<`boolean`\>
 
 Skip to the next track in the queue.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `position?` | `number` |
 
 #### Returns
 
@@ -705,35 +716,7 @@ True if the next track was successfully played.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:356](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L356)
-
-___
-
-### skipTo
-
-▸ **skipTo**(`position`): `Promise`\<`boolean` \| `void`\>
-
-Skip to a specific position in the queue.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `position` | `number` | The position to skip to. |
-
-#### Returns
-
-`Promise`\<`boolean` \| `void`\>
-
-True if the position exists and the skip was successful.
-
-**`Throws`**
-
-Error if the queue is empty, or the indicated position does not exist.
-
-#### Defined in
-
-[src/@Entities/MoonlinkPlayer.ts:492](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L492)
+[src/@Entities/MoonlinkPlayer.ts:382](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L382)
 
 ___
 
@@ -757,7 +740,7 @@ True if stopped successfully.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:341](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L341)
+[src/@Entities/MoonlinkPlayer.ts:363](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L363)
 
 ___
 
@@ -779,7 +762,7 @@ Private method to update the playback status (paused or resumed).
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:328](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L328)
+[src/@Entities/MoonlinkPlayer.ts:350](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L350)
 
 ___
 
@@ -795,7 +778,7 @@ Private method to update player information in the map.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:103](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L103)
+[src/@Entities/MoonlinkPlayer.ts:104](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L104)
 
 ___
 
@@ -822,4 +805,4 @@ Error if the parameter is not a valid number.
 
 #### Defined in
 
-[src/@Entities/MoonlinkPlayer.ts:449](https://github.com/Ecliptia/moonlink.js/blob/150c8e5/src/@Entities/MoonlinkPlayer.ts#L449)
+[src/@Entities/MoonlinkPlayer.ts:508](https://github.com/Ecliptia/moonlink.js/blob/a19be7d/src/@Entities/MoonlinkPlayer.ts#L508)

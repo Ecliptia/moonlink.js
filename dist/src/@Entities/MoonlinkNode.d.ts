@@ -21,8 +21,10 @@ export declare class MoonlinkNode {
     resumeTimeout?: number;
     sessionId: string;
     socket: MoonlinkWebSocket | null;
+    version: string;
     state: string;
     stats: INodeStats;
+    info: any;
     calls: number;
     db: MoonlinkDatabase;
     constructor(node: INode);

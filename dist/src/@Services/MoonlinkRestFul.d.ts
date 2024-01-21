@@ -9,7 +9,7 @@ export declare class MoonlinkRestFul {
     setSessionId(sessionId: string): void;
     update(data: RestOptions): Promise<Record<string, unknown>>;
     destroy(guildId: string): Promise<Record<string, unknown>>;
-    get(endpoint: Endpoint): Promise<Record<string, unknown>>;
+    get(endpoint: Endpoint): Promise<any>;
     post(endpoint: Endpoint, data: RestOptions): Promise<Record<string, unknown>>;
     patch(endpoint: Endpoint, data: RestOptions | any): Promise<Record<string, unknown>>;
     delete(endpoint: Endpoint): Promise<Record<string, unknown>>;
@@ -17,7 +17,7 @@ export declare class MoonlinkRestFul {
     decodeTracks(data: RestOptions): Promise<Record<string, unknown>>;
     getInfo(): Promise<Record<string, unknown>>;
     getStats(): Promise<Record<string, unknown>>;
-    getVersion(): Promise<Record<string, unknown>>;
+    getVersion(): Promise<any>;
     routePlannerFreeAddress(data: RestOptions): Promise<Record<string, unknown>>;
     routePlannerFreeAll(data: RestOptions): Promise<Record<string, unknown>>;
     private ensureUrlIsSet;

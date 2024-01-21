@@ -3,6 +3,7 @@ import {
     MoonlinkManager,
     MoonlinkQueue,
     MoonlinkNode,
+    MoonlinkTrack,
     Structure
 } from "../../index";
 import { PlayerInfos, connectOptions, PreviousInfosPlayer } from "../@Typings";
@@ -134,13 +135,11 @@ export class MoonlinkPlayer {
      */
     public setTextChannel(channelId: string): boolean {
         if (!channelId) {
-            throw new Error(
-                '[ @Moonlink/Player ]: "channelId" option is empty'
-            );
+            throw new Error('@Moonlink(Player) - "channelId" option is empty');
         }
         if (typeof channelId !== "string") {
             throw new Error(
-                '[ @Moonlink/Player ]: option "channelId" is different from a string'
+                '@Moonlink(Player) - option "channelId" is different from a string'
             );
         }
         this.set("textChannel", channelId);
@@ -156,13 +155,11 @@ export class MoonlinkPlayer {
      */
     public setVoiceChannel(channelId: string): boolean {
         if (!channelId) {
-            throw new Error(
-                '[ @Moonlink/Player ]: "channelId" option is empty'
-            );
+            throw new Error('@Moonlink(Player) - "channelId" option is empty');
         }
         if (typeof channelId !== "string") {
             throw new Error(
-                '[ @Moonlink/Player ]: option "channelId" is different from a string'
+                '@Moonlink(Player) - option "channelId" is different from a string'
             );
         }
         this.set("voiceChannel", channelId);
@@ -173,7 +170,7 @@ export class MoonlinkPlayer {
     public setAutoLeave(mode?: boolean | null): boolean | null {
         if (typeof mode !== "boolean") {
             throw new Error(
-                '[ @Moonlink/Player ]: "mode" option is empty or different from a boolean'
+                '@Moonlink(Player) - "mode" option is empty or different from a boolean'
             );
         }
         mode ? mode : (mode = !this.autoLeave);
@@ -190,7 +187,7 @@ export class MoonlinkPlayer {
     public setAutoPlay(mode: boolean): boolean {
         if (typeof mode !== "boolean") {
             throw new Error(
-                '[ @Moonlink/Player ]: "mode" option is empty or different from a boolean'
+                '@Moonlink(Player) - "mode" option is empty or different from a boolean'
             );
         }
         this.set("autoPlay", mode);
@@ -248,8 +245,20 @@ export class MoonlinkPlayer {
      * Restart the player by reconnecting and updating its state.
      */
     public async restart(): Promise<void> {
-        if (!this.current) return;
+        if (!this.current || !this.queue.size) return;
+
+        await this.connect({
+            setDeaf: true,
+            setMute: false
+        }); // applicaçao discord ainda escultam mesmo com deaf ativo, mas a lavalink é um servidor surdo
+
         await this.manager.players.attemptConnection(this.guildId);
+
+        if (!this.current && this.queue.size) {
+            this.play();
+            return;
+        }
+
         await this.rest.update({
             guildId: this.guildId,
             data: {
@@ -264,31 +273,43 @@ export class MoonlinkPlayer {
     /**
      * Play the next track in the queue.
      */
-    public async play(): Promise<void> {
-        // modified by PiscesXD
-        if (!this.queue.size) return;
+    public async play(track?: MoonlinkTrack | string): Promise<boolean> {
+        if (!track && !this.queue.size) return false;
 
-        let queue: any = this.queue.db.get(`queue.${this.guildId}`);
-        let data: any = queue.shift();
+        let data: MoonlinkTrack | string | null = track
+            ? track
+            : this.queue.shift();
 
-        if (!data) return;
-
+        if (!data) return false;
         let current = this.map.get("current") || {};
 
-        if (this.loop && Object.keys(current).length != 0) {
+        if (this.loop && Object.keys(current[this.guildId]).length != 0) {
             current[this.guildId].time
                 ? (current[this.guildId].time = 0)
                 : false;
             this.set("ping", undefined);
-            queue.push(current[this.guildId]);
+            this.queue.push(current[this.guildId]);
+        }
+
+        if (typeof data == "string") {
+            try {
+                let resolveTrack: any = await this.rest.decodeTrack(data);
+                data = new (Structure.get("MoonlinkTrack"))(resolveTrack, null);
+            } catch (err) {
+                this.manager.emit(
+                    "debug",
+                    "@Moonlink(Player) - falha ao tentar decodificar uma track " +
+                        data +
+                        ", error: " +
+                        err
+                );
+                return;
+            }
         }
 
         current[this.guildId] = data;
 
-        this.current = current[this.guildId];
         this.map.set("current", current);
-
-        await this.queue.db.set(`queue.${this.guildId}`, queue);
 
         await this.rest.update({
             guildId: this.guildId,
@@ -299,6 +320,7 @@ export class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        return true;
     }
 
     /**
@@ -342,10 +364,14 @@ export class MoonlinkPlayer {
         if (!this.queue.size) {
             await this.rest.update({
                 guildId: this.guildId,
-                data: { track: { encoded: null } }
+                data: {
+                    track: { encoded: null }
+                }
             });
         }
-        destroy ? this.destroy() : this.queue.clear();
+        this.manager.options?.destroyPlayersStopped && destroy
+            ? this.destroy()
+            : this.queue.clear();
         return true;
     }
 
@@ -353,20 +379,38 @@ export class MoonlinkPlayer {
      * Skip to the next track in the queue.
      * @returns True if the next track was successfully played.
      */
-    public async skip(): Promise<boolean> {
+    public async skip(position?: number): Promise<boolean> {
+        if (position) {
+            this.validateNumberParam(position, "position");
+            let queue = this.queue.all();
+            if (!queue[position - 1]) {
+                throw new Error(
+                    `@Moonlink(Player) - the indicated position does not exist, make security in your code to avoid errors`
+                );
+            }
+
+            let data: MoonlinkTrack | Record<string, any> = queue.splice(
+                position - 1,
+                1
+            )[0];
+            let currents: Map<string, any> = this.map.get("current") || {};
+            currents[this.guildId] = data;
+            this.map.set("current", currents);
+            this.queue.setQueue(queue);
+
+            await this.play(data as MoonlinkTrack);
+            return true;
+        }
         /* 
             @Author: PiscesXD
             Track shuffling logic
           */
-
         if (this.queue.size && this.data.shuffled) {
-            let currentQueue: string[] = this.queue.db.get(
-                `queue.${this.guildId}`
-            );
+            let currentQueue: MoonlinkTrack[] = this.queue.all;
             const randomIndex = Math.floor(Math.random() * currentQueue.length);
             const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
             currentQueue.unshift(shuffledTrack);
-            this.queue.db.set(`queue.${this.guildId}`, currentQueue);
+            this.queue.setQueue(currentQueue);
             this.play();
             return;
         }
@@ -389,12 +433,12 @@ export class MoonlinkPlayer {
     public async setVolume(percent: number): Promise<number> {
         if (typeof percent == "undefined" || typeof percent !== "number") {
             throw new Error(
-                '[ @Moonlink/Player ]: option "percent" is empty or different from a number'
+                '@Moonlink(Player) - option "percent" is empty or different from a number'
             );
         }
         if (!this.playing) {
             throw new Error(
-                "[ @Moonlink/Player ]: cannot change volume while the player is not playing"
+                "@Moonlink(Player) - cannot change volume while the player is not playing"
             );
         }
 
@@ -412,13 +456,23 @@ export class MoonlinkPlayer {
      * @returns The new loop mode.
      * @throws Error if the mode is not a valid number or out of range.
      */
-    public setLoop(mode: number | null): number | null {
+    public setLoop(mode: number | string | null): number | string | null {
+        if (
+            typeof mode == "string" &&
+            ["off", "track", "queue"].includes(mode)
+        ) {
+            mode == "track"
+                ? (mode = 1)
+                : mode == "queue"
+                ? (mode = 2)
+                : (mode = 0);
+        }
         if (
             typeof mode !== "number" ||
             (mode !== null && (mode < 0 || mode > 2))
         ) {
             throw new Error(
-                '[ @Moonlink/Player ]: the option "mode" is different from a number or the option does not exist'
+                '@Moonlink(Player) - the option "mode" is different from a number and string or the option does not exist'
             );
         }
 
@@ -437,6 +491,11 @@ export class MoonlinkPlayer {
         let players = this.map.get("players");
         delete players[this.guildId];
         this.map.set("players", players);
+        this.manager.emit(
+            "debug",
+            "@Moonlink(Player): destroyed player " + this.guildId
+        );
+
         return true;
     }
 
@@ -449,7 +508,7 @@ export class MoonlinkPlayer {
     private validateNumberParam(param: number, paramName: string): void {
         if (typeof param !== "number") {
             throw new Error(
-                `[ @Moonlink/Player ]: option "${paramName}" is empty or different from a number`
+                `@Moonlink(Player) - option "${paramName}" is empty or different from a number`
             );
         }
     }
@@ -465,13 +524,13 @@ export class MoonlinkPlayer {
 
         if (position >= this.current.duration) {
             throw new Error(
-                `[ @Moonlink/Player ]: parameter "position" is greater than the duration of the current track`
+                `@Moonlink(Player) - parameter "position" is greater than the duration of the current track`
             );
         }
 
         if (!this.current.isSeekable && this.current.isStream) {
             throw new Error(
-                `[ @Moonlink/Player ]: seek function cannot be applied on live video or cannot be applied in "isSeekable"`
+                `@Moonlink(Player) - seek function cannot be applied on live video or cannot be applied in "isSeekable"`
             );
         }
 
@@ -481,45 +540,6 @@ export class MoonlinkPlayer {
         });
 
         return position;
-    }
-
-    /**
-     * Skip to a specific position in the queue.
-     * @param position - The position to skip to.
-     * @returns True if the position exists and the skip was successful.
-     * @throws Error if the queue is empty, or the indicated position does not exist.
-     */
-    public async skipTo(position: number): Promise<boolean | void> {
-        this.validateNumberParam(position, "position");
-
-        if (!this.queue.size) {
-            throw new Error(
-                `[ @Moonlink/Player ]: the queue is empty to use this function`
-            );
-        }
-
-        let queue: string[] = this.queue.db.get(`queue.${this.guildId}`);
-        if (!queue[position - 1]) {
-            throw new Error(
-                `[ @Moonlink/Player ]: the indicated position does not exist, make security in your code to avoid errors`
-            );
-        }
-
-        let data: any = queue.splice(position - 1, 1)[0];
-        let currents: any = this.map.get("current") || {};
-        currents[this.guildId] = data;
-        this.map.set("current", currents);
-        this.queue.db.set(`queue.${this.guildId}`, queue);
-
-        await this.rest.update({
-            guildId: this.guildId,
-            data: {
-                track: { encoded: data.encoded },
-                volume: 80
-            }
-        });
-
-        return true;
     }
 
     /**
@@ -534,7 +554,7 @@ export class MoonlinkPlayer {
           */
         if (!this.queue.size) {
             throw new Error(
-                `[ @Moonlink/Player ]: The "shuffle" method doesn't work if there are no tracks in the queue`
+                `@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`
             );
             return false;
         }
