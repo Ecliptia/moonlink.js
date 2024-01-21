@@ -1,0 +1,23 @@
+---
+title: "Welcome to Moonlink.js"
+description: "a universe of songs..."
+---
+
+![MoonlinkImage](https://media.discordapp.net/attachments/979497984481972335/1182079622939156490/48_Sem_Titulo_20231206190210.png?ex=65836470&is=6570ef70&hm=4012795219214609661e20e10ed16105c5ba8fe9e76867e01a0ef4a2d50f959e&)
+
+::block-hero
+---
+cta:
+  - Let's start?
+  - /introduction
+secondary:
+  - GitHub →
+  - https://github.com/Ecliptia/moonlink.js
+snippet: npm install moonlink.js
+---
+#title
+Imagine a Music Bot...
+
+#description
+In the dimensions of the sonic universe, Moonlink.js unfolds majestically—a gateway of possibilities transcending melodic boundaries. It beckons you to explore soundscapes beyond imagination, where each note becomes a journey, and every beat, a discovery.
+::
