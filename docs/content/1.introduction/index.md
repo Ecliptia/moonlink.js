@@ -15,7 +15,7 @@ It's an npmjs package, very simple and easy to use it.
 
 For more information related to configuration and other things, visit the official lavalink page https://lavalink.dev/
 
-# How to download moonlink.js package?
+## How to download moonlink.js package?
 
 use a package manager to download it, such as npm, yarn, pnpm and others.
 
@@ -31,19 +31,8 @@ use a package manager to download it, such as npm, yarn, pnpm and others.
   ```
 ::
 
-moonlink.js supports [Bun](https://bun.sh/)? 
-
 ::alert{type="danger"}
-currently not, after moonlink.js has the [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455) code made using native packages, to reduce its weight, and there is a function that is not called by bun, net.createConnection()
+moonlink.js supports [Bun](https://bun.sh/) currently not, after moonlink.js has the [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455) code made using native packages, to reduce its weight, and there is a function that is not called by bun, net.createConnection()
 ::
 
-and Deno? 
-
-::alert{type="success"}
-Ao deno a moonlink.js tem suporte, defina 
-::
-
-```js
-import * as moonlink from "npm:moonlink.js"
-```
 
