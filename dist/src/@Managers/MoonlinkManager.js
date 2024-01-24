@@ -71,7 +71,9 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 if (typeof query !== "string" && typeof query !== "object") {
                     throw new Error("@Moonlink(Manager) - (search) the search option has to be in string or array format");
                 }
-                node && this.nodes.get(node) ? node = this.nodes.get(node) : node = this.nodes.sortByUsage("memory")[0];
+                node && this.nodes.get(node)
+                    ? (node = this.nodes.get(node))
+                    : (node = this.nodes.sortByUsage("memory")[0]);
                 const sources = {
                     youtube: "ytsearch",
                     youtubemusic: "ytmsearch",
@@ -104,6 +106,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
+                console.log(res);
                 const tracks = res.data.map(track => new (index_1.Structure.get("MoonlinkTrack"))(track, requester));
                 resolve({
                     ...res,

@@ -147,8 +147,10 @@ export class MoonlinkManager extends EventEmitter {
                         "@Moonlink(Manager) - (search) the search option has to be in string or array format"
                     );
                 }
-                node && this.nodes.get(node) ? node = this.nodes.get(node) : node = this.nodes.sortByUsage("memory")[0]
-                    
+                node && this.nodes.get(node)
+                    ? (node = this.nodes.get(node))
+                    : (node = this.nodes.sortByUsage("memory")[0]);
+
                 const sources = {
                     youtube: "ytsearch",
                     youtubemusic: "ytmsearch",
@@ -192,6 +194,7 @@ export class MoonlinkManager extends EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
+                console.log(res);
                 const tracks = res.data.map(
                     track =>
                         new (Structure.get("MoonlinkTrack"))(
