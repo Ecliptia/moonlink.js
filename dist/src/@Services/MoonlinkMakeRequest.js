@@ -99,6 +99,8 @@ function makeRequest(uri, options, data) {
                 res.on("end", async () => {
                     try {
                         const responseData = Buffer.concat(chunks).toString();
+                        if (typeof responseData == "string")
+                            resolve(responseData);
                         const parsedData = JSON.parse(responseData);
                         resolve(parsedData);
                     }

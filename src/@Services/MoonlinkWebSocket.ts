@@ -82,8 +82,22 @@ export class MoonlinkWebSocket extends EventEmitter {
                     frame,
                     frame.payload.toString("utf-8")
                 );
-
-            this.emit("message", frame.payload.toString("utf-8"));
+            switch (frame.opcode) {
+                case 1: {
+                    this.emit("message", frame.payload.toString("utf-8"));
+                    break;
+                }
+                case 8: {
+                    const code = frame.payload.readUInt16BE(0);
+                    
+                    const reason = frame.payload.slice(2).toString("utf8");
+                    
+                    this.emit("close", code, reason);
+                    break;
+                }
+                default: {
+                }
+            }
         });
 
         this.socket.on("close", hadError => {

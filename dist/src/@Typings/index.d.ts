@@ -51,6 +51,7 @@ export interface SearchQuery {
     source?: SearchPlatform | string | undefined | null;
     query: string | string[];
     requester?: string | object | any;
+    node?: string;
 }
 export interface SearchResult {
     loadType: LoadType;
