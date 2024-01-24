@@ -83,17 +83,18 @@ export class MoonlinkRestFul {
     }
 
     public async getVersion(): Promise<any> {
-      const headers = {
+        const headers = {
             Authorization: this.node.password
         };
-        return makeRequest<Record<string, unknown> | any>(
-            this.url.replace("/v4", "") + "version",
+        return makeRequest<any>(
+            this.node.secure
+                ? "https://"
+                : "http://" + this.node.address + "/version",
             {
                 method: "GET",
                 headers
             }
         ).catch(err => err);
-
     }
 
     public async routePlannerFreeAddress(
@@ -120,13 +121,10 @@ export class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return makeRequest<Record<string, unknown> | any>(
-            this.url + endpoint,
-            {
-                method: "GET",
-                headers
-            }
-        ).catch(err => err);
+        return makeRequest<Record<string, unknown> | any>(this.url + endpoint, {
+            method: "GET",
+            headers
+        }).catch(err => err);
     }
 
     private async makePostRequest(

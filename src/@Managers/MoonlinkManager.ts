@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { performance } from "perf_hooks";
 import {
     Structure,
     MoonlinkPlayer,
@@ -117,10 +118,12 @@ export class MoonlinkManager extends EventEmitter {
                 let query;
                 let source;
                 let requester: any = null;
+                let node;
                 if (typeof options === "object") {
                     query = options.query;
                     source = options.source;
                     requester = options.requester;
+                    node = options.node;
                 } else {
                     query = options;
                 }
@@ -144,7 +147,8 @@ export class MoonlinkManager extends EventEmitter {
                         "@Moonlink(Manager) - (search) the search option has to be in string or array format"
                     );
                 }
-
+                node && this.nodes.get(node) ? node = this.nodes.get(node) : node = this.nodes.sortByUsage("memory")[0]
+                    
                 const sources = {
                     youtube: "ytsearch",
                     youtubemusic: "ytmsearch",
@@ -163,9 +167,7 @@ export class MoonlinkManager extends EventEmitter {
                 const params = new URLSearchParams({
                     identifier: searchIdentifier
                 });
-                const res: any = await this.nodes
-                    .sortByUsage("memory")[0]
-                    .request("loadtracks", params);
+                const res: any = await node.request("loadtracks", params);
                 if (["error", "empty"].includes(res.loadType)) {
                     this.emit(
                         "debug",

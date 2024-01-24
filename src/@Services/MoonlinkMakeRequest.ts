@@ -97,7 +97,7 @@ export function makeRequest<T>(
                     res.on("end", async () => {
                         try {
                             const responseData: string = Buffer.concat(chunks).toString();
-
+                            if(typeof responseData == "string") resolve (responseData as T)
                             const parsedData = JSON.parse(responseData) as T;
                             resolve(parsedData);
                         } catch (err) {
