@@ -106,7 +106,6 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     res.pluginInfo = res.data.pluginInfo;
                     res.data = [...res.data.tracks];
                 }
-                console.log(res);
                 const tracks = res.data.map(track => new (index_1.Structure.get("MoonlinkTrack"))(track, requester));
                 resolve({
                     ...res,
