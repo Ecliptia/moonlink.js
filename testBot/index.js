@@ -53,7 +53,14 @@ client.moon = new MoonlinkManager(
     port: 34953,
     secure: false,
     identifier: "LAVALINK-2"
-  }, /*{
+  },
+    {
+        identifier: "It'z Zoldy 2",
+        host: "139.99.124.43",
+        port: 7784,
+        password: "PasswordIsZoldy",
+        secure: false,
+    }/*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
   }*/ /*{
     host: "fbfcdd0d-e644-4b03-a632-1237cb5b6077-00-1ecqthk8a8ux8.kirk.replit.dev", secure: true, port: 443, identifier: "NODELINK", isNodeLink: true
