@@ -87,9 +87,9 @@ export class MoonlinkRestFul {
             Authorization: this.node.password
         };
         return makeRequest<any>(
-            this.node.secure
+            (this.node.secure
                 ? "https://"
-                : "http://" + this.node.address + "/version",
+                : "http://") + this.node.address + "/version",
             {
                 method: "GET",
                 headers

@@ -54,9 +54,9 @@ class MoonlinkRestFul {
         const headers = {
             Authorization: this.node.password
         };
-        return (0, index_1.makeRequest)(this.node.secure
+        return (0, index_1.makeRequest)((this.node.secure
             ? "https://"
-            : "http://" + this.node.address + "/version", {
+            : "http://") + this.node.address + "/version", {
             method: "GET",
             headers
         }).catch(err => err);
