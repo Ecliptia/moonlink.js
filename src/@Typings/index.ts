@@ -131,6 +131,7 @@ export interface IOptions {
     clientName?: string;
     sortNode?: SortType;
     autoResume?: boolean;
+    resume?: boolean;
     plugins?: Plugin[];
     http2?: boolean;
     movePlayersToNextNode?: boolean;

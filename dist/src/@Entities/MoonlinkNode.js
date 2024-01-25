@@ -43,6 +43,7 @@ class MoonlinkNode {
                 : null;
         this.secure = node.secure || false;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
+        this.resume = this._manager.options?.resume;
         this.stats = {
             players: 0,
             playingPlayers: 0,
@@ -216,6 +217,8 @@ class MoonlinkNode {
                             timeout: this.resumeTimeout
                         }
                     });
+                    this.version = this.rest.getVersion();
+                    this.info = this.rest.getInfo();
                     this._manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
                 }
                 if (this._manager.options.autoResume) {
