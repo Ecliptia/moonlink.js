@@ -13,8 +13,8 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     options;
     socket;
     established;
-    closing = false;
     debug = false;
+    closing = false;
     constructor(uri, options) {
         super();
         this.url = new URL(uri);
@@ -64,9 +64,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     configureSocketEvents() {
         this.established = true;
         this.socket.on("data", data => {
-            if (this.closing)
-                return;
-            const frame = this.parseSingleWebSocketFrame(data);
+            const frame = this.parseFrame(data);
             if (this.debug)
                 console.log("@Moonlink(WebSocket) -", frame, frame.payload.toString("utf-8"));
             switch (frame.opcode) {
@@ -111,7 +109,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
         });
         req.end();
     }
-    parseSingleWebSocketFrame(data) {
+    parseFrame(data) {
         const opcode = data[0] & 0x0f;
         const fin = (data[0] & 0x80) === 0x80;
         const mask = (data[1] & 0x80) === 0x80;
@@ -145,24 +143,53 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             payload
         };
     }
-    close(code = 1000, reason = "closed") {
+    writeFrame(data) {
+        const { fin, opcode, mask, payload } = data;
+        const header1 = (fin ? 128 : 0) | (opcode & 15);
+        const header2 = (mask ? 128 : 0) | (payload.length & 127);
+        let frame = Buffer.allocUnsafe(2);
+        frame.writeUInt8(header1, 0);
+        frame.writeUInt8(header2, 1);
+        if (payload.length > 125 && payload.length < 65535) {
+            let extendedFrame = Buffer.allocUnsafe(2);
+            extendedFrame.writeUInt16BE(payload.length, 0);
+            frame = Buffer.concat([frame, extendedFrame]);
+        }
+        else if (payload.length > 65535) {
+            let extendedFrame = Buffer.allocUnsafe(8);
+            extendedFrame.writeUInt32BE(0, 0);
+            extendedFrame.writeUInt32BE(payload.length, 4);
+            frame = Buffer.concat([frame, extendedFrame]);
+        }
+        if (mask) {
+            let maskingKey = Buffer.from([
+                Math.floor(Math.random() * 256),
+                Math.floor(Math.random() * 256),
+                Math.floor(Math.random() * 256),
+                Math.floor(Math.random() * 256)
+            ]);
+            frame = Buffer.concat([frame, maskingKey]);
+            for (let i = 0; i < payload.length; i++) {
+                payload[i] ^= maskingKey[i % 4];
+            }
+        }
+        frame = Buffer.concat([frame, payload]);
+        return frame;
+    }
+    close(code = 1000, reason = "normal closing") {
         if (this.socket && this.established) {
             this.closing = true;
-            const closeFrame = this.createCloseFrame(1000, reason);
-            this.socket.write(closeFrame);
-            this.socket.end();
-            this.emit("close", code, reason);
+            const buffer = Buffer.alloc(2 + Buffer.byteLength(reason));
+            buffer.writeUInt16BE(code, 0);
+            buffer.write(reason, 2, Buffer.byteLength(reason), "utf-8");
+            let frame = this.writeFrame({
+                fin: true,
+                opcode: 8,
+                mask: false,
+                payload: buffer
+            });
+            this.socket.write(frame);
         }
-    }
-    createCloseFrame(code, reason) {
-        const buffer = Buffer.alloc(2 + Buffer.byteLength("closed"));
-        buffer.writeUInt16BE(1000, 0);
-        buffer.write("closed", 2, Buffer.byteLength("closed"), "utf-8");
-        const closeFrame = Buffer.alloc(buffer.length + 2);
-        closeFrame[0] = 0x88;
-        closeFrame[1] = buffer.length;
-        buffer.copy(closeFrame, 2);
-        return closeFrame;
     }
 }
 exports.MoonlinkWebSocket = MoonlinkWebSocket;

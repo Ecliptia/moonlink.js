@@ -1,5 +1,4 @@
 import { EventEmitter } from "node:events";
-import { performance } from "perf_hooks";
 import {
     Structure,
     MoonlinkPlayer,
