@@ -9,6 +9,7 @@ class MoonlinkPlayer {
     guildId;
     textChannel;
     voiceChannel;
+    voiceRegion;
     autoPlay;
     autoLeave;
     connected;
@@ -28,6 +29,7 @@ class MoonlinkPlayer {
         this.guildId = infos.guildId;
         this.textChannel = infos.textChannel;
         this.voiceChannel = infos.voiceChannel;
+        this.voiceRegion = infos.voiceRegion;
         this.autoPlay = infos.autoPlay;
         this.autoLeave = infos.autoLeave || false;
         this.connected = infos.connected || null;

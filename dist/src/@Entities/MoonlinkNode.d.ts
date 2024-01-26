@@ -14,6 +14,7 @@ export declare class MoonlinkNode {
     password: string;
     port: number | null;
     secure: boolean;
+    regions: string[] | null;
     http: string;
     rest: MoonlinkRestFul;
     resume?: boolean;
@@ -21,7 +22,7 @@ export declare class MoonlinkNode {
     resumeTimeout?: number;
     sessionId: string;
     socket: MoonlinkWebSocket | null;
-    version: string;
+    version: any;
     state: string;
     stats: INodeStats;
     info: any;

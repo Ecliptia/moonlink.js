@@ -28,6 +28,7 @@ export class MoonlinkNode {
     public password: string;
     public port: number | null;
     public secure: boolean;
+    public regions: string[] | null;
     public http: string;
     public rest: MoonlinkRestFul;
     public resume?: boolean;
@@ -35,7 +36,7 @@ export class MoonlinkNode {
     public resumeTimeout?: number = 30000;
     public sessionId: string;
     public socket: MoonlinkWebSocket | null;
-    public version: string = "";
+    public version: any = "";
     public state: string = State.DISCONNECTED;
     public stats: INodeStats;
     public info: any = {};
@@ -61,7 +62,9 @@ export class MoonlinkNode {
                 : 80
             : null;
         this.secure = node.secure || false;
+        this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
+        this.resume = this._manager.options?.resume;
         this.stats = {
             players: 0,
             playingPlayers: 0,
@@ -187,6 +190,7 @@ export class MoonlinkNode {
                 this.identifier ? this.identifier : this.host
             } has been connected successfully`
         );
+        this._manager.emit("nodeCreate", this)
 
         this.state = State.CONNECTED;
     }
@@ -315,7 +319,6 @@ export class MoonlinkNode {
                     this.db.delete("queue");
                     this.db.delete("players");
                 }
-
                 this._manager.emit(
                     "debug",
                     `@Moonlink(Node) - ${
@@ -329,6 +332,8 @@ export class MoonlinkNode {
                             timeout: this.resumeTimeout
                         }
                     });
+                    this.version = this.rest.getVersion();
+                    this.info = this.rest.getInfo();
                     this._manager.emit(
                         "debug",
                         `[ @Moonlink/Node ]: Resuming configured on Lavalink`
