@@ -70,6 +70,7 @@ export class MoonlinkWebSocket extends EventEmitter {
 
     private configureSocketEvents(): void {
         this.established = true;
+        this.emit("open", this.socket);
         this.socket.on("data", data => {
             const frame = this.parseFrame(data);
 
@@ -119,7 +120,6 @@ export class MoonlinkWebSocket extends EventEmitter {
 
         req.on("upgrade", (res, socket, head) => {
             this.socket = socket;
-            if (res.statusCode == 101) this.emit("open", this.socket);
             this.configureSocketEvents();
         });
 
