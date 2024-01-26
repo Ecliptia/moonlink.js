@@ -7,6 +7,7 @@ export declare class MoonlinkPlayer {
     guildId: string;
     textChannel: string;
     voiceChannel: string;
+    voiceRegion: string;
     autoPlay: boolean | null;
     autoLeave: boolean | null;
     connected: boolean | null;

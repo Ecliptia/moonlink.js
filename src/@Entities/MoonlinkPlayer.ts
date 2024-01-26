@@ -13,7 +13,8 @@ export class MoonlinkPlayer {
     private map: Map<string, any>;
     public guildId: string;
     public textChannel: string;
-    public voiceChannel: string;
+    public voiceChannel: string; 
+    public voiceRegion: string;
     public autoPlay: boolean | null;
     public autoLeave: boolean | null;
     public connected: boolean | null;
@@ -45,6 +46,7 @@ export class MoonlinkPlayer {
         this.guildId = infos.guildId;
         this.textChannel = infos.textChannel;
         this.voiceChannel = infos.voiceChannel;
+        this.voiceRegion = infos.voiceRegion;
         this.autoPlay = infos.autoPlay;
         this.autoLeave = infos.autoLeave || false;
         this.connected = infos.connected || null;

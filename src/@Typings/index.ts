@@ -122,6 +122,7 @@ export interface INode {
     password: string;
     port: number;
     secure: boolean;
+    regions?: string[];
     retryAmount?: number;
     retryDelay?: number;
 }
@@ -131,10 +132,12 @@ export interface IOptions {
     clientName?: string;
     sortNode?: SortType;
     autoResume?: boolean;
+    resume?: boolean;
     plugins?: Plugin[];
     http2?: boolean;
     movePlayersToNextNode?: boolean;
-    destroyPlayersStopped?: boolean
+    destroyPlayersStopped?: boolean;
+    balancingPlayersByRegion?: boolean;
     playersOnCache?: boolean;
     WebSocketDebug?: boolean;
 }
@@ -220,6 +223,7 @@ export interface PlayerInfos {
     guildId: string;
     textChannel: string | null;
     voiceChannel: string | null;
+    voiceRegion?: string | null;
     autoPlay?: boolean | null;
     autoLeave?: boolean | null;
     connected?: boolean | null;
