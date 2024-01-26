@@ -63,6 +63,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     }
     configureSocketEvents() {
         this.established = true;
+        this.emit("open", this.socket);
         this.socket.on("data", data => {
             const frame = this.parseFrame(data);
             if (this.debug)
@@ -96,8 +97,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
         const req = request(`${this.options.secure ? "https://" : "http://"}${this.url.host}${this.url.pathname}${this.url.search || ""}`, requestOptions);
         req.on("upgrade", (res, socket, head) => {
             this.socket = socket;
-            if (res.statusCode == 101)
-                this.emit("open", this.socket);
             this.configureSocketEvents();
         });
         req.on("error", error => {

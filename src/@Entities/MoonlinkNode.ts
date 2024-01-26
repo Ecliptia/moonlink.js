@@ -28,6 +28,7 @@ export class MoonlinkNode {
     public password: string;
     public port: number | null;
     public secure: boolean;
+    public regions: string[] | null;
     public http: string;
     public rest: MoonlinkRestFul;
     public resume?: boolean;
@@ -61,6 +62,7 @@ export class MoonlinkNode {
                 : 80
             : null;
         this.secure = node.secure || false;
+        this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
         this.resume = this._manager.options?.resume;
         this.stats = {
@@ -188,6 +190,7 @@ export class MoonlinkNode {
                 this.identifier ? this.identifier : this.host
             } has been connected successfully`
         );
+        this._manager.emit("nodeCreate", this)
 
         this.state = State.CONNECTED;
     }
