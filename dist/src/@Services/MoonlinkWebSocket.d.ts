@@ -11,7 +11,6 @@ export declare class MoonlinkWebSocket extends EventEmitter {
     constructor(uri: string, options: any);
     private buildRequestOptions;
     private buildHandshake;
-    private configureSocketEvents;
     connect(): void;
     private parseFrame;
     writeFrame(data: any): Buffer;
