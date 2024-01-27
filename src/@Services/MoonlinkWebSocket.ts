@@ -50,7 +50,7 @@ export class MoonlinkWebSocket extends EventEmitter {
             keepAlive: true,
             noDelay: true,
             keepAliveInitialDelay: 0,
-            timeout: 5000
+            timeout: 0
         };
 
         return this.options.secure
@@ -84,6 +84,8 @@ export class MoonlinkWebSocket extends EventEmitter {
 
         req.on("upgrade", (res, socket, head) => {
             this.established = true;
+            this.socket = socket;
+            this.emit("open", this.socket);
             if (
                 res.headers.upgrade.toLowerCase() !== "websocket" ||
                 res.headers["sec-websocket-accept"] !==
@@ -98,7 +100,10 @@ export class MoonlinkWebSocket extends EventEmitter {
                 socket.destroy();
                 return;
             }
-
+            if (head && head.length > 0) {
+              if(this.debug) console.log(`@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString("utf8")}`);
+              socket.unshift(head); //https://nodejs.org/api/stream.html#readableunshiftchunk-encoding
+            }
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
 
@@ -123,6 +128,10 @@ export class MoonlinkWebSocket extends EventEmitter {
                         break;
                     }
                     default: {
+                        console.log(
+                            "Emitted data that has not been implemented; opcode: " +
+                                frame.opcode
+                        );
                     }
                 }
             });
@@ -132,9 +141,6 @@ export class MoonlinkWebSocket extends EventEmitter {
             });
 
             socket.on("error", error => this.emit("error", error));
-            
-            this.emit("open", this.socket);
-            this.socket = socket;
         });
 
         req.on("error", error => {

@@ -101,7 +101,7 @@ export class Players {
                 : null;
 
             if (players[guildId].voiceRegion) voiceRegion = null;
-            else players[guildId].voiceRegion = voiceRegion;
+            else players[guildId].voiceRegion = voiceRegion[1];
 
             if (voiceRegion) {
                 const connectedNodes = [
@@ -109,7 +109,7 @@ export class Players {
                 ].filter(node => node.state == State.READY);
 
                 const matchingNode = connectedNodes.find(node =>
-                    node.regions.includes(voiceRegion[1])
+                    node.regions.includes(voiceRegion)
                 );
 
                 if (matchingNode) {
@@ -136,7 +136,7 @@ export class Players {
                       )
                     : null;
 
-                players[guildId].voiceRegion = voiceRegion;
+                players[guildId].voiceRegion = voiceRegion ? voiceRegion[1] : null;
 
                 this.map.set("players", players);
             }
