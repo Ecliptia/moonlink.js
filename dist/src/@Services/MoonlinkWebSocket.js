@@ -47,7 +47,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             keepAlive: true,
             noDelay: true,
             keepAliveInitialDelay: 0,
-            timeout: 5000
+            timeout: 0
         };
         return this.options.secure
             ? requestOptions
@@ -70,6 +70,8 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
         const req = request(`${this.options.secure ? "https://" : "http://"}${this.url.host}${this.url.pathname}${this.url.search || ""}`, requestOptions);
         req.on("upgrade", (res, socket, head) => {
             this.established = true;
+            this.socket = socket;
+            this.emit("open", this.socket);
             if (res.headers.upgrade.toLowerCase() !== "websocket" ||
                 res.headers["sec-websocket-accept"] !==
                     crypto_1.default
@@ -79,6 +81,11 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                         .digest("base64")) {
                 socket.destroy();
                 return;
+            }
+            if (head && head.length > 0) {
+                if (this.debug)
+                    console.log(`@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString("utf8")}`);
+                socket.unshift(head);
             }
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
@@ -96,6 +103,8 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                         break;
                     }
                     default: {
+                        console.log("Emitted data that has not been implemented; opcode: " +
+                            frame.opcode);
                     }
                 }
             });
@@ -106,8 +115,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                     this.emit("close");
             });
             socket.on("error", error => this.emit("error", error));
-            this.emit("open", this.socket);
-            this.socket = socket;
         });
         req.on("error", error => {
             this.emit("error", error);
