@@ -47,6 +47,9 @@ export class MoonlinkWebSocket extends EventEmitter {
             port: this.options.port,
             headers: this.buildHandshake(this.options),
             method: "GET",
+            keepAlive: true,
+            noDelay: true,
+            keepAliveInitialDelay: 0,
             timeout: 5000
         };
 
@@ -68,45 +71,6 @@ export class MoonlinkWebSocket extends EventEmitter {
         return headers;
     }
 
-    private configureSocketEvents(): void {
-        this.established = true;
-        this.emit("open", this.socket);
-        this.socket.on("data", data => {
-            const frame = this.parseFrame(data);
-
-            if (this.debug)
-                console.log(
-                    "@Moonlink(WebSocket) -",
-                    frame,
-                    frame.payload.toString("utf-8")
-                );
-
-            switch (frame.opcode) {
-                case 1: {
-                    this.emit("message", frame.payload.toString("utf-8"));
-                    break;
-                }
-                case 8: {
-                    const code = frame.payload.readUInt16BE(0);
-
-                    const reason = frame.payload.slice(2).toString("utf8");
-
-                    this.emit("close", code, reason);
-                    break;
-                }
-                default: {
-                }
-            }
-        });
-
-        this.socket.on("close", hadError => {
-            if (hadError) this.emit("error", hadError);
-            if (!this.closing) this.emit("close");
-        });
-
-        this.socket.on("error", error => this.emit("error", error));
-    }
-
     public connect(): void {
         const { request } = this.options.secure ? https : http;
         const requestOptions = this.buildRequestOptions();
@@ -119,8 +83,58 @@ export class MoonlinkWebSocket extends EventEmitter {
         );
 
         req.on("upgrade", (res, socket, head) => {
+            this.established = true;
+            if (
+                res.headers.upgrade.toLowerCase() !== "websocket" ||
+                res.headers["sec-websocket-accept"] !==
+                    crypto
+                        .createHash("sha1")
+                        .update(
+                            requestOptions.headers["Sec-WebSocket-Key"] +
+                                "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                        )
+                        .digest("base64")
+            ) {
+                socket.destroy();
+                return;
+            }
+
+            socket.on("data", data => {
+                const frame = this.parseFrame(data);
+
+                if (this.debug)
+                    console.log(
+                        "@Moonlink(WebSocket) -",
+                        frame,
+                        frame.payload.toString("utf-8")
+                    );
+
+                switch (frame.opcode) {
+                    case 1: {
+                        this.emit("message", frame.payload.toString("utf-8"));
+                        break;
+                    }
+                    case 8: {
+                        const code = frame.payload.readUInt16BE(0);
+
+                        const reason = frame.payload.slice(2).toString("utf8");
+
+                        this.emit("close", code, reason);
+                        break;
+                    }
+                    default: {
+                    }
+                }
+            });
+            socket.on("close", hadError => {
+                if (hadError) this.emit("error", hadError);
+                if (!this.closing) this.emit("close");
+            });
+
+            socket.on("error", error => this.emit("error", error));
+            
+            this.emit("open", this.socket);
             this.socket = socket;
-            this.configureSocketEvents();
         });
 
         req.on("error", error => {

@@ -49,8 +49,8 @@ client.moon = new MoonlinkManager(
     password: require("../config.json").password,
     identifier: "LAVALINK"
   }, {
-    host: "5.9.8.124",
-    port: 34953,
+    host: "65.108.101.89",
+    port: 17958,
     secure: false,
     identifier: "LAVALINK-2"
   },
