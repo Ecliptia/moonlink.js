@@ -76,12 +76,12 @@ class Players {
             if (players[guildId].voiceRegion)
                 voiceRegion = null;
             else
-                players[guildId].voiceRegion = voiceRegion;
+                players[guildId].voiceRegion = voiceRegion[1];
             if (voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
                 ].filter(node => node.state == exports.State.READY);
-                const matchingNode = connectedNodes.find(node => node.regions.includes(voiceRegion[1]));
+                const matchingNode = connectedNodes.find(node => node.regions.includes(voiceRegion));
                 if (matchingNode) {
                     players[guildId] = {
                         node: matchingNode.identifier
@@ -105,7 +105,7 @@ class Players {
                 let voiceRegion = voiceServer[guildId].event.endpoint
                     ? voiceServer[guildId].event.endpoint.match(/([a-zA-Z-]+)\d+/)
                     : null;
-                players[guildId].voiceRegion = voiceRegion;
+                players[guildId].voiceRegion = voiceRegion ? voiceRegion[1] : null;
                 this.map.set("players", players);
             }
         }
