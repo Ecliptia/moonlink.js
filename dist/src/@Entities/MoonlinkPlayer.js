@@ -281,7 +281,7 @@ class MoonlinkPlayer {
         }
     }
     async setVolume(percent) {
-        if (typeof percent == "undefined" || typeof percent !== "number") {
+        if (typeof percent == "undefined" || isNaN(percent)) {
             throw new Error('@Moonlink(Player) - option "percent" is empty or different from a number');
         }
         if (!this.playing) {

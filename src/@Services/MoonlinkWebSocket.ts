@@ -101,10 +101,16 @@ export class MoonlinkWebSocket extends EventEmitter {
                 return;
             }
             if (head && head.length > 0) {
-              if(this.debug) console.log(`@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString("utf8")}`);
-              socket.unshift(head); //https://nodejs.org/api/stream.html#readableunshiftchunk-encoding
+                if (this.debug)
+                    console.log(
+                        `@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString(
+                            "utf8"
+                        )}`
+                    );
+                socket.unshift(head); //https://nodejs.org/api/stream.html#readableunshiftchunk-encoding
             }
             socket.on("data", data => {
+                console.log(data.toString("utf8"));
                 const frame = this.parseFrame(data);
 
                 if (this.debug)

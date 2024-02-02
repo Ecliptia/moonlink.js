@@ -13,7 +13,7 @@ export class MoonlinkPlayer {
     private map: Map<string, any>;
     public guildId: string;
     public textChannel: string;
-    public voiceChannel: string; 
+    public voiceChannel: string;
     public voiceRegion: string;
     public autoPlay: boolean | null;
     public autoLeave: boolean | null;
@@ -433,7 +433,7 @@ export class MoonlinkPlayer {
      * @throws Error if the volume is not a valid number or player is not playing.
      */
     public async setVolume(percent: number): Promise<number> {
-        if (typeof percent == "undefined" || typeof percent !== "number") {
+        if (typeof percent == "undefined" || isNaN(percent)) {
             throw new Error(
                 '@Moonlink(Player) - option "percent" is empty or different from a number'
             );

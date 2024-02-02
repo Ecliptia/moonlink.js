@@ -15,7 +15,7 @@ module.exports = {
     if (!player.playing) return message.reply("<:hi:1176345748405768252> | ")
     if (!args[0]) return message.reply("<:hi:1176345748405768252> | off, track or queue")
 
-    if (!args[0].includes(["off", "track", "queue"])) return message.reply("<:hi:1176345748405768252> | track or queue")
+    if (!["off", "track", "queue"].includes(args[0])) return message.reply("<:hi:1176345748405768252> | track or queue")
 
 
     let mode = 0;
