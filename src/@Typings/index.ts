@@ -219,7 +219,7 @@ export interface connectOptions {
     setDeaf?: boolean;
 }
 
-export interface PlayerInfos {
+export interface IPlayerData {
     guildId: string;
     textChannel: string | null;
     voiceChannel: string | null;
