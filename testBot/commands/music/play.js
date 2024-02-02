@@ -125,7 +125,7 @@ module.exports = {
         },
       );
       
-      if (player.queue.has(searchResult.tracks[0].identifier)) return message.reply("<:hi:1176345748405768252> | Has track in queue");
+      //if (player.queue.has(searchResult.tracks[0].identifier)) return message.reply("<:hi:1176345748405768252> | Has track in queue");
       
       player.queue.add(searchResult.tracks[0]);
       message.reply({

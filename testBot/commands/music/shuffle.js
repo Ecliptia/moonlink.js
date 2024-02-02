@@ -14,7 +14,7 @@ module.exports = {
 
     if (!player.playing) return message.reply("<:hi:1176345748405768252> | ")
 
-    player.shuffle(!!player.shuffled);
+    player.shuffle(!player.shuffled);
     return message.reply(`<:hi:1176345748405768252> | shuffled(${player.shuffled})`);
   },
 };
