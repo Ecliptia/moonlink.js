@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.Structure = exports.Nodes = exports.Players = exports.State = void 0;
+exports.Plugin = exports.Structure = exports.Nodes = exports.State = void 0;
 const index_1 = require("../../index");
 exports.State = {
     READY: "READY",
@@ -13,185 +13,6 @@ exports.State = {
     RESUMING: "RESUMING",
     MOVING: "MOVING"
 };
-class Players {
-    _manager;
-    map;
-    cache;
-    constructor() {
-        this.map = new Map();
-    }
-    init() {
-        this._manager = Structure.manager;
-        this._manager.emit("debug", "@Moonlink(Players) - Structure(Players) has been initialized, and assigned the value of the main class ");
-        if (this._manager.options?.playersOnCache)
-            this.cache = new Map();
-    }
-    handleVoiceServerUpdate(update, guildId) {
-        const existingVoiceServer = this.map.get("voiceServer") || {};
-        existingVoiceServer[guildId] = { event: update };
-        this.map.set("voiceServer", existingVoiceServer);
-        this.attemptConnection(guildId);
-    }
-    handlePlayerDisconnect(player, guildId) {
-        const players = this.map.get("players") || {};
-        this._manager.emit("playerDisconnect", player);
-        players[guildId] = {
-            ...players[guildId],
-            connected: false,
-            voiceChannel: null,
-            playing: false
-        };
-        Object.assign(player, {
-            connected: false,
-            voiceChannel: null,
-            playing: false
-        });
-        player.stop();
-    }
-    handlePlayerMove(player, newChannelId, oldChannelId, guildId) {
-        const players = this.map.get("players") || {};
-        this._manager.emit("playerMove", player, newChannelId, oldChannelId);
-        players[guildId] = {
-            ...players[guildId],
-            voiceChannel: newChannelId
-        };
-        this.map.set("players", players);
-        player.voiceChannel = newChannelId;
-    }
-    updateVoiceStates(guildId, update) {
-        const voiceStates = this.map.get("voiceStates") || {};
-        voiceStates[guildId] = update;
-        this.map.set("voiceStates", voiceStates);
-    }
-    async attemptConnection(guildId) {
-        const voiceServer = this.map.get("voiceServer") || {};
-        const voiceStates = this.map.get("voiceStates") || {};
-        const players = this.map.get("players") || {};
-        if (!players[guildId] || !voiceServer[guildId])
-            return false;
-        if (this._manager.options?.balancingPlayersByRegion) {
-            let voiceRegion = voiceServer[guildId].event.endpoint
-                ? voiceServer[guildId].event.endpoint.match(/([a-zA-Z-]+)\d+/)
-                : null;
-            if (players[guildId].voiceRegion)
-                voiceRegion = null;
-            else
-                players[guildId].voiceRegion = voiceRegion[1];
-            if (voiceRegion) {
-                const connectedNodes = [
-                    ...this._manager.nodes.map.values()
-                ].filter(node => node.state == exports.State.READY);
-                const matchingNode = connectedNodes.find(node => node.regions.includes(voiceRegion));
-                if (matchingNode) {
-                    players[guildId] = {
-                        node: matchingNode.identifier
-                            ? matchingNode.identifier
-                            : matchingNode.host,
-                        ...players[guildId]
-                    };
-                    this.map.set("players", players);
-                }
-                else {
-                    players[guildId] = {
-                        voiceRegion,
-                        ...players[guildId]
-                    };
-                    this.map.set("players", players);
-                }
-            }
-        }
-        else {
-            if (!players[guildId].region) {
-                let voiceRegion = voiceServer[guildId].event.endpoint
-                    ? voiceServer[guildId].event.endpoint.match(/([a-zA-Z-]+)\d+/)
-                    : null;
-                players[guildId].voiceRegion = voiceRegion ? voiceRegion[1] : null;
-                this.map.set("players", players);
-            }
-        }
-        await this._manager.nodes.get(players[guildId].node).rest.update({
-            guildId,
-            data: {
-                voice: {
-                    sessionId: voiceStates[guildId]?.session_id,
-                    endpoint: voiceServer[guildId].event.endpoint,
-                    token: voiceServer[guildId].event.token
-                }
-            }
-        });
-        return true;
-    }
-    has(guildId) {
-        return !!this.map.get("players")?.[guildId];
-    }
-    get(guildId) {
-        if (this.cache && this.cache.get(guildId))
-            return this.cache.get(guildId);
-        if (!guildId && typeof guildId !== "string")
-            throw new Error('[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string');
-        if (!this.has(guildId))
-            return null;
-        return new (Structure.get("MoonlinkPlayer"))(this.map.get("players")[guildId], this._manager, this.map);
-    }
-    create(data) {
-        if (this.cache && data?.guildId && this.cache.get(data?.guildId))
-            return this.cache.get(data?.guildId);
-        if (typeof data !== "object" ||
-            !data.guildId ||
-            typeof data.guildId !== "string" ||
-            !data.textChannel ||
-            typeof data.textChannel !== "string" ||
-            !data.voiceChannel ||
-            typeof data.voiceChannel !== "string" ||
-            (data.autoPlay !== undefined &&
-                typeof data.autoPlay !== "boolean") ||
-            (data.node && typeof data.node !== "string")) {
-            const missingParams = [];
-            if (!data.guildId || typeof data.guildId !== "string")
-                missingParams.push("guildId");
-            if (!data.textChannel || typeof data.textChannel !== "string")
-                missingParams.push("textChannel");
-            if (!data.voiceChannel || typeof data.voiceChannel !== "string")
-                missingParams.push("voiceChannel");
-            if (data.autoPlay !== undefined &&
-                typeof data.autoPlay !== "boolean")
-                missingParams.push("autoPlay");
-            if (data.node && typeof data.node !== "string")
-                missingParams.push("node");
-            throw new Error(`[ @Moonlink/Manager ]: Invalid or missing parameters for player creation: ${missingParams.join(", ")}`);
-        }
-        if (this.has(data.guildId))
-            return this.get(data.guildId);
-        let players_map = this.map.get("players") || {};
-        let nodeSorted = this._manager.nodes.sortByUsage(`${this._manager.options.sortNode
-            ? this._manager.options.sortNode
-            : "players"}`)[0];
-        players_map[data.guildId] = {
-            guildId: data.guildId,
-            textChannel: data.textChannel,
-            voiceChannel: data.voiceChannel,
-            volume: data.volume || 80,
-            playing: false,
-            connected: false,
-            paused: false,
-            shuffled: false,
-            loop: null,
-            autoPlay: data.autoPlay !== undefined ? data.autoPlay : undefined,
-            node: data.node || nodeSorted?.identifier || nodeSorted?.host
-        };
-        this.map.set("players", players_map);
-        this._manager.emit("debug", `@Moonlink(Players) - A server player was created (${data.guildId})`);
-        this._manager.emit("playerCreated", data.guildId);
-        let instance = new (Structure.get("MoonlinkPlayer"))(players_map[data.guildId], this._manager, this.map);
-        if (this.cache)
-            this.cache.set(data.guildId, instance);
-        return instance;
-    }
-    get all() {
-        return this.map.get("players") ?? null;
-    }
-}
-exports.Players = Players;
 class Nodes {
     initiated = false;
     _manager;
@@ -286,7 +107,7 @@ const structures = {
     MoonlinkQueue: index_1.MoonlinkQueue,
     MoonlinkNode: index_1.MoonlinkNode,
     MoonlinkTrack: index_1.MoonlinkTrack,
-    Players,
+    PlayerManager: index_1.PlayerManager,
     Nodes
 };
 class Structure {

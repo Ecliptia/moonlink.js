@@ -1,6 +1,7 @@
 export const version: string = require("../package.json").version as string;
 
 export * from "./src/@Managers/MoonlinkManager";
+export * from "./src/@Managers/PlayerManager";
 export * from "./src/@Entities/MoonlinkNode";
 export * from "./src/@Entities/MoonlinkPlayer";
 export * from "./src/@Entities/MoonlinkQueue";

@@ -6,11 +6,11 @@ class MoonlinkQueue {
     db = __1.Structure.db;
     guildId;
     manager;
-    constructor(manager, data) {
-        if (!manager || !data || !data.guildId) {
+    constructor(manager, guildId) {
+        if (!manager || !guildId) {
             throw new Error("[ @Moonlink/Queue ]: Invalid constructor arguments");
         }
-        this.guildId = data.guildId;
+        this.guildId = guildId;
         this.manager = __1.Structure.manager;
     }
     add(data, position) {

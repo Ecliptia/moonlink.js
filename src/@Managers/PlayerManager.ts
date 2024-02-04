@@ -1,5 +1,12 @@
-import { MoonlinkPlayer, MoonlinkTracl } from "../../index";
-export class Players {
+import {
+    MoonlinkPlayer,
+    MoonlinkTrack,
+    MoonlinkManager,
+    createOptions,
+    Structure,
+    State
+} from "../../index";
+export class PlayerManager {
     public _manager: MoonlinkManager;
     public cache: Record<string, MoonlinkPlayer> = {};
     private voices: Record<string, any> = {};
@@ -13,7 +20,7 @@ export class Players {
     }
     public handleVoiceServerUpdate(update: any, guildId: string): void {
         this.voices[guildId] = {
-            ...voices[guildId],
+            ...this.voices[guildId],
             endpoint: update.endpoint,
             token: update.token
         };
@@ -24,6 +31,7 @@ export class Players {
     public handlePlayerDisconnect(guildId: string): void {
         this._manager.emit("playerDisconnect", this.cache[guildId]);
         this._manager.emit(
+            "debug",
             `@Moonlink(PlayerManager) - a player(${guildId}) was disconnected, issuing stop and resolving information`
         );
 
@@ -55,7 +63,10 @@ export class Players {
     }
 
     public updateVoiceStates(guildId: string, update: any): void {
-        this.voices[guildId].sessionId = update.session_id;
+        this.voices[guildId] = {
+            ...this.voices[guildId],
+            sessionId: update.session_id
+        };
     }
 
     public async attemptConnection(guildId: string): Promise<boolean> {
@@ -66,7 +77,6 @@ export class Players {
                 !this.voices[guildId]?.sessionId)
         )
             return false;
-
         if (this._manager.options?.balancingPlayersByRegion) {
             let voiceRegion = this.voices[guildId].endpoint
                 ? this.voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
@@ -103,10 +113,9 @@ export class Players {
         await this.cache[guildId].node.rest.update({
             guildId,
             data: {
-                voice: voices[guildId]
+                voice: this.voices[guildId]
             }
         });
-        delete this.voices[guildId];
         return true;
     }
     public has(guildId: string): boolean {
@@ -119,7 +128,7 @@ export class Players {
             );
         if (!this.has(guildId)) return null;
 
-        return voices[guildId];
+        return this.cache[guildId];
     }
     public create(data: createOptions): MoonlinkPlayer {
         if (
@@ -165,7 +174,9 @@ export class Players {
                     : "players"
             }`
         )[0];
-
+        data.node = nodeSorted.identifier
+            ? nodeSorted.identifier
+            : nodeSorted.host;
         this._manager.emit(
             "debug",
             `@Moonlink(Players) - A server player was created (${data.guildId})`
@@ -173,9 +184,14 @@ export class Players {
         this._manager.emit("playerCreated", data.guildId);
         let instance = new (Structure.get("MoonlinkPlayer"))(data);
 
+        this.cache[data.guildId] = instance;
+
         return instance;
     }
     public get all(): Record<string, any> | null {
         return this.cache ?? null;
+    }
+    public delete(guildId): void {
+        delete this.cache[guildId];
     }
 }

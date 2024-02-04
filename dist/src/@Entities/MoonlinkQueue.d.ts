@@ -3,9 +3,7 @@ export declare class MoonlinkQueue {
     db: MoonlinkDatabase;
     private guildId;
     private manager;
-    constructor(manager: MoonlinkManager, data: {
-        guildId: string;
-    });
+    constructor(manager: MoonlinkManager, guildId: string);
     add(data: MoonlinkTrack, position?: number): void;
     has(identifier: string): boolean;
     first(): any;

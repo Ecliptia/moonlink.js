@@ -16,7 +16,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         super();
         this._nodes = nodes;
         this._SPayload = SPayload;
-        this.players = new (index_1.Structure.get("Players"))();
+        this.players = new (index_1.Structure.get("PlayerManager"))();
         this.nodes = new (index_1.Structure.get("Nodes"))();
         this.options = options;
         if (options.plugins) {
@@ -134,11 +134,11 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             if (!player)
                 return;
             if (!update.channel_id) {
-                this.players.handlePlayerDisconnect(player, guildId);
+                this.players.handlePlayerDisconnect(guildId);
             }
             if (update.channel_id &&
                 update.channel_id !== player.voiceChannel) {
-                this.players.handlePlayerMove(player, update.channel_id, player.voiceChannel, guildId);
+                this.players.handlePlayerMove(update.channel_id, player.voiceChannel, guildId);
             }
             this.players.updateVoiceStates(guildId, update);
             this.players.attemptConnection(guildId);

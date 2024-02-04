@@ -1,5 +1,5 @@
-import { INode, Extendable, SortType, createOptions } from "../@Typings";
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode } from "../../index";
+import { INode, Extendable, SortType } from "../@Typings";
+import { MoonlinkManager, MoonlinkDatabase, MoonlinkNode } from "../../index";
 export declare const State: {
     READY: string;
     CONNECTED: string;
@@ -11,22 +11,6 @@ export declare const State: {
     RESUMING: string;
     MOVING: string;
 };
-export declare class Players {
-    _manager: MoonlinkManager;
-    map: Map<any, any>;
-    cache?: Map<any, any>;
-    constructor();
-    init(): void;
-    handleVoiceServerUpdate(update: any, guildId: string): void;
-    handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void;
-    handlePlayerMove(player: MoonlinkPlayer, newChannelId: string, oldChannelId: string, guildId: string): void;
-    updateVoiceStates(guildId: string, update: any): void;
-    attemptConnection(guildId: string): Promise<boolean>;
-    has(guildId: string): boolean;
-    get(guildId: string): MoonlinkPlayer | null;
-    create(data: createOptions): MoonlinkPlayer;
-    get all(): Record<string, any> | null;
-}
 export declare class Nodes {
     initiated: boolean;
     _manager: MoonlinkManager;
