@@ -3,9 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkPlayer = void 0;
 const index_1 = require("../../index");
 class MoonlinkPlayer {
-    manager;
-    infos;
-    map;
+    manager = index_1.Structure.manager;
     guildId;
     textChannel;
     voiceChannel;
@@ -24,32 +22,25 @@ class MoonlinkPlayer {
     previous;
     data;
     node;
-    rest;
-    constructor(infos, manager, map) {
-        this.guildId = infos.guildId;
-        this.textChannel = infos.textChannel;
-        this.voiceChannel = infos.voiceChannel;
-        this.voiceRegion = infos.voiceRegion;
-        this.autoPlay = infos.autoPlay;
-        this.autoLeave = infos.autoLeave || false;
-        this.connected = infos.connected || null;
-        this.playing = infos.playing || null;
-        this.paused = infos.paused || null;
-        this.loop = infos.loop || null;
-        this.volume = infos.volume || 90;
-        this.shuffled = infos.shuffled || false;
-        this.ping = infos.ping || 0;
-        this.queue = new (index_1.Structure.get("MoonlinkQueue"))(manager, this);
-        this.current = map.get("current") || {};
-        this.current = this.current[this.guildId];
-        this.previous = map.get("previous") || {};
-        this.previous = this.previous[this.guildId];
-        this.map = map;
-        this.data = this.map.get("players") || {};
-        this.data = this.data[this.guildId];
-        this.node = manager.nodes.get(this.get("node"));
-        this.rest = this.node.rest;
-        this.manager = manager;
+    constructor(data) {
+        this.guildId = data.guildId;
+        this.textChannel = data.textChannel;
+        this.voiceChannel = data.voiceChannel;
+        this.voiceRegion = data.voiceRegion;
+        this.autoPlay = data.autoPlay;
+        this.autoLeave = data.autoLeave || false;
+        this.connected = data.connected || false;
+        this.playing = data.playing || false;
+        this.paused = data.paused || false;
+        this.loop = data.loop || 0;
+        this.volume = data.volume || 80;
+        this.shuffled = data.shuffled || false;
+        this.ping = data.ping || 0;
+        this.queue = new (index_1.Structure.get("MoonlinkQueue"))(this.manager, this.guildId);
+        this.current = null;
+        this.previous = [];
+        this.data = {};
+        this.node = this.manager.nodes.get(data.node);
         const existingData = this.queue.db.get(`players.${this.guildId}`) ||
             {};
         if (this.voiceChannel &&
@@ -67,17 +58,10 @@ class MoonlinkPlayer {
             this.queue.db.set(`players.${this.guildId}`, existingData);
         }
     }
-    updatePlayers() {
-        let players = this.map.get("players") || {};
-        players[this.guildId] = this.data;
-        this.map.set("players", players);
-    }
     set(key, value) {
         this.data[key] = value;
-        this.updatePlayers();
     }
     get(key) {
-        this.updatePlayers();
         return this.data[key] || null;
     }
     setTextChannel(channelId) {
@@ -87,7 +71,6 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('@Moonlink(Player) - option "channelId" is different from a string');
         }
-        this.set("textChannel", channelId);
         this.textChannel = channelId;
         return true;
     }
@@ -98,7 +81,6 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('@Moonlink(Player) - option "channelId" is different from a string');
         }
-        this.set("voiceChannel", channelId);
         this.voiceChannel = channelId;
         return true;
     }
@@ -107,7 +89,6 @@ class MoonlinkPlayer {
             throw new Error('@Moonlink(Player) - "mode" option is empty or different from a boolean');
         }
         mode ? mode : (mode = !this.autoLeave);
-        this.set("autoLeave", mode);
         this.autoLeave = mode;
         return mode;
     }
@@ -115,14 +96,12 @@ class MoonlinkPlayer {
         if (typeof mode !== "boolean") {
             throw new Error('@Moonlink(Player) - "mode" option is empty or different from a boolean');
         }
-        this.set("autoPlay", mode);
         this.autoPlay = mode;
         return mode;
     }
     connect(options) {
         options = options || { setDeaf: false, setMute: false };
         const { setDeaf, setMute } = options;
-        this.set("connected", true);
         this.manager._SPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
@@ -132,11 +111,10 @@ class MoonlinkPlayer {
                 self_deaf: setDeaf
             }
         }));
+        this.connected = true;
         return true;
     }
     disconnect() {
-        this.set("connected", false);
-        this.set("voiceChannel", null);
         this.manager._SPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
@@ -146,6 +124,8 @@ class MoonlinkPlayer {
                 self_deaf: false
             }
         }));
+        this.connected = false;
+        this.voiceChannel = null;
         return true;
     }
     async restart() {
@@ -160,7 +140,7 @@ class MoonlinkPlayer {
             this.play();
             return;
         }
-        await this.rest.update({
+        await this.node.rest.update({
             guildId: this.guildId,
             data: {
                 track: {
@@ -179,30 +159,26 @@ class MoonlinkPlayer {
             : this.queue.shift();
         if (!data)
             return false;
-        let current = this.map.get("current") || {};
-        if (this.loop && Object.keys(current[this.guildId]).length != 0) {
-            current[this.guildId].time
-                ? (current[this.guildId].time = 0)
-                : false;
-            this.set("ping", undefined);
-            this.queue.push(current[this.guildId]);
+        if (this.loop && Object.keys(this.current).length != 0) {
+            this.current.time ? (this.current.time = 0) : false;
+            this.ping = undefined;
+            this.queue.push(this.current);
         }
         if (typeof data == "string") {
             try {
-                let resolveTrack = await this.rest.decodeTrack(data);
+                let resolveTrack = await this.node.rest.decodeTrack(data);
                 data = new (index_1.Structure.get("MoonlinkTrack"))(resolveTrack, null);
             }
             catch (err) {
-                this.manager.emit("debug", "@Moonlink(Player) - falha ao tentar decodificar uma track " +
+                this.manager.emit("debug", "@Moonlink(Player) - Fails when trying to decode a track " +
                     data +
                     ", error: " +
                     err);
                 return;
             }
         }
-        current[this.guildId] = data;
-        this.map.set("current", current);
-        await this.rest.update({
+        this.current = data;
+        await this.node.rest.update({
             guildId: this.guildId,
             data: {
                 track: {
@@ -226,16 +202,16 @@ class MoonlinkPlayer {
         return true;
     }
     async updatePlaybackStatus(paused) {
-        await this.rest.update({
+        await this.node.rest.update({
             guildId: this.guildId,
             data: { paused }
         });
-        this.set("paused", paused);
-        this.set("playing", !paused);
+        this.paused = paused;
+        this.playing = !paused;
     }
     async stop(destroy) {
         if (!this.queue.size) {
-            await this.rest.update({
+            await this.node.rest.update({
                 guildId: this.guildId,
                 data: {
                     track: { encoded: null }
@@ -255,9 +231,7 @@ class MoonlinkPlayer {
                 throw new Error(`@Moonlink(Player) - the indicated position does not exist, make security in your code to avoid errors`);
             }
             let data = queue.splice(position - 1, 1)[0];
-            let currents = this.map.get("current") || {};
-            currents[this.guildId] = data;
-            this.map.set("current", currents);
+            this.current = data;
             this.queue.setQueue(queue);
             await this.play(data);
             return true;
@@ -287,11 +261,11 @@ class MoonlinkPlayer {
         if (!this.playing) {
             throw new Error("@Moonlink(Player) - cannot change volume while the player is not playing");
         }
-        await this.rest.update({
+        await this.node.rest.update({
             guildId: this.guildId,
             data: { volume: percent }
         });
-        this.set("volume", percent);
+        this.volume = percent;
         return percent;
     }
     setLoop(mode) {
@@ -307,17 +281,15 @@ class MoonlinkPlayer {
             (mode !== null && (mode < 0 || mode > 2))) {
             throw new Error('@Moonlink(Player) - the option "mode" is different from a number and string or the option does not exist');
         }
-        this.set("loop", mode);
+        this.loop = mode;
         return mode;
     }
     async destroy() {
         if (this.connected)
             this.disconnect();
-        await this.rest.destroy(this.guildId);
+        await this.node.rest.destroy(this.guildId);
         this.queue.clear();
-        let players = this.map.get("players");
-        delete players[this.guildId];
-        this.map.set("players", players);
+        this.manager.players.delete(this.guildId);
         this.manager.emit("debug", "@Moonlink(Player): destroyed player " + this.guildId);
         return true;
     }
@@ -334,7 +306,7 @@ class MoonlinkPlayer {
         if (!this.current.isSeekable && this.current.isStream) {
             throw new Error(`@Moonlink(Player) - seek function cannot be applied on live video or cannot be applied in "isSeekable"`);
         }
-        await this.rest.update({
+        await this.node.rest.update({
             guildId: this.guildId,
             data: { position }
         });
@@ -346,7 +318,6 @@ class MoonlinkPlayer {
             return false;
         }
         mode ? mode : (mode = !this.shuffled);
-        this.set("shuffled", mode);
         this.shuffled = mode;
         return mode;
     }

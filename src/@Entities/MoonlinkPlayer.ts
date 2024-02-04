@@ -8,7 +8,7 @@ import {
 } from "../../index";
 import { IPlayerData, connectOptions, PreviousInfosPlayer } from "../@Typings";
 export class MoonlinkPlayer {
-    public manager: MoonlinkManager = Structure._manager;
+    public manager: MoonlinkManager = Structure.manager;
     public guildId: string;
     public textChannel: string;
     public voiceChannel: string;
@@ -24,7 +24,7 @@ export class MoonlinkPlayer {
     public ping: number;
     public queue: MoonlinkQueue;
     public current: Record<string, any>;
-    public previous: MoonlinkTrack[];
+    public previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     public data: Record<string, any>;
     public node: MoonlinkNode | any;
 
@@ -44,14 +44,17 @@ export class MoonlinkPlayer {
         this.playing = data.playing || false;
         this.paused = data.paused || false;
         this.loop = data.loop || 0;
-        this.volume = data.volume || 90;
+        this.volume = data.volume || 80;
         this.shuffled = data.shuffled || false;
         this.ping = data.ping || 0;
-        this.queue = new (Structure.get("MoonlinkQueue"))(this);
+        this.queue = new (Structure.get("MoonlinkQueue"))(
+            this.manager,
+            this.guildId
+        );
         this.current = null;
         this.previous = [];
         this.data = {};
-        this.node = manager.nodes.get(this.get("node"));
+        this.node = this.manager.nodes.get(data.node);
 
         const existingData =
             this.queue.db.get<PreviousInfosPlayer>(`players.${this.guildId}`) ||
@@ -86,22 +89,12 @@ export class MoonlinkPlayer {
     }
 
     /**
-     * Private method to update player information in the map.
-     */
-    private updatePlayers(): void {
-        let players = this.map.get("players") || {};
-        players[this.guildId] = this.data;
-        this.map.set("players", players);
-    }
-
-    /**
      * Set a key-value pair in the player's data and update the map.
      * @param key - The key to set.
      * @param value - The value to set.
      */
     public set(key: string, value: unknown): void {
         this.data[key] = value;
-        this.updatePlayers();
     }
 
     /**
@@ -110,7 +103,6 @@ export class MoonlinkPlayer {
      * @returns The value associated with the key.
      */
     public get<T>(key: string): T {
-        this.updatePlayers();
         return (this.data[key] as T) || null;
     }
 
@@ -129,7 +121,6 @@ export class MoonlinkPlayer {
                 '@Moonlink(Player) - option "channelId" is different from a string'
             );
         }
-        this.set("textChannel", channelId);
         this.textChannel = channelId;
         return true;
     }
@@ -149,7 +140,6 @@ export class MoonlinkPlayer {
                 '@Moonlink(Player) - option "channelId" is different from a string'
             );
         }
-        this.set("voiceChannel", channelId);
         this.voiceChannel = channelId;
         return true;
     }
@@ -161,7 +151,6 @@ export class MoonlinkPlayer {
             );
         }
         mode ? mode : (mode = !this.autoLeave);
-        this.set("autoLeave", mode);
         this.autoLeave = mode;
         return mode;
     }
@@ -177,7 +166,6 @@ export class MoonlinkPlayer {
                 '@Moonlink(Player) - "mode" option is empty or different from a boolean'
             );
         }
-        this.set("autoPlay", mode);
         this.autoPlay = mode;
         return mode;
     }
@@ -190,7 +178,6 @@ export class MoonlinkPlayer {
     public connect(options: connectOptions): boolean | null {
         options = options || { setDeaf: false, setMute: false };
         const { setDeaf, setMute } = options;
-        this.set("connected", true);
         this.manager._SPayload(
             this.guildId,
             JSON.stringify({
@@ -203,6 +190,8 @@ export class MoonlinkPlayer {
                 }
             })
         );
+
+        this.connected = true;
         return true;
     }
 
@@ -211,8 +200,6 @@ export class MoonlinkPlayer {
      * @returns True if the disconnection was successful.
      */
     public disconnect(): boolean {
-        this.set("connected", false);
-        this.set("voiceChannel", null);
         this.manager._SPayload(
             this.guildId,
             JSON.stringify({
@@ -225,6 +212,9 @@ export class MoonlinkPlayer {
                 }
             })
         );
+
+        this.connected = false;
+        this.voiceChannel = null;
         return true;
     }
 
@@ -237,7 +227,7 @@ export class MoonlinkPlayer {
         await this.connect({
             setDeaf: true,
             setMute: false
-        }); // applicaçao discord ainda escultam mesmo com deaf ativo, mas a lavalink é um servidor surdo
+        });
 
         await this.manager.players.attemptConnection(this.guildId);
 
@@ -268,14 +258,11 @@ export class MoonlinkPlayer {
             : this.queue.shift();
 
         if (!data) return false;
-        let current = this.map.get("current") || {};
 
-        if (this.loop && Object.keys(current[this.guildId]).length != 0) {
-            current[this.guildId].time
-                ? (current[this.guildId].time = 0)
-                : false;
-            this.set("ping", undefined);
-            this.queue.push(current[this.guildId]);
+        if (this.loop && Object.keys(this.current).length != 0) {
+            this.current.time ? (this.current.time = 0) : false;
+            this.ping = undefined;
+            this.queue.push(this.current);
         }
 
         if (typeof data == "string") {
@@ -285,7 +272,7 @@ export class MoonlinkPlayer {
             } catch (err) {
                 this.manager.emit(
                     "debug",
-                    "@Moonlink(Player) - falha ao tentar decodificar uma track " +
+                    "@Moonlink(Player) - Fails when trying to decode a track " +
                         data +
                         ", error: " +
                         err
@@ -294,9 +281,7 @@ export class MoonlinkPlayer {
             }
         }
 
-        current[this.guildId] = data;
-
-        this.map.set("current", current);
+        this.current = data;
 
         await this.node.rest.update({
             guildId: this.guildId,
@@ -339,8 +324,8 @@ export class MoonlinkPlayer {
             guildId: this.guildId,
             data: { paused }
         });
-        this.set("paused", paused);
-        this.set("playing", !paused);
+        this.paused = paused;
+        this.playing = !paused;
     }
 
     /**
@@ -380,9 +365,7 @@ export class MoonlinkPlayer {
                 position - 1,
                 1
             )[0];
-            let currents: Map<string, any> = this.map.get("current") || {};
-            currents[this.guildId] = data;
-            this.map.set("current", currents);
+            this.current = data;
             this.queue.setQueue(queue);
 
             await this.play(data as MoonlinkTrack);
@@ -433,7 +416,7 @@ export class MoonlinkPlayer {
             guildId: this.guildId,
             data: { volume: percent }
         });
-        this.set("volume", percent);
+        this.volume = percent;
         return percent;
     }
 
@@ -463,7 +446,7 @@ export class MoonlinkPlayer {
             );
         }
 
-        this.set("loop", mode);
+        this.loop = mode;
         return mode;
     }
 
@@ -475,9 +458,7 @@ export class MoonlinkPlayer {
         if (this.connected) this.disconnect();
         await this.node.rest.destroy(this.guildId);
         this.queue.clear();
-        let players = this.map.get("players");
-        delete players[this.guildId];
-        this.map.set("players", players);
+        this.manager.players.delete(this.guildId);
         this.manager.emit(
             "debug",
             "@Moonlink(Player): destroyed player " + this.guildId
@@ -546,7 +527,6 @@ export class MoonlinkPlayer {
             return false;
         }
         mode ? mode : (mode = !this.shuffled);
-        this.set("shuffled", mode);
         this.shuffled = mode;
         return mode;
     }

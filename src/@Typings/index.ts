@@ -7,7 +7,7 @@ import {
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
-    Players,
+    PlayerManager,
     Plugin,
     Nodes
 } from "../../index";
@@ -138,8 +138,8 @@ export interface IOptions {
     movePlayersToNextNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;
-    playersOnCache?: boolean;
     WebSocketDebug?: boolean;
+    previousTracksInArray?: boolean;
 }
 
 export interface IHeaders {
@@ -157,7 +157,7 @@ export interface Extendable {
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
-    Players: typeof Players;
+    PlayerManager: typeof PlayerManager;
     Nodes: typeof Nodes;
 }
 
