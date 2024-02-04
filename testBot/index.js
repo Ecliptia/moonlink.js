@@ -20,10 +20,12 @@ const path = require("path");
 const http = require("http");
 
 const log = (message) => {
-  const coloredMessage = message.replace(/\[(.*?)\]/g, "\x1b[34m[$1]\x1b[0m");
+  const coloredMessage = message.replace(/\((.*?)\)/g, "\x1b[34m[$1]\x1b[0m");
   console.log(coloredMessage);
 };
+
 console.log(Lyrics, !(Lyrics instanceof Plugin))
+
 const client = new Client({
   intents: 131071,
 });
