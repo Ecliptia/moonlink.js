@@ -12,7 +12,7 @@ export class Players {
         );
     }
     public handleVoiceServerUpdate(update: any, guildId: string): void {
-        voices[guildId] = {
+        this.voices[guildId] = {
             ...voices[guildId],
             endpoint: update.endpoint,
             token: update.token
@@ -20,44 +20,60 @@ export class Players {
 
         this.attemptConnection(guildId);
     }
-    public handlePlayerDisconnect(
-        player: MoonlinkPlayer,
-        guildId: string
-    ): void {
-        this._manager.emit("playerDisconnect");
 
-        player.stop();
+    public handlePlayerDisconnect(guildId: string): void {
+        this._manager.emit("playerDisconnect", this.cache[guildId]);
+        this._manager.emit(
+            `@Moonlink(PlayerManager) - a player(${guildId}) was disconnected, issuing stop and resolving information`
+        );
+
+        Object.assign(this.cache[guildId], {
+            connected: false,
+            voiceChannel: null,
+            playing: false
+        });
+
+        this.cache[guildId].stop();
     }
+
     public handlePlayerMove(
-        player: MoonlinkPlayer,
         newChannelId: string,
         oldChannelId: string,
         guildId: string
     ): void {
-        this._manager.emit("playerMove", player, newChannelId, oldChannelId);
+        this._manager.emit(
+            "playerMove",
+            this.cache[guildId],
+            newChannelId,
+            oldChannelId
+        );
+        this._manager.emit(
+            "debug",
+            `@Moonlink(PlayerManager) - a player(${guildId}) was moved channel, resolving information`
+        );
+        this.cache[guildId].voiceChannel = newChannelId;
     }
 
     public updateVoiceStates(guildId: string, update: any): void {
-        voices[guildId] = {
-            ...voices[guildId],
-            sessionId: update
-        };
+        this.voices[guildId].sessionId = update.session_id;
     }
+
     public async attemptConnection(guildId: string): Promise<boolean> {
-        const voiceServer = this.map.get("voiceServer") || {};
-        const voiceStates = this.map.get("voiceStates") || {};
-        const players = this.map.get("players") || {};
+        if (
+            !this.cache[guildId] ||
+            (!this.voices[guildId]?.token &&
+                !this.voices[guildId]?.endpoint &&
+                !this.voices[guildId]?.sessionId)
+        )
+            return false;
 
-        if (!players[guildId] || !voiceServer[guildId]) return false;
-
-        /*
         if (this._manager.options?.balancingPlayersByRegion) {
-            let voiceRegion = voices[guildId].endpoint
-                ? voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
+            let voiceRegion = this.voices[guildId].endpoint
+                ? this.voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
                 : null;
 
-            if (cache[guildId].voiceRegion) voiceRegion = null;
-            else cache[guildId].voiceRegion = voiceRegion[1];
+            if (this.cache[guildId].voiceRegion) voiceRegion = null;
+            else this.cache[guildId].voiceRegion = voiceRegion[1];
 
             if (voiceRegion) {
                 const connectedNodes = [
@@ -65,41 +81,24 @@ export class Players {
                 ].filter(node => node.state == State.READY);
 
                 const matchingNode = connectedNodes.find(node =>
-                    node.regions.includes(voiceRegion)
+                    node.regions.includes(voiceRegion[1])
                 );
 
                 if (matchingNode) {
-                    players[guildId] = {
-                        node: matchingNode.identifier
-                            ? matchingNode.identifier
-                            : matchingNode.host,
-                        ...players[guildId]
-                    };
-                    this.map.set("players", players);
+                    this.cache[guildId].node = matchingNode;
+                    this.cache[guildId].voiceRegion = voiceRegion[1];
                 } else {
-                    players[guildId] = {
-                        voiceRegion,
-                        ...players[guildId]
-                    };
-                    this.map.set("players", players);
+                    this.cache[guildId].voiceRegion = voiceRegion[1];
                 }
             }
         } else {
-            if (!players[guildId].region) {
-                let voiceRegion = voiceServer[guildId].event.endpoint
-                    ? voiceServer[guildId].event.endpoint.match(
-                          /([a-zA-Z-]+)\d+/
-                      )
+            if (!this.cache[guildId].voiceRegion) {
+                let voiceRegion = this.voices[guildId].endpoint
+                    ? this.voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
                     : null;
-
-                players[guildId].voiceRegion = voiceRegion
-                    ? voiceRegion[1]
-                    : null;
-
-                this.map.set("players", players);
+                this.cache[guildId].voiceRegion = voiceRegion[1];
             }
         }
-*/
 
         await this.cache[guildId].node.rest.update({
             guildId,
@@ -107,7 +106,7 @@ export class Players {
                 voice: voices[guildId]
             }
         });
-
+        delete this.voices[guildId];
         return true;
     }
     public has(guildId: string): boolean {
