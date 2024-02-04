@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { MoonlinkPlayer, MoonlinkNode, PlayerManager, Nodes } from "../../index";
+import { MoonlinkPlayer, MoonlinkNode, PlayerManager, NodeManager } from "../../index";
 import { INode, IOptions, VoicePacket, SearchResult, SearchQuery } from "../@Typings";
 export interface MoonlinkEvents {
     autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
@@ -33,7 +33,7 @@ export declare class MoonlinkManager extends EventEmitter {
     readonly _nodes: INode[];
     readonly _SPayload: Function;
     readonly players: PlayerManager;
-    readonly nodes: Nodes;
+    readonly nodes: NodeManager;
     readonly version: number;
     options: IOptions;
     initiated: boolean;

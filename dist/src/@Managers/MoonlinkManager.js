@@ -17,7 +17,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this._nodes = nodes;
         this._SPayload = SPayload;
         this.players = new (index_1.Structure.get("PlayerManager"))();
-        this.nodes = new (index_1.Structure.get("Nodes"))();
+        this.nodes = new (index_1.Structure.get("NodeManager"))();
         this.options = options;
         if (options.plugins) {
             options.plugins.forEach(plugin => {

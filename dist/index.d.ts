@@ -1,6 +1,7 @@
 export declare const version: string;
 export * from "./src/@Managers/MoonlinkManager";
 export * from "./src/@Managers/PlayerManager";
+export * from "./src/@Managers/NodeManager";
 export * from "./src/@Entities/MoonlinkNode";
 export * from "./src/@Entities/MoonlinkPlayer";
 export * from "./src/@Entities/MoonlinkQueue";

@@ -1,4 +1,4 @@
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkFilters, MoonlinkDatabase, MoonlinkRestFul, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, PlayerManager, Plugin, Nodes } from "../../index";
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkFilters, MoonlinkDatabase, MoonlinkRestFul, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, PlayerManager, NodeManager, Plugin } from "../../index";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface createOptions {
     guildId: string;
@@ -122,7 +122,7 @@ export interface Extendable {
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
     PlayerManager: typeof PlayerManager;
-    Nodes: typeof Nodes;
+    NodeManager: typeof NodeManager;
 }
 export interface PlaylistInfo {
     name: string;
