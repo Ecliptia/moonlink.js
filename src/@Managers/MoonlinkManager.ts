@@ -232,7 +232,7 @@ export class MoonlinkManager extends EventEmitter {
             if (!player) return;
 
             if (!update.channel_id) {
-                this.players.handlePlayerDisconnect(player, guildId);
+                this.players.handlePlayerDisconnect(guildId);
             }
 
             if (
@@ -240,7 +240,6 @@ export class MoonlinkManager extends EventEmitter {
                 update.channel_id !== player.voiceChannel
             ) {
                 this.players.handlePlayerMove(
-                    player,
                     update.channel_id,
                     player.voiceChannel,
                     guildId
