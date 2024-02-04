@@ -7,9 +7,9 @@ import {
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
-    Players,
-    Plugin,
-    Nodes
+    PlayerManager,
+    NodeManager,
+    Plugin
 } from "../../index";
 
 export type Constructor<T> = new (...args: any[]) => T;
@@ -138,8 +138,8 @@ export interface IOptions {
     movePlayersToNextNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;
-    playersOnCache?: boolean;
     WebSocketDebug?: boolean;
+    previousTracksInArray?: boolean;
 }
 
 export interface IHeaders {
@@ -157,8 +157,8 @@ export interface Extendable {
     MoonlinkQueue: typeof MoonlinkQueue;
     MoonlinkNode: typeof MoonlinkNode;
     MoonlinkTrack: typeof MoonlinkTrack;
-    Players: typeof Players;
-    Nodes: typeof Nodes;
+    PlayerManager: typeof PlayerManager;
+    NodeManager: typeof NodeManager;
 }
 
 export interface PlaylistInfo {
@@ -219,7 +219,7 @@ export interface connectOptions {
     setDeaf?: boolean;
 }
 
-export interface PlayerInfos {
+export interface IPlayerData {
     guildId: string;
     textChannel: string | null;
     voiceChannel: string | null;

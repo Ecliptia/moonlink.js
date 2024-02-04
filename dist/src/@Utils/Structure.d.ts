@@ -1,50 +1,5 @@
-import { INode, Extendable, SortType, createOptions } from "../@Typings";
-import { MoonlinkManager, MoonlinkPlayer, MoonlinkDatabase, MoonlinkNode } from "../../index";
-export declare const State: {
-    READY: string;
-    CONNECTED: string;
-    CONNECTING: string;
-    DISCONNECTING: string;
-    DISCONNECTED: string;
-    RECONNECTING: string;
-    AUTORESUMING: string;
-    RESUMING: string;
-    MOVING: string;
-};
-export declare class Players {
-    _manager: MoonlinkManager;
-    map: Map<any, any>;
-    cache?: Map<any, any>;
-    constructor();
-    init(): void;
-    handleVoiceServerUpdate(update: any, guildId: string): void;
-    handlePlayerDisconnect(player: MoonlinkPlayer, guildId: string): void;
-    handlePlayerMove(player: MoonlinkPlayer, newChannelId: string, oldChannelId: string, guildId: string): void;
-    updateVoiceStates(guildId: string, update: any): void;
-    attemptConnection(guildId: string): Promise<boolean>;
-    has(guildId: string): boolean;
-    get(guildId: string): MoonlinkPlayer | null;
-    create(data: createOptions): MoonlinkPlayer;
-    get all(): Record<string, any> | null;
-}
-export declare class Nodes {
-    initiated: boolean;
-    _manager: MoonlinkManager;
-    map: Map<any, any>;
-    constructor();
-    init(): void;
-    check(): void;
-    add(node: INode): void;
-    remove(name: string): boolean;
-    get(name: any): any;
-    sortByUsage(sortType: SortType): MoonlinkNode[];
-    private sortNodesByMemoryUsage;
-    private sortNodesByLavalinkCpuLoad;
-    private sortNodesBySystemCpuLoad;
-    private sortNodesByCalls;
-    private sortNodesByPlayingPlayers;
-    private sortNodesByPlayers;
-}
+import { Extendable } from "../@Typings";
+import { MoonlinkManager, MoonlinkDatabase } from "../../index";
 export declare abstract class Structure {
     static manager: MoonlinkManager;
     static db: MoonlinkDatabase;

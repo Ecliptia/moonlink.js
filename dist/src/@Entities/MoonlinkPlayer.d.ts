@@ -1,9 +1,7 @@
-import { MoonlinkRestFul, MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack } from "../../index";
-import { PlayerInfos, connectOptions } from "../@Typings";
+import { MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack } from "../../index";
+import { IPlayerData, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     manager: MoonlinkManager;
-    private infos;
-    private map;
     guildId: string;
     textChannel: string;
     voiceChannel: string;
@@ -19,12 +17,10 @@ export declare class MoonlinkPlayer {
     ping: number;
     queue: MoonlinkQueue;
     current: Record<string, any>;
-    previous: Record<string, any>;
+    previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     data: Record<string, any>;
     node: MoonlinkNode | any;
-    rest: MoonlinkRestFul;
-    constructor(infos: PlayerInfos, manager: MoonlinkManager, map: Map<string, any>);
-    private updatePlayers;
+    constructor(data: IPlayerData);
     set(key: string, value: unknown): void;
     get<T>(key: string): T;
     setTextChannel(channelId: string): boolean;

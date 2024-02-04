@@ -190,7 +190,7 @@ export class MoonlinkNode {
                 this.identifier ? this.identifier : this.host
             } has been connected successfully`
         );
-        this._manager.emit("nodeCreate", this)
+        this._manager.emit("nodeCreate", this);
 
         this.state = State.CONNECTED;
     }
@@ -199,13 +199,10 @@ export class MoonlinkNode {
         const state = this.state;
         this.state = State.MOVING;
         try {
-            let obj = this._manager.players.map.get("players") || [];
+            let obj = this._manager.players.all || [];
             const players = Object.keys(obj);
             for (const player of players) {
-                if (
-                    obj[player].node == this.host ||
-                    obj[player].node == this.identifier
-                ) {
+                if (obj[player].node == this) {
                     let nextNode =
                         this._manager.nodes.sortByUsage("players")[0];
                     let playerClass = this._manager.players.get(
@@ -221,15 +218,7 @@ export class MoonlinkNode {
                                 : nextNode.host
                         }`
                     );
-                    await playerClass.set(
-                        "node",
-                        nextNode.identifier
-                            ? nextNode.identifier
-                            : nextNode.host
-                    );
-                    playerClass = this._manager.players.get(
-                        obj[player].guildId
-                    );
+                    playerClass.node = nextNode;
                     await playerClass.restart();
                 }
             }
@@ -283,17 +272,13 @@ export class MoonlinkNode {
             this.state !== State.DISCONNECTED ||
             this.state !== State.RECONNECTING
         ) {
-            let obj = this._manager.players.map.get("players") || [];
+            let obj = this._manager.players.all || [];
             if (obj.length !== 0) {
                 const players = Object.keys(obj);
                 for (const player of players) {
-                    if (
-                        obj[player].host == this.host ||
-                        obj[player].host == this.identifier
-                    ) {
-                        this._manager.players
-                            .get(obj[player].guildId)
-                            .set("playing", false);
+                    if (obj[player].node == this) {
+                        this._manager.players.get(obj[player].guildId).playing =
+                            false;
                     }
                 }
             }
@@ -341,10 +326,10 @@ export class MoonlinkNode {
                 }
                 if (this._manager.options.autoResume) {
                     this.state = State.AUTORESUMING;
-                    let obj = this._manager.players.map.get("players") || [];
+                    let obj = this._manager.players.all || [];
                     const players = Object.keys(obj);
                     for (const player of players) {
-                        if (obj[player].node == this.host) {
+                        if (obj[player].node == this) {
                             await this._manager.players.attemptConnection(
                                 obj[player].guildId
                             );
@@ -378,15 +363,12 @@ export class MoonlinkNode {
                             setDeaf: true,
                             setMute: false
                         });
-                        playerClass.set("playing", true);
-                        playerClass.set("conneted", true);
+                        playerClass.playing = true;
+                        playerClass.connected = true;
                         let track = new (Structure.get("MoonlinkTrack"))(
                             player.track
                         );
-                        let current: any =
-                            this._manager.players.map.get("current") || {};
-                        current[player.guildId] = track;
-                        this._manager.players.map.set("current", current);
+                        playerClass.current = track;
                     }
                 }
                 this.state = State.READY;
@@ -396,19 +378,16 @@ export class MoonlinkNode {
                 this.stats = { ...payload };
                 break;
             case "playerUpdate":
-                let current: any =
-                    this._manager.players.map.get(`current`) || {};
                 let player = this._manager.players.get(payload.guildId);
-                player.set("ping", payload.state.ping);
-                if (current[payload.guildId] instanceof MoonlinkTrack) {
-                    current[payload.guildId]
+                player.ping = payload.state.ping;
+                if (player.current instanceof MoonlinkTrack) {
+                    player.current
                         .setPosition(payload.state.position)
                         .setTime(payload.state.time);
-                } else if (current[payload.guildId]) {
-                    current[payload.guildId].position = payload.state.position;
-                    current[payload.guildId].time = payload.state.time;
+                } else if (player.current) {
+                    player.current.position = payload.state.position;
+                    player.current.time = payload.state.time;
                 }
-                this._manager.players.map.set("current", current);
                 break;
             case "event":
                 this.handleEvent(payload);
@@ -437,43 +416,29 @@ export class MoonlinkNode {
         if (!payload.guildId) return;
         if (!this._manager.players.has(payload.guildId)) return;
         let player: MoonlinkPlayer = this._manager.players.get(payload.guildId);
-        let players: any = this._manager.players.map.get("players") || {};
         switch (payload.type) {
             case "TrackStartEvent": {
-                let current: MoonlinkTrack | Record<string, any> | null =
-                    player.current;
+                let current = player.current;
                 if (!current) return;
-                let currents: any =
-                    this._manager.players.map.get("current") || {};
-                players[payload.guildId] = {
-                    ...players[payload.guildId],
-                    playing: true,
-                    paused: false
-                };
-                this._manager.players.map.set("players", players);
+                player.playing = true;
+                player.paused = false;
                 this._manager.emit("trackStart", player, current);
                 break;
             }
             case "TrackEndEvent": {
-                let currents: any =
-                    this._manager.players.map.get("current") || {};
-                let previousData: any =
-                    this._manager.players.map.get("previous") || {};
-                let track: any = currents[payload.guildId] || null;
-                let queue: string[] = this.db.get(`queue.${payload.guildId}`);
-                players[payload.guildId] = {
-                    ...players[payload.guildId],
-                    playing: false
-                };
-                previousData[payload.guildId] = {
-                    track
-                };
-                this._manager.players.map.set("players", players);
-                this._manager.players.map.set("previous", previousData);
+                let track = player.current;
+                let queue: string[] = player.queue.all;
+                player.playing = false;
+
+                if (this._manager.options.previousTracksInArray)
+                    (player.previous as MoonlinkTrack[]).push(
+                        track as MoonlinkTrack
+                    );
+                else player.previous = track;
 
                 if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
-                        this.db.delete(`queue.${payload.guildId}`);
+                        player.queue.clear();
                         return this._manager.emit("queueEnd", player, track);
                     }
                     player.play();
@@ -492,7 +457,7 @@ export class MoonlinkNode {
                         return;
                     }
                     if (player.loop == 2) {
-                        player.queue.add(track);
+                        player.queue.add(player.current as MoonlinkTrack);
                         if (!queue || queue.length === 0)
                             return this._manager.emit(
                                 "trackEnd",
@@ -508,7 +473,7 @@ export class MoonlinkNode {
                         this._manager.emit("trackEnd", player, track);
                         this._manager.emit(
                             "debug",
-                            "[ @_manager/Nodes ]: invalid loop value will be ignored!"
+                            "@Manager(Nodes) - invalid loop value will be ignored!"
                         );
                     }
                 }
@@ -517,9 +482,7 @@ export class MoonlinkNode {
                                         Track shuffling logic
                                 */
                 if (player.queue.size && player.data.shuffled) {
-                    let currentQueue: string[] = this.db.get(
-                        `queue.${payload.guildId}`
-                    );
+                    let currentQueue: string[] = player.queue.all;
                     const randomIndex = Math.floor(
                         Math.random() * currentQueue.length
                     );
@@ -572,27 +535,20 @@ export class MoonlinkNode {
                         "[ @Moonlink/Nodes ]: The queue is empty"
                     );
                     this._manager.emit("queueEnd", player);
-                    currents[payload.guildId] = null;
-                    this._manager.players.map.set("current", currents);
-                    this.db.delete(`queue.${payload.guildId}`);
+                    player.current = null;
+                    player.queue.clear();
                 }
                 break;
             }
 
             case "TrackStuckEvent": {
-                let currents: any =
-                    this._manager.players.map.get("current") || {};
-                let track: any = currents[payload.guildId] || null;
+                this._manager.emit("trackStuck", player, player.current);
                 player.stop();
-                this._manager.emit("trackStuck", player, track);
                 break;
             }
             case "TrackExceptionEvent": {
-                let currents: any =
-                    this._manager.players.map.get("current") || {};
-                let track: any = currents[payload.guildId] || null;
+                this._manager.emit("trackError", player, player.current);
                 player.stop();
-                this._manager.emit("trackError", player, track);
                 break;
             }
             case "WebSocketClosedEvent": {

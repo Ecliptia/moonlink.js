@@ -14,7 +14,7 @@ module.exports = {
 
     if (!player.playing) return message.reply("<:hi:1176345748405768252> | not the player playing")
 
-    player.setAutoPlay(!!player.autoPlay);
+    player.setAutoPlay(!player.autoPlay);
     return message.reply(`<:hi:1176345748405768252> | autoPlay(${player.autoPlay})`);
   },
 };

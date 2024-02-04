@@ -10,14 +10,14 @@ export class MoonlinkQueue {
     private guildId: string;
     private manager: MoonlinkManager;
 
-    constructor(manager: MoonlinkManager, data: { guildId: string }) {
-        if (!manager || !data || !data.guildId) {
+    constructor(manager: MoonlinkManager, guildId: string) {
+        if (!manager || !guildId) {
             throw new Error(
                 "[ @Moonlink/Queue ]: Invalid constructor arguments"
             );
         }
 
-        this.guildId = data.guildId;
+        this.guildId = guildId;
         this.manager = Structure.manager;
     }
 

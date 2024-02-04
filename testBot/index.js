@@ -2,6 +2,7 @@ const {
   Client,
   Collection
 } = require("discord.js");
+const mongoose = require("mongoose");
 const {
   MoonlinkManager,
   Plugin,
@@ -10,6 +11,10 @@ const {
 const {
   Lyrics
 } = require("../../moonlink.js-lyrics/index.js")
+const {
+  mongodb
+} = require("../../moonlink.js-mongodb/index.js")
+
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
@@ -55,11 +60,11 @@ client.moon = new MoonlinkManager(
     identifier: "LAVALINK-2"
   },
     {
-        identifier: "It'z Zoldy 2",
-        host: "139.99.124.43",
-        port: 7784,
-        password: "PasswordIsZoldy",
-        secure: false,
+      identifier: "It'z Zoldy 2",
+      host: "139.99.124.43",
+      port: 7784,
+      password: "PasswordIsZoldy",
+      secure: false,
     }/*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
   }*/ /*{
@@ -76,7 +81,7 @@ client.moon = new MoonlinkManager(
     autoResume: true,
     clientName: "Moonlink/Blio",
     WebSocketDebug: true,
-    plugins: [new Lyrics()],
+    plugins: [new Lyrics(), /*new mongodb(mongoose)*/],
   },
   (id, data) => {
     let guild = client.guilds.cache.get(id);
@@ -95,7 +100,7 @@ client.on("messageCreate", (message) => {
   if (message.author.bot || !message.content.startsWith("?")) return;
 
   const args = message.content.slice("?".length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
+  const commandName = args.shift();
 
   const command =
   client.commands.get(commandName) ||

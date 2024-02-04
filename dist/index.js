@@ -17,6 +17,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.version = void 0;
 exports.version = require("../package.json").version;
 __exportStar(require("./src/@Managers/MoonlinkManager"), exports);
+__exportStar(require("./src/@Managers/PlayerManager"), exports);
+__exportStar(require("./src/@Managers/NodeManager"), exports);
 __exportStar(require("./src/@Entities/MoonlinkNode"), exports);
 __exportStar(require("./src/@Entities/MoonlinkPlayer"), exports);
 __exportStar(require("./src/@Entities/MoonlinkQueue"), exports);
