@@ -5,7 +5,7 @@ import {
     MoonlinkTrack,
     MoonlinkNode,
     PlayerManager,
-    Nodes,
+    NodeManager,
     Plugin
 } from "../../index";
 
@@ -67,7 +67,7 @@ export class MoonlinkManager extends EventEmitter {
     public readonly _nodes: INode[];
     public readonly _SPayload: Function;
     public readonly players: PlayerManager;
-    public readonly nodes: Nodes;
+    public readonly nodes: NodeManager;
     public readonly version: number = require("../../index").version;
     public options: IOptions;
     public initiated: boolean = false;
@@ -77,7 +77,7 @@ export class MoonlinkManager extends EventEmitter {
         this._nodes = nodes;
         this._SPayload = SPayload;
         this.players = new (Structure.get("PlayerManager"))();
-        this.nodes = new (Structure.get("Nodes"))();
+        this.nodes = new (Structure.get("NodeManager"))();
         this.options = options;
         if (options.plugins) {
             options.plugins.forEach(plugin => {
