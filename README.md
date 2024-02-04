@@ -176,7 +176,6 @@ client.on("interactionCreate", async interaction => {
             player.play();
         }
     } else if (commandName == "pause") {
-      
     }
 });
 
@@ -196,6 +195,8 @@ We would like to express our gratitude to the amazing individuals who contribute
 
 4. **PiscesXD** - First sponsor and contributed to making the shuffle method reversible, and autoLeave.
 
+5. **Suryansh** - Second contributor and helped discover bugs 🌷
+
 **Bug Hunters** 🐛:
 
 -   Nah
@@ -205,6 +206,10 @@ We would like to express our gratitude to the amazing individuals who contribute
 -   Tasty-Kiwi
 -   rrm
 -   WilsontheWolf
+-   Aertic
+-   'Forster
+-   Fireball
+-   Ghos't
 
 We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
 
