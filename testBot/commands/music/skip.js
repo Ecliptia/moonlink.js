@@ -8,7 +8,7 @@ module.exports = {
       );
     }
 
-    if (client.moon.players.has(message.guild.id)) return message.reply("<:hi:1176345748405768252> | On this server, the player is not playing")
+    if (!client.moon.players.has(message.guild.id)) return message.reply("<:hi:1176345748405768252> | On this server, the player is not playing")
 
     let player = client.moon.players.get(message.guild.id);
 

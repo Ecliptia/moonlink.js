@@ -4,8 +4,8 @@ import {
     MoonlinkPlayer,
     MoonlinkTrack,
     MoonlinkNode,
-    Players,
-    Nodes,
+    PlayerManager,
+    NodeManager,
     Plugin
 } from "../../index";
 
@@ -66,8 +66,8 @@ export class MoonlinkManager extends EventEmitter {
     public clientId: string;
     public readonly _nodes: INode[];
     public readonly _SPayload: Function;
-    public readonly players: Players;
-    public readonly nodes: Nodes;
+    public readonly players: PlayerManager;
+    public readonly nodes: NodeManager;
     public readonly version: number = require("../../index").version;
     public options: IOptions;
     public initiated: boolean = false;
@@ -76,8 +76,8 @@ export class MoonlinkManager extends EventEmitter {
         super();
         this._nodes = nodes;
         this._SPayload = SPayload;
-        this.players = new (Structure.get("Players"))();
-        this.nodes = new (Structure.get("Nodes"))();
+        this.players = new (Structure.get("PlayerManager"))();
+        this.nodes = new (Structure.get("NodeManager"))();
         this.options = options;
         if (options.plugins) {
             options.plugins.forEach(plugin => {
@@ -232,7 +232,7 @@ export class MoonlinkManager extends EventEmitter {
             if (!player) return;
 
             if (!update.channel_id) {
-                this.players.handlePlayerDisconnect(player, guildId);
+                this.players.handlePlayerDisconnect(guildId);
             }
 
             if (
@@ -240,7 +240,6 @@ export class MoonlinkManager extends EventEmitter {
                 update.channel_id !== player.voiceChannel
             ) {
                 this.players.handlePlayerMove(
-                    player,
                     update.channel_id,
                     player.voiceChannel,
                     guildId
