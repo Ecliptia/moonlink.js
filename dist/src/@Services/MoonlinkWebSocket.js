@@ -88,7 +88,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                 socket.unshift(head);
             }
             socket.on("data", data => {
-                console.log(data.toString("utf8"));
                 const frame = this.parseFrame(data);
                 if (this.debug)
                     console.log("@Moonlink(WebSocket) -", frame, frame.payload.toString("utf-8"));

@@ -41,5 +41,5 @@ export declare class MoonlinkPlayer {
     destroy(): Promise<boolean>;
     private validateNumberParam;
     seek(position: number): Promise<number | null>;
-    shuffle(mode?: boolean | null): boolean | null;
+    shuffle(mode?: boolean | null): boolean | void;
 }

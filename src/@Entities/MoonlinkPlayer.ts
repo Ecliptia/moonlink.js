@@ -1,5 +1,4 @@
 import {
-    MoonlinkRestFul,
     MoonlinkManager,
     MoonlinkQueue,
     MoonlinkNode,
@@ -224,7 +223,7 @@ export class MoonlinkPlayer {
     public async restart(): Promise<void> {
         if (!this.current || !this.queue.size) return;
 
-        await this.connect({
+        this.connect({
             setDeaf: true,
             setMute: false
         });
@@ -515,7 +514,7 @@ export class MoonlinkPlayer {
      * @returns True if the shuffle was successful.
      * @throws Error if the queue is empty.
      */
-    public shuffle(mode?: boolean | null): boolean | null {
+    public shuffle(mode?: boolean | null): boolean | void {
         /* 
             @Author: PiscesXD
             Track shuffling logic
@@ -524,7 +523,6 @@ export class MoonlinkPlayer {
             throw new Error(
                 `@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`
             );
-            return false;
         }
         mode ? mode : (mode = !this.shuffled);
         this.shuffled = mode;
