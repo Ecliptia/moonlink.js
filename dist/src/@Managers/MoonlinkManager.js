@@ -125,7 +125,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         const update = d;
         const guildId = update.guild_id;
         const player = this.players.get(guildId);
-        if (!update || (!update.token && !update.session_id))
+        if (!update.token && !update.session_id)
             return;
         if (t === "VOICE_SERVER_UPDATE") {
             this.players.handleVoiceServerUpdate(update, guildId);

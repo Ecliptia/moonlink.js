@@ -131,7 +131,7 @@ class MoonlinkPlayer {
     async restart() {
         if (!this.current || !this.queue.size)
             return;
-        await this.connect({
+        this.connect({
             setDeaf: true,
             setMute: false
         });
@@ -315,7 +315,6 @@ class MoonlinkPlayer {
     shuffle(mode) {
         if (!this.queue.size) {
             throw new Error(`@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`);
-            return false;
         }
         mode ? mode : (mode = !this.shuffled);
         this.shuffled = mode;

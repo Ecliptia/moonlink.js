@@ -67,6 +67,11 @@ client.moon = new MoonlinkManager(
       port: 7784,
       password: "PasswordIsZoldy",
       secure: false,
+    }, {
+      host: "lavalink-v4.teramont.net",
+      port: 443,
+      password: "eHKuFcz67k4lBS64",
+      secure: true
     }/*{
     host: "localhost", port: 2333, secure: false, password: require("../config.json").password
   }*/ /*{
