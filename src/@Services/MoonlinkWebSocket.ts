@@ -110,7 +110,6 @@ export class MoonlinkWebSocket extends EventEmitter {
                 socket.unshift(head); //https://nodejs.org/api/stream.html#readableunshiftchunk-encoding
             }
             socket.on("data", data => {
-                console.log(data.toString("utf8"));
                 const frame = this.parseFrame(data);
 
                 if (this.debug)

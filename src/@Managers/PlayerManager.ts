@@ -68,46 +68,41 @@ export class PlayerManager {
             sessionId: update.session_id
         };
     }
-
     public async attemptConnection(guildId: string): Promise<boolean> {
         if (
             !this.cache[guildId] ||
-            (!this.voices[guildId]?.token &&
-                !this.voices[guildId]?.endpoint &&
-                !this.voices[guildId]?.sessionId)
-        )
+            (!this.voices &&
+                !(
+                    this.voices[guildId]?.token &&
+                    this.voices[guildId]?.endpoint &&
+                    this.voices[guildId]?.sessionId
+                ))
+        ) {
             return false;
+        }
+
         if (this._manager.options?.balancingPlayersByRegion) {
-            let voiceRegion = this.voices[guildId].endpoint
-                ? this.voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
-                : null;
+            const voiceRegion =
+                this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
 
-            if (this.cache[guildId].voiceRegion) voiceRegion = null;
-            else this.cache[guildId].voiceRegion = voiceRegion[1];
-
-            if (voiceRegion) {
+            if (!this.cache[guildId].voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
                 ].filter(node => node.state == State.READY);
-
                 const matchingNode = connectedNodes.find(node =>
-                    node.regions.includes(voiceRegion[1])
+                    node.regions.includes(voiceRegion)
                 );
+
+                this.cache[guildId].voiceRegion = voiceRegion;
 
                 if (matchingNode) {
                     this.cache[guildId].node = matchingNode;
-                    this.cache[guildId].voiceRegion = voiceRegion[1];
-                } else {
-                    this.cache[guildId].voiceRegion = voiceRegion[1];
                 }
             }
-        } else {
-            if (!this.cache[guildId].voiceRegion) {
-                let voiceRegion = this.voices[guildId].endpoint
-                    ? this.voices[guildId].endpoint.match(/([a-zA-Z-]+)\d+/)
-                    : null;
-                this.cache[guildId].voiceRegion = voiceRegion[1];
-            }
+        } else if (!this.cache[guildId].voiceRegion) {
+            const voiceRegion =
+                this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
+            this.cache[guildId].voiceRegion = voiceRegion;
         }
 
         await this.cache[guildId].node.rest.update({
@@ -116,6 +111,7 @@ export class PlayerManager {
                 voice: this.voices[guildId]
             }
         });
+
         return true;
     }
     public has(guildId: string): boolean {
