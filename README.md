@@ -210,6 +210,7 @@ We would like to express our gratitude to the amazing individuals who contribute
 -   'Forster
 -   Fireball
 -   Ghos't
+-   loulou310 - Xotak
 
 We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
 
