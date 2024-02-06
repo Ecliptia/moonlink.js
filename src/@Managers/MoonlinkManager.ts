@@ -222,7 +222,7 @@ export class MoonlinkManager extends EventEmitter {
         const guildId = update.guild_id;
         const player: MoonlinkPlayer = this.players.get(guildId);
 
-        if (!update || (!update.token && !update.session_id)) return;
+        if (!update.token && !update.session_id) return;
 
         if (t === "VOICE_SERVER_UPDATE") {
             this.players.handleVoiceServerUpdate(update, guildId);
