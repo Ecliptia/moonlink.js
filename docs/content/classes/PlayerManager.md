@@ -1,3 +1,7 @@
+---
+title: PlayerManager
+---
+
 # Class: PlayerManager
 
 ## Table of contents
