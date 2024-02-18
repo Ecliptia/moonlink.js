@@ -465,7 +465,7 @@ export class MoonlinkNode {
                                 track,
                                 payload
                             );
-                            | any;
+                            
                         player.play();
                         return;
                     } else {
