@@ -120,12 +120,13 @@ export class PlayerManager {
     public get(guildId: string): MoonlinkPlayer | null {
         if (!guildId && typeof guildId !== "string")
             throw new Error(
-                '[ @Moonlink/Manager ]: "guildId" option in parameter to get player is empty or type is different from string'
+                '@Moonlink(PlayerManager) - "guildId" option in parameter to get player is empty or type is different from string'
             );
         if (!this.has(guildId)) return null;
 
         return this.cache[guildId];
     }
+
     public create(data: createOptions): MoonlinkPlayer {
         if (
             typeof data !== "object" ||
@@ -155,7 +156,7 @@ export class PlayerManager {
                 missingParams.push("node");
 
             throw new Error(
-                `[ @Moonlink/Manager ]: Invalid or missing parameters for player creation: ${missingParams.join(
+                `@Moonlink(PlayerManager) - Missing parameters for player creation: ${missingParams.join(
                     ", "
                 )}`
             );
@@ -184,9 +185,11 @@ export class PlayerManager {
 
         return instance;
     }
+
     public get all(): Record<string, any> | null {
         return this.cache ?? null;
     }
+
     public delete(guildId): void {
         delete this.cache[guildId];
     }

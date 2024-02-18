@@ -3,9 +3,6 @@ import https from "https";
 import crypto from "crypto";
 import { EventEmitter } from "events";
 
-// @Author: 1Lucas1apk
-// Code made entirely by me, the code can be used as inspiration for your own RFC 6455 Protocol
-
 export class MoonlinkWebSocket extends EventEmitter {
     private url: URL;
     private options: any;

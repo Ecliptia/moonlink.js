@@ -1,0 +1,57 @@
+{
+  "players": {
+    "990369410344701964": {
+      "voiceChannel": "1089198118022680626",
+      "textChannel": "1151684866971275325"
+    }
+  },
+  "queue": {
+    "990369410344701964": [
+      {
+        "encoded": "QAABJgMAKUpWS0UgLSBnb2xkZW4gaG91ciAob2ZmaWNpYWwgbXVzaWMgdmlkZW8pAARKVktFAAAAAAADikAAC1BFTTBWczhqZjF3AAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9UEVNMFZzOGpmMXcBAJtodHRwczovL2kueXRpbWcuY29tL3ZpL1BFTTBWczhqZjF3L21heHJlc2RlZmF1bHQuanBnP3NxcD0tb2F5bXdFbUNJQUtFTkFGOHF1S3FRTWE4QUVCLUFIVUI0QUMwQVdLQWd3SUFCQUJHR1VnV1NnN01BOD0mcnM9QU9uNENMQ3MtejJuMkFWaXdCSk1EeVNtT1lkTm1BQWhpZwAAB3lvdXR1YmUAAAAAAAAAAA==",
+        "identifier": "PEM0Vs8jf1w",
+        "title": "JVKE - golden hour (official music video)",
+        "author": "JVKE",
+        "url": "https://www.youtube.com/watch?v=PEM0Vs8jf1w",
+        "duration": 232000,
+        "position": 229380,
+        "isSeekable": true,
+        "isStream": false,
+        "sourceName": "youtube",
+        "artworkUrl": "https://i.ytimg.com/vi/PEM0Vs8jf1w/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AHUB4AC0AWKAgwIABABGGUgWSg7MA8=&rs=AOn4CLCs-z2n2AViwBJMDySmOYdNmAAhig",
+        "isrc": null,
+        "time": 1708273105121
+      },
+      {
+        "encoded": "QAABJgMAKUpWS0UgLSBnb2xkZW4gaG91ciAob2ZmaWNpYWwgbXVzaWMgdmlkZW8pAARKVktFAAAAAAADikAAC1BFTTBWczhqZjF3AAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9UEVNMFZzOGpmMXcBAJtodHRwczovL2kueXRpbWcuY29tL3ZpL1BFTTBWczhqZjF3L21heHJlc2RlZmF1bHQuanBnP3NxcD0tb2F5bXdFbUNJQUtFTkFGOHF1S3FRTWE4QUVCLUFIVUI0QUMwQVdLQWd3SUFCQUJHR1VnV1NnN01BOD0mcnM9QU9uNENMQ3MtejJuMkFWaXdCSk1EeVNtT1lkTm1BQWhpZwAAB3lvdXR1YmUAAAAAAAAAAA==",
+        "identifier": "PEM0Vs8jf1w",
+        "title": "JVKE - golden hour (official music video)",
+        "author": "JVKE",
+        "url": "https://www.youtube.com/watch?v=PEM0Vs8jf1w",
+        "duration": 232000,
+        "position": 229380,
+        "isSeekable": true,
+        "isStream": false,
+        "sourceName": "youtube",
+        "artworkUrl": "https://i.ytimg.com/vi/PEM0Vs8jf1w/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AHUB4AC0AWKAgwIABABGGUgWSg7MA8=&rs=AOn4CLCs-z2n2AViwBJMDySmOYdNmAAhig",
+        "isrc": null,
+        "time": 1708273105121
+      },
+      {
+        "encoded": "QAAAwQMAIUNhcmxhIE1vcnJpc29uIC0gRGlzZnJ1dG8gKGxldHJhKQAOQ2FybGEgTW9ycmlzb24AAAAAAAPE2AALandQMUhSbURWSUkAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1qd1AxSFJtRFZJSQEANGh0dHBzOi8vaS55dGltZy5jb20vdmkvandQMUhSbURWSUkvbWF4cmVzZGVmYXVsdC5qcGcAAAd5b3V0dWJlAAAAAAAAAAA=",
+        "identifier": "jwP1HRmDVII",
+        "title": "Carla Morrison - Disfruto (letra)",
+        "author": "Carla Morrison",
+        "url": "https://www.youtube.com/watch?v=jwP1HRmDVII",
+        "duration": 247000,
+        "position": 242560,
+        "isSeekable": true,
+        "isStream": false,
+        "sourceName": "youtube",
+        "artworkUrl": "https://i.ytimg.com/vi/jwP1HRmDVII/maxresdefault.jpg",
+        "isrc": null,
+        "time": 0
+      }
+    ]
+  }
+}

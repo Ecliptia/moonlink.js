@@ -465,8 +465,7 @@ export class MoonlinkNode {
                                 track,
                                 payload
                             );
-
-                        player.current = queue.shift() as MoonlinkTrack | any;
+                            | any;
                         player.play();
                         return;
                     } else {
