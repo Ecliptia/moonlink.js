@@ -25,7 +25,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             });
         }
         if (!this.options.clientName)
-            this.options.clientName = `@Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
+            this.options.clientName = `Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
     }
     init(clientId) {
         if (this.initiated)

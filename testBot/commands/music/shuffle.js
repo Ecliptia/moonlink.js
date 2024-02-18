@@ -13,7 +13,9 @@ module.exports = {
     let player = client.moon.players.get(message.guild.id);
 
     if (!player.playing) return message.reply("<:hi:1176345748405768252> | ")
-
+    
+    if(!player.queue.size) return message.reply("<:hi:1176345748405768252> | ")
+    
     player.shuffle(!player.shuffled);
     return message.reply(`<:hi:1176345748405768252> | shuffled(${player.shuffled})`);
   },

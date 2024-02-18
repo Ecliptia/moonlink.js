@@ -2,29 +2,26 @@ const {
   Client,
   Collection
 } = require("discord.js");
-const mongoose = require("mongoose");
+
 const {
   MoonlinkManager,
   Plugin,
   makeRequest
-} = require("../dist/index.js");
+} = require("../dist/index.js")
+
 const {
   Lyrics
 } = require("../../moonlink.js-lyrics/index.js")
-const {
-  mongodb
-} = require("../../moonlink.js-mongodb/index.js")
 
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
 
 const log = (message) => {
-  const coloredMessage = message.replace(/\((.*?)\)/g, "\x1b[34m[$1]\x1b[0m");
+  const coloredMessage = message.replace(/\((.*?)\)/g, "\x1b[34m($1)\x1b[0m");
   console.log(coloredMessage);
 };
 
-console.log(Lyrics, !(Lyrics instanceof Plugin))
 
 const client = new Client({
   intents: 131071,
@@ -88,7 +85,7 @@ client.moon = new MoonlinkManager(
     autoResume: true,
     clientName: "Moonlink/Blio",
     WebSocketDebug: true,
-    plugins: [new Lyrics(), /*new mongodb(mongoose)*/],
+    plugins: [new Lyrics()],
   },
   (id, data) => {
     let guild = client.guilds.cache.get(id);
@@ -125,32 +122,9 @@ client.on("messageCreate", (message) => {
 });
 
 client.moon.on("debug", log);
-client.moon.on("nodeCreate", (node) =>
-  log(`[ Moonlink/Event ]: Node created: ${node.identifier || node.host}`),
-);
 
 client.on("error", (error) => {
   log(`[ Client ]: Client error: ${error}`);
 });
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, {
-    "Content-Type": "text/plain"
-  });
-  res.end("Hello, World!\n");
-});
-
-/*
-server.listen(80, () => {
-  log(`[ Server ]: Server running;`);
-});
-*/
-const token = require ("../config.json").token;
-if (!token) {
-  console.error(
-    "[ System ]: Please provide a valid TOKEN in the environment variables.",
-  );
-
-} else {
-  client.login(token);
-}
+client.login(require ("../config.json").token);

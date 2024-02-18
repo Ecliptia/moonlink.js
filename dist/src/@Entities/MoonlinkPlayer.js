@@ -290,7 +290,7 @@ class MoonlinkPlayer {
         await this.node.rest.destroy(this.guildId);
         this.queue.clear();
         this.manager.players.delete(this.guildId);
-        this.manager.emit("debug", "@Moonlink(Player): destroyed player " + this.guildId);
+        this.manager.emit("debug", "@Moonlink(Player) - Destroyed player " + this.guildId);
         return true;
     }
     validateNumberParam(param, paramName) {
@@ -316,7 +316,7 @@ class MoonlinkPlayer {
         if (!this.queue.size) {
             throw new Error(`@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`);
         }
-        mode ? mode : (mode = !this.shuffled);
+        mode ?? (mode = !this.shuffled);
         this.shuffled = mode;
         return mode;
     }
