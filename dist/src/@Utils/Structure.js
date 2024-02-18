@@ -41,5 +41,6 @@ class Structure {
 exports.Structure = Structure;
 class Plugin {
     load(manager) { }
+    unload(manager) { }
 }
 exports.Plugin = Plugin;

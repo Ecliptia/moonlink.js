@@ -13,7 +13,7 @@ export class MoonlinkTrack {
     public requester: any;
     public artworkUrl: string;
     public isrc: string;
-    public time?: number;
+    public time?: number = 0;
     constructor(data: MoonlinkTrackOptions, requester?: string | any) {
         this.encoded = data.encoded;
         this.title = data.info.title;

@@ -9,4 +9,5 @@ export declare abstract class Structure {
 }
 export declare class Plugin {
     load(manager: MoonlinkManager): void;
+    unload(manager: MoonlinkManager): void;
 }
