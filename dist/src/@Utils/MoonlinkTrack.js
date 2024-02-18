@@ -15,7 +15,7 @@ class MoonlinkTrack {
     requester;
     artworkUrl;
     isrc;
-    time;
+    time = 0;
     constructor(data, requester) {
         this.encoded = data.encoded;
         this.title = data.info.title;

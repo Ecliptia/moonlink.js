@@ -63,4 +63,5 @@ export abstract class Structure {
 
 export class Plugin {
     public load(manager: MoonlinkManager): void {}
+    public unload(manager: MoonlinkManager): void {}
 }

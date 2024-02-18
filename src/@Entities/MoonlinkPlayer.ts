@@ -460,7 +460,7 @@ export class MoonlinkPlayer {
         this.manager.players.delete(this.guildId);
         this.manager.emit(
             "debug",
-            "@Moonlink(Player): destroyed player " + this.guildId
+            "@Moonlink(Player) - Destroyed player " + this.guildId
         );
 
         return true;
@@ -524,7 +524,7 @@ export class MoonlinkPlayer {
                 `@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`
             );
         }
-        mode ? mode : (mode = !this.shuffled);
+        mode ?? (mode = !this.shuffled);
         this.shuffled = mode;
         return mode;
     }
