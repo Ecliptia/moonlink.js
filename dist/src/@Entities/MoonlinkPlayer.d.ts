@@ -13,7 +13,6 @@ export declare class MoonlinkPlayer {
     paused: boolean | null;
     loop: number | null;
     volume: number;
-    shuffled: boolean | null;
     ping: number;
     queue: MoonlinkQueue;
     current: Record<string, any>;
@@ -41,5 +40,5 @@ export declare class MoonlinkPlayer {
     destroy(): Promise<boolean>;
     private validateNumberParam;
     seek(position: number): Promise<number | null>;
-    shuffle(mode?: boolean | null): boolean | void;
+    shuffle(): boolean;
 }

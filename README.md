@@ -175,8 +175,6 @@ client.on("interactionCreate", async interaction => {
             // Starting playback if not already playing
             player.play();
         }
-    } else if (commandName == "pause") {
-    }
 });
 
 // Logging in with the Discord token
@@ -197,20 +195,7 @@ We would like to express our gratitude to the amazing individuals who contribute
 
 5. **Suryansh** - Second contributor and helped discover bugs 🌷
 
-**Bug Hunters** 🐛:
-
--   Nah
--   ItzGG
--   SuperPlayerBots
--   ddemile
--   Tasty-Kiwi
--   rrm
--   WilsontheWolf
--   Aertic
--   'Forster
--   Fireball
--   Ghos't
--   loulou310 - Xotak
+-   Nah, ItzGG, SuperPlayerBot, ddemile, Tasty-Kiwi, rrm, WilsontheWolf, Aertic, 'Forster, Fireball, Ghos't, loulou310 - Xotak
 
 We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
 
@@ -226,12 +211,6 @@ This project is licensed under the [Open Software License ("OSL") v. 3.0](LICENS
 
 ## Support
 
-We offer various forms of support for our project:
-
-1. **Code Assistance:** Our experienced developers and contributors are ready
-
-to help. Open an issue on our GitHub repository for prompt assistance. 💻
-
-2. **Community:** Join our Discord server at [Moonlink.js - Imagine a Music Bot](https://discord.com/invite/xQq2A8vku3) to connect with other users, ask questions, and participate in discussions. 🤝
+Join our Discord server at [Moonlink.js - Imagine a Music Bot](https://discord.com/invite/xQq2A8vku3) to connect with other users, ask questions, and participate in discussions. 🤝
 
 For any inquiries or assistance, we're here to help! 🌟

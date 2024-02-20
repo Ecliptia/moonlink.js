@@ -6,7 +6,6 @@ export declare class MoonlinkWebSocket extends EventEmitter {
     private options;
     private socket;
     private established;
-    private debug;
     private closing;
     constructor(uri: string, options: any);
     private buildRequestOptions;

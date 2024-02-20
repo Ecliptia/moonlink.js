@@ -8,7 +8,6 @@ export class MoonlinkWebSocket extends EventEmitter {
     private options: any;
     private socket: any;
     private established: boolean;
-    private debug: boolean = false;
     private closing: boolean = false;
     constructor(uri: string, options: any) {
         super();
@@ -32,9 +31,6 @@ export class MoonlinkWebSocket extends EventEmitter {
         ) {
             require("net").setDefaultAutoSelectFamily(false);
         } // https://nodejs.org/api/errors.html#err_socket_connection_timeout
-        this.options.debug !== undefined && this.options.debug == true
-            ? (this.debug = true)
-            : null;
 
         this.connect();
     }
@@ -97,24 +93,9 @@ export class MoonlinkWebSocket extends EventEmitter {
                 socket.destroy();
                 return;
             }
-            if (head && head.length > 0) {
-                if (this.debug)
-                    console.log(
-                        `@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString(
-                            "utf8"
-                        )}`
-                    );
-                socket.unshift(head); //https://nodejs.org/api/stream.html#readableunshiftchunk-encoding
-            }
+            if (head && head.length > 0)        socket.unshift(head);
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-
-                if (this.debug)
-                    console.log(
-                        "@Moonlink(WebSocket) -",
-                        frame,
-                        frame.payload.toString("utf-8")
-                    );
 
                 switch (frame.opcode) {
                     case 1: {
