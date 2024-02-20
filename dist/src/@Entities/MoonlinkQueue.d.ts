@@ -11,6 +11,7 @@ export declare class MoonlinkQueue {
     push(data: any): void;
     clear(): boolean;
     get size(): number;
+    shuffle(): boolean;
     remove(position: number): boolean;
     get all(): any;
     getQueue(): MoonlinkTrack[];

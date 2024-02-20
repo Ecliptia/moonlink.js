@@ -62,6 +62,18 @@ class MoonlinkQueue {
     get size() {
         return this.getQueue().length;
     }
+    shuffle() {
+        const currentQueue = this.all;
+        for (let i = currentQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [currentQueue[i], currentQueue[j]] = [
+                currentQueue[j],
+                currentQueue[i]
+            ];
+        }
+        this.setQueue(currentQueue);
+        return true;
+    }
     remove(position) {
         if (!position || typeof position !== "number" || position < 1) {
             throw new Error("[ @Moonlink/Queue ]: Invalid position specified");

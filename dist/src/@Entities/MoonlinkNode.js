@@ -107,7 +107,7 @@ class MoonlinkNode {
             headers["Session-Id"] = this.db.get("sessionId")
                 ? this.db.get("sessionId")
                 : "";
-        this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { debug: this._manager.options.WebSocketDebug, headers });
+        this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
@@ -214,10 +214,10 @@ class MoonlinkNode {
                             timeout: this.resumeTimeout
                         }
                     });
-                    this.version = this.rest.getVersion();
-                    this.info = this.rest.getInfo();
                     this._manager.emit("debug", `[ @Moonlink/Node ]: Resuming configured on Lavalink`);
                 }
+                this.version = await this.rest.getVersion();
+                this.info = await this.rest.getInfo();
                 if (this._manager.options.autoResume) {
                     this.state = index_1.State.AUTORESUMING;
                     let obj = this._manager.players.all || [];
@@ -344,15 +344,6 @@ class MoonlinkNode {
                         this._manager.emit("debug", "@Manager(Nodes) - invalid loop value will be ignored!");
                     }
                 }
-                if (player.queue.size && player.data.shuffled) {
-                    let currentQueue = player.queue.all;
-                    const randomIndex = Math.floor(Math.random() * currentQueue.length);
-                    const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
-                    currentQueue.unshift(shuffledTrack);
-                    this.db.set(`queue.${payload.guildId}`, currentQueue);
-                    player.play();
-                    return;
-                }
                 if (player.queue.size) {
                     this._manager.emit("trackEnd", player, track);
                     player.play();
@@ -373,7 +364,7 @@ class MoonlinkNode {
                     player.play();
                     return;
                 }
-                if (player.data.autoLeave) {
+                if (player.autoLeave) {
                     player.destroy();
                     this._manager.emit("autoLeaved", player, track);
                 }

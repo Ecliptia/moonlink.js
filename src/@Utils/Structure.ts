@@ -1,4 +1,3 @@
-import { EventEmitter } from "events";
 import { INode, Extendable, SortType, createOptions } from "../@Typings";
 
 import {

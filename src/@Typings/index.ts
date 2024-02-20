@@ -138,7 +138,6 @@ export interface IOptions {
     movePlayersToNextNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;
-    WebSocketDebug?: boolean;
     previousTracksInArray?: boolean;
 }
 
@@ -245,7 +244,7 @@ export interface TrackInfo {
     position: number;
     title: string;
     uri?: string;
-    artworkUrl?: string | null;
+    artworkUrl?: string;
     sourceName: string;
     isrc?: string;
 }
