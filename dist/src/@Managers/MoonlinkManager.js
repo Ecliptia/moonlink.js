@@ -32,7 +32,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
             return this;
         this.emit("debug", "@Moonlink - moonlink.js has started the initialization process, do not attempt to use functions until everything is initialized correctly ");
         if (!clientId && !this.options.clientId)
-            throw new TypeError('[ @Moonlink/Manager ]: "clientId" option is required.');
+            throw new TypeError('@Moonlink(Manager): "clientId" option is required.');
         this.options.clientId = clientId;
         this.clientId = clientId;
         index_1.Structure.init(this);
@@ -49,7 +49,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                 }
                 let query;
                 let source;
-                let requester = null;
+                let requester;
                 let node;
                 if (typeof options === "object") {
                     query = options.query;
@@ -61,19 +61,18 @@ class MoonlinkManager extends node_events_1.EventEmitter {
                     query = options;
                 }
                 if (requester &&
-                    typeof requester !== "object" &&
-                    typeof requester !== "string") {
-                    throw new Error('[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format');
+                    typeof requester !== "string" &&
+                    typeof requester !== "object") {
+                    throw new Error('@Moonlink(Manager) - The "requester" option in the search function must be in string or array format');
                 }
                 if (source && typeof source !== "string") {
-                    throw new Error("[ @Moonlink/Manager ]: the source option has to be in string format");
+                    throw new Error("@Moonlink(Manager) - the source option has to be in string format");
                 }
                 if (typeof query !== "string" && typeof query !== "object") {
                     throw new Error("@Moonlink(Manager) - (search) the search option has to be in string or array format");
                 }
-                node && this.nodes.get(node)
-                    ? (node = this.nodes.get(node))
-                    : (node = this.nodes.sortByUsage("memory")[0]);
+                (node && (node = this.nodes.get(node))) ??
+                    (node = this.nodes.sortByUsage("memory")[0]);
                 const sources = {
                     youtube: "ytsearch",
                     youtubemusic: "ytmsearch",

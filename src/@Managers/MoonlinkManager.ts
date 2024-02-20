@@ -95,7 +95,7 @@ export class MoonlinkManager extends EventEmitter {
         );
         if (!clientId && !this.options.clientId)
             throw new TypeError(
-                '[ @Moonlink/Manager ]: "clientId" option is required.'
+                '@Moonlink(Manager): "clientId" option is required.'
             );
         this.options.clientId = clientId;
         this.clientId = clientId;
@@ -116,7 +116,7 @@ export class MoonlinkManager extends EventEmitter {
 
                 let query;
                 let source;
-                let requester: any = null;
+                let requester;
                 let node;
                 if (typeof options === "object") {
                     query = options.query;
@@ -128,16 +128,16 @@ export class MoonlinkManager extends EventEmitter {
                 }
                 if (
                     requester &&
-                    typeof requester !== "object" &&
-                    typeof requester !== "string"
+                    typeof requester !== "string" &&
+                    typeof requester !== "object"
                 ) {
                     throw new Error(
-                        '[ @Moonlink/Manager ]: The "requester" option in the search function must be in string or array format'
+                        '@Moonlink(Manager) - The "requester" option in the search function must be in string or array format'
                     );
                 }
                 if (source && typeof source !== "string") {
                     throw new Error(
-                        "[ @Moonlink/Manager ]: the source option has to be in string format"
+                        "@Moonlink(Manager) - the source option has to be in string format"
                     );
                 }
 
@@ -146,9 +146,8 @@ export class MoonlinkManager extends EventEmitter {
                         "@Moonlink(Manager) - (search) the search option has to be in string or array format"
                     );
                 }
-                node && this.nodes.get(node)
-                    ? (node = this.nodes.get(node))
-                    : (node = this.nodes.sortByUsage("memory")[0]);
+                (node && (node = this.nodes.get(node))) ??
+                    (node = this.nodes.sortByUsage("memory")[0]);
 
                 const sources = {
                     youtube: "ytsearch",

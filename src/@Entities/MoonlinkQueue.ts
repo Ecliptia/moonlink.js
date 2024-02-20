@@ -9,7 +9,6 @@ export class MoonlinkQueue {
     public db: MoonlinkDatabase = Structure.db;
     private guildId: string;
     private manager: MoonlinkManager;
-
     constructor(manager: MoonlinkManager, guildId: string) {
         if (!manager || !guildId) {
             throw new Error(
@@ -36,6 +35,7 @@ export class MoonlinkQueue {
         }
 
         queue.splice(position, 0, data);
+
         this.setQueue(queue);
     }
     public has(identifier: string): boolean {
@@ -77,6 +77,22 @@ export class MoonlinkQueue {
 
     public get size(): number {
         return this.getQueue().length;
+    }
+
+    public shuffle(): boolean {
+        const currentQueue: MoonlinkTrack[] = this.all;
+
+        for (let i = currentQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [currentQueue[i], currentQueue[j]] = [
+                currentQueue[j],
+                currentQueue[i]
+            ];
+        }
+
+        this.setQueue(currentQueue);
+
+        return true;
     }
 
     public remove(position: number): boolean {

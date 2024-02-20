@@ -161,29 +161,25 @@ export class PlayerManager {
                 )}`
             );
         }
-
+      
         if (this.has(data.guildId)) return this.get(data.guildId);
 
         let nodeSorted = this._manager.nodes.sortByUsage(
-            `${
-                this._manager.options.sortNode
-                    ? this._manager.options.sortNode
-                    : "players"
-            }`
+            `${this._manager.options.sortNode ?? "players"}`
         )[0];
-        data.node = nodeSorted.identifier
-            ? nodeSorted.identifier
-            : nodeSorted.host;
+
+        data.node = nodeSorted.identifier ?? nodeSorted.host;
+
         this._manager.emit(
             "debug",
             `@Moonlink(Players) - A server player was created (${data.guildId})`
         );
+
         this._manager.emit("playerCreated", data.guildId);
-        let instance = new (Structure.get("MoonlinkPlayer"))(data);
 
-        this.cache[data.guildId] = instance;
+        this.cache[data.guildId] = new (Structure.get("MoonlinkPlayer"))(data);
 
-        return instance;
+        return this.cache[data.guildId];
     }
 
     public get all(): Record<string, any> | null {

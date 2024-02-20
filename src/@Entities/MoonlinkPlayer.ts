@@ -19,7 +19,6 @@ export class MoonlinkPlayer {
     public paused: boolean | null;
     public loop: number | null;
     public volume: number;
-    public shuffled: boolean | null;
     public ping: number;
     public queue: MoonlinkQueue;
     public current: Record<string, any>;
@@ -44,7 +43,6 @@ export class MoonlinkPlayer {
         this.paused = data.paused || false;
         this.loop = data.loop || 0;
         this.volume = data.volume || 80;
-        this.shuffled = data.shuffled || false;
         this.ping = data.ping || 0;
         this.queue = new (Structure.get("MoonlinkQueue"))(
             this.manager,
@@ -370,20 +368,6 @@ export class MoonlinkPlayer {
             await this.play(data as MoonlinkTrack);
             return true;
         }
-        /* 
-            @Author: PiscesXD
-            Track shuffling logic
-          */
-        if (this.queue.size && this.data.shuffled) {
-            let currentQueue: MoonlinkTrack[] = this.queue.all;
-            const randomIndex = Math.floor(Math.random() * currentQueue.length);
-            const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
-            currentQueue.unshift(shuffledTrack);
-            this.queue.setQueue(currentQueue);
-            this.play();
-            return;
-        }
-
         if (this.queue.size) {
             this.play();
             return false;
@@ -514,18 +498,12 @@ export class MoonlinkPlayer {
      * @returns True if the shuffle was successful.
      * @throws Error if the queue is empty.
      */
-    public shuffle(mode?: boolean | null): boolean | void {
-        /* 
-            @Author: PiscesXD
-            Track shuffling logic
-          */
+    public shuffle(): boolean {
         if (!this.queue.size) {
             throw new Error(
-                `@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`
+                "@Moonlink(Player)the one that is empty so that the shuffle can be performed"
             );
         }
-        mode ?? (mode = !this.shuffled);
-        this.shuffled = mode;
-        return mode;
+        return this.queue.shuffle();
     }
 }

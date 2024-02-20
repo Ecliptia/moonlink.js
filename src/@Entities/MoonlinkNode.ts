@@ -175,7 +175,7 @@ export class MoonlinkNode {
 
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
-            { debug: this._manager.options.WebSocketDebug, headers }
+            { headers }
         );
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -317,13 +317,14 @@ export class MoonlinkNode {
                             timeout: this.resumeTimeout
                         }
                     });
-                    this.version = this.rest.getVersion();
-                    this.info = this.rest.getInfo();
                     this._manager.emit(
                         "debug",
                         `[ @Moonlink/Node ]: Resuming configured on Lavalink`
                     );
                 }
+
+                this.version = await this.rest.getVersion();
+                this.info = await this.rest.getInfo();
                 if (this._manager.options.autoResume) {
                     this.state = State.AUTORESUMING;
                     let obj = this._manager.players.all || [];
@@ -465,7 +466,7 @@ export class MoonlinkNode {
                                 track,
                                 payload
                             );
-                            
+
                         player.play();
                         return;
                     } else {
@@ -476,25 +477,6 @@ export class MoonlinkNode {
                         );
                     }
                 }
-                /* 
-                                        @Author: PiscesXD
-                                        Track shuffling logic
-                                */
-                if (player.queue.size && player.data.shuffled) {
-                    let currentQueue: string[] = player.queue.all;
-                    const randomIndex = Math.floor(
-                        Math.random() * currentQueue.length
-                    );
-                    const shuffledTrack = currentQueue.splice(
-                        randomIndex,
-                        1
-                    )[0];
-                    currentQueue.unshift(shuffledTrack);
-                    this.db.set(`queue.${payload.guildId}`, currentQueue);
-                    player.play();
-                    return;
-                }
-
                 if (player.queue.size) {
                     this._manager.emit("trackEnd", player, track);
                     player.play();
@@ -524,7 +506,7 @@ export class MoonlinkNode {
                     return;
                 }
                 /* Logic created by PiscesXD */
-                if (player.data.autoLeave) {
+                if (player.autoLeave) {
                     player.destroy();
                     this._manager.emit("autoLeaved", player, track);
                 }

@@ -15,7 +15,6 @@ class MoonlinkPlayer {
     paused;
     loop;
     volume;
-    shuffled;
     ping;
     queue;
     current;
@@ -34,7 +33,6 @@ class MoonlinkPlayer {
         this.paused = data.paused || false;
         this.loop = data.loop || 0;
         this.volume = data.volume || 80;
-        this.shuffled = data.shuffled || false;
         this.ping = data.ping || 0;
         this.queue = new (index_1.Structure.get("MoonlinkQueue"))(this.manager, this.guildId);
         this.current = null;
@@ -236,15 +234,6 @@ class MoonlinkPlayer {
             await this.play(data);
             return true;
         }
-        if (this.queue.size && this.data.shuffled) {
-            let currentQueue = this.queue.all;
-            const randomIndex = Math.floor(Math.random() * currentQueue.length);
-            const shuffledTrack = currentQueue.splice(randomIndex, 1)[0];
-            currentQueue.unshift(shuffledTrack);
-            this.queue.setQueue(currentQueue);
-            this.play();
-            return;
-        }
         if (this.queue.size) {
             this.play();
             return false;
@@ -312,13 +301,11 @@ class MoonlinkPlayer {
         });
         return position;
     }
-    shuffle(mode) {
+    shuffle() {
         if (!this.queue.size) {
-            throw new Error(`@Moonlink(Player) - The "shuffle" method doesn't work if there are no tracks in the queue`);
+            throw new Error("@Moonlink(Player)the one that is empty so that the shuffle can be performed");
         }
-        mode ?? (mode = !this.shuffled);
-        this.shuffled = mode;
-        return mode;
+        return this.queue.shuffle();
     }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;
