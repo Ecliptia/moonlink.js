@@ -170,12 +170,10 @@ export class MoonlinkNode {
         };
         if (this.resume)
             headers["Session-Id"] =
-                this.db.get(`sessionId.${this.identifier ?? this.host}`) ??
+                this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`) ??
                 null;
-        console.log(
-            headers,
-            this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`)
-        );
+        
+        
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
@@ -301,7 +299,9 @@ export class MoonlinkNode {
                 this.sessionId = payload.sessionId;
                 this.resume
                     ? this.db.set(
-                          `sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`,
+                          `sessionId.${
+                              this.identifier ?? this.host.replace(/\./g, "-")
+                          }`,
                           this.sessionId
                       )
                     : null;
