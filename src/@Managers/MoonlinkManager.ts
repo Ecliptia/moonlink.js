@@ -32,14 +32,57 @@ export interface MoonlinkEvents {
     trackStuck: (player: MoonlinkPlayer, track: any) => void;
     trackError: (player: MoonlinkPlayer, track: any) => void;
     queueEnd: (player: MoonlinkPlayer, track?: any) => void;
+    playerConnected: (player: MoonlinkPlayer) => void;
     playerCreated: (guildId: string) => void;
-    playerDisconnect: (player: MoonlinkPlayer) => void;
+    playerPaused: (player: MoonlinkPlayer) => void;
+    playerRestarted: (player: MoonlinkPlayer) => void;
     playerResume: (player: MoonlinkPlayer) => void;
+    playerStopped: (player: MoonlinkPlayer, current: MoonlinkTrack) => void;
+    playerSetVoiceChannel: (
+        player: MoonlinkPlayer,
+        oldChannel: string,
+        newChannel: string
+    ) => void;
+    playerAutoPlayTriggered: (player: MoonlinkPlayer, mode: boolean) => void;
+    playerAutoLeaveTriggered: (player: MoonlinkPlayer, mode: boolean) => void;
+    playerSetTextChannel: (
+        player: MoonlinkPlayer,
+        oldChannel: string,
+        newChannel: string
+    ) => void;
+    playerVolumeChanged: (
+        player: MoonlinkPlayer,
+        oldVolume: number,
+        newVolume: number
+    ) => void;
+    playerSkipped: (
+        player: MoonlinkPlayer,
+        oldCurrent: MoonlinkTrack,
+        newCurrent: MoonlinkTrack
+    ) => void;
+    playerSeeking: (
+        player: MoonlinkPlayer,
+        oldPosition: number,
+        newPosition: number
+    ) => void;
+    playerLoopSet: (
+        player: MoonlinkPlayer,
+        oldMode: number,
+        mode: number
+    ) => void;
+    playerShuffled: (
+        player: MoonlinkPlayer,
+        oldQueue: unknown[],
+        newQueue: MoonlinkTrack[],
+        status: boolean
+    ) => void;
     playerMove: (
         player: MoonlinkPlayer,
         newVoiceChannel: string,
         oldVoiceChannel: string
     ) => void;
+    playerDisconnect: (player: MoonlinkPlayer) => void;
+    playerDestroyed: (guildId: string) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 

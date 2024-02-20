@@ -334,10 +334,6 @@ export class MoonlinkNode {
                             await this._manager.players.attemptConnection(
                                 obj[player].guildId
                             );
-                            this._manager.emit(
-                                "playerResume",
-                                this._manager.players.get(obj[player].guildId)
-                            );
                             this._manager.players
                                 .get(obj[player].guildId)
                                 .restart();

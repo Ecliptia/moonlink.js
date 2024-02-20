@@ -225,7 +225,6 @@ class MoonlinkNode {
                     for (const player of players) {
                         if (obj[player].node == this) {
                             await this._manager.players.attemptConnection(obj[player].guildId);
-                            this._manager.emit("playerResume", this._manager.players.get(obj[player].guildId));
                             this._manager.players
                                 .get(obj[player].guildId)
                                 .restart();

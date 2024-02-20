@@ -33,6 +33,8 @@ class PlayerManager {
         this._manager.emit("playerMove", this.cache[guildId], newChannelId, oldChannelId);
         this._manager.emit("debug", `@Moonlink(PlayerManager) - a player(${guildId}) was moved channel, resolving information`);
         this.cache[guildId].voiceChannel = newChannelId;
+        if (this._manager.options.resume)
+            this.backup(guildId);
     }
     updateVoiceStates(guildId, update) {
         this.voices[guildId] = {
@@ -119,6 +121,25 @@ class PlayerManager {
     }
     get all() {
         return this.cache ?? null;
+    }
+    backup(guildId) {
+        const queue = this.cache[guildId].queue;
+        const existingData = queue.db.get(`players.${guildId}`) || {};
+        if (this.cache[guildId].voiceChannel &&
+            this.cache[guildId].voiceChannel !==
+                (existingData.voiceChannel && existingData.voiceChannel)) {
+            existingData.voiceChannel = this.cache[guildId].voiceChannel;
+        }
+        if (this.cache[guildId].textChannel &&
+            this.cache[guildId].textChannel !==
+                (existingData.textChannel && existingData.textChannel)) {
+            existingData.textChannel = this.cache[guildId].textChannel;
+        }
+        if (existingData !==
+            (queue.db.get(`players.${guildId}`) || {})) {
+            queue.db.set(`players.${guildId}`, existingData);
+        }
+        return true;
     }
     delete(guildId) {
         delete this.cache[guildId];
