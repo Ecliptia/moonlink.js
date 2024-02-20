@@ -195,7 +195,7 @@ We would like to express our gratitude to the amazing individuals who contribute
 
 5. **Suryansh** - Second contributor and helped discover bugs 🌷
 
--   Nah, ItzGG, SuperPlayerBot, ddemile, Tasty-Kiwi, rrm, WilsontheWolf, Aertic, 'Forster, Fireball, Ghos't, loulou310 - Xotak
+Other contributors: Nah, ItzGG, SuperPlayerBot, ddemile, Tasty-Kiwi, rrm, WilsontheWolf, Aertic, 'Forster, Fireball, Ghos't, loulou310 - Xotak
 
 We sincerely thank all the contributors mentioned above and everyone who contributed to this project in any way. Your support is truly appreciated. 🙏
 
