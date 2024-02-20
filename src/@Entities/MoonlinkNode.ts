@@ -169,10 +169,13 @@ export class MoonlinkNode {
             "Client-Name": this._manager.options.clientName
         };
         if (this.resume)
-            headers["Session-Id"] = this.db.get("sessionId")
-                ? this.db.get("sessionId")
-                : "";
-
+            headers["Session-Id"] =
+                this.db.get(`sessionId.${this.identifier ?? this.host}`) ??
+                null;
+        console.log(
+            headers,
+            this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`)
+        );
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
@@ -251,7 +254,7 @@ export class MoonlinkNode {
                 this._manager.emit(
                     "debug",
                     `@Moonlink(Node) - we are trying to reconnect node ${
-                        this.identifier ? this.identifier : this.host
+                        this.identifier ?? this.host
                     }, attempted number ${this.reconnectAttempts}
                 `
                 );
@@ -296,7 +299,12 @@ export class MoonlinkNode {
         switch (payload.op) {
             case "ready":
                 this.sessionId = payload.sessionId;
-                this.resume ? this.db.set("sessionId", this.sessionId) : null;
+                this.resume
+                    ? this.db.set(
+                          `sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`,
+                          this.sessionId
+                      )
+                    : null;
                 this.resumed = payload.resumed;
                 this._manager.nodes.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
@@ -310,10 +318,10 @@ export class MoonlinkNode {
                         this.resumed ? ` session was resumed, ` : ``
                     } session is currently ${this.sessionId}`
                 );
-                if (this.resume && this.resumeStatus) {
+                if (this.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
-                            resuming: this.resumeStatus,
+                            resuming: this.resume,
                             timeout: this.resumeTimeout
                         }
                     });

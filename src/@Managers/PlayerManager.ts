@@ -61,7 +61,7 @@ export class PlayerManager {
             `@Moonlink(PlayerManager) - a player(${guildId}) was moved channel, resolving information`
         );
         this.cache[guildId].voiceChannel = newChannelId;
-        if (this._manager.options.resume) this.backup(guildId);
+        if (this._manager.options.resume) this.backup(this.cache[guildId]);
     }
 
     public updateVoiceStates(guildId: string, update: any): void {
@@ -187,34 +187,31 @@ export class PlayerManager {
     public get all(): Record<string, any> | null {
         return this.cache ?? null;
     }
-    public backup(guildId): boolean {
-        const queue = this.cache[guildId].queue;
+    public backup(player): boolean {
+        const db = Structure.db;
+        let { guildId } = player;
         const existingData =
-            queue.db.get<PreviousInfosPlayer>(`players.${guildId}`) || {};
-
+            db.get<PreviousInfosPlayer>(`players.${guildId}`) || {};
         if (
-            this.cache[guildId].voiceChannel &&
-            this.cache[guildId].voiceChannel !==
+            player.voiceChannel &&
+            player.voiceChannel !==
                 (existingData.voiceChannel && existingData.voiceChannel)
         ) {
-            existingData.voiceChannel = this.cache[guildId].voiceChannel;
+            existingData.voiceChannel = player.voiceChannel;
         }
 
         if (
-            this.cache[guildId].textChannel &&
-            this.cache[guildId].textChannel !==
+            player.textChannel &&
+            player.textChannel !==
                 (existingData.textChannel && existingData.textChannel)
         ) {
-            existingData.textChannel = this.cache[guildId].textChannel;
+            existingData.textChannel = player.textChannel;
         }
         if (
             existingData !==
-            (queue.db.get<PreviousInfosPlayer>(`players.${guildId}`) || {})
+            (db.get<PreviousInfosPlayer>(`players.${guildId}`) || {})
         ) {
-            queue.db.set<PreviousInfosPlayer>(
-                `players.${guildId}`,
-                existingData
-            );
+            db.set<PreviousInfosPlayer>(`players.${guildId}`, existingData);
         }
         return true;
     }
