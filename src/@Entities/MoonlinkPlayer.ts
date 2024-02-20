@@ -5,7 +5,7 @@ import {
     MoonlinkTrack,
     Structure
 } from "../../index";
-import { IPlayerData, connectOptions, PreviousInfosPlayer } from "../@Typings";
+import { IPlayerData, connectOptions} from "../@Typings";
 export class MoonlinkPlayer {
     public manager: MoonlinkManager = Structure.manager;
     public guildId: string;
@@ -304,8 +304,8 @@ export class MoonlinkPlayer {
     public async resume(): Promise<boolean> {
         if (this.playing) return true;
         await this.updatePlaybackStatus(false);
-        return true;
         this.manager.emit("playerResume", this);
+        return true;
     }
 
     /**
