@@ -14,5 +14,6 @@ export declare class PlayerManager {
     get(guildId: string): MoonlinkPlayer | null;
     create(data: createOptions): MoonlinkPlayer;
     get all(): Record<string, any> | null;
+    backup(guildId: any): boolean;
     delete(guildId: any): void;
 }

@@ -39,22 +39,8 @@ class MoonlinkPlayer {
         this.previous = [];
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
-        const existingData = this.queue.db.get(`players.${this.guildId}`) ||
-            {};
-        if (this.voiceChannel &&
-            this.voiceChannel !==
-                (existingData.voiceChannel && existingData.voiceChannel)) {
-            existingData.voiceChannel = this.voiceChannel;
-        }
-        if (this.textChannel &&
-            this.textChannel !==
-                (existingData.textChannel && existingData.textChannel)) {
-            existingData.textChannel = this.textChannel;
-        }
-        if (existingData !==
-            (this.queue.db.get(`players.${this.guildId}`) || {})) {
-            this.queue.db.set(`players.${this.guildId}`, existingData);
-        }
+        if (this.manager.options.resume)
+            this.manager.players.backup(this.guildId);
     }
     set(key, value) {
         this.data[key] = value;
@@ -69,7 +55,10 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('@Moonlink(Player) - option "channelId" is different from a string');
         }
+        this.manager.emit("playerSetTextChannel", this, this.textChannel, channelId);
         this.textChannel = channelId;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this.guildId);
         return true;
     }
     setVoiceChannel(channelId) {
@@ -79,7 +68,10 @@ class MoonlinkPlayer {
         if (typeof channelId !== "string") {
             throw new Error('@Moonlink(Player) - option "channelId" is different from a string');
         }
+        this.manager.emit("playerSetVoiceChannel", this, this.voiceChannel, channelId);
         this.voiceChannel = channelId;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this.guildId);
         return true;
     }
     setAutoLeave(mode) {
@@ -88,6 +80,7 @@ class MoonlinkPlayer {
         }
         mode ? mode : (mode = !this.autoLeave);
         this.autoLeave = mode;
+        this.manager.emit("playerAutoLeaveTriggered", this, mode);
         return mode;
     }
     setAutoPlay(mode) {
@@ -95,6 +88,7 @@ class MoonlinkPlayer {
             throw new Error('@Moonlink(Player) - "mode" option is empty or different from a boolean');
         }
         this.autoPlay = mode;
+        this.manager.emit("playerAutoPlayTriggered", this, mode);
         return mode;
     }
     connect(options) {
@@ -110,6 +104,7 @@ class MoonlinkPlayer {
             }
         }));
         this.connected = true;
+        this.manager.emit("playerConnected", this);
         return true;
     }
     disconnect() {
@@ -148,6 +143,7 @@ class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        this.manager.emit("playerRestarted", this);
     }
     async play(track) {
         if (!track && !this.queue.size)
@@ -191,6 +187,7 @@ class MoonlinkPlayer {
         if (this.paused)
             return true;
         await this.updatePlaybackStatus(true);
+        this.manager.emit("playerPaused", this);
         return true;
     }
     async resume() {
@@ -198,6 +195,7 @@ class MoonlinkPlayer {
             return true;
         await this.updatePlaybackStatus(false);
         return true;
+        this.manager.emit("playerResume", this);
     }
     async updatePlaybackStatus(paused) {
         await this.node.rest.update({
@@ -216,6 +214,7 @@ class MoonlinkPlayer {
                 }
             });
         }
+        this.manager.emit("playerStopped", this, this.current);
         this.manager.options?.destroyPlayersStopped && destroy
             ? this.destroy()
             : this.queue.clear();
@@ -229,12 +228,14 @@ class MoonlinkPlayer {
                 throw new Error(`@Moonlink(Player) - the indicated position does not exist, make security in your code to avoid errors`);
             }
             let data = queue.splice(position - 1, 1)[0];
+            this.manager.emit("playerSkipped", this, this.current, data);
             this.current = data;
             this.queue.setQueue(queue);
             await this.play(data);
             return true;
         }
         if (this.queue.size) {
+            this.manager.emit("playerSkipped", this, this.current, this.queue.all[0]);
             this.play();
             return false;
         }
@@ -254,6 +255,7 @@ class MoonlinkPlayer {
             guildId: this.guildId,
             data: { volume: percent }
         });
+        this.manager.emit("playerVolumeChanged", this, this.volume, percent);
         this.volume = percent;
         return percent;
     }
@@ -270,6 +272,7 @@ class MoonlinkPlayer {
             (mode !== null && (mode < 0 || mode > 2))) {
             throw new Error('@Moonlink(Player) - the option "mode" is different from a number and string or the option does not exist');
         }
+        this.manager.emit("playerLoopSet", this, this.loop, mode);
         this.loop = mode;
         return mode;
     }
@@ -280,6 +283,7 @@ class MoonlinkPlayer {
         this.queue.clear();
         this.manager.players.delete(this.guildId);
         this.manager.emit("debug", "@Moonlink(Player) - Destroyed player " + this.guildId);
+        this.manager.emit("playerDestroyed", this.guildId);
         return true;
     }
     validateNumberParam(param, paramName) {
@@ -295,6 +299,7 @@ class MoonlinkPlayer {
         if (!this.current.isSeekable && this.current.isStream) {
             throw new Error(`@Moonlink(Player) - seek function cannot be applied on live video or cannot be applied in "isSeekable"`);
         }
+        this.manager.emit("playerSeeking", this, this.current.position, position);
         await this.node.rest.update({
             guildId: this.guildId,
             data: { position }
@@ -305,7 +310,10 @@ class MoonlinkPlayer {
         if (!this.queue.size) {
             throw new Error("@Moonlink(Player)the one that is empty so that the shuffle can be performed");
         }
-        return this.queue.shuffle();
+        let oldQueue = Array.from(this.queue.all);
+        let shuffleStatus = this.queue.shuffle();
+        this.manager.emit("playerShuffled", this, oldQueue, this.queue.all, shuffleStatus);
+        return shuffleStatus;
     }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;
