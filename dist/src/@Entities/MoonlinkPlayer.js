@@ -40,7 +40,7 @@ class MoonlinkPlayer {
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
         if (this.manager.options.resume)
-            this.manager.players.backup(this.guildId);
+            this.manager.players.backup(this);
     }
     set(key, value) {
         this.data[key] = value;
@@ -58,7 +58,7 @@ class MoonlinkPlayer {
         this.manager.emit("playerSetTextChannel", this, this.textChannel, channelId);
         this.textChannel = channelId;
         if (this.manager.options.resume)
-            this.manager.players.backup(this.guildId);
+            this.manager.players.backup(this);
         return true;
     }
     setVoiceChannel(channelId) {
@@ -71,7 +71,7 @@ class MoonlinkPlayer {
         this.manager.emit("playerSetVoiceChannel", this, this.voiceChannel, channelId);
         this.voiceChannel = channelId;
         if (this.manager.options.resume)
-            this.manager.players.backup(this.guildId);
+            this.manager.players.backup(this);
         return true;
     }
     setAutoLeave(mode) {
