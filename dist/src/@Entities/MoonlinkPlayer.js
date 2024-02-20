@@ -194,8 +194,8 @@ class MoonlinkPlayer {
         if (this.playing)
             return true;
         await this.updatePlaybackStatus(false);
-        return true;
         this.manager.emit("playerResume", this);
+        return true;
     }
     async updatePlaybackStatus(paused) {
         await this.node.rest.update({
