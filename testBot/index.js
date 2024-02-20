@@ -46,17 +46,17 @@ for (const folder of commandFolders) {
 }
 
 client.moon = new MoonlinkManager(
-  [/*{
+  [{
     host: "lavalink.jirayu.pw",
     port: 2333,
     password: "youshallnotpass",
     secure: false
-  }, */{
+  }/*, {
     host: "localhost",
     port: 2333,
     secure: false,
     identifier: "LAVALINK"
-  }/*, {
+  }, /*{
     host: "65.108.101.89",
     port: 17958,
     secure: false,
@@ -87,6 +87,7 @@ client.moon = new MoonlinkManager(
     //http2: true,
     movePlayersToNextNode: true,
     autoResume: true,
+    resume: true,
     clientName: "Moonlink/Blio",
     WebSocketDebug: true,
     plugins: [new Lyrics()],
