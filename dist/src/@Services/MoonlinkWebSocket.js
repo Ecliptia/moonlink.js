@@ -13,7 +13,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     options;
     socket;
     established;
-    debug = false;
     closing = false;
     constructor(uri, options) {
         super();
@@ -34,9 +33,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             process.versions.node.match(/20\.[0-2]\.0/)) {
             require("net").setDefaultAutoSelectFamily(false);
         }
-        this.options.debug !== undefined && this.options.debug == true
-            ? (this.debug = true)
-            : null;
         this.connect();
     }
     buildRequestOptions() {
@@ -82,15 +78,10 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                 socket.destroy();
                 return;
             }
-            if (head && head.length > 0) {
-                if (this.debug)
-                    console.log(`@Moonlink(WebSocket) - head had pending payload, and will be resolved ${head.toString("utf8")}`);
+            if (head && head.length > 0)
                 socket.unshift(head);
-            }
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-                if (this.debug)
-                    console.log("@Moonlink(WebSocket) -", frame, frame.payload.toString("utf-8"));
                 switch (frame.opcode) {
                     case 1: {
                         this.emit("message", frame.payload.toString("utf-8"));
