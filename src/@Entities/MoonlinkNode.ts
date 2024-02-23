@@ -54,13 +54,7 @@ export class MoonlinkNode {
         this.host = node.host;
         this.identifier = node.identifier || null;
         this.password = node.password ? node.password : "youshallnotpass";
-        this.port = node.port
-            ? node.port
-            : node.secure
-            ? node.secure == true
-                ? 443
-                : 80
-            : null;
+        this.port = node.port ?? node.secure == true ? 443 : 80;
         this.secure = node.secure || false;
         this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
@@ -108,14 +102,14 @@ export class MoonlinkNode {
     public check(node: INode): void | never {
         if (typeof node.host !== "string" && typeof node.host !== "undefined")
             throw new Error(
-                '[ @Moonlink/Node ]: "host" option is not configured correctly'
+                '@Moonlink(Nodes) - "host" option is not configured correctly'
             );
         if (
             typeof node.password !== "string" &&
             typeof node.password !== "undefined"
         )
             throw new Error(
-                '[ @Moonlink/Node ]: the option "password" is not set correctly'
+                '@Moonlink(Nodes) - the option "password" is not set correctly'
             );
         if (
             (node.port && typeof node.port !== "number") ||
@@ -123,14 +117,14 @@ export class MoonlinkNode {
             node.port < 0
         )
             throw new Error(
-                '[ @Moonlink/Node ]: the "port" option is not set correctly'
+                '@Moonlink(Nodes) - the "port" option is not set correctly'
             );
         if (
             typeof node.retryAmount !== "undefined" &&
             typeof node.retryAmount !== "number"
         )
             throw new Error(
-                '[ @Moonlink/Node ]: the "retryAmount" option is not set correctly'
+                '@Moonlink(Nodes) - the "retryAmount" option is not set correctly'
             );
 
         if (
@@ -138,7 +132,7 @@ export class MoonlinkNode {
             typeof node.retryDelay !== "number"
         )
             throw new Error(
-                '[ @Moonlink/Node ]: the "retryDelay" option is not set correctly'
+                '@Moonlink(Nodes) - the "retryDelay" option is not set correctly'
             );
     }
 
@@ -170,10 +164,12 @@ export class MoonlinkNode {
         };
         if (this.resume)
             headers["Session-Id"] =
-                this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`) ??
-                null;
-        
-        
+                this.db.get(
+                    `sessionId.${
+                        this.identifier ?? this.host.replace(/\./g, "-")
+                    }`
+                ) ?? null;
+
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
@@ -188,60 +184,25 @@ export class MoonlinkNode {
         this._manager.emit(
             "debug",
             `@Moonlink(Node) - The Node ${
-                this.identifier ? this.identifier : this.host
+                this.identifier ?? this.host
             } has been connected successfully`
         );
         this._manager.emit("nodeCreate", this);
 
         this.state = State.CONNECTED;
     }
-    private async movePlayersToNextNode(): Promise<void> {
-        if (!this._manager.options.movePlayersToNextNode) return;
-        const state = this.state;
-        this.state = State.MOVING;
-        try {
-            let obj = this._manager.players.all || [];
-            const players = Object.keys(obj);
-            for (const player of players) {
-                if (obj[player].node == this) {
-                    let nextNode =
-                        this._manager.nodes.sortByUsage("players")[0];
-                    let playerClass = this._manager.players.get(
-                        obj[player].guildId
-                    );
-                    this._manager.emit(
-                        "debug",
-                        `@Moonlink(Node) - Moving player ${
-                            obj[player].guildId
-                        } to ${
-                            nextNode.identifier
-                                ? nextNode.identifier
-                                : nextNode.host
-                        }`
-                    );
-                    playerClass.node = nextNode;
-                    await playerClass.restart();
-                }
-            }
-            this.state = state;
-        } catch (err) {
-            throw new Error(
-                "@Moonlink(Node) - not to other connected lavalinks " + err
-            );
-        }
-    }
+
     private reconnect(): void {
         if (this.reconnectAttempts >= this.retryAmount) {
             this._manager.emit(
                 "debug",
                 `@Moonlink(Node) - Node ${
-                    this.identifier ? this.identifier : this.host
+                    this.identifier ?? this.host
                 } was destroyed due to inactivity, attempts to reconnect were failed`
             );
             this._manager.emit("nodeDestroy", this);
             this.socket.close(1000, "destroy");
             this.socket.removeAllListeners();
-            this.movePlayersToNextNode();
         } else {
             this.reconnectTimeout = setTimeout(() => {
                 this.socket.removeAllListeners();
@@ -251,7 +212,7 @@ export class MoonlinkNode {
                 this.connect();
                 this._manager.emit(
                     "debug",
-                    `@Moonlink(Node) - we are trying to reconnect node ${
+                    `@Moonlink(Node) - We are trying to reconnect node ${
                         this.identifier ?? this.host
                     }, attempted number ${this.reconnectAttempts}
                 `
@@ -265,25 +226,10 @@ export class MoonlinkNode {
         this._manager.emit(
             "debug",
             `@Moonlink(Node) - The node connection ${
-                this.identifier ? this.identifier : this.host
+                this.identifier ?? this.host
             } has been closed`
         );
         this._manager.emit("nodeClose", this, code, reason);
-        if (
-            this.state !== State.DISCONNECTED ||
-            this.state !== State.RECONNECTING
-        ) {
-            let obj = this._manager.players.all || [];
-            if (obj.length !== 0) {
-                const players = Object.keys(obj);
-                for (const player of players) {
-                    if (obj[player].node == this) {
-                        this._manager.players.get(obj[player].guildId).playing =
-                            false;
-                    }
-                }
-            }
-        }
         this.state = State.DISCONNECTED;
     }
     protected async message(data: Buffer | string): Promise<void> {
@@ -306,7 +252,6 @@ export class MoonlinkNode {
                       )
                     : null;
                 this.resumed = payload.resumed;
-                this._manager.nodes.map.set("sessionId", payload.sessionId);
                 this.rest.setSessionId(this.sessionId);
                 if (!this._manager.initiated && !this.resumed) {
                     this.db.delete("queue");
@@ -327,55 +272,12 @@ export class MoonlinkNode {
                     });
                     this._manager.emit(
                         "debug",
-                        `[ @Moonlink/Node ]: Resuming configured on Lavalink`
+                        `@Moonlink(Nodes) - Resuming configured`
                     );
                 }
 
                 this.version = await this.rest.getVersion();
                 this.info = await this.rest.getInfo();
-                if (this._manager.options.autoResume) {
-                    this.state = State.AUTORESUMING;
-                    let obj = this._manager.players.all || [];
-                    const players = Object.keys(obj);
-                    for (const player of players) {
-                        if (obj[player].node == this) {
-                            await this._manager.players.attemptConnection(
-                                obj[player].guildId
-                            );
-                            this._manager.players
-                                .get(obj[player].guildId)
-                                .restart();
-                        }
-                    }
-                }
-                if (this.resumed) {
-                    this.state = State.RESUMING;
-                    let players: any = await this.rest.get(
-                        `sessions/${this.sessionId}/players`
-                    );
-                    for (const player of players) {
-                        let previousInfosPlayer: PreviousInfosPlayer =
-                            this.db.get<PreviousInfosPlayer>(
-                                `players.${player.guildId}`
-                            ) || {};
-                        let playerClass = this._manager.players.create({
-                            guildId: player.guildId,
-                            voiceChannel: previousInfosPlayer.voiceChannel,
-                            textChannel: previousInfosPlayer.textChannel,
-                            node: this.host
-                        });
-                        playerClass.connect({
-                            setDeaf: true,
-                            setMute: false
-                        });
-                        playerClass.playing = true;
-                        playerClass.connected = true;
-                        let track = new (Structure.get("MoonlinkTrack"))(
-                            player.track
-                        );
-                        playerClass.current = track;
-                    }
-                }
                 this.state = State.READY;
                 break;
             case "stats":
@@ -385,14 +287,9 @@ export class MoonlinkNode {
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
                 player.ping = payload.state.ping;
-                if (player.current instanceof MoonlinkTrack) {
-                    player.current
-                        .setPosition(payload.state.position)
-                        .setTime(payload.state.time);
-                } else if (player.current) {
-                    player.current.position = payload.state.position;
-                    player.current.time = payload.state.time;
-                }
+                player.current.position = payload.state.position;
+                player.current.time = payload.state.time;
+
                 break;
             case "event":
                 this.handleEvent(payload);
@@ -402,7 +299,7 @@ export class MoonlinkNode {
                     "nodeError",
                     this,
                     new Error(
-                        `[ @Moonlink/Nodes ]: Unexpected op "${payload.op}" with data: ${payload}`
+                        `@Moonlink(Nodes) - Unexpected op "${payload.op}" with data: ${payload}`
                     )
                 );
         }
@@ -412,77 +309,74 @@ export class MoonlinkNode {
         this._manager.emit("nodeError", this, error);
         this._manager.emit(
             "debug",
-            "[ @Moonlink/Nodes ]: An error occurred in one of the lavalink(s) server connection(s): " +
+            "@Moonlink(Nodes) - An error occurred in one of the lavalink(s) server connection(s): " +
                 error
         );
     }
     protected async handleEvent(payload: any): Promise<any> {
         if (!payload) return;
         if (!payload.guildId) return;
-        if (!this._manager.players.has(payload.guildId)) return;
         let player: MoonlinkPlayer = this._manager.players.get(payload.guildId);
+        if (!player) return;
+
         switch (payload.type) {
             case "TrackStartEvent": {
-                let current = player.current;
-                if (!current) return;
+                if (player.current) {
+                    player.current = new MoonlinkTrack(
+                        await this.rest.decodeTrack(payload.track)
+                    );
+                }
                 player.playing = true;
                 player.paused = false;
-                this._manager.emit("trackStart", player, current);
+                this._manager.emit("trackStart", player, player.current);
                 break;
             }
             case "TrackEndEvent": {
-                let track = player.current;
-                let queue: string[] = player.queue.all;
-                player.playing = false;
-
                 if (this._manager.options.previousTracksInArray)
                     (player.previous as MoonlinkTrack[]).push(
                         track as MoonlinkTrack
                     );
-                else player.previous = track;
+                else player.previous = player.current;
+                player.playing = false;
 
-                if (["loadFailed", "cleanup"].includes(payload.reason)) {
-                    if (!queue) {
-                        player.queue.clear();
-                        return this._manager.emit("queueEnd", player, track);
-                    }
-                    player.play();
-                    return;
-                }
                 if (payload.reason === "replaced") {
-                    this._manager.emit("trackEnd", player, track, payload);
+                    this._manager.emit(
+                        "trackEnd",
+                        player,
+                        player.current,
+                        payload
+                    );
                     return;
                 }
-                if (track && player.loop) {
+                if (player.current && [1, 2].includes(player.loop)) {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: { track: { encoded: track.encoded } }
+                            data: { track: { encoded: player.current.encoded } }
                         });
                         return;
                     }
                     if (player.loop == 2) {
                         player.queue.add(player.current as MoonlinkTrack);
-                        if (!queue || queue.length === 0)
+                        if (!player.queue.all || !player.queue.size)
                             return this._manager.emit(
                                 "trackEnd",
                                 player,
-                                track,
+                                player.current,
                                 payload
                             );
 
                         player.play();
                         return;
-                    } else {
-                        this._manager.emit("trackEnd", player, track);
-                        this._manager.emit(
-                            "debug",
-                            "@Manager(Nodes) - invalid loop value will be ignored!"
-                        );
                     }
                 }
                 if (player.queue.size) {
-                    this._manager.emit("trackEnd", player, track);
+                    this._manager.emit(
+                        "trackEnd",
+                        player,
+                        player.current,
+                        payload
+                    );
                     player.play();
                     return;
                 }
@@ -491,8 +385,9 @@ export class MoonlinkNode {
                     player.autoPlay === true
                 ) {
                     if (payload.reason == "stopped") return;
-                    let uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
-                    let req: SearchResult = await this._manager.search(uri);
+                    let req: SearchResult = await this._manager.search(
+                        `https://www.youtube.com/watch?v=${player.curren.identifier}&list=RD${player.current.identifier}`
+                    );
                     if (
                         !req ||
                         !req.tracks ||
@@ -512,16 +407,15 @@ export class MoonlinkNode {
                 /* Logic created by PiscesXD */
                 if (player.autoLeave) {
                     player.destroy();
-                    this._manager.emit("autoLeaved", player, track);
+                    this._manager.emit("autoLeaved", player, player.current);
                 }
                 if (!player.queue.size) {
                     this._manager.emit(
                         "debug",
-                        "[ @Moonlink/Nodes ]: The queue is empty"
+                        "@Moonlink(Nodes) - The queue is empty"
                     );
                     this._manager.emit("queueEnd", player);
                     player.current = null;
-                    player.queue.clear();
                 }
                 break;
             }
@@ -538,11 +432,12 @@ export class MoonlinkNode {
             }
             case "WebSocketClosedEvent": {
                 this._manager.emit("socketClosed", player, payload);
+                //migrar pro outro node se tiver players
                 break;
             }
             default: {
                 const error = new Error(
-                    `[ @Moonlink/Nodes ] unknown event '${payload.type}'.`
+                    `@Moonlink(Nodes) - unknown event '${payload.type}'.`
                 );
                 this._manager.emit("nodeError", this, error);
             }

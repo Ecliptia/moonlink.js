@@ -105,9 +105,8 @@ class MoonlinkNode {
         };
         if (this.resume)
             headers["Session-Id"] =
-                this.db.get(`sessionId.${this.identifier ?? this.host}`) ??
+                this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`) ??
                     null;
-        console.log(headers, this.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`));
         this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -200,7 +199,7 @@ class MoonlinkNode {
             case "ready":
                 this.sessionId = payload.sessionId;
                 this.resume
-                    ? this.db.set(`sessionId.${this.identifier ?? this.host.replace(/\./g, '-')}`, this.sessionId)
+                    ? this.db.set(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`, this.sessionId)
                     : null;
                 this.resumed = payload.resumed;
                 this._manager.nodes.map.set("sessionId", payload.sessionId);
