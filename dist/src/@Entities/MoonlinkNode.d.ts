@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { INode, INodeStats } from "../@Typings";
 import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
-import { MoonlinkRestFul, MoonlinkDatabase } from "../../index";
+import { MoonlinkRestFul } from "../../index";
 export declare class MoonlinkNode {
     private _manager;
     private reconnectTimeout?;
@@ -12,32 +12,33 @@ export declare class MoonlinkNode {
     host: string;
     identifier?: string;
     password: string;
-    port: number | null;
+    port?: number;
     secure: boolean;
-    regions: string[] | null;
+    regions?: string[];
     http: string;
     rest: MoonlinkRestFul;
+    info?: Record<string, any>;
+    version?: string;
     resume?: boolean;
     resumed?: boolean;
+    autoResume?: boolean;
     resumeTimeout?: number;
     sessionId: string;
     socket: MoonlinkWebSocket | null;
-    version: any;
     state: string;
-    stats: INodeStats;
-    info: any;
+    stats: INodeStats | Record<string, any>;
     calls: number;
-    db: MoonlinkDatabase;
     constructor(node: INode);
     get address(): string;
-    check(node: INode): void | never;
+    check(node: INode): void;
     request(endpoint: string, params: any): Promise<object>;
     connect(): Promise<any>;
     open(): void;
-    private movePlayersToNextNode;
     private reconnect;
     protected close(code: number, reason: any): void;
-    protected message(data: Buffer | string): Promise<void>;
     protected error(error: Error): void;
+    protected message(data: Buffer | string): Promise<void>;
     protected handleEvent(payload: any): Promise<any>;
+    private movePlayers;
+    private get getAllPlayers();
 }
