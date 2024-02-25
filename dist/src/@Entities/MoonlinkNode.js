@@ -173,7 +173,6 @@ class MoonlinkNode {
                 }
                 if (this.resumed) {
                     const resumedPlayers = await this.rest.get(`sessions/${this.sessionId}/players`);
-                    console.log(resumedPlayers);
                     for (const resumedPlayer of resumedPlayers) {
                         const previousInfosPlayer = index_1.Structure.db.get(`players.${resumedPlayer.guildId}`) || {};
                         const player = this._manager.players.create({
@@ -195,7 +194,6 @@ class MoonlinkNode {
             case "stats":
                 delete payload.op;
                 this.stats = { ...payload };
-                console.log(payload);
                 break;
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
