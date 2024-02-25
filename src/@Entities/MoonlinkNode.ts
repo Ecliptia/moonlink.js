@@ -134,20 +134,17 @@ export class MoonlinkNode {
     public async connect(): Promise<any> {
         if (this.state == "CONNECTED" || this.state == "READY") return;
         this.state = "CONNECTING";
-
+        if (Object.keys(Structure.db.data).length == 0)
+            await Structure.db.fetch();
         let headers = {
             Authorization: this.password,
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
         };
         if (this.resume)
-            headers["Session-Id"] =
-                Structure.db.get(
-                    `sessionId.${
-                        this.identifier ?? this.host.replace(/\./g, "-")
-                    }`
-                ) ?? null;
-
+            headers["Session-Id"] = Structure.db.get(
+                `sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`
+            );
         this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
@@ -260,6 +257,12 @@ export class MoonlinkNode {
                         this.resumed ? ` session was resumed,` : ``
                     } session is currently ${this.sessionId}`
                 );
+                this._manager.emit(
+                    "nodeReady",
+                    this,
+                    this.sessionId,
+                    this.resumed
+                );
                 if (this.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
@@ -277,6 +280,7 @@ export class MoonlinkNode {
                 this.info = await this.rest.getInfo();
                 if (this.autoResume) {
                     let resumePlayers = this.getAllPlayers;
+
                     for (const resumePlayer of resumePlayers) {
                         resumePlayer.restart();
                     }
@@ -285,7 +289,7 @@ export class MoonlinkNode {
                     const resumedPlayers: any[] = await this.rest.get(
                         `sessions/${this.sessionId}/players`
                     );
-
+                    console.log(resumedPlayers);
                     for (const resumedPlayer of resumedPlayers) {
                         const previousInfosPlayer: PreviousInfosPlayer =
                             Structure.db.get<PreviousInfosPlayer>(
@@ -303,7 +307,9 @@ export class MoonlinkNode {
                             resumedPlayer.track
                         );
                         player.current = track;
+                        player.restart();
                     }
+                    this._manager.emit("nodeResumed", this, resumedPlayers);
                 }
                 this.state = "READY";
                 break;

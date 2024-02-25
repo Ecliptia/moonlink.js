@@ -20,7 +20,7 @@ class MoonlinkNode {
     rest;
     info = {};
     version;
-    resume;
+    resume = index_1.Structure.manager.options?.resume;
     resumed;
     autoResume = index_1.Structure.manager.options?.autoResume;
     resumeTimeout = 30000;
@@ -38,7 +38,6 @@ class MoonlinkNode {
         this.secure = node.secure || false;
         this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
-        this.resume = this._manager.options?.resume;
         this.rest = new (index_1.Structure.get("MoonlinkRestFul"))(this);
         this.connect();
     }
@@ -70,14 +69,15 @@ class MoonlinkNode {
         if (this.state == "CONNECTED" || this.state == "READY")
             return;
         this.state = "CONNECTING";
+        if (Object.keys(index_1.Structure.db.data).length == 0)
+            await index_1.Structure.db.fetch();
         let headers = {
             Authorization: this.password,
             "User-Id": this._manager.options.clientId,
             "Client-Name": this._manager.options.clientName
         };
         if (this.resume)
-            headers["Session-Id"] =
-                index_1.Structure.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`) ?? null;
+            headers["Session-Id"] = index_1.Structure.db.get(`sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`);
         this.socket = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
         this.socket.on("close", this.close.bind(this));
@@ -152,6 +152,7 @@ class MoonlinkNode {
                     index_1.Structure.db.delete("players");
                 }
                 this._manager.emit("debug", `@Moonlink(Node) - ${this.resumed ? ` session was resumed,` : ``} session is currently ${this.sessionId}`);
+                this._manager.emit("nodeReady", this, this.sessionId, this.resumed);
                 if (this.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
@@ -171,6 +172,7 @@ class MoonlinkNode {
                 }
                 if (this.resumed) {
                     const resumedPlayers = await this.rest.get(`sessions/${this.sessionId}/players`);
+                    console.log(resumedPlayers);
                     for (const resumedPlayer of resumedPlayers) {
                         const previousInfosPlayer = index_1.Structure.db.get(`players.${resumedPlayer.guildId}`) || {};
                         const player = this._manager.players.create({
@@ -183,7 +185,9 @@ class MoonlinkNode {
                         player.connected = true;
                         const track = new (index_1.Structure.get("MoonlinkTrack"))(resumedPlayer.track);
                         player.current = track;
+                        player.restart();
                     }
+                    this._manager.emit("nodeResumed", this, resumedPlayers);
                 }
                 this.state = "READY";
                 break;

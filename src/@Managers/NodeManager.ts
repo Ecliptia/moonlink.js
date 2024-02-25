@@ -65,13 +65,14 @@ export class NodeManager {
     public get(name) {
         return this.map.get(name) ? this.map.get(name) : null;
     }
+    
     public sortByUsage(sortType: SortType): MoonlinkNode[] {
         this._manager.emit(
             "debug",
             `@Moonlink(Nodes) - A new lavalink server is being drawn, sorting the type ${sortType}`
         );
         const connectedNodes = [...this.map.values()].filter(
-            node => node.state == State.READY
+            node => node.state == "READY"
         );
         if (connectedNodes.length == 0)
             throw new TypeError(
@@ -128,15 +129,3 @@ export class NodeManager {
         );
     }
 }
-
-export const State = {
-    READY: "READY",
-    CONNECTED: "CONNECTED",
-    CONNECTING: "CONNECTING",
-    DISCONNECTING: "DISCONNECTING",
-    DISCONNECTED: "DISCONNECTED",
-    RECONNECTING: "RECONNECTING",
-    AUTORESUMING: "AUTORESUMING",
-    RESUMING: "RESUMING",
-    MOVING: "MOVING"
-};

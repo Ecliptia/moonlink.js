@@ -4,7 +4,6 @@ import {
     MoonlinkManager,
     createOptions,
     Structure,
-    State,
     PreviousInfosPlayer
 } from "../../index";
 export class PlayerManager {
@@ -74,11 +73,11 @@ export class PlayerManager {
         if (
             !this.cache[guildId] ||
             (!this.voices &&
-                !(
+                !
                     this.voices[guildId]?.token &&
-                    this.voices[guildId]?.endpoint &&
-                    this.voices[guildId]?.sessionId
-                ))
+                    !this.voices[guildId]?.endpoint &&
+                   ! this.voices[guildId]?.sessionId
+                )
         ) {
             return false;
         }
@@ -90,7 +89,7 @@ export class PlayerManager {
             if (!this.cache[guildId].voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
-                ].filter(node => node.state == State.READY);
+                ].filter(node => node.state == "READY");
                 const matchingNode = connectedNodes.find(node =>
                     node.regions.includes(voiceRegion)
                 );
