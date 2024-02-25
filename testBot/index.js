@@ -46,16 +46,19 @@ for (const folder of commandFolders) {
 }
 
 client.moon = new MoonlinkManager(
-  [/*{
+  [{
+    host: "541b2cbb-4e46-4064-b8de-53bbe5ac63dc-00-20h37tgfzow4w.kirk.replit.dev",
+    password: "maybeiwasboring", secure: true, port: 443
+  }/*{
     host: "lavalink.jirayu.pw",
     port: 2333,
     password: "youshallnotpass",
     secure: false
-  }*/ {
+  }*//* {
     host: "localhost",
     port: 2333,
     secure: false,
-    identifier: "LAVALINK"
+    identifier: "NODELINK"
   } /*{
     host: "65.108.101.89",
     port: 17958,
@@ -68,7 +71,7 @@ client.moon = new MoonlinkManager(
       port: 7784,
       password: "PasswordIsZoldy",
       secure: false,
-    }, {
+    },{
       host: "lavalink-v4.teramont.net",
       port: 443,
       password: "eHKuFcz67k4lBS64",
@@ -85,7 +88,6 @@ client.moon = new MoonlinkManager(
   }*/],
   {
     //http2: true,
-    movePlayersToNextNode: true,
     autoResume: true,
     resume: true,
     clientName: "Moonlink/Blio",

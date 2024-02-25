@@ -6,7 +6,9 @@ export interface MoonlinkEvents {
     autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
     debug: (...args: any) => void;
     nodeCreate: (node: MoonlinkNode) => void;
+    nodeReady: (node: MoonlinkNode, sessionId: string, resumed: boolean) => void;
     nodeDestroy: (node: MoonlinkNode) => void;
+    nodeResumed: (node: MoonlinkNode, players: MoonlinkEvents[]) => void;
     nodeReconnect: (node: MoonlinkNode) => void;
     nodeClose: (node: MoonlinkNode, code: number, reason: any) => void;
     nodeRaw: (node: MoonlinkNode, payload: object) => void;

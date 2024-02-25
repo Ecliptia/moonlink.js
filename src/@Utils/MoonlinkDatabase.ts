@@ -4,8 +4,8 @@ import path from "path";
 type Data = Record<string, any>;
 
 export class MoonlinkDatabase {
-    private data: Data = {};
-    private id: string;
+   public data: Data = {};
+    public id: string;
 
     constructor(clientId: string) {
         this.fetch();
@@ -24,8 +24,11 @@ export class MoonlinkDatabase {
 
     get<T>(key: string): T | undefined {
         if (!key) throw new Error('[ @Moonlink(Database) - "key" is empty');
+        if (Object.keys(this.data).length === 0) this.fetch();
 
-        return key.split(".").reduce((acc, curr) => acc?.[curr], this.data);
+        return (
+            key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? null
+        );
     }
 
     push<T>(key: string, value: T): void {
@@ -41,7 +44,7 @@ export class MoonlinkDatabase {
             );
         }
     }
-    
+
     delete(key: string): boolean {
         if (!key) throw new Error('@Moonlink(Database) - "key" is empty');
 
@@ -92,7 +95,7 @@ export class MoonlinkDatabase {
         );
     }
 
-    private fetch() {
+    fetch() {
         try {
             const directory = path.join(__dirname, "../@Datastore");
             if (!fs.existsSync(directory)) {
@@ -107,7 +110,10 @@ export class MoonlinkDatabase {
             if (err.code === "ENOENT") {
                 this.data = {};
             } else {
-                throw new Error("@Moonlink(Database) - Failed to fetch data (Error):", err);
+                throw new Error(
+                    "@Moonlink(Database) - Failed to fetch data (Error):",
+                    err
+                );
             }
         }
     }

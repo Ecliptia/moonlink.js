@@ -45,9 +45,9 @@ class PlayerManager {
     async attemptConnection(guildId) {
         if (!this.cache[guildId] ||
             (!this.voices &&
-                !(this.voices[guildId]?.token &&
-                    this.voices[guildId]?.endpoint &&
-                    this.voices[guildId]?.sessionId))) {
+                !this.voices[guildId]?.token &&
+                !this.voices[guildId]?.endpoint &&
+                !this.voices[guildId]?.sessionId)) {
             return false;
         }
         if (this._manager.options?.balancingPlayersByRegion) {
@@ -55,7 +55,7 @@ class PlayerManager {
             if (!this.cache[guildId].voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
-                ].filter(node => node.state == index_1.State.READY);
+                ].filter(node => node.state == "READY");
                 const matchingNode = connectedNodes.find(node => node.regions.includes(voiceRegion));
                 this.cache[guildId].voiceRegion = voiceRegion;
                 if (matchingNode) {
