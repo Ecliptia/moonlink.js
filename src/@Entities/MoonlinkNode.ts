@@ -12,7 +12,6 @@ import {
     MoonlinkTrack,
     MoonlinkPlayer,
     MoonlinkRestFul,
-    MoonlinkDatabase,
     Structure
 } from "../../index";
 
@@ -290,7 +289,6 @@ export class MoonlinkNode {
                     const resumedPlayers: any[] = await this.rest.get(
                         `sessions/${this.sessionId}/players`
                     );
-                    console.log(resumedPlayers);
                     for (const resumedPlayer of resumedPlayers) {
                         const previousInfosPlayer: PreviousInfosPlayer =
                             Structure.db.get<PreviousInfosPlayer>(
@@ -317,7 +315,6 @@ export class MoonlinkNode {
             case "stats":
                 delete payload.op;
                 this.stats = { ...payload };
-                console.log(payload)
                 break;
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
