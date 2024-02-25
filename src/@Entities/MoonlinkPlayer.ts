@@ -209,7 +209,6 @@ export class MoonlinkPlayer {
      * Restart the player by reconnecting and updating its state.
      */
     public async restart(): Promise<void> {
-        if (!this.current || !this.queue.size) return;
 
         this.connect({
             setDeaf: true,
@@ -221,8 +220,7 @@ export class MoonlinkPlayer {
         if (!this.current && this.queue.size) {
             this.play();
             return;
-        }
-
+        } else {
         await this.node.rest.update({
             guildId: this.guildId,
             data: {
@@ -233,6 +231,7 @@ export class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        }
         this.manager.emit("playerRestarted", this);
     }
     /**

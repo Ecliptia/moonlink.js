@@ -147,6 +147,7 @@ class MoonlinkNode {
                     : null;
                 this.resumed = payload.resumed;
                 this.rest.setSessionId(this.sessionId);
+                this.state = "READY";
                 if (!this._manager.initiated && !this.resumed) {
                     index_1.Structure.db.delete("queue");
                     index_1.Structure.db.delete("players");
@@ -185,15 +186,16 @@ class MoonlinkNode {
                         player.connected = true;
                         const track = new (index_1.Structure.get("MoonlinkTrack"))(resumedPlayer.track);
                         player.current = track;
-                        player.restart();
+                        player.current.position = resumedPlayer.state.position;
+                        await player.restart();
                     }
                     this._manager.emit("nodeResumed", this, resumedPlayers);
                 }
-                this.state = "READY";
                 break;
             case "stats":
                 delete payload.op;
                 this.stats = { ...payload };
+                console.log(payload);
                 break;
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
@@ -213,47 +215,61 @@ class MoonlinkNode {
             return;
         if (!payload.guildId)
             return;
-        let player = this._manager.players.get(payload.guildId);
-        if (!player)
+        if (!this._manager.players.has(payload.guildId))
             return;
+        let player = this._manager.players.get(payload.guildId);
         switch (payload.type) {
             case "TrackStartEvent": {
-                if (!player.current) {
-                    player.current = new index_1.MoonlinkTrack((await this.rest.decodeTrack(payload.track)));
-                }
+                let current = player.current;
+                if (!current)
+                    return;
                 player.playing = true;
                 player.paused = false;
-                this._manager.emit("trackStart", player, player.current);
+                this._manager.emit("trackStart", player, current);
                 break;
             }
             case "TrackEndEvent": {
-                if (this._manager.options.previousTracksInArray)
-                    player.previous.push(player.current);
-                else
-                    player.previous = player.current;
+                let track = player.current;
+                let queue = player.queue.all;
                 player.playing = false;
-                if (payload.reason === "replaced") {
-                    this._manager.emit("trackEnd", player, player.current, payload);
+                if (this._manager.options.previousTracksInArray)
+                    player.previous.push(track);
+                else
+                    player.previous = track;
+                if (["loadFailed", "cleanup"].includes(payload.reason)) {
+                    if (!queue) {
+                        player.queue.clear();
+                        return this._manager.emit("queueEnd", player, track);
+                    }
+                    player.play();
                     return;
                 }
-                if (player.current && [1, 2].includes(player.loop)) {
+                if (payload.reason === "replaced") {
+                    this._manager.emit("trackEnd", player, track, payload);
+                    return;
+                }
+                if (track && player.loop) {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: { track: { encoded: player.current.encoded } }
+                            data: { track: { encoded: track.encoded } }
                         });
                         return;
                     }
                     if (player.loop == 2) {
                         player.queue.add(player.current);
-                        if (!player.queue.all || !player.queue.size)
-                            return this._manager.emit("trackEnd", player, player.current, payload);
+                        if (!queue || queue.length === 0)
+                            return this._manager.emit("trackEnd", player, track, payload);
                         player.play();
                         return;
                     }
+                    else {
+                        this._manager.emit("trackEnd", player, track);
+                        this._manager.emit("debug", "@Manager(Nodes) - invalid loop value will be ignored!");
+                    }
                 }
                 if (player.queue.size) {
-                    this._manager.emit("trackEnd", player, player.current, payload);
+                    this._manager.emit("trackEnd", player, track);
                     player.play();
                     return;
                 }
@@ -261,7 +277,8 @@ class MoonlinkNode {
                     player.autoPlay === true) {
                     if (payload.reason == "stopped")
                         return;
-                    let req = await this._manager.search(`https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`);
+                    let uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
+                    let req = await this._manager.search(uri);
                     if (!req ||
                         !req.tracks ||
                         ["loadFailed", "cleanup"].includes(req.loadType))
@@ -273,12 +290,13 @@ class MoonlinkNode {
                 }
                 if (player.autoLeave) {
                     player.destroy();
-                    this._manager.emit("autoLeaved", player, player.current);
+                    this._manager.emit("autoLeaved", player, track);
                 }
                 if (!player.queue.size) {
-                    this._manager.emit("debug", "@Moonlink(Nodes) - The queue is empty");
+                    this._manager.emit("debug", "[ @Moonlink/Nodes ]: The queue is empty");
                     this._manager.emit("queueEnd", player);
                     player.current = null;
+                    player.queue.clear();
                 }
                 break;
             }
@@ -297,7 +315,7 @@ class MoonlinkNode {
                 break;
             }
             default: {
-                const error = new Error(`@Moonlink(Nodes) - unknown event '${payload.type}'.`);
+                const error = new Error(`[ @Moonlink/Nodes ] unknown event '${payload.type}'.`);
                 this._manager.emit("nodeError", this, error);
             }
         }

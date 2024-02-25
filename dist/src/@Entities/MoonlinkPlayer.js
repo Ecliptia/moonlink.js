@@ -122,8 +122,6 @@ class MoonlinkPlayer {
         return true;
     }
     async restart() {
-        if (!this.current || !this.queue.size)
-            return;
         this.connect({
             setDeaf: true,
             setMute: false
@@ -133,16 +131,18 @@ class MoonlinkPlayer {
             this.play();
             return;
         }
-        await this.node.rest.update({
-            guildId: this.guildId,
-            data: {
-                track: {
-                    encoded: this.current.encoded
-                },
-                position: this.current.position,
-                volume: this.volume
-            }
-        });
+        else {
+            await this.node.rest.update({
+                guildId: this.guildId,
+                data: {
+                    track: {
+                        encoded: this.current.encoded
+                    },
+                    position: this.current.position,
+                    volume: this.volume
+                }
+            });
+        }
         this.manager.emit("playerRestarted", this);
     }
     async play(track) {
