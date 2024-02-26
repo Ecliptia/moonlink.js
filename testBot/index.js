@@ -9,10 +9,6 @@ const {
   makeRequest
 } = require("../dist/index.js")
 
-const {
-  Lyrics
-} = require("../../moonlink.js-lyrics/index.js")
-
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
@@ -90,9 +86,7 @@ client.moon = new MoonlinkManager(
     //http2: true,
     autoResume: true,
     resume: true,
-    clientName: "Moonlink/Blio",
-    WebSocketDebug: true,
-    plugins: [new Lyrics()],
+    clientName: "Moonlink/Blio"
   },
   (id, data) => {
     let guild = client.guilds.cache.get(id);

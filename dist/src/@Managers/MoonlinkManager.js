@@ -27,7 +27,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         if (!this.options.clientName)
             this.options.clientName = `Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
     }
-    init(clientId) {
+    async init(clientId) {
         if (this.initiated)
             return this;
         this.emit("debug", "@Moonlink - moonlink.js has started the initialization process, do not attempt to use functions until everything is initialized correctly ");
@@ -36,6 +36,7 @@ class MoonlinkManager extends node_events_1.EventEmitter {
         this.options.clientId = clientId;
         this.clientId = clientId;
         index_1.Structure.init(this);
+        await index_1.Structure.db.fetch();
         this.nodes.init();
         this.players.init();
         this.initiated = true;
