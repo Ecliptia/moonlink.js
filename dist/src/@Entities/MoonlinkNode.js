@@ -69,8 +69,6 @@ class MoonlinkNode {
         if (this.state == "CONNECTED" || this.state == "READY")
             return;
         this.state = "CONNECTING";
-        if (Object.keys(index_1.Structure.db.data).length == 0)
-            await index_1.Structure.db.fetch();
         let headers = {
             Authorization: this.password,
             "User-Id": this._manager.options.clientId,
@@ -198,6 +196,8 @@ class MoonlinkNode {
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
                 player.ping = payload.state.ping;
+                if (!player.current)
+                    return;
                 player.current.position = payload.state.position;
                 player.current.time = payload.state.time;
                 break;

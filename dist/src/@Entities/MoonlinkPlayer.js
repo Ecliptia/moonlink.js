@@ -17,6 +17,7 @@ class MoonlinkPlayer {
     volume;
     ping;
     queue;
+    filters;
     current;
     previous;
     data;
@@ -39,6 +40,7 @@ class MoonlinkPlayer {
         this.previous = [];
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
+        this.filters = new (index_1.Structure.get("MoonlinkFilters"))(this);
         if (this.manager.options.resume)
             this.manager.players.backup(this);
     }

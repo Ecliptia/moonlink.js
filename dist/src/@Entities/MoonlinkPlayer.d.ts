@@ -1,4 +1,4 @@
-import { MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack } from "../../index";
+import { MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, MoonlinkFilters } from "../../index";
 import { IPlayerData, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     manager: MoonlinkManager;
@@ -15,6 +15,7 @@ export declare class MoonlinkPlayer {
     volume: number;
     ping: number;
     queue: MoonlinkQueue;
+    filters: MoonlinkFilters;
     current: Record<string, any>;
     previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     data: Record<string, any>;

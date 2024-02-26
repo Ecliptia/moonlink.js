@@ -3,6 +3,7 @@ import {
     MoonlinkQueue,
     MoonlinkNode,
     MoonlinkTrack,
+    MoonlinkFilters,
     Structure
 } from "../../index";
 import { IPlayerData, connectOptions } from "../@Typings";
@@ -21,6 +22,7 @@ export class MoonlinkPlayer {
     public volume: number;
     public ping: number;
     public queue: MoonlinkQueue;
+    public filters: MoonlinkFilters;
     public current: Record<string, any>;
     public previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     public data: Record<string, any>;
@@ -52,6 +54,7 @@ export class MoonlinkPlayer {
         this.previous = [];
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
+        this.filters = new (Structure.get("MoonlinkFilters"))(this);
 
         if (this.manager.options.resume) this.manager.players.backup(this);
     }
@@ -209,7 +212,6 @@ export class MoonlinkPlayer {
      * Restart the player by reconnecting and updating its state.
      */
     public async restart(): Promise<void> {
-
         this.connect({
             setDeaf: true,
             setMute: false
@@ -221,16 +223,16 @@ export class MoonlinkPlayer {
             this.play();
             return;
         } else {
-        await this.node.rest.update({
-            guildId: this.guildId,
-            data: {
-                track: {
-                    encoded: this.current.encoded
-                },
-                position: this.current.position,
-                volume: this.volume
-            }
-        });
+            await this.node.rest.update({
+                guildId: this.guildId,
+                data: {
+                    track: {
+                        encoded: this.current.encoded
+                    },
+                    position: this.current.position,
+                    volume: this.volume
+                }
+            });
         }
         this.manager.emit("playerRestarted", this);
     }
