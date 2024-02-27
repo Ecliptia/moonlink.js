@@ -296,10 +296,15 @@ export class MoonlinkNode {
                             guildId: resumedPlayer.guildId,
                             voiceChannel: previousInfosPlayer.voiceChannel,
                             textChannel: previousInfosPlayer.textChannel,
+                            volume: previousInfosPlayer.volume,
+                            loop: previousInfosPlayer.loop,
+                            autoPlay: previousInfosPlayer.autoPlay,
+                            autoLeave: previousInfosPlayer.autoLeave,
                             node: this.identifier ?? this.host
                         });
                         player.playing = true;
                         player.connected = true;
+                        player.previous = previousInfosPlayer.previous;
                         const track = new (Structure.get("MoonlinkTrack"))(
                             resumedPlayer.track
                         );

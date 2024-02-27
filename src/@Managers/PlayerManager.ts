@@ -73,11 +73,9 @@ export class PlayerManager {
         if (
             !this.cache[guildId] ||
             (!this.voices &&
-                !
-                    this.voices[guildId]?.token &&
-                    !this.voices[guildId]?.endpoint &&
-                   ! this.voices[guildId]?.sessionId
-                )
+                !this.voices[guildId]?.token &&
+                !this.voices[guildId]?.endpoint &&
+                !this.voices[guildId]?.sessionId)
         ) {
             return false;
         }
@@ -187,31 +185,27 @@ export class PlayerManager {
         return this.cache ?? null;
     }
     public backup(player): boolean {
-        const db = Structure.db;
-        let { guildId } = player;
-        const existingData =
-            db.get<PreviousInfosPlayer>(`players.${guildId}`) || {};
-        if (
-            player.voiceChannel &&
-            player.voiceChannel !==
-                (existingData.voiceChannel && existingData.voiceChannel)
-        ) {
-            existingData.voiceChannel = player.voiceChannel;
-        }
-
-        if (
-            player.textChannel &&
-            player.textChannel !==
-                (existingData.textChannel && existingData.textChannel)
-        ) {
-            existingData.textChannel = player.textChannel;
-        }
-        if (
-            existingData !==
-            (db.get<PreviousInfosPlayer>(`players.${guildId}`) || {})
-        ) {
-            db.set<PreviousInfosPlayer>(`players.${guildId}`, existingData);
-        }
+        let {
+            guildId,
+            textChannel,
+            voiceChannel,
+            loop,
+            voiceRegion,
+            autoPlay,
+            autoLeave,
+            previous,
+            volume
+        } = player;
+        Structure.db.set(`players.${guildId}`, {
+            guildId,
+            textChannel,
+            voiceChannel,
+            loop,
+            autoPlay,
+            autoLeave,
+            previous,
+            volume
+        });
         return true;
     }
 
