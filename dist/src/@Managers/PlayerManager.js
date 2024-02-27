@@ -44,12 +44,11 @@ class PlayerManager {
     }
     async attemptConnection(guildId) {
         if (!this.cache[guildId] ||
-            (!this.voices &&
+            (!this.voices ||
                 !this.voices[guildId]?.token &&
-                !this.voices[guildId]?.endpoint &&
-                !this.voices[guildId]?.sessionId)) {
+                    !this.voices[guildId]?.endpoint &&
+                    !this.voices[guildId]?.sessionId))
             return false;
-        }
         if (this._manager.options?.balancingPlayersByRegion) {
             const voiceRegion = this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
             if (!this.cache[guildId].voiceRegion) {
@@ -123,7 +122,7 @@ class PlayerManager {
         return this.cache ?? null;
     }
     backup(player) {
-        let { guildId, textChannel, voiceChannel, loop, voiceRegion, autoPlay, autoLeave, previous, volume } = player;
+        let { guildId, textChannel, voiceChannel, loop, autoPlay, autoLeave, previous, volume } = player;
         index_1.Structure.db.set(`players.${guildId}`, {
             guildId,
             textChannel,

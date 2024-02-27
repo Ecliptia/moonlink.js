@@ -257,10 +257,10 @@ class MoonlinkPlayer {
         }
         else {
             this.stop();
+            if (this.manager.options.resume)
+                this.manager.players.backup(this);
             return true;
         }
-        if (this.manager.options.resume)
-            this.manager.players.backup(this);
     }
     async setVolume(percent) {
         if (typeof percent == "undefined" || isNaN(percent)) {
