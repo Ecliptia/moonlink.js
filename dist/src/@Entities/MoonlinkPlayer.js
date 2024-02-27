@@ -83,6 +83,8 @@ class MoonlinkPlayer {
         mode ? mode : (mode = !this.autoLeave);
         this.autoLeave = mode;
         this.manager.emit("playerAutoLeaveTriggered", this, mode);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     setAutoPlay(mode) {
@@ -91,6 +93,8 @@ class MoonlinkPlayer {
         }
         this.autoPlay = mode;
         this.manager.emit("playerAutoPlayTriggered", this, mode);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     connect(options) {
@@ -146,6 +150,8 @@ class MoonlinkPlayer {
             });
         }
         this.manager.emit("playerRestarted", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
     }
     async play(track) {
         if (!track && !this.queue.size)
@@ -190,6 +196,8 @@ class MoonlinkPlayer {
             return true;
         await this.updatePlaybackStatus(true);
         this.manager.emit("playerPaused", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async resume() {
@@ -197,6 +205,8 @@ class MoonlinkPlayer {
             return true;
         await this.updatePlaybackStatus(false);
         this.manager.emit("playerResume", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async updatePlaybackStatus(paused) {
@@ -215,11 +225,15 @@ class MoonlinkPlayer {
                     track: { encoded: null }
                 }
             });
+            if (this.manager.options.resume)
+                this.manager.players.backup(this);
         }
         this.manager.emit("playerStopped", this, this.current);
         this.manager.options?.destroyPlayersStopped && destroy
             ? this.destroy()
             : this.queue.clear();
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async skip(position) {
@@ -245,6 +259,8 @@ class MoonlinkPlayer {
             this.stop();
             return true;
         }
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
     }
     async setVolume(percent) {
         if (typeof percent == "undefined" || isNaN(percent)) {
@@ -259,6 +275,8 @@ class MoonlinkPlayer {
         });
         this.manager.emit("playerVolumeChanged", this, this.volume, percent);
         this.volume = percent;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return percent;
     }
     setLoop(mode) {
@@ -276,6 +294,8 @@ class MoonlinkPlayer {
         }
         this.manager.emit("playerLoopSet", this, this.loop, mode);
         this.loop = mode;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     async destroy() {
@@ -306,6 +326,8 @@ class MoonlinkPlayer {
             guildId: this.guildId,
             data: { position }
         });
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return position;
     }
     shuffle() {
@@ -315,6 +337,8 @@ class MoonlinkPlayer {
         let oldQueue = Array.from(this.queue.all);
         let shuffleStatus = this.queue.shuffle();
         this.manager.emit("playerShuffled", this, oldQueue, this.queue.all, shuffleStatus);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return shuffleStatus;
     }
 }

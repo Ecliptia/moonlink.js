@@ -123,23 +123,17 @@ class PlayerManager {
         return this.cache ?? null;
     }
     backup(player) {
-        const db = index_1.Structure.db;
-        let { guildId } = player;
-        const existingData = db.get(`players.${guildId}`) || {};
-        if (player.voiceChannel &&
-            player.voiceChannel !==
-                (existingData.voiceChannel && existingData.voiceChannel)) {
-            existingData.voiceChannel = player.voiceChannel;
-        }
-        if (player.textChannel &&
-            player.textChannel !==
-                (existingData.textChannel && existingData.textChannel)) {
-            existingData.textChannel = player.textChannel;
-        }
-        if (existingData !==
-            (db.get(`players.${guildId}`) || {})) {
-            db.set(`players.${guildId}`, existingData);
-        }
+        let { guildId, textChannel, voiceChannel, loop, voiceRegion, autoPlay, autoLeave, previous, volume } = player;
+        index_1.Structure.db.set(`players.${guildId}`, {
+            guildId,
+            textChannel,
+            voiceChannel,
+            loop,
+            autoPlay,
+            autoLeave,
+            previous,
+            volume
+        });
         return true;
     }
     delete(guildId) {

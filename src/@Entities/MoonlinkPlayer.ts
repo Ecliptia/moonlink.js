@@ -139,6 +139,7 @@ export class MoonlinkPlayer {
         this.autoLeave = mode;
 
         this.manager.emit("playerAutoLeaveTriggered", this, mode);
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return mode;
     }
     /**
@@ -156,6 +157,7 @@ export class MoonlinkPlayer {
         this.autoPlay = mode;
 
         this.manager.emit("playerAutoPlayTriggered", this, mode);
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return mode;
     }
 
@@ -182,6 +184,7 @@ export class MoonlinkPlayer {
 
         this.connected = true;
         this.manager.emit("playerConnected", this);
+
         return true;
     }
 
@@ -235,6 +238,7 @@ export class MoonlinkPlayer {
             });
         }
         this.manager.emit("playerRestarted", this);
+        if (this.manager.options.resume) this.manager.players.backup(this);
     }
     /**
      * Play the next track in the queue.
@@ -292,6 +296,7 @@ export class MoonlinkPlayer {
         if (this.paused) return true;
         await this.updatePlaybackStatus(true);
         this.manager.emit("playerPaused", this);
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return true;
     }
 
@@ -303,6 +308,7 @@ export class MoonlinkPlayer {
         if (this.playing) return true;
         await this.updatePlaybackStatus(false);
         this.manager.emit("playerResume", this);
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return true;
     }
 
@@ -331,12 +337,14 @@ export class MoonlinkPlayer {
                     track: { encoded: null }
                 }
             });
+            if (this.manager.options.resume) this.manager.players.backup(this);
         }
 
         this.manager.emit("playerStopped", this, this.current as MoonlinkTrack);
         this.manager.options?.destroyPlayersStopped && destroy
             ? this.destroy()
             : this.queue.clear();
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return true;
     }
 
@@ -383,6 +391,7 @@ export class MoonlinkPlayer {
             this.stop();
             return true;
         }
+        if (this.manager.options.resume) this.manager.players.backup(this);
     }
 
     /**
@@ -411,6 +420,8 @@ export class MoonlinkPlayer {
         this.manager.emit("playerVolumeChanged", this, this.volume, percent);
 
         this.volume = percent;
+
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return percent;
     }
 
@@ -442,6 +453,8 @@ export class MoonlinkPlayer {
 
         this.manager.emit("playerLoopSet", this, this.loop, mode);
         this.loop = mode;
+
+        if (this.manager.options.resume) this.manager.players.backup(this);
 
         return mode;
     }
@@ -509,7 +522,7 @@ export class MoonlinkPlayer {
             guildId: this.guildId,
             data: { position }
         });
-
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return position;
     }
 
@@ -533,7 +546,7 @@ export class MoonlinkPlayer {
             this.queue.all,
             shuffleStatus
         );
-
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return shuffleStatus;
     }
 }
