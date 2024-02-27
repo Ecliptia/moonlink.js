@@ -389,9 +389,9 @@ export class MoonlinkPlayer {
             return false;
         } else {
             this.stop();
+        if (this.manager.options.resume) this.manager.players.backup(this);
             return true;
         }
-        if (this.manager.options.resume) this.manager.players.backup(this);
     }
 
     /**

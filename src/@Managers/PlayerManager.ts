@@ -3,8 +3,7 @@ import {
     MoonlinkTrack,
     MoonlinkManager,
     createOptions,
-    Structure,
-    PreviousInfosPlayer
+    Structure
 } from "../../index";
 export class PlayerManager {
     public _manager: MoonlinkManager;
@@ -72,13 +71,12 @@ export class PlayerManager {
     public async attemptConnection(guildId: string): Promise<boolean> {
         if (
             !this.cache[guildId] ||
-            (!this.voices &&
+            (!this.voices ||
                 !this.voices[guildId]?.token &&
                 !this.voices[guildId]?.endpoint &&
                 !this.voices[guildId]?.sessionId)
-        ) {
+        )
             return false;
-        }
 
         if (this._manager.options?.balancingPlayersByRegion) {
             const voiceRegion =
@@ -190,7 +188,6 @@ export class PlayerManager {
             textChannel,
             voiceChannel,
             loop,
-            voiceRegion,
             autoPlay,
             autoLeave,
             previous,
