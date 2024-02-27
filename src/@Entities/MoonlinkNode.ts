@@ -316,6 +316,7 @@ export class MoonlinkNode {
                 break;
             case "playerUpdate":
                 let player = this._manager.players.get(payload.guildId);
+                if (!player) return;
                 player.ping = payload.state.ping;
                 if (!player.current) return;
                 player.current.position = payload.state.position;
