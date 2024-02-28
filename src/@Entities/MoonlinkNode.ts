@@ -306,9 +306,9 @@ export class MoonlinkNode {
                         player.playing = true;
                         player.connected = true;
                         player.previous = previousInfosPlayer.previous;
-                        const track = new (Structure.get(
-                            "MoonlinkTrack"
-                        ))(resumedPlayer.track)
+                        const track = new (Structure.get("MoonlinkTrack"))(
+                            resumedPlayer.track
+                        );
                         //@ts-ignore
                         player.current = track;
                         player.current.position = resumedPlayer.state.position;
@@ -383,12 +383,19 @@ export class MoonlinkNode {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: { track: { encoded: track.encoded } }
+                            data: { track: { encoded: payload.track.encoded } }
                         });
+                       if(this.resumed) player.current = new (Structure.get("MoonlinkTrack"))(
+                            payload.track
+                        );
                         return;
                     }
                     if (player.loop == 2) {
-                        player.queue.add(player.current as MoonlinkTrack);
+                        player.queue.add(
+                            new (Structure.get("MoonlinkTrack"))(
+                                payload.track
+                            ) as MoonlinkTrack
+                        );
                         if (!queue || queue.length === 0)
                             return this._manager.emit(
                                 "trackEnd",

@@ -258,12 +258,14 @@ class MoonlinkNode {
                     if (player.loop == 1) {
                         await this.rest.update({
                             guildId: payload.guildId,
-                            data: { track: { encoded: track.encoded } }
+                            data: { track: { encoded: payload.track.encoded } }
                         });
+                        if (this.resumed)
+                            player.current = new (index_1.Structure.get("MoonlinkTrack"))(payload.track);
                         return;
                     }
                     if (player.loop == 2) {
-                        player.queue.add(player.current);
+                        player.queue.add(new (index_1.Structure.get("MoonlinkTrack"))(payload.track));
                         if (!queue || queue.length === 0)
                             return this._manager.emit("trackEnd", player, track, payload);
                         player.play();
