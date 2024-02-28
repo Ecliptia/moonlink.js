@@ -300,7 +300,8 @@ export class MoonlinkNode {
                             loop: previousInfosPlayer.loop,
                             autoPlay: previousInfosPlayer.autoPlay,
                             autoLeave: previousInfosPlayer.autoLeave,
-                            node: this.identifier ?? this.host
+                            node: this.identifier ?? this.host,
+                            notBackup: true
                         });
                         player.playing = true;
                         player.connected = true;
