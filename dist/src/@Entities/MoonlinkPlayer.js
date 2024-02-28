@@ -189,6 +189,8 @@ class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async pause() {
@@ -306,6 +308,8 @@ class MoonlinkPlayer {
         this.manager.players.delete(this.guildId);
         this.manager.emit("debug", "@Moonlink(Player) - Destroyed player " + this.guildId);
         this.manager.emit("playerDestroyed", this.guildId);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     validateNumberParam(param, paramName) {

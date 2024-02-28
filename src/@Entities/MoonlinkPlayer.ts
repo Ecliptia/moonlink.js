@@ -285,6 +285,7 @@ export class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return true;
     }
 
@@ -389,7 +390,7 @@ export class MoonlinkPlayer {
             return false;
         } else {
             this.stop();
-        if (this.manager.options.resume) this.manager.players.backup(this);
+            if (this.manager.options.resume) this.manager.players.backup(this);
             return true;
         }
     }
@@ -473,6 +474,8 @@ export class MoonlinkPlayer {
             "@Moonlink(Player) - Destroyed player " + this.guildId
         );
         this.manager.emit("playerDestroyed", this.guildId);
+
+        if (this.manager.options.resume) this.manager.players.backup(this);
         return true;
     }
 

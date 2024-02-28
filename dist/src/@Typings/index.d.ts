@@ -161,6 +161,7 @@ export interface PreviousInfosPlayer {
     autoLeave?: boolean;
     previous?: object | MoonlinkTrack;
     loop?: number;
+    current?: Record<string, any>;
 }
 export interface RestOptions {
     guildId: string;

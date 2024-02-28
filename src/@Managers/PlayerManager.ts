@@ -71,8 +71,8 @@ export class PlayerManager {
     public async attemptConnection(guildId: string): Promise<boolean> {
         if (
             !this.cache[guildId] ||
-            (!this.voices ||
-                !this.voices[guildId]?.token &&
+            !this.voices ||
+            (!this.voices[guildId]?.token &&
                 !this.voices[guildId]?.endpoint &&
                 !this.voices[guildId]?.sessionId)
         )
@@ -183,30 +183,22 @@ export class PlayerManager {
         return this.cache ?? null;
     }
     public backup(player): boolean {
-        let {
-            guildId,
-            textChannel,
-            voiceChannel,
-            loop,
-            autoPlay,
-            autoLeave,
-            previous,
-            volume
-        } = player;
-        Structure.db.set(`players.${guildId}`, {
-            guildId,
-            textChannel,
-            voiceChannel,
-            loop,
-            autoPlay,
-            autoLeave,
-            previous,
-            volume
+        Structure.db.set(`players.${player.guildId}`, {
+            guildId: player.guildId,
+            textChannel: player.textChannel,
+            voiceChannel: player.voiceChannel,
+            loop: player.loop,
+            autoPlay: player.autoPlay,
+            autoLeave: player.autoLeave,
+            previous: player.previous,
+            volume: player.volume,
+            current: player.current
         });
         return true;
     }
 
     public delete(guildId): void {
         delete this.cache[guildId];
+        Structure.db.delete(`players.${guildId}`);
     }
 }
