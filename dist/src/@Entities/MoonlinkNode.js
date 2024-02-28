@@ -186,7 +186,7 @@ class MoonlinkNode {
                         player.playing = true;
                         player.connected = true;
                         player.previous = previousInfosPlayer.previous;
-                        const track = new (index_1.Structure.get("MoonlinkTrack"))(resumedPlayer.track);
+                        const track = new (index_1.Structure.get("MoonlinkTrack"))().resolveQueueData(previousInfosPlayer.current);
                         player.current = track;
                         player.current.position = resumedPlayer.state.position;
                         await player.restart();

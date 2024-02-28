@@ -305,9 +305,10 @@ export class MoonlinkNode {
                         player.playing = true;
                         player.connected = true;
                         player.previous = previousInfosPlayer.previous;
-                        const track = new (Structure.get("MoonlinkTrack"))(
-                            resumedPlayer.track
-                        );
+                        const track = new (Structure.get(
+                            "MoonlinkTrack"
+                        ))().resolveQueueData(previousInfosPlayer.current);
+                        //@ts-ignore
                         player.current = track;
                         player.current.position = resumedPlayer.state.position;
                         await player.restart();
