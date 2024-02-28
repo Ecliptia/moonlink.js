@@ -20,6 +20,7 @@ export interface createOptions {
     voiceChannel: string;
     autoPlay?: boolean;
     autoLeave?: boolean;
+    notBackup?: boolean;
     loop?: number;
     volume?: number;
     node?: string;
@@ -239,6 +240,7 @@ export interface IPlayerData {
     shuffled?: boolean | null;
     loop?: number | null;
     volume?: number | null;
+    notBackup?: boolean;
     ping?: number;
     node?: string;
 }

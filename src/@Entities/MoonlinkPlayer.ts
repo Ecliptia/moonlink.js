@@ -56,7 +56,8 @@ export class MoonlinkPlayer {
         this.node = this.manager.nodes.get(data.node);
         this.filters = new (Structure.get("MoonlinkFilters"))(this);
 
-        if (this.manager.options.resume) this.manager.players.backup(this);
+        if (!data.notBackup && this.manager.options.resume)
+            this.manager.players.backup(this);
     }
 
     /**
