@@ -14,8 +14,7 @@ export declare class MoonlinkTrack {
     artworkUrl: string;
     isrc: string;
     time?: number;
-    constructor(data: MoonlinkTrackOptions, requester?: string | any);
+    constructor(data?: MoonlinkTrackOptions, requester?: string | any);
     get calculateRealTimePosition(): number;
-    setPosition(data: number): this;
-    setTime(data: number): this;
+    resolveQueueData(data: any): void;
 }

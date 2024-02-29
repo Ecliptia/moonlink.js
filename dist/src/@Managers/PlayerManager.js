@@ -44,18 +44,17 @@ class PlayerManager {
     }
     async attemptConnection(guildId) {
         if (!this.cache[guildId] ||
-            (!this.voices &&
-                !(this.voices[guildId]?.token &&
-                    this.voices[guildId]?.endpoint &&
-                    this.voices[guildId]?.sessionId))) {
+            !this.voices[guildId] ||
+            (!this.voices[guildId]?.token &&
+                !this.voices[guildId]?.endpoint &&
+                !this.voices[guildId]?.sessionId))
             return false;
-        }
         if (this._manager.options?.balancingPlayersByRegion) {
             const voiceRegion = this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
             if (!this.cache[guildId].voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
-                ].filter(node => node.state == index_1.State.READY);
+                ].filter(node => node.state == "READY");
                 const matchingNode = connectedNodes.find(node => node.regions.includes(voiceRegion));
                 this.cache[guildId].voiceRegion = voiceRegion;
                 if (matchingNode) {
@@ -123,27 +122,22 @@ class PlayerManager {
         return this.cache ?? null;
     }
     backup(player) {
-        const db = index_1.Structure.db;
-        let { guildId } = player;
-        const existingData = db.get(`players.${guildId}`) || {};
-        if (player.voiceChannel &&
-            player.voiceChannel !==
-                (existingData.voiceChannel && existingData.voiceChannel)) {
-            existingData.voiceChannel = player.voiceChannel;
-        }
-        if (player.textChannel &&
-            player.textChannel !==
-                (existingData.textChannel && existingData.textChannel)) {
-            existingData.textChannel = player.textChannel;
-        }
-        if (existingData !==
-            (db.get(`players.${guildId}`) || {})) {
-            db.set(`players.${guildId}`, existingData);
-        }
+        index_1.Structure.db.set(`players.${player.guildId}`, {
+            guildId: player.guildId,
+            textChannel: player.textChannel,
+            voiceChannel: player.voiceChannel,
+            loop: player.loop,
+            autoPlay: player.autoPlay,
+            autoLeave: player.autoLeave,
+            previous: player.previous,
+            volume: player.volume,
+            current: player.current
+        });
         return true;
     }
     delete(guildId) {
         delete this.cache[guildId];
+        index_1.Structure.db.delete(`players.${guildId}`);
     }
 }
 exports.PlayerManager = PlayerManager;

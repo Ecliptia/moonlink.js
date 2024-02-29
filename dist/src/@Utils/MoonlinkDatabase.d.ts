@@ -1,6 +1,7 @@
+type Data = Record<string, any>;
 export declare class MoonlinkDatabase {
-    private data;
-    private id;
+    data: Data;
+    id: string;
     constructor(clientId: string);
     set<T>(key: string, value: T): void;
     get<T>(key: string): T | undefined;
@@ -8,6 +9,7 @@ export declare class MoonlinkDatabase {
     delete(key: string): boolean;
     private updateData;
     private getFilePath;
-    private fetch;
+    fetch(): void;
     private save;
 }
+export {};

@@ -17,6 +17,7 @@ class MoonlinkPlayer {
     volume;
     ping;
     queue;
+    filters;
     current;
     previous;
     data;
@@ -39,7 +40,8 @@ class MoonlinkPlayer {
         this.previous = [];
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
-        if (this.manager.options.resume)
+        this.filters = new (index_1.Structure.get("MoonlinkFilters"))(this);
+        if (!data.notBackup && this.manager.options.resume)
             this.manager.players.backup(this);
     }
     set(key, value) {
@@ -81,6 +83,8 @@ class MoonlinkPlayer {
         mode ? mode : (mode = !this.autoLeave);
         this.autoLeave = mode;
         this.manager.emit("playerAutoLeaveTriggered", this, mode);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     setAutoPlay(mode) {
@@ -89,6 +93,8 @@ class MoonlinkPlayer {
         }
         this.autoPlay = mode;
         this.manager.emit("playerAutoPlayTriggered", this, mode);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     connect(options) {
@@ -122,28 +128,29 @@ class MoonlinkPlayer {
         return true;
     }
     async restart() {
-        if (!this.current || !this.queue.size)
-            return;
         this.connect({
             setDeaf: true,
             setMute: false
         });
-        await this.manager.players.attemptConnection(this.guildId);
         if (!this.current && this.queue.size) {
             this.play();
             return;
         }
-        await this.node.rest.update({
-            guildId: this.guildId,
-            data: {
-                track: {
-                    encoded: this.current.encoded
-                },
-                position: this.current.position,
-                volume: this.volume
-            }
-        });
+        else {
+            await this.node.rest.update({
+                guildId: this.guildId,
+                data: {
+                    track: {
+                        encoded: this.current.encoded
+                    },
+                    position: this.current.position,
+                    volume: this.volume
+                }
+            });
+        }
         this.manager.emit("playerRestarted", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
     }
     async play(track) {
         if (!track && !this.queue.size)
@@ -181,6 +188,8 @@ class MoonlinkPlayer {
                 volume: this.volume
             }
         });
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async pause() {
@@ -188,6 +197,8 @@ class MoonlinkPlayer {
             return true;
         await this.updatePlaybackStatus(true);
         this.manager.emit("playerPaused", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async resume() {
@@ -195,6 +206,8 @@ class MoonlinkPlayer {
             return true;
         await this.updatePlaybackStatus(false);
         this.manager.emit("playerResume", this);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async updatePlaybackStatus(paused) {
@@ -213,11 +226,15 @@ class MoonlinkPlayer {
                     track: { encoded: null }
                 }
             });
+            if (this.manager.options.resume)
+                this.manager.players.backup(this);
         }
         this.manager.emit("playerStopped", this, this.current);
         this.manager.options?.destroyPlayersStopped && destroy
             ? this.destroy()
             : this.queue.clear();
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     async skip(position) {
@@ -241,6 +258,8 @@ class MoonlinkPlayer {
         }
         else {
             this.stop();
+            if (this.manager.options.resume)
+                this.manager.players.backup(this);
             return true;
         }
     }
@@ -257,6 +276,8 @@ class MoonlinkPlayer {
         });
         this.manager.emit("playerVolumeChanged", this, this.volume, percent);
         this.volume = percent;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return percent;
     }
     setLoop(mode) {
@@ -274,6 +295,8 @@ class MoonlinkPlayer {
         }
         this.manager.emit("playerLoopSet", this, this.loop, mode);
         this.loop = mode;
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return mode;
     }
     async destroy() {
@@ -284,6 +307,8 @@ class MoonlinkPlayer {
         this.manager.players.delete(this.guildId);
         this.manager.emit("debug", "@Moonlink(Player) - Destroyed player " + this.guildId);
         this.manager.emit("playerDestroyed", this.guildId);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return true;
     }
     validateNumberParam(param, paramName) {
@@ -304,6 +329,8 @@ class MoonlinkPlayer {
             guildId: this.guildId,
             data: { position }
         });
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return position;
     }
     shuffle() {
@@ -313,6 +340,8 @@ class MoonlinkPlayer {
         let oldQueue = Array.from(this.queue.all);
         let shuffleStatus = this.queue.shuffle();
         this.manager.emit("playerShuffled", this, oldQueue, this.queue.all, shuffleStatus);
+        if (this.manager.options.resume)
+            this.manager.players.backup(this);
         return shuffleStatus;
     }
 }
