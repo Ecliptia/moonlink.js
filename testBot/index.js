@@ -86,7 +86,6 @@ client.moon = new MoonlinkManager(
     //http2: true,
     resume: true,
     autoResume: true,
-    resume: true,
     clientName: "Moonlink/Blio"
   },
   (id, data) => {
