@@ -132,6 +132,7 @@ class MoonlinkPlayer {
             setDeaf: true,
             setMute: false
         });
+        await this.manager.players.attemptConnection(this.guildId);
         if (!this.current && this.queue.size) {
             this.play();
             return;
