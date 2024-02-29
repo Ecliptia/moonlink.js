@@ -22,7 +22,13 @@ export interface MoonlinkEvents {
     autoLeaved: (player: MoonlinkPlayer, track?: any) => void;
     debug: (...args: any) => void;
     nodeCreate: (node: MoonlinkNode) => void;
+    nodeReady: (
+        node: MoonlinkNode,
+        sessionId: string,
+        resumed: boolean
+    ) => void;
     nodeDestroy: (node: MoonlinkNode) => void;
+    nodeResumed: (node: MoonlinkNode, players: MoonlinkEvents[]) => void;
     nodeReconnect: (node: MoonlinkNode) => void;
     nodeClose: (node: MoonlinkNode, code: number, reason: any) => void;
     nodeRaw: (node: MoonlinkNode, payload: object) => void;
@@ -130,7 +136,7 @@ export class MoonlinkManager extends EventEmitter {
         if (!this.options.clientName)
             this.options.clientName = `Moonlink/${this.version} (https://github.com/Ecliptia/moonlink.js)`;
     }
-    public init(clientId?: string): this {
+    public async init(clientId?: string): Promise<this> {
         if (this.initiated) return this;
         this.emit(
             "debug",
@@ -143,6 +149,7 @@ export class MoonlinkManager extends EventEmitter {
         this.options.clientId = clientId;
         this.clientId = clientId;
         Structure.init(this);
+        await Structure.db.fetch();
         this.nodes.init();
         this.players.init();
         this.initiated = true;

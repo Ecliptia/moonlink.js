@@ -14,7 +14,7 @@ export class MoonlinkTrack {
     public artworkUrl: string;
     public isrc: string;
     public time?: number = 0;
-    constructor(data: MoonlinkTrackOptions, requester?: string | any) {
+    constructor(data?: MoonlinkTrackOptions, requester?: string | any) {
         this.encoded = data.encoded;
         this.title = data.info.title;
         this.author = data.info.author;
@@ -48,13 +48,19 @@ export class MoonlinkTrack {
 
         return this.position;
     }
-
-    public setPosition(data: number): this {
-        this.position = data;
-        return this;
-    }
-    public setTime(data: number): this {
-        this.time = data;
-        return this
+    public resolveQueueData(data) {
+        this.encoded = data.encoded;
+        this.title = data.title;
+        this.author = data.author;
+        this.url = data.url;
+        this.duration = data.duration;
+        this.position = data.position;
+        this.identifier = data.identifier;
+        this.isSeekable = Boolean(data.isSeekable);
+        this.isStream = Boolean(data.isStream);
+        this.sourceName = data.sourceName;
+        this.requester = data.requester;
+        this.artworkUrl = data.artworkUrl;
+        this.isrc = data.isrc;
     }
 }

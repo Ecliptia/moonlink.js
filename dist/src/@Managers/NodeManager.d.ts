@@ -17,14 +17,3 @@ export declare class NodeManager {
     private sortNodesByPlayingPlayers;
     private sortNodesByPlayers;
 }
-export declare const State: {
-    READY: string;
-    CONNECTED: string;
-    CONNECTING: string;
-    DISCONNECTING: string;
-    DISCONNECTED: string;
-    RECONNECTING: string;
-    AUTORESUMING: string;
-    RESUMING: string;
-    MOVING: string;
-};

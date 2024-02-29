@@ -4,7 +4,10 @@ export interface createOptions {
     guildId: string;
     textChannel: string;
     voiceChannel: string;
-    autoPlay?: boolean | null;
+    autoPlay?: boolean;
+    autoLeave?: boolean;
+    notBackup?: boolean;
+    loop?: number;
     volume?: number;
     node?: string;
 }
@@ -101,7 +104,7 @@ export interface IOptions {
     resume?: boolean;
     plugins?: Plugin[];
     http2?: boolean;
-    movePlayersToNextNode?: boolean;
+    switchPlayersAnotherNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;
     previousTracksInArray?: boolean;
@@ -154,6 +157,13 @@ export interface objectTrack {
 export interface PreviousInfosPlayer {
     voiceChannel?: string;
     textChannel?: string;
+    guildId?: string;
+    volume?: number;
+    autoPlay?: boolean;
+    autoLeave?: boolean;
+    previous?: object | MoonlinkTrack;
+    loop?: number;
+    current?: Record<string, any>;
 }
 export interface RestOptions {
     guildId: string;
@@ -186,6 +196,7 @@ export interface IPlayerData {
     shuffled?: boolean | null;
     loop?: number | null;
     volume?: number | null;
+    notBackup?: boolean;
     ping?: number;
     node?: string;
 }

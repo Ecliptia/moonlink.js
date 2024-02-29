@@ -12,7 +12,6 @@ export const MoonlinkTrack = mod.MoonlinkTrack;
 export const NodeManager = mod.NodeManager;
 export const PlayerManager = mod.PlayerManager;
 export const Plugin = mod.Plugin;
-export const State = mod.State;
 export const Structure = mod.Structure;
 export const makeRequest = mod.makeRequest;
 export const version = mod.version;

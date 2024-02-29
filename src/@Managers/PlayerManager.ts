@@ -3,9 +3,7 @@ import {
     MoonlinkTrack,
     MoonlinkManager,
     createOptions,
-    Structure,
-    State,
-    PreviousInfosPlayer
+    Structure
 } from "../../index";
 export class PlayerManager {
     public _manager: MoonlinkManager;
@@ -73,15 +71,12 @@ export class PlayerManager {
     public async attemptConnection(guildId: string): Promise<boolean> {
         if (
             !this.cache[guildId] ||
-            (!this.voices &&
-                !(
-                    this.voices[guildId]?.token &&
-                    this.voices[guildId]?.endpoint &&
-                    this.voices[guildId]?.sessionId
-                ))
-        ) {
+            !this.voices[guildId] ||
+            (!this.voices[guildId]?.token &&
+                !this.voices[guildId]?.endpoint &&
+                !this.voices[guildId]?.sessionId)
+        )
             return false;
-        }
 
         if (this._manager.options?.balancingPlayersByRegion) {
             const voiceRegion =
@@ -90,7 +85,7 @@ export class PlayerManager {
             if (!this.cache[guildId].voiceRegion) {
                 const connectedNodes = [
                     ...this._manager.nodes.map.values()
-                ].filter(node => node.state == State.READY);
+                ].filter(node => node.state == "READY");
                 const matchingNode = connectedNodes.find(node =>
                     node.regions.includes(voiceRegion)
                 );
@@ -188,35 +183,22 @@ export class PlayerManager {
         return this.cache ?? null;
     }
     public backup(player): boolean {
-        const db = Structure.db;
-        let { guildId } = player;
-        const existingData =
-            db.get<PreviousInfosPlayer>(`players.${guildId}`) || {};
-        if (
-            player.voiceChannel &&
-            player.voiceChannel !==
-                (existingData.voiceChannel && existingData.voiceChannel)
-        ) {
-            existingData.voiceChannel = player.voiceChannel;
-        }
-
-        if (
-            player.textChannel &&
-            player.textChannel !==
-                (existingData.textChannel && existingData.textChannel)
-        ) {
-            existingData.textChannel = player.textChannel;
-        }
-        if (
-            existingData !==
-            (db.get<PreviousInfosPlayer>(`players.${guildId}`) || {})
-        ) {
-            db.set<PreviousInfosPlayer>(`players.${guildId}`, existingData);
-        }
+        Structure.db.set(`players.${player.guildId}`, {
+            guildId: player.guildId,
+            textChannel: player.textChannel,
+            voiceChannel: player.voiceChannel,
+            loop: player.loop,
+            autoPlay: player.autoPlay,
+            autoLeave: player.autoLeave,
+            previous: player.previous,
+            volume: player.volume,
+            current: player.current
+        });
         return true;
     }
 
     public delete(guildId): void {
         delete this.cache[guildId];
+        Structure.db.delete(`players.${guildId}`);
     }
 }
