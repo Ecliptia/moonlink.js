@@ -221,6 +221,8 @@ export class MoonlinkPlayer {
             setMute: false
         });
 
+        await this.manager.players.attemptConnection(this.guildId);
+
         if (!this.current && this.queue.size) {
             this.play();
             return;
