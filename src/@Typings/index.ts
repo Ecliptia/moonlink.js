@@ -138,6 +138,7 @@ export interface IOptions {
     resume?: boolean;
     plugins?: Plugin[];
     http2?: boolean;
+    switchPlayersAnotherNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;
     previousTracksInArray?: boolean;

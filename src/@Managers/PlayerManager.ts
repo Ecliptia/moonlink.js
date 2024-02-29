@@ -71,7 +71,7 @@ export class PlayerManager {
     public async attemptConnection(guildId: string): Promise<boolean> {
         if (
             !this.cache[guildId] ||
-            !this.voices ||
+            !this.voices[guildId] ||
             (!this.voices[guildId]?.token &&
                 !this.voices[guildId]?.endpoint &&
                 !this.voices[guildId]?.sessionId)

@@ -188,7 +188,11 @@ export class MoonlinkNode {
                     }, attempted number ${this.reconnectAttempts}
                 `
                 );
-                if (this.getAllPlayers.length) this.movePlayers();
+                if (
+                    this.getAllPlayers.length &&
+                    this._manager.options?.switchPlayersAnotherNode
+                )
+                    this.movePlayers();
                 this.reconnectAttempts++;
             }, this.retryDelay);
         }
@@ -306,13 +310,14 @@ export class MoonlinkNode {
                         player.playing = true;
                         player.connected = true;
                         player.previous = previousInfosPlayer.previous;
-                        const track = new (Structure.get("MoonlinkTrack"))(
-                            resumedPlayer.track
-                        );
-                        //@ts-ignore
-                        player.current = track;
+                        if (resumedPlayer.track) {
+                            const track = new (Structure.get("MoonlinkTrack"))(
+                                resumedPlayer.track
+                            );
+                            player.current = track;
                         player.current.position = resumedPlayer.state.position;
                         await player.restart();
+                        }
                     }
                     this._manager.emit("nodeResumed", this, resumedPlayers);
                 }
@@ -350,7 +355,10 @@ export class MoonlinkNode {
         switch (payload.type) {
             case "TrackStartEvent": {
                 let current = player.current;
-                if (!current) return;
+                if (!current)
+                    current = new (Structure.get("MoonlinkTrack"))(
+                        payload.track
+                    );
                 player.playing = true;
                 player.paused = false;
                 this._manager.emit("trackStart", player, current);
@@ -385,9 +393,10 @@ export class MoonlinkNode {
                             guildId: payload.guildId,
                             data: { track: { encoded: payload.track.encoded } }
                         });
-                       if(this.resumed) player.current = new (Structure.get("MoonlinkTrack"))(
-                            payload.track
-                        );
+                        if (this.resumed)
+                            player.current = new (Structure.get(
+                                "MoonlinkTrack"
+                            ))(payload.track);
                         return;
                     }
                     if (player.loop == 2) {

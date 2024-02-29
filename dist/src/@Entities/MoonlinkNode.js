@@ -105,7 +105,8 @@ class MoonlinkNode {
                 this.connect();
                 this._manager.emit("debug", `@Moonlink(Node) - We are trying to reconnect node ${this.identifier ?? this.host}, attempted number ${this.reconnectAttempts}
                 `);
-                if (this.getAllPlayers.length)
+                if (this.getAllPlayers.length &&
+                    this._manager.options?.switchPlayersAnotherNode)
                     this.movePlayers();
                 this.reconnectAttempts++;
             }, this.retryDelay);
@@ -187,10 +188,12 @@ class MoonlinkNode {
                         player.playing = true;
                         player.connected = true;
                         player.previous = previousInfosPlayer.previous;
-                        const track = new (index_1.Structure.get("MoonlinkTrack"))(resumedPlayer.track);
-                        player.current = track;
-                        player.current.position = resumedPlayer.state.position;
-                        await player.restart();
+                        if (resumedPlayer.track) {
+                            const track = new (index_1.Structure.get("MoonlinkTrack"))(resumedPlayer.track);
+                            player.current = track;
+                            player.current.position = resumedPlayer.state.position;
+                            await player.restart();
+                        }
                     }
                     this._manager.emit("nodeResumed", this, resumedPlayers);
                 }
@@ -228,7 +231,7 @@ class MoonlinkNode {
             case "TrackStartEvent": {
                 let current = player.current;
                 if (!current)
-                    return;
+                    current = new (index_1.Structure.get("MoonlinkTrack"))(payload.track);
                 player.playing = true;
                 player.paused = false;
                 this._manager.emit("trackStart", player, current);
