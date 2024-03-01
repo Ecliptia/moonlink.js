@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkPlayer = void 0;
+const node_events_1 = require("node:events");
 const index_1 = require("../../index");
+const MoonlinkWebSocket_1 = require("../@Services/MoonlinkWebSocket");
 class MoonlinkPlayer {
     manager = index_1.Structure.manager;
     guildId;
@@ -22,6 +24,7 @@ class MoonlinkPlayer {
     previous;
     data;
     node;
+    voiceReceiverWs;
     constructor(data) {
         this.guildId = data.guildId;
         this.textChannel = data.textChannel;
@@ -41,6 +44,7 @@ class MoonlinkPlayer {
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
         this.filters = new (index_1.Structure.get("MoonlinkFilters"))(this);
+        this.voiceReceiverWs = null;
         if (!data.notBackup && this.manager.options.resume)
             this.manager.players.backup(this);
     }
@@ -344,6 +348,55 @@ class MoonlinkPlayer {
         if (this.manager.options.resume)
             this.manager.players.backup(this);
         return shuffleStatus;
+    }
+    listenVoice() {
+        if (!this.node.info.isNodeLink)
+            return false;
+        this.voiceReceiverWs = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
+            headers: {
+                "Authorization": this.node.password,
+                "Client-Name": "Moonlink.js/3",
+                "guild-id": this.guildId,
+                "user-id": this.manager.clientId
+            }
+        });
+        const listener = new node_events_1.EventEmitter();
+        this.voiceReceiverWs.on("message", (data) => {
+            const payload = JSON.parse(data);
+            switch (payload?.type) {
+                case "startSpeakingEvent": {
+                    payload.data.data = Buffer.from(payload.data.data, "base64");
+                    listener.emit("start", {
+                        ...payload.data
+                    });
+                    break;
+                }
+                case "stopSpeakingEvent": {
+                    listener.emit("stop", {
+                        ...payload.data
+                    });
+                    break;
+                }
+                default: {
+                    listener.emit("unknown", {
+                        ...payload
+                    });
+                }
+            }
+        });
+        this.voiceReceiverWs.on("close", () => {
+            listener.emit("close");
+        });
+        this.voiceReceiverWs.on("error", (error) => {
+            listener.emit("error", error);
+        });
+        return listener;
+    }
+    stopListeningVoice() {
+        if (!this.voiceReceiverWs)
+            return;
+        this.voiceReceiverWs.close();
+        this.voiceReceiverWs = null;
     }
 }
 exports.MoonlinkPlayer = MoonlinkPlayer;

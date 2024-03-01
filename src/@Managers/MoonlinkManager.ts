@@ -5,8 +5,7 @@ import {
     MoonlinkTrack,
     MoonlinkNode,
     PlayerManager,
-    NodeManager,
-    Plugin
+    NodeManager
 } from "../../index";
 
 import {
