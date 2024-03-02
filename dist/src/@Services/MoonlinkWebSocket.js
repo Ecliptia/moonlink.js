@@ -95,6 +95,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                             this.emit("message", this.partialMessage.toString("utf-8"));
                             this.partialMessage = null;
                         }
+                        break;
                     }
                     case 1: {
                         this.emit("message", frame.payload.toString("utf-8"));
