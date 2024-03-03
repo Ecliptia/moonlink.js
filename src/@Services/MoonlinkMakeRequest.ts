@@ -1,6 +1,7 @@
 import * as http from "http";
 import * as https from "https";
 import * as http2 from "http2";
+import * as zlib from "zlib";
 import { Structure } from "../../index";
 
 export function makeRequest<T>(
@@ -69,6 +70,7 @@ export function makeRequest<T>(
 
             options.headers = {
                 "Content-Type": "application/json",
+                "Accept-Encoding": "br",
                 ...(options.headers || {})
             };
 
@@ -88,13 +90,19 @@ export function makeRequest<T>(
                 url,
                 reqOptions,
                 async (res: http.IncomingMessage) => {
+                    let newStream: http.IncomingMessage | zlib.BrotliDecompress = res;
+
+                    if (res.headers["content-encoding"] === "br") {
+                      newStream = res.pipe(zlib.createBrotliDecompress());
+                    }
+
                     const chunks: Uint8Array[] = [];
 
-                    res.on("data", async (chunk: Uint8Array) => {
+                    newStream.on("data", async (chunk: Uint8Array) => {
                         chunks.push(chunk);
                     });
 
-                    res.on("end", async () => {
+                    newStream.on("end", async () => {
                         try {
                             const responseData: string = Buffer.concat(chunks).toString();
                             if(reqOptions.path == "/version") resolve (responseData as T)
