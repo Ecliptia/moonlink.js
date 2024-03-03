@@ -307,16 +307,17 @@ export class MoonlinkNode {
                             node: this.identifier ?? this.host,
                             notBackup: true
                         });
-                        player.playing = true;
-                        player.connected = true;
                         player.previous = previousInfosPlayer.previous;
                         if (resumedPlayer.track) {
                             const track = new (Structure.get("MoonlinkTrack"))(
                                 resumedPlayer.track
                             );
                             player.current = track;
-                        player.current.position = resumedPlayer.state.position;
-                        await player.restart();
+                            player.current.position =
+                                resumedPlayer.state.position;
+                            await player.restart();
+                            player.playing = true;
+                            player.connected = true;
                         }
                     }
                     this._manager.emit("nodeResumed", this, resumedPlayers);
