@@ -220,6 +220,6 @@ export class PlayerManager {
     }
     public delete(guildId): void {
         delete this.cache[guildId];
-        Structure.db.delete(`players.${guildId}`);
+        if(Structure.db.get(`players.${guildId}`))Structure.db.delete(`players.${guildId}`);
     }
 }
