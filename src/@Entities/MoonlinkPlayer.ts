@@ -1,3 +1,5 @@
+import { EventEmitter } from "node:events";
+
 import {
     MoonlinkManager,
     MoonlinkQueue,
@@ -6,7 +8,11 @@ import {
     MoonlinkFilters,
     Structure
 } from "../../index";
+
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
+
 import { IPlayerData, connectOptions } from "../@Typings";
+
 export class MoonlinkPlayer {
     public manager: MoonlinkManager = Structure.manager;
     public guildId: string;
@@ -27,6 +33,7 @@ export class MoonlinkPlayer {
     public previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     public data: Record<string, any>;
     public node: MoonlinkNode | any;
+    public voiceReceiverWs: MoonlinkWebSocket | any;
 
     /**
      * Creates an instance of MoonlinkPlayer.
@@ -55,6 +62,8 @@ export class MoonlinkPlayer {
         this.data = {};
         this.node = this.manager.nodes.get(data.node);
         this.filters = new (Structure.get("MoonlinkFilters"))(this);
+
+        this.voiceReceiverWs = null;
 
         if (!data.notBackup && this.manager.options.resume)
             this.manager.players.backup(this);
@@ -552,5 +561,75 @@ export class MoonlinkPlayer {
         );
         if (this.manager.options.resume) this.manager.players.backup(this);
         return shuffleStatus;
+    }
+
+    /**
+     * Returns an event listener containing voice data received from the NodeLink server.
+     * @note NodeLink only feature
+     * @returns An event listener that emits "start", "stop", "close", "error", and "unknown" events.
+     */
+    public listenVoice(): EventEmitter | boolean {
+        if (!this.node.info.isNodeLink)
+          return false;
+
+        this.voiceReceiverWs = new MoonlinkWebSocket(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
+            headers: {
+              "Authorization": this.node.password,
+              "Client-Name": "Moonlink.js/3",
+              "guild-id": this.guildId,
+              "user-id": this.manager.clientId
+            }
+        });
+        const listener = new EventEmitter();
+
+        this.voiceReceiverWs.on("message", (data: string) => {
+            const payload = JSON.parse(data);
+
+            switch (payload?.type) {
+                case "startSpeakingEvent": {
+                    payload.data.data = Buffer.from(payload.data.data, "base64");
+
+                    listener.emit("start", {
+                        ...payload.data
+                    });
+
+                    break;
+                }
+                case "stopSpeakingEvent": {
+                    listener.emit("stop", {
+                        ...payload.data
+                    });
+
+                    break;
+                }
+                default: {
+                    listener.emit("unknown", {
+                        ...payload
+                    });
+                }
+            }
+        });
+
+        this.voiceReceiverWs.on("close", () => {
+            listener.emit("close");
+        })
+
+        this.voiceReceiverWs.on("error", (error) => {
+            listener.emit("error", error);
+        });
+
+        return listener;
+    }
+
+    /**
+     * Stop listening to voice data from the NodeLink server.
+     * @note NodeLink only feature
+     */
+    public stopListeningVoice(): void {
+        if (!this.voiceReceiverWs)
+          return;
+
+        this.voiceReceiverWs.close();
+        this.voiceReceiverWs = null;
     }
 }
