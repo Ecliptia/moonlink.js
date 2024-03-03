@@ -183,20 +183,41 @@ export class PlayerManager {
         return this.cache ?? null;
     }
     public backup(player): boolean {
-        Structure.db.set(`players.${player.guildId}`, {
-            guildId: player.guildId,
-            textChannel: player.textChannel,
-            voiceChannel: player.voiceChannel,
-            loop: player.loop,
-            autoPlay: player.autoPlay,
-            autoLeave: player.autoLeave,
-            previous: player.previous,
-            volume: player.volume,
-            current: player.current
+        const playerData: any = {};
+        const playerKeys = Object.keys(player);
+
+        playerKeys.forEach(key => {
+            if (
+                [
+                    "guildId",
+                    "voiceChannel",
+                    "textChannel",
+                    "volume",
+                    "loop",
+                    "autoPlay",
+                    "autoLeave",
+                    "data",
+                    "previous"
+                ].includes(key)
+            ) {
+                const value = Structure.db.get(
+                    `players.${player.guildId}.${key}`
+                );
+                if (
+                    player[key] !== undefined &&
+                    player[key] !== null &&
+                    player[key] !== value
+                ) {
+                    playerData[key] = player[key];
+                } else if (value !== undefined && value !== null) {
+                    playerData[key] = value;
+                }
+            }
         });
+
+        Structure.db.set(`players.${player.guildId}`, playerData);
         return true;
     }
-
     public delete(guildId): void {
         delete this.cache[guildId];
         Structure.db.delete(`players.${guildId}`);

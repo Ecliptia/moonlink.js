@@ -122,17 +122,32 @@ class PlayerManager {
         return this.cache ?? null;
     }
     backup(player) {
-        index_1.Structure.db.set(`players.${player.guildId}`, {
-            guildId: player.guildId,
-            textChannel: player.textChannel,
-            voiceChannel: player.voiceChannel,
-            loop: player.loop,
-            autoPlay: player.autoPlay,
-            autoLeave: player.autoLeave,
-            previous: player.previous,
-            volume: player.volume,
-            current: player.current
+        const playerData = {};
+        const playerKeys = Object.keys(player);
+        playerKeys.forEach(key => {
+            if ([
+                "guildId",
+                "voiceChannel",
+                "textChannel",
+                "volume",
+                "loop",
+                "autoPlay",
+                "autoLeave",
+                "data",
+                "previous"
+            ].includes(key)) {
+                const value = index_1.Structure.db.get(`players.${player.guildId}.${key}`);
+                if (player[key] !== undefined &&
+                    player[key] !== null &&
+                    player[key] !== value) {
+                    playerData[key] = player[key];
+                }
+                else if (value !== undefined && value !== null) {
+                    playerData[key] = value;
+                }
+            }
         });
+        index_1.Structure.db.set(`players.${player.guildId}`, playerData);
         return true;
     }
     delete(guildId) {
