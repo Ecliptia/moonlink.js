@@ -316,8 +316,6 @@ export class MoonlinkNode {
                             player.current.position =
                                 resumedPlayer.state.position;
                             await player.restart();
-                            player.playing = true;
-                            player.connected = true;
                         }
                     }
                     this._manager.emit("nodeResumed", this, resumedPlayers);
@@ -334,6 +332,8 @@ export class MoonlinkNode {
                 if (!player.current) return;
                 player.current.position = payload.state.position;
                 player.current.time = payload.state.time;
+
+                this._manager.emit("playerUpdate", player, payload, this);
                 break;
             case "event":
                 this.handleEvent(payload);

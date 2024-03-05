@@ -16,5 +16,4 @@ export declare class MoonlinkTrack {
     time?: number;
     constructor(data?: MoonlinkTrackOptions, requester?: string | any);
     get calculateRealTimePosition(): number;
-    resolveQueueData(data: any): void;
 }

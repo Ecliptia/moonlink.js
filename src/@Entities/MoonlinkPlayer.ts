@@ -563,23 +563,41 @@ export class MoonlinkPlayer {
         return shuffleStatus;
     }
 
+    public async transferNode(node: MoonlinkNode | string): Promise<boolean> {
+        typeof node == "string" ? (node = this.manager.nodes.get(node)) : null;
+        if (!node) return false;
+
+        this.node = node;
+        if (this.current || this.queue.size) {
+            await this.restart();
+            return true;
+        } else {
+            await this.manager.players.attemptConnection(this.guildId);
+            return true;
+        }
+    }
+
     /**
      * Returns an event listener containing voice data received from the NodeLink server.
      * @note NodeLink only feature
      * @returns An event listener that emits "start", "stop", "close", "error", and "unknown" events.
      */
     public listenVoice(): EventEmitter | boolean {
-        if (!this.node.info.isNodeLink)
-          return false;
+        if (!this.node.info.isNodeLink) return false;
 
-        this.voiceReceiverWs = new MoonlinkWebSocket(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
-            headers: {
-              "Authorization": this.node.password,
-              "Client-Name": "Moonlink.js/3",
-              "guild-id": this.guildId,
-              "user-id": this.manager.clientId
+        this.voiceReceiverWs = new MoonlinkWebSocket(
+            `ws${this.node.secure ? "s" : ""}://${
+                this.node.address
+            }/connection/data`,
+            {
+                headers: {
+                    Authorization: this.node.password,
+                    "Client-Name": `Moonlink/${this.manager.version}`,
+                    "guild-id": this.guildId,
+                    "user-id": this.manager.clientId
+                }
             }
-        });
+        );
         const listener = new EventEmitter();
 
         this.voiceReceiverWs.on("message", (data: string) => {
@@ -587,7 +605,10 @@ export class MoonlinkPlayer {
 
             switch (payload?.type) {
                 case "startSpeakingEvent": {
-                    payload.data.data = Buffer.from(payload.data.data, "base64");
+                    payload.data.data = Buffer.from(
+                        payload.data.data,
+                        "base64"
+                    );
 
                     listener.emit("start", {
                         ...payload.data
@@ -612,9 +633,9 @@ export class MoonlinkPlayer {
 
         this.voiceReceiverWs.on("close", () => {
             listener.emit("close");
-        })
+        });
 
-        this.voiceReceiverWs.on("error", (error) => {
+        this.voiceReceiverWs.on("error", error => {
             listener.emit("error", error);
         });
 
@@ -626,8 +647,7 @@ export class MoonlinkPlayer {
      * @note NodeLink only feature
      */
     public stopListeningVoice(): void {
-        if (!this.voiceReceiverWs)
-          return;
+        if (!this.voiceReceiverWs) return;
 
         this.voiceReceiverWs.close();
         this.voiceReceiverWs = null;

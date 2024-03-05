@@ -46,6 +46,7 @@ export declare class MoonlinkPlayer {
     private validateNumberParam;
     seek(position: number): Promise<number | null>;
     shuffle(): boolean;
+    transferNode(node: MoonlinkNode | string): Promise<boolean>;
     listenVoice(): EventEmitter | boolean;
     stopListeningVoice(): void;
 }

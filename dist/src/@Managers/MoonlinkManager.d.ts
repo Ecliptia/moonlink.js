@@ -36,6 +36,7 @@ export interface MoonlinkEvents {
     playerMove: (player: MoonlinkPlayer, newVoiceChannel: string, oldVoiceChannel: string) => void;
     playerDisconnect: (player: MoonlinkPlayer) => void;
     playerDestroyed: (guildId: string) => void;
+    playerUpdate: (player: MoonlinkPlayer, node: MoonlinkNode, payload: Record<string, any>) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 export declare interface MoonlinkManager {
