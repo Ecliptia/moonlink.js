@@ -15,7 +15,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     established;
     closing = false;
     headers;
-    partialMessage = null;
+    partialMessage = [];
     constructor(uri, options) {
         super();
         this.url = new URL(uri);
@@ -85,15 +85,16 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             this.headers = res.headers;
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
+                if (frame.payloadLength + frame.payloadOffset < data.length) {
+                    let payload = data.slice(0, frame.payloadLength + frame.payloadOffset);
+                    this.socket.unshift(payload);
+                }
                 switch (frame.opcode) {
                     case 0: {
-                        this.partialMessage = Buffer.concat([
-                            this.partialMessage,
-                            frame.payload
-                        ]);
+                        this.partialMessage.push(frame.payload);
                         if (frame.fin) {
-                            this.emit("message", this.partialMessage.toString("utf-8"));
-                            this.partialMessage = null;
+                            this.emit("message", Buffer.concat(this.partialMessage).toString("utf-8"));
+                            this.partialMessage = [];
                         }
                         break;
                     }

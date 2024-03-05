@@ -349,13 +349,27 @@ class MoonlinkPlayer {
             this.manager.players.backup(this);
         return shuffleStatus;
     }
+    async transferNode(node) {
+        typeof node == "string" ? (node = this.manager.nodes.get(node)) : null;
+        if (!node)
+            return false;
+        this.node = node;
+        if (this.current || this.queue.size) {
+            await this.restart();
+            return true;
+        }
+        else {
+            await this.manager.players.attemptConnection(this.guildId);
+            return true;
+        }
+    }
     listenVoice() {
         if (!this.node.info.isNodeLink)
             return false;
         this.voiceReceiverWs = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
             headers: {
-                "Authorization": this.node.password,
-                "Client-Name": "Moonlink.js/3",
+                Authorization: this.node.password,
+                "Client-Name": `Moonlink/${this.manager.version}`,
                 "guild-id": this.guildId,
                 "user-id": this.manager.clientId
             }
@@ -387,7 +401,7 @@ class MoonlinkPlayer {
         this.voiceReceiverWs.on("close", () => {
             listener.emit("close");
         });
-        this.voiceReceiverWs.on("error", (error) => {
+        this.voiceReceiverWs.on("error", error => {
             listener.emit("error", error);
         });
         return listener;

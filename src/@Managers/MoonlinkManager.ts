@@ -5,7 +5,8 @@ import {
     MoonlinkTrack,
     MoonlinkNode,
     PlayerManager,
-    NodeManager
+    NodeManager,
+    Plugin
 } from "../../index";
 
 import {
@@ -88,6 +89,7 @@ export interface MoonlinkEvents {
     ) => void;
     playerDisconnect: (player: MoonlinkPlayer) => void;
     playerDestroyed: (guildId: string) => void;
+    playerUpdate: (player: MoonlinkPlayer, node: MoonlinkNode, payload: Record<string, any>) => void;
     socketClosed: (player: MoonlinkPlayer, track: any) => void;
 }
 
