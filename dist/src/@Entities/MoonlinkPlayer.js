@@ -1,9 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkPlayer = void 0;
 const node_events_1 = require("node:events");
 const index_1 = require("../../index");
-const MoonlinkWebSocket_1 = require("../@Services/MoonlinkWebSocket");
+const ws_1 = __importDefault(require("ws"));
 class MoonlinkPlayer {
     manager = index_1.Structure.manager;
     guildId;
@@ -366,7 +369,7 @@ class MoonlinkPlayer {
     listenVoice() {
         if (!this.node.info.isNodeLink)
             return false;
-        this.voiceReceiverWs = new MoonlinkWebSocket_1.MoonlinkWebSocket(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
+        this.voiceReceiverWs = new ws_1.default(`ws${this.node.secure ? "s" : ""}://${this.node.address}/connection/data`, {
             headers: {
                 Authorization: this.node.password,
                 "Client-Name": `Moonlink/${this.manager.version}`,
