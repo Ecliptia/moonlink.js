@@ -5,7 +5,7 @@ import {
     PreviousInfosPlayer
 } from "../@Typings";
 
-import WebSocket from "ws";
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
 
 import {
     MoonlinkManager,
@@ -38,7 +38,7 @@ export class MoonlinkNode {
     public autoResume?: boolean = Structure.manager.options?.autoResume;
     public resumeTimeout?: number = 30000;
     public sessionId: string;
-    public socket: WebSocket | null;
+    public socket: MoonlinkWebSocket | null;
     public state: string = "DISCONNECTED";
     public stats: INodeStats | Record<string, any> = {};
     public calls: number = 0;
@@ -142,7 +142,7 @@ export class MoonlinkNode {
             headers["Session-Id"] = Structure.db.get(
                 `sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`
             );
-        this.socket = new WebSocket(
+        this.socket = new MoonlinkWebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
         );
@@ -463,6 +463,7 @@ export class MoonlinkNode {
                         "[ @Moonlink/Nodes ]: The queue is empty"
                     );
                     this._manager.emit("queueEnd", player);
+                    this._manager.emit("trackEnd", player, track);
                     player.current = null;
                     player.queue.clear();
                 }

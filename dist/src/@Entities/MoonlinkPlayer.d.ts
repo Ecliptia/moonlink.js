@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
 import { MoonlinkManager, MoonlinkQueue, MoonlinkNode, MoonlinkTrack, MoonlinkFilters } from "../../index";
-import WebSocket from "ws";
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
 import { IPlayerData, connectOptions } from "../@Typings";
 export declare class MoonlinkPlayer {
     manager: MoonlinkManager;
@@ -23,7 +23,7 @@ export declare class MoonlinkPlayer {
     previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     data: Record<string, any>;
     node: MoonlinkNode | any;
-    voiceReceiverWs: WebSocket | any;
+    voiceReceiverWs: MoonlinkWebSocket | any;
     constructor(data: IPlayerData);
     set(key: string, value: unknown): void;
     get<T>(key: string): T;

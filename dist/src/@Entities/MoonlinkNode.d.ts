@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { INode, INodeStats } from "../@Typings";
-import WebSocket from "ws";
+import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
 import { MoonlinkRestFul } from "../../index";
 export declare class MoonlinkNode {
     private _manager;
@@ -24,7 +24,7 @@ export declare class MoonlinkNode {
     autoResume?: boolean;
     resumeTimeout?: number;
     sessionId: string;
-    socket: WebSocket | null;
+    socket: MoonlinkWebSocket | null;
     state: string;
     stats: INodeStats | Record<string, any>;
     calls: number;
