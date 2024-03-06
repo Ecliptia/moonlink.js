@@ -15,7 +15,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     established;
     closing = false;
     headers;
-    partialMessage = [];
+    partialMessage = "";
     constructor(uri, options) {
         super();
         this.url = new URL(uri);
@@ -85,30 +85,10 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             this.headers = res.headers;
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-                if (frame.payloadLength + frame.payloadOffset < data.length) {
-                    let payload = data.slice(frame.payloadLength + frame.payloadOffset, data.length);
-                    this.socket.unshift(payload);
-                }
-                if (!frame.fin) {
-                    this.partialMessage.push(frame.payload);
-                    return;
-                }
                 switch (frame.opcode) {
-                    case 0: {
-                        if (frame.fin) {
-                            this.emit("message", Buffer.concat(this.partialMessage).toString("utf-8"));
-                            this.partialMessage = [];
-                        }
-                        break;
-                    }
+                    case 0:
                     case 1: {
-                        if (frame.fin) {
-                            if (this.partialMessage.length > 0) {
-                                this.partialMessage.push(frame.payload);
-                                frame.payload = Buffer.concat(this.partialMessage).toString("utf8");
-                            }
-                            this.emit("message", frame.payload.toString("utf-8"));
-                        }
+                        this.emit("message", frame.payload.toString("utf-8"));
                         break;
                     }
                     case 8: {
@@ -117,10 +97,15 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                         this.emit("close", code, reason);
                         break;
                     }
-                    default: {
-                        console.log("Emitted data that has not been implemented; opcode: " +
-                            frame.opcode);
-                    }
+                    default:
+                        {
+                            console.log("Emitted data that has not been implemented; opcode: " +
+                                frame.opcode);
+                        }
+                        if (frame.payloadLength + frame.payloadOffset <
+                            data.length) {
+                            this.socket.unshift(data.slice(frame.payloadLength + frame.payloadOffset));
+                        }
                 }
             });
             socket.on("close", hadError => {
