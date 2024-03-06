@@ -10,7 +10,7 @@ export class MoonlinkWebSocket extends EventEmitter {
     private established: boolean;
     private closing: boolean = false;
     private headers?: Record<string, any>;
-    private partialMessage?: any = [];
+    private partialMessage?: any = "";
     constructor(uri: string, options: any) {
         super();
         this.url = new URL(uri);
@@ -101,41 +101,12 @@ export class MoonlinkWebSocket extends EventEmitter {
 
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-                // solves problem in payloads together
-                if (frame.payloadLength + frame.payloadOffset < data.length) {
-                    let payload = data.slice(
-                        frame.payloadLength + frame.payloadOffset,
-                        data.length
-                    );
-                    this.socket.unshift(payload);
-                }
 
-                if (!frame.fin) {
-                    this.partialMessage.push(frame.payload);
-                    return;
-                }
                 switch (frame.opcode) {
-                    case 0: {
-                        if (frame.fin) {
-                            this.emit(
-                                "message",
-                                Buffer.concat(this.partialMessage).toString(
-                                    "utf-8"
-                                )
-                            );
-
-                            this.partialMessage = [];
-                        }
-                        break;
-                    }
+                    case 0:
                     case 1: {
-                       if(frame.fin) {
-                         if(this.partialMessage.length > 0) {
-                           this.partialMessage.push(frame.payload)
-                           frame.payload = Buffer.concat(this.partialMessage).toString("utf8")
-                         }
                         this.emit("message", frame.payload.toString("utf-8"));
-                       }
+
                         break;
                     }
                     case 8: {
@@ -146,12 +117,19 @@ export class MoonlinkWebSocket extends EventEmitter {
                         this.emit("close", code, reason);
                         break;
                     }
-                    default: {
-                        console.log(
-                            "Emitted data that has not been implemented; opcode: " +
-                                frame.opcode
-                        );
-                    }
+                    default:
+                        {
+                            console.log(
+                                "Emitted data that has not been implemented; opcode: " +
+                                    frame.opcode
+                            );
+                        }
+                        if (
+                            frame.payloadLength + frame.payloadOffset <
+                            data.length
+                        ) {
+                          this.socket.unshift(data.slice(frame.payloadLength + frame.payloadOffset))
+                        }
                 }
             });
             socket.on("close", hadError => {
