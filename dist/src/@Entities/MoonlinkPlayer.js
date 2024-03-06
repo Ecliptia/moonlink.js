@@ -379,13 +379,13 @@ class MoonlinkPlayer {
             const payload = JSON.parse(data);
             switch (payload?.type) {
                 case "startSpeakingEvent": {
-                    payload.data.data = Buffer.from(payload.data.data, "base64");
                     listener.emit("start", {
                         ...payload.data
                     });
                     break;
                 }
                 case "stopSpeakingEvent": {
+                    payload.data.data = Buffer.from(payload.data.data, "base64");
                     listener.emit("stop", {
                         ...payload.data
                     });

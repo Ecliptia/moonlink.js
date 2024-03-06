@@ -605,11 +605,6 @@ export class MoonlinkPlayer {
 
             switch (payload?.type) {
                 case "startSpeakingEvent": {
-                    payload.data.data = Buffer.from(
-                        payload.data.data,
-                        "base64"
-                    );
-
                     listener.emit("start", {
                         ...payload.data
                     });
@@ -617,6 +612,11 @@ export class MoonlinkPlayer {
                     break;
                 }
                 case "stopSpeakingEvent": {
+                    payload.data.data = Buffer.from(
+                        payload.data.data,
+                        "base64"
+                    );
+
                     listener.emit("stop", {
                         ...payload.data
                     });
