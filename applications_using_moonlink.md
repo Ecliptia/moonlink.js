@@ -8,4 +8,9 @@ Here are some Discord applications that use the **moonlink.js** library:
 - **Repository:** [Framagit Repository](https://framagit.org/xotak/yadb)
 - **Documentation:** [Documentation](https://xotak.frama.io/yadb-docs)
 
+### 2. Vivy - Music Bot
+- **Description:** A music bot for Discord. Play your favorite tunes, manage playlists, and enhance your server's atmosphere with ease.
+- **Invite:** Private bot, but you can clone the code and create your own
+- **Repository:** [GitHub Repository](https://github.com/gavenda/vivy)
+
 A big thank you to the creators of these amazing Discord applications for their hard work and dedication!
