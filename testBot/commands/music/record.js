@@ -24,7 +24,6 @@ module.exports = {
 
     listener.on("end", (data) => {
       /* Emitted when something stops speaking */
-      console.log('trued', data)
       writeStream.write(data.data);
     })
   },
