@@ -17,13 +17,15 @@ module.exports = {
     const listener = player.listenVoice()
     const writeStream = fs.createWriteStream("test.ogg")
 
-    listener.on("start", (_data) => {
+    console.log(listener)
+    listener.on("start", (data) => {
       /* Emitted when something starts speaking */
     })
 
     listener.on("end", (data) => {
       /* Emitted when something stops speaking */
-      writeStream.write(data);
+      console.log('trued', data)
+      writeStream.write(data.data);
     })
   },
 };

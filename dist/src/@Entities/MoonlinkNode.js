@@ -229,12 +229,10 @@ class MoonlinkNode {
         let player = this._manager.players.get(payload.guildId);
         switch (payload.type) {
             case "TrackStartEvent": {
-                let current = player.current;
-                if (!current)
-                    current = new (index_1.Structure.get("MoonlinkTrack"))(payload.track);
+                player.current = new (index_1.Structure.get("MoonlinkTrack"))(payload.track);
                 player.playing = true;
                 player.paused = false;
-                this._manager.emit("trackStart", player, current);
+                this._manager.emit("trackStart", player, player.current);
                 break;
             }
             case "TrackEndEvent": {
@@ -248,7 +246,11 @@ class MoonlinkNode {
                 if (["loadFailed", "cleanup"].includes(payload.reason)) {
                     if (!queue) {
                         player.queue.clear();
-                        return this._manager.emit("queueEnd", player, track);
+                        {
+                            this._manager.emit("trackEnd", player, track, payload);
+                            this._manager.emit("queueEnd", player, track);
+                            return;
+                        }
                     }
                     player.play();
                     return;
@@ -304,9 +306,9 @@ class MoonlinkNode {
                     this._manager.emit("autoLeaved", player, track);
                 }
                 if (!player.queue.size) {
-                    this._manager.emit("debug", "[ @Moonlink/Nodes ]: The queue is empty");
+                    this._manager.emit("debug", "@Moonlink(Nodes) - The queue is empty");
+                    this._manager.emit("trackEnd", player, track, payload);
                     this._manager.emit("queueEnd", player);
-                    this._manager.emit("trackEnd", player, track);
                     player.current = null;
                     player.queue.clear();
                 }
@@ -327,7 +329,7 @@ class MoonlinkNode {
                 break;
             }
             default: {
-                const error = new Error(`[ @Moonlink/Nodes ] unknown event '${payload.type}'.`);
+                const error = new Error(`@Moonlink(Nodes) - unknown event '${payload.type}'.`);
                 this._manager.emit("nodeError", this, error);
             }
         }
@@ -336,8 +338,7 @@ class MoonlinkNode {
         this.getAllPlayers.forEach(player => {
             let anotherNode = this._manager.nodes.sortByUsage(this._manager.options?.sortNode ?? "players")[0];
             this._manager.emit("debug", `@Moonlink(Node) - Moving player ${player.guildId} to ${anotherNode.identifier ?? anotherNode.host}`);
-            player.node = anotherNode;
-            player.restart();
+            player.transferNode(anotherNode);
         });
         return true;
     }
