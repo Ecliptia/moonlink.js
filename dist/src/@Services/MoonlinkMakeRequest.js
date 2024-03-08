@@ -27,6 +27,7 @@ exports.makeRequest = void 0;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
 const http2 = __importStar(require("http2"));
+const zlib = __importStar(require("zlib"));
 const index_1 = require("../../index");
 function makeRequest(uri, options, data) {
     return new Promise(resolve => {
@@ -78,6 +79,7 @@ function makeRequest(uri, options, data) {
             }
             options.headers = {
                 "Content-Type": "application/json",
+                "Accept-Encoding": "br",
                 ...(options.headers || {})
             };
             const reqOptions = {
@@ -92,11 +94,15 @@ function makeRequest(uri, options, data) {
                 ...options
             };
             const req = requestModule.request(url, reqOptions, async (res) => {
+                let newStream = res;
+                if (res.headers["content-encoding"] === "br") {
+                    newStream = res.pipe(zlib.createBrotliDecompress());
+                }
                 const chunks = [];
-                res.on("data", async (chunk) => {
+                newStream.on("data", async (chunk) => {
                     chunks.push(chunk);
                 });
-                res.on("end", async () => {
+                newStream.on("end", async () => {
                     try {
                         const responseData = Buffer.concat(chunks).toString();
                         if (reqOptions.path == "/version")

@@ -10,7 +10,7 @@ export class MoonlinkWebSocket extends EventEmitter {
     private established: boolean;
     private closing: boolean = false;
     private headers?: Record<string, any>;
-    private partialMessage?: Buffer | null = null;
+    private partialMessage?: any = null;
     constructor(uri: string, options: any) {
         super();
         this.url = new URL(uri);
@@ -101,33 +101,55 @@ export class MoonlinkWebSocket extends EventEmitter {
 
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-
+                
                 switch (frame.opcode) {
                     case 0: {
-                        this.partialMessage = Buffer.concat([
-                            this.partialMessage,
-                            frame.payload
-                        ]);
-
                         if (frame.fin) {
-                            this.emit(
-                                "message",
-                                this.partialMessage.toString("utf-8")
-                            );
-
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                             
+                            } else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                                ;
+                            }
+                            const message =
+                                this.partialMessage.toString("utf-8");
+                            this.emit("message", message);
                             this.partialMessage = null;
+                            
+                        } else {
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                                
+                            } else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                                
+                            }
                         }
                         break;
                     }
                     case 1: {
-                        this.emit("message", frame.payload.toString("utf-8"));
+                        if (frame.fin) {
+                            this.emit(
+                                "message",
+                                frame.payload.toString("utf-8")
+                            );
+                            
+                        } else {
+                            this.partialMessage = frame.payload;
+                            
+                        }
                         break;
                     }
                     case 8: {
                         const code = frame.payload.readUInt16BE(0);
-
                         const reason = frame.payload.slice(2).toString("utf8");
-
                         this.emit("close", code, reason);
                         break;
                     }
@@ -136,6 +158,16 @@ export class MoonlinkWebSocket extends EventEmitter {
                             "Emitted data that has not been implemented; opcode: " +
                                 frame.opcode
                         );
+                        if (
+                            frame.payloadLength + frame.payloadOffset <
+                            data.length
+                        ) {
+                            this.socket.unshift(
+                                data.slice(
+                                    frame.payloadLength + frame.payloadOffset
+                                )
+                            );
+                        }
                     }
                 }
             });
@@ -187,6 +219,7 @@ export class MoonlinkWebSocket extends EventEmitter {
                 payload[i] ^= maskingKey[i % 4];
             }
         }
+
         return {
             opcode,
             fin,

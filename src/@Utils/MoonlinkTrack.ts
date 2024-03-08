@@ -48,19 +48,4 @@ export class MoonlinkTrack {
 
         return this.position;
     }
-    public resolveQueueData(data) {
-        this.encoded = data.encoded;
-        this.title = data.title;
-        this.author = data.author;
-        this.url = data.url;
-        this.duration = data.duration;
-        this.position = data.position;
-        this.identifier = data.identifier;
-        this.isSeekable = Boolean(data.isSeekable);
-        this.isStream = Boolean(data.isStream);
-        this.sourceName = data.sourceName;
-        this.requester = data.requester;
-        this.artworkUrl = data.artworkUrl;
-        this.isrc = data.isrc;
-    }
 }

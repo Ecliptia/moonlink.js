@@ -152,7 +152,8 @@ class PlayerManager {
     }
     delete(guildId) {
         delete this.cache[guildId];
-        index_1.Structure.db.delete(`players.${guildId}`);
+        if (index_1.Structure.db.get(`players.${guildId}`))
+            index_1.Structure.db.delete(`players.${guildId}`);
     }
 }
 exports.PlayerManager = PlayerManager;

@@ -87,18 +87,41 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                 const frame = this.parseFrame(data);
                 switch (frame.opcode) {
                     case 0: {
-                        this.partialMessage = Buffer.concat([
-                            this.partialMessage,
-                            frame.payload
-                        ]);
                         if (frame.fin) {
-                            this.emit("message", this.partialMessage.toString("utf-8"));
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                            }
+                            else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                                ;
+                            }
+                            const message = this.partialMessage.toString("utf-8");
+                            this.emit("message", message);
                             this.partialMessage = null;
+                        }
+                        else {
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                            }
+                            else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                            }
                         }
                         break;
                     }
                     case 1: {
-                        this.emit("message", frame.payload.toString("utf-8"));
+                        if (frame.fin) {
+                            this.emit("message", frame.payload.toString("utf-8"));
+                        }
+                        else {
+                            this.partialMessage = frame.payload;
+                        }
                         break;
                     }
                     case 8: {
@@ -110,6 +133,10 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                     default: {
                         console.log("Emitted data that has not been implemented; opcode: " +
                             frame.opcode);
+                        if (frame.payloadLength + frame.payloadOffset <
+                            data.length) {
+                            this.socket.unshift(data.slice(frame.payloadLength + frame.payloadOffset));
+                        }
                     }
                 }
             });
