@@ -10,11 +10,11 @@ export interface MoonlinkEvents {
     nodeDestroy: (node: MoonlinkNode) => void;
     nodeResumed: (node: MoonlinkNode, players: MoonlinkEvents[]) => void;
     nodeReconnect: (node: MoonlinkNode) => void;
-    nodeClose: (node: MoonlinkNode, code: number, reason: any) => void;
+    nodeClose: (node: MoonlinkNode, code: number, reason: string) => void;
     nodeRaw: (node: MoonlinkNode, payload: object) => void;
     nodeError: (node: MoonlinkNode, error: Error) => void;
     trackStart: (player: MoonlinkPlayer, current: any) => void;
-    trackEnd: (player: MoonlinkPlayer, track: any, payload?: any) => void;
+    trackEnd: (player: MoonlinkPlayer, track: any, payload?: Record<string, any>) => void;
     trackStuck: (player: MoonlinkPlayer, track: any) => void;
     trackError: (player: MoonlinkPlayer, track: any) => void;
     queueEnd: (player: MoonlinkPlayer, track?: any) => void;
@@ -37,7 +37,7 @@ export interface MoonlinkEvents {
     playerDisconnect: (player: MoonlinkPlayer) => void;
     playerDestroyed: (guildId: string) => void;
     playerUpdate: (player: MoonlinkPlayer, node: MoonlinkNode, payload: Record<string, any>) => void;
-    socketClosed: (player: MoonlinkPlayer, track: any) => void;
+    socketClosed: (player: MoonlinkPlayer, track: MoonlinkTrack) => void;
 }
 export declare interface MoonlinkManager {
     on<K extends keyof MoonlinkEvents>(event: K, listener: MoonlinkEvents[K]): this;

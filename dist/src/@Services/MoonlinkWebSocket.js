@@ -15,7 +15,7 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
     established;
     closing = false;
     headers;
-    partialMessage = "";
+    partialMessage = null;
     constructor(uri, options) {
         super();
         this.url = new URL(uri);
@@ -85,10 +85,44 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             this.headers = res.headers;
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
+                console.log(frame, frame.payload.toString());
                 switch (frame.opcode) {
-                    case 0:
+                    case 0: {
+                        if (frame.fin) {
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                            }
+                            else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                                ;
+                            }
+                            const message = this.partialMessage.toString("utf-8");
+                            this.emit("message", message);
+                            this.partialMessage = null;
+                        }
+                        else {
+                            if (!this.partialMessage) {
+                                this.partialMessage = frame.payload;
+                            }
+                            else {
+                                this.partialMessage = Buffer.concat([
+                                    this.partialMessage,
+                                    frame.payload
+                                ]);
+                            }
+                        }
+                        break;
+                    }
                     case 1: {
-                        this.emit("message", frame.payload.toString("utf-8"));
+                        if (frame.fin) {
+                            this.emit("message", frame.payload.toString("utf-8"));
+                        }
+                        else {
+                            this.partialMessage = frame.payload;
+                        }
                         break;
                     }
                     case 8: {
@@ -97,15 +131,14 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
                         this.emit("close", code, reason);
                         break;
                     }
-                    default:
-                        {
-                            console.log("Emitted data that has not been implemented; opcode: " +
-                                frame.opcode);
-                        }
+                    default: {
+                        console.log("Emitted data that has not been implemented; opcode: " +
+                            frame.opcode);
                         if (frame.payloadLength + frame.payloadOffset <
                             data.length) {
                             this.socket.unshift(data.slice(frame.payloadLength + frame.payloadOffset));
                         }
+                    }
                 }
             });
             socket.on("close", hadError => {
