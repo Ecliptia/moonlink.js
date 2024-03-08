@@ -85,7 +85,6 @@ class MoonlinkWebSocket extends events_1.EventEmitter {
             this.headers = res.headers;
             socket.on("data", data => {
                 const frame = this.parseFrame(data);
-                console.log(frame, frame.payload.toString());
                 switch (frame.opcode) {
                     case 0: {
                         if (frame.fin) {
