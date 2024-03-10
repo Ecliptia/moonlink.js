@@ -48,4 +48,7 @@ export class MoonlinkTrack {
 
         return this.position;
     }
+    setRequester(data: any): void {
+      this.requester = data;
+    }
 }

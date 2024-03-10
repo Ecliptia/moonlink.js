@@ -43,11 +43,12 @@ class PlayerManager {
         };
     }
     async attemptConnection(guildId) {
-        if (!this.cache[guildId] ||
-            !this.voices[guildId] ||
-            (!this.voices[guildId]?.token &&
-                !this.voices[guildId]?.endpoint &&
-                !this.voices[guildId]?.sessionId))
+        if (!this.cache[guildId])
+            return false;
+        if (this.voices[guildId] &&
+            !this.voices[guildId]?.token &&
+            !this.voices[guildId]?.endpoint &&
+            !this.voices[guildId]?.sessionId)
             return false;
         if (this._manager.options?.balancingPlayersByRegion) {
             const voiceRegion = this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];

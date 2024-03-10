@@ -45,5 +45,8 @@ class MoonlinkTrack {
         }
         return this.position;
     }
+    setRequester(data) {
+        this.requester = data;
+    }
 }
 exports.MoonlinkTrack = MoonlinkTrack;

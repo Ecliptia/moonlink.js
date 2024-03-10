@@ -355,9 +355,10 @@ export class MoonlinkNode {
         let player: MoonlinkPlayer = this._manager.players.get(payload.guildId);
         switch (payload.type) {
             case "TrackStartEvent": {
-                player.current = new (Structure.get("MoonlinkTrack"))(
+                if(!player.current) player.current = new (Structure.get("MoonlinkTrack"))(
                     payload.track
                 );
+                
                 player.playing = true;
                 player.paused = false;
                 this._manager.emit("trackStart", player, player.current);

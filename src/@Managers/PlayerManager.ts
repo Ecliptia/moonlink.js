@@ -69,38 +69,40 @@ export class PlayerManager {
         };
     }
     public async attemptConnection(guildId: string): Promise<boolean> {
+        if (!this.cache[guildId]) return false;
         if (
-            !this.cache[guildId] ||
-            !this.voices[guildId] ||
-            (!this.voices[guildId]?.token &&
-                !this.voices[guildId]?.endpoint &&
-                !this.voices[guildId]?.sessionId)
-        )
-            return false;
+            this.voices[guildId] &&
+            !this.voices[guildId]?.token &&
+            !this.voices[guildId]?.endpoint &&
+            !this.voices[guildId]?.sessionId
+        ) return false;
+            if (this._manager.options?.balancingPlayersByRegion) {
+                const voiceRegion =
+                    this.voices[guildId]?.endpoint?.match(
+                        /([a-zA-Z-]+)\d+/
+                    )?.[1];
 
-        if (this._manager.options?.balancingPlayersByRegion) {
-            const voiceRegion =
-                this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
+                if (!this.cache[guildId].voiceRegion) {
+                    const connectedNodes = [
+                        ...this._manager.nodes.map.values()
+                    ].filter(node => node.state == "READY");
+                    const matchingNode = connectedNodes.find(node =>
+                        node.regions.includes(voiceRegion)
+                    );
 
-            if (!this.cache[guildId].voiceRegion) {
-                const connectedNodes = [
-                    ...this._manager.nodes.map.values()
-                ].filter(node => node.state == "READY");
-                const matchingNode = connectedNodes.find(node =>
-                    node.regions.includes(voiceRegion)
-                );
+                    this.cache[guildId].voiceRegion = voiceRegion;
 
-                this.cache[guildId].voiceRegion = voiceRegion;
-
-                if (matchingNode) {
-                    this.cache[guildId].node = matchingNode;
+                    if (matchingNode) {
+                        this.cache[guildId].node = matchingNode;
+                    }
                 }
+            } else if (!this.cache[guildId].voiceRegion) {
+                const voiceRegion =
+                    this.voices[guildId]?.endpoint?.match(
+                        /([a-zA-Z-]+)\d+/
+                    )?.[1];
+                this.cache[guildId].voiceRegion = voiceRegion;
             }
-        } else if (!this.cache[guildId].voiceRegion) {
-            const voiceRegion =
-                this.voices[guildId]?.endpoint?.match(/([a-zA-Z-]+)\d+/)?.[1];
-            this.cache[guildId].voiceRegion = voiceRegion;
-        }
 
         await this.cache[guildId].node.rest.update({
             guildId,
@@ -220,6 +222,7 @@ export class PlayerManager {
     }
     public delete(guildId): void {
         delete this.cache[guildId];
-        if(Structure.db.get(`players.${guildId}`))Structure.db.delete(`players.${guildId}`);
+        if (Structure.db.get(`players.${guildId}`))
+            Structure.db.delete(`players.${guildId}`);
     }
 }
