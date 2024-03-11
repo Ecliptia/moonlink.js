@@ -4,7 +4,7 @@ import path from "path";
 type Data = Record<string, any>;
 
 export class MoonlinkDatabase {
-   public data: Data = {};
+    public data: Data = {};
     public id: string;
 
     constructor(clientId: string) {
@@ -104,8 +104,10 @@ export class MoonlinkDatabase {
 
             const filePath = this.getFilePath();
 
-            const rawData = fs.readFileSync(filePath, "utf-8");
+            const fileDescriptor = fs.openSync(filePath, "r");
+            const rawData = fs.readFileSync(fileDescriptor, "utf-8");
             this.data = JSON.parse(rawData) || {};
+            fs.closeSync(fileDescriptor);
         } catch (err) {
             if (err.code === "ENOENT") {
                 this.data = {};
@@ -117,13 +119,14 @@ export class MoonlinkDatabase {
             }
         }
     }
-
     private save() {
-        try {
-            const filePath = this.getFilePath();
-            fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
-        } catch (error) {
-            throw new Error("@Moonlink(Database) - Failed to save data");
-        }
+    try {
+        const filePath = this.getFilePath();
+        const fileDescriptor = fs.openSync(filePath, "w");
+        fs.writeFileSync(fileDescriptor, JSON.stringify(this.data, null, 2));
+        fs.closeSync(fileDescriptor);
+    } catch (error) {
+        throw new Error("@Moonlink(Database) - Failed to save data, error: ", error);
     }
+}
 }
