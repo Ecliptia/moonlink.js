@@ -88,8 +88,10 @@ class MoonlinkDatabase {
                 fs_1.default.mkdirSync(directory, { recursive: true });
             }
             const filePath = this.getFilePath();
-            const rawData = fs_1.default.readFileSync(filePath, "utf-8");
+            const fileDescriptor = fs_1.default.openSync(filePath, "r");
+            const rawData = fs_1.default.readFileSync(fileDescriptor, "utf-8");
             this.data = JSON.parse(rawData) || {};
+            fs_1.default.closeSync(fileDescriptor);
         }
         catch (err) {
             if (err.code === "ENOENT") {
@@ -103,10 +105,12 @@ class MoonlinkDatabase {
     save() {
         try {
             const filePath = this.getFilePath();
-            fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
+            const fileDescriptor = fs_1.default.openSync(filePath, "w");
+            fs_1.default.writeFileSync(fileDescriptor, JSON.stringify(this.data, null, 2));
+            fs_1.default.closeSync(fileDescriptor);
         }
         catch (error) {
-            throw new Error("@Moonlink(Database) - Failed to save data");
+            throw new Error("@Moonlink(Database) - Failed to save data, error: ", error);
         }
     }
 }
