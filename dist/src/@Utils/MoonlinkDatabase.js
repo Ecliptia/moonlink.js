@@ -6,12 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkDatabase = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const index_1 = require("../../index");
 class MoonlinkDatabase {
     data = {};
     id;
+    doNotSaveToFiles;
     constructor(clientId) {
         this.fetch();
         this.id = clientId;
+        this.doNotSaveToFiles = index_1.Structure.manager.options?.doNotSaveToFiles;
     }
     set(key, value) {
         if (!key)
@@ -82,6 +85,8 @@ class MoonlinkDatabase {
         return path_1.default.join(__dirname, "../@Datastore", `database-${this.id}.json`);
     }
     fetch() {
+        if (this.doNotSaveToFiles)
+            return;
         try {
             const directory = path_1.default.join(__dirname, "../@Datastore");
             if (!fs_1.default.existsSync(directory)) {
@@ -103,6 +108,8 @@ class MoonlinkDatabase {
         }
     }
     save() {
+        if (this.doNotSaveToFiles)
+            return;
         try {
             const filePath = this.getFilePath();
             const fileDescriptor = fs_1.default.openSync(filePath, "w");

@@ -39,6 +39,8 @@ class MoonlinkNode {
         this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
         this.rest = new (index_1.Structure.get("MoonlinkRestFul"))(this);
+        if (node.sessionId)
+            this.sessionId = node.sessionId;
         this.connect();
     }
     get address() {
