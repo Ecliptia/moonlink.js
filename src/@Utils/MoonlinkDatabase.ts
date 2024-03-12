@@ -1,15 +1,16 @@
 import fs from "fs";
 import path from "path";
-
+import { Structure } from "../../index";
 type Data = Record<string, any>;
 
 export class MoonlinkDatabase {
     public data: Data = {};
     public id: string;
-
+    public doNotSaveToFiles: boolean;
     constructor(clientId: string) {
         this.fetch();
         this.id = clientId;
+        this.doNotSaveToFiles = Structure.manager.options?.doNotSaveToFiles;
     }
 
     set<T>(key: string, value: T): void {
@@ -96,6 +97,8 @@ export class MoonlinkDatabase {
     }
 
     fetch() {
+        if (this.doNotSaveToFiles) return;
+
         try {
             const directory = path.join(__dirname, "../@Datastore");
             if (!fs.existsSync(directory)) {
@@ -120,13 +123,20 @@ export class MoonlinkDatabase {
         }
     }
     private save() {
-    try {
-        const filePath = this.getFilePath();
-        const fileDescriptor = fs.openSync(filePath, "w");
-        fs.writeFileSync(fileDescriptor, JSON.stringify(this.data, null, 2));
-        fs.closeSync(fileDescriptor);
-    } catch (error) {
-        throw new Error("@Moonlink(Database) - Failed to save data, error: ", error);
+        if (this.doNotSaveToFiles) return;
+        try {
+            const filePath = this.getFilePath();
+            const fileDescriptor = fs.openSync(filePath, "w");
+            fs.writeFileSync(
+                fileDescriptor,
+                JSON.stringify(this.data, null, 2)
+            );
+            fs.closeSync(fileDescriptor);
+        } catch (error) {
+            throw new Error(
+                "@Moonlink(Database) - Failed to save data, error: ",
+                error
+            );
+        }
     }
-}
 }
