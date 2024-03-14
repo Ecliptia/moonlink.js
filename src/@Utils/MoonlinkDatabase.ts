@@ -95,77 +95,49 @@ export class MoonlinkDatabase {
             `database-${this.id}.json`
         );
     }
-fetch() {
-    if (this.doNotSaveToFiles) return;
-    const maxAttempts = 10;
-    let attempts = 0;
+    fetch() {
+        if (this.doNotSaveToFiles) return;
 
-    const fetchWithRetry = () => {
-        try {
-            const directory = path.join(__dirname, "../@Datastore");
-            if (!fs.existsSync(directory)) {
-                fs.mkdirSync(directory, { recursive: true });
-            }
-
-            const filePath = this.getFilePath();
-
-            const fileDescriptor = fs.openSync(filePath, "r");
-            try {
-                const rawData = fs.readFileSync(fileDescriptor, "utf-8");
-                this.data = JSON.parse(rawData) || {};
-            } finally {
-                fs.closeSync(fileDescriptor);
-            }
-        } catch (err) {
-            if (attempts < maxAttempts) {
-                if (err.code === "EMFILE") {
-                    attempts++;
-                    setTimeout(fetchWithRetry, 1000);
-                } else if (err.code === "ENOENT") {
-                    this.data = {};
-                } else {
-                    throw err;
-                }
-            } else {
-                throw err;
-            }
+        const directory = path.join(__dirname, "../@Datastore");
+        if (!fs.existsSync(directory)) {
+            fs.mkdirSync(directory, { recursive: true });
         }
-    };
 
-    fetchWithRetry();
-}
+        let fileDescriptor;
+        const filePath = this.getFilePath();
+        try {
+            fileDescriptor = fs.openSync(filePath, "r");
 
-private save() {
-    if (this.doNotSaveToFiles) return;
-    const maxAttempts = 10;
-    let attempts = 0;
+            const rawData = fs.readFileSync(fileDescriptor, "utf-8");
+            this.data = JSON.parse(rawData) || {};
+        } catch (err) {
+            Structure.manager.emit(
+                "debug",
+                "Moonlink(Database) - Error: " + err
+            );
+        } finally {
+            fs.closeSync(fileDescriptor);
+        }
+    }
 
-    const saveWithRetry = () => {
+    private save() {
+        if (this.doNotSaveToFiles) return;
+        let fileDescriptor;
         try {
             const filePath = this.getFilePath();
-            const fileDescriptor = fs.openSync(filePath, "w");
-            try {
-                fs.writeFileSync(
-                    fileDescriptor,
-                    JSON.stringify(this.data, null, 2)
-                );
-            } finally {
-                fs.closeSync(fileDescriptor);
-            }
-        } catch (err) {
-            if (attempts < maxAttempts) {
-                if (err.code === "EMFILE") {
-                    attempts++;
-                    setTimeout(saveWithRetry, 1000);
-                } else {
-                    throw err;
-                }
-            } else {
-                throw err;
-            }
-        }
-    };
+            fileDescriptor = fs.openSync(filePath, "w");
 
-    saveWithRetry();
-}
+            fs.writeFileSync(
+                fileDescriptor,
+                JSON.stringify(this.data, null, 2)
+            );
+        } catch (err) {
+            Structure.manager.emit(
+                "debug",
+                "Moonlink(Database) - Error: " + err
+            );
+        } finally {
+            fs.closeSync(fileDescriptor);
+        }
+    }
 }
