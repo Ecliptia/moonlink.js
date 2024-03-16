@@ -6,15 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoonlinkDatabase = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const index_1 = require("../../index");
 class MoonlinkDatabase {
     data = {};
     id;
-    doNotSaveToFiles;
     constructor(clientId) {
         this.fetch();
         this.id = clientId;
-        this.doNotSaveToFiles = index_1.Structure.manager.options?.doNotSaveToFiles;
     }
     set(key, value) {
         if (!key)
@@ -85,40 +82,31 @@ class MoonlinkDatabase {
         return path_1.default.join(__dirname, "../@Datastore", `database-${this.id}.json`);
     }
     fetch() {
-        if (this.doNotSaveToFiles)
-            return;
-        const directory = path_1.default.join(__dirname, "../@Datastore");
-        if (!fs_1.default.existsSync(directory)) {
-            fs_1.default.mkdirSync(directory, { recursive: true });
-        }
-        let fileDescriptor;
-        const filePath = this.getFilePath();
         try {
-            fileDescriptor = fs_1.default.openSync(filePath, "r");
-            const rawData = fs_1.default.readFileSync(fileDescriptor, "utf-8");
+            const directory = path_1.default.join(__dirname, "../@Datastore");
+            if (!fs_1.default.existsSync(directory)) {
+                fs_1.default.mkdirSync(directory, { recursive: true });
+            }
+            const filePath = this.getFilePath();
+            const rawData = fs_1.default.readFileSync(filePath, "utf-8");
             this.data = JSON.parse(rawData) || {};
         }
         catch (err) {
-            index_1.Structure.manager.emit("debug", "Moonlink(Database) - Error: " + err);
-        }
-        finally {
-            fs_1.default.closeSync(fileDescriptor);
+            if (err.code === "ENOENT") {
+                this.data = {};
+            }
+            else {
+                throw new Error("@Moonlink(Database) - Failed to fetch data (Error):", err);
+            }
         }
     }
     save() {
-        if (this.doNotSaveToFiles)
-            return;
-        let fileDescriptor;
         try {
             const filePath = this.getFilePath();
-            fileDescriptor = fs_1.default.openSync(filePath, "w");
-            fs_1.default.writeFileSync(fileDescriptor, JSON.stringify(this.data, null, 2));
+            fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
-        catch (err) {
-            index_1.Structure.manager.emit("debug", "Moonlink(Database) - Error: " + err);
-        }
-        finally {
-            fs_1.default.closeSync(fileDescriptor);
+        catch (error) {
+            throw new Error("@Moonlink(Database) - Failed to save data");
         }
     }
 }
