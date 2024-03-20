@@ -1,4 +1,5 @@
 export interface INode {
+    group?: number;
     host: string;
     id?: number;
     identifier?: string;
@@ -12,6 +13,7 @@ export interface INode {
 export interface IDataManager {
     nodes: INode[];
     options: IOptionsManager;
+    sendPayload: Function;
 }
 export interface IOptionsManager {
     clientame?: string;
@@ -19,5 +21,9 @@ export interface IOptionsManager {
     defaultPlaformSearch?: string;
     plugins?: any;
     partialTrack?: any;
-    sendPayload: Function;
+}
+
+export interface IVoicePacket {
+    t?: "VOICE_SERVER_UPDATE" | "VOICE_STATE_UPDATE";
+    d: VoiceState | VoiceServer;
 }
