@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import {
-    IDataManager,
+    IConfigManager,
     IOptionsManager,
     IPacketVoice
 } from "../typings/Interfaces";
@@ -9,7 +9,7 @@ export class Manager extends EventEmitter {
     public options: IOptionsManager;
     public sendPayload: Function;
     public version: string;
-    constructor(data: IDataManager) {
+    constructor(data: IConfigManager) {
         super();
         this.sendPayload = data?.sendPayload;
         this.options = {
@@ -21,6 +21,5 @@ export class Manager extends EventEmitter {
     public packetUpdate(data: IPacketVoice): void {
         if (!["VOICE_SERVER_UPDATE", "VOICE_STATE_UPDATE"].includes(data?.t))
             return;
-            
     }
 }
