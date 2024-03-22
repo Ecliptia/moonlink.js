@@ -51,5 +51,8 @@
     "typecript": "^0.0.1-security",
     "typedoc": "^0.25.4",
     "typedoc-plugin-markdown": "^3.17.1"
+  },
+  "dependencies": {
+    "@performanc/pwsl-mini": "github:PerformanC/internals#PWSL-mini"
   }
 }

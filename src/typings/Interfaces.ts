@@ -7,10 +7,11 @@ export interface INode {
     password?: string;
     reconnectTimeout?: number;
     reconnectAmount?: number;
+    regions?: String[];
     secure?: boolean;
     sessionId?: string;
 }
-export interface IDataManager {
+export interface IConfigManager {
     nodes: INode[];
     options: IOptionsManager;
     sendPayload: Function;
