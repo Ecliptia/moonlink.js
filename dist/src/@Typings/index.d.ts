@@ -95,6 +95,7 @@ export interface INode {
     regions?: string[];
     retryAmount?: number;
     retryDelay?: number;
+    sessionId?: string;
 }
 export interface IOptions {
     clientId?: string;
@@ -104,6 +105,7 @@ export interface IOptions {
     resume?: boolean;
     plugins?: Plugin[];
     http2?: boolean;
+    doNotSaveToFiles?: boolean;
     switchPlayersAnotherNode?: boolean;
     destroyPlayersStopped?: boolean;
     balancingPlayersByRegion?: boolean;

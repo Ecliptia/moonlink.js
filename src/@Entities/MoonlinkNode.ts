@@ -58,7 +58,7 @@ export class MoonlinkNode {
         this.regions = node.regions;
         this.http = `http${node.secure ? "s" : ""}://${this.address}/v4/`;
         this.rest = new (Structure.get("MoonlinkRestFul"))(this);
-
+        if (node.sessionId) this.sessionId = node.sessionId;
         this.connect();
     }
 
@@ -355,9 +355,11 @@ export class MoonlinkNode {
         let player: MoonlinkPlayer = this._manager.players.get(payload.guildId);
         switch (payload.type) {
             case "TrackStartEvent": {
-                player.current = new (Structure.get("MoonlinkTrack"))(
-                    payload.track
-                );
+                if (!player.current)
+                    player.current = new (Structure.get("MoonlinkTrack"))(
+                        payload.track
+                    );
+
                 player.playing = true;
                 player.paused = false;
                 this._manager.emit("trackStart", player, player.current);
