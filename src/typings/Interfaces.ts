@@ -17,14 +17,9 @@ export interface IConfigManager {
     sendPayload: Function;
 }
 export interface IOptionsManager {
-    clientame?: string;
+    clientName?: string;
     clientId?: string;
-    defaultPlaformSearch?: string;
+    defaultPlatformSearch?: string;
     plugins?: any;
     partialTrack?: any;
-}
-
-export interface IVoicePacket {
-    t?: "VOICE_SERVER_UPDATE" | "VOICE_STATE_UPDATE";
-    d: VoiceState | VoiceServer;
 }

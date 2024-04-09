@@ -2,7 +2,6 @@ import { EventEmitter } from "node:events";
 import {
     IConfigManager,
     IOptionsManager,
-    IPacketVoice
 } from "../typings/Interfaces";
 export class Manager extends EventEmitter {
     public clientId: string;
@@ -14,12 +13,8 @@ export class Manager extends EventEmitter {
         this.sendPayload = data?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
-            defaultPlataformSearch: "youtube",
+            defaultPlatformSearch: "youtube",
             ...data.options
         };
-    }
-    public packetUpdate(data: IPacketVoice): void {
-        if (!["VOICE_SERVER_UPDATE", "VOICE_STATE_UPDATE"].includes(data?.t))
-            return;
     }
 }
