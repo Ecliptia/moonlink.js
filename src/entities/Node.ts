@@ -7,7 +7,7 @@ export class Node {
     public regions: String[];
     public secure: boolean;
     public sessionId: string;
-    public group: number;
+    public url: string;
     constructor(config) {
         this.host = config.host;
         this.port = config.port;
@@ -17,6 +17,15 @@ export class Node {
         this.regions = config.regions;
         this.secure = config.secure;
         this.sessionId = config.sessionId;
-        this.group = config.group;
+        this.url = `${this.secure ? 'https' : 'http'}://${this.adress}`;
+
+
+        this.connect();
+    }
+    public get adress(): string {
+        return `${this.host}:${this.port}`;
+    }
+    public connect(): void {
+        
     }
 }

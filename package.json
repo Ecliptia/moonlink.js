@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "start": "rm -r dist && tsc && mv ./dist/index.js ./"
+    "start": ""
   },
   "homepage": "https://moonlink.js.org",
   "bugs": {
@@ -45,14 +45,6 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "discord.js": "^14.14.1",
-    "get-image-colors": "^4.0.1",
-    "mongoose": "^8.1.1",
-    "typecript": "^0.0.1-security",
-    "typedoc": "^0.25.4",
-    "typedoc-plugin-markdown": "^3.17.1"
-  },
-  "dependencies": {
-    "@performanc/pwsl-mini": "github:PerformanC/internals#PWSL-mini"
+    "discord.js": "^14.14.1"
   }
 }
