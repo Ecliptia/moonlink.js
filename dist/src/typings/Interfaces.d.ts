@@ -1,6 +1,5 @@
-import { } from "../../index"
-
 export interface INode {
+    group?: number;
     host: string;
     id?: number;
     identifier?: string;
@@ -23,7 +22,4 @@ export interface IOptionsManager {
     defaultPlatformSearch?: string;
     plugins?: any;
     partialTrack?: any;
-}
-export interface IExtendable {
-
 }
