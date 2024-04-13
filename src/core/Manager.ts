@@ -9,7 +9,7 @@ export class Manager extends EventEmitter {
     public options: IOptionsManager;
     public sendPayload: Function;
     public nodes: NodeManager;
-    public version: string;
+    public version: string = require("../../index").version;
     constructor(config: IConfigManager) {
         super();
         this.sendPayload = config?.sendPayload;

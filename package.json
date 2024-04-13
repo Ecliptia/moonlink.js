@@ -41,7 +41,7 @@
     "url": "https://github.com/Ecliptia/moonlink.js"
   },
   "engines": {
-    "node": ">=16.6.0"
+    "node": ">=18.x.x"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

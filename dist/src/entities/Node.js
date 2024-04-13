@@ -10,7 +10,7 @@ class Node {
     regions;
     secure;
     sessionId;
-    group;
+    url;
     constructor(config) {
         this.host = config.host;
         this.port = config.port;
@@ -20,7 +20,13 @@ class Node {
         this.regions = config.regions;
         this.secure = config.secure;
         this.sessionId = config.sessionId;
-        this.group = config.group;
+        this.url = `${this.secure ? 'https' : 'http'}://${this.adress}`;
+        this.connect();
+    }
+    get adress() {
+        return `${this.host}:${this.port}`;
+    }
+    connect() {
     }
 }
 exports.Node = Node;

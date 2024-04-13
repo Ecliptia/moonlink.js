@@ -15,8 +15,8 @@ export class NodeManager {
         validateProperty(node.id, (value) => value === undefined || typeof value === 'number', '(Moonlink.js) - Node > Invalid id value. Id must be a number.');
         validateProperty(node.identifier, (value) => value === undefined || typeof value === 'string', '(Moonlink.js) - Node > Invalid identifier value. Identifier must be a string.');
         validateProperty(node.regions, (value) => value === undefined || Array.isArray(value), '(Moonlink.js) - Node > Invalid regions value. Regions must be an array.');
-        validateProperty(node.reconnectTimeout, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid reconnectTimeout value. ReconnectTimeout must be a number greater than or equal to 0.');
-        validateProperty(node.reconnectAmount, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid reconnectAmount value. ReconnectAmount must be a number greater than or equal to 0.');
+        validateProperty(node.retryDelay, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid retryDelay value. ReconnectTimeout must be a number greater than or equal to 0.');
+        validateProperty(node.retryAmount, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid retryAmount value. ReconnectAmount must be a number greater than or equal to 0.');
     }
     
     public addNodes(nodes: INode[]): void {
