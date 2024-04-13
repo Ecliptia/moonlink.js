@@ -1,4 +1,4 @@
-import { } from "../../index"
+import { Plugin } from "../../index"
 
 export interface INode {
     host: string;
@@ -6,12 +6,13 @@ export interface INode {
     identifier?: string;
     port: number;
     password?: string;
-    reconnectTimeout?: number;
-    reconnectAmount?: number;
+    retryDelay?: number;
+    retryAmount?: number;
     regions?: String[];
     secure?: boolean;
     sessionId?: string;
 }
+export interface INodeStats {}
 export interface IConfigManager {
     nodes: INode[];
     options: IOptionsManager;
@@ -21,7 +22,7 @@ export interface IOptionsManager {
     clientName?: string;
     clientId?: string;
     defaultPlatformSearch?: string;
-    plugins?: any;
+    plugins?: Plugin[];
     partialTrack?: any;
 }
 export interface IExtendable {

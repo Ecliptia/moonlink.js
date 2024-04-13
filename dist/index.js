@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./src/core/Manager"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/entities/Node"), exports);
+__exportStar(require("./src/Utils"), exports);

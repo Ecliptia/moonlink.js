@@ -7,6 +7,8 @@ export declare class Node {
     regions: String[];
     secure: boolean;
     sessionId: string;
-    group: number;
+    url: string;
     constructor(config: any);
+    get adress(): string;
+    connect(): void;
 }

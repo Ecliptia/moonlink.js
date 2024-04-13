@@ -1,5 +1,5 @@
+import { Plugin } from "../../index";
 export interface INode {
-    group?: number;
     host: string;
     id?: number;
     identifier?: string;
@@ -20,6 +20,8 @@ export interface IOptionsManager {
     clientName?: string;
     clientId?: string;
     defaultPlatformSearch?: string;
-    plugins?: any;
+    plugins?: Plugin[];
     partialTrack?: any;
+}
+export interface IExtendable {
 }
