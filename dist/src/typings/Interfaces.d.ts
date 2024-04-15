@@ -5,11 +5,13 @@ export interface INode {
     identifier?: string;
     port: number;
     password?: string;
-    reconnectTimeout?: number;
-    reconnectAmount?: number;
+    retryDelay?: number;
+    retryAmount?: number;
     regions?: String[];
     secure?: boolean;
     sessionId?: string;
+}
+export interface INodeStats {
 }
 export interface IConfigManager {
     nodes: INode[];

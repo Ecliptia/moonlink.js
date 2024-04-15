@@ -1,7 +1,10 @@
-import { Manager } from '../../index'
+import { Manager, Node, Rest } from '../../index'
 import { IExtendable } from '../typings/Interfaces'
 
-const structures: IExtendable = {};
+const structures: IExtendable = {
+    Node: Node,
+    Rest: Rest
+};
 export abstract class Structure {
     public static manager: Manager;
     public initialize(manager: Manager) {

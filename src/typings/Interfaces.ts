@@ -1,5 +1,10 @@
-import { Plugin } from "../../index"
+import { Plugin, Node, Rest } from "../../index"
 
+export interface IEvents {
+    debug: (...args: string[]) => void;
+    nodeCreate: (node: INode) => void;
+    nodeDestroy: (node: INode) => void;
+}
 export interface INode {
     host: string;
     id?: number;
@@ -12,7 +17,27 @@ export interface INode {
     secure?: boolean;
     sessionId?: string;
 }
-export interface INodeStats {}
+export interface INodeStats {
+    players: number;
+    playingPlayers: number;
+    uptime: number;
+    memory: {
+        reservable: number;
+        used: number;
+        free: number;
+        allocated: number;
+    };
+    frameStats: {
+        sent: number;
+        deficit: number;
+        nulled: number;
+    };
+    cpu: {
+        cores: number;
+        systemLoad: number;
+        lavalinkLoad: number;
+    };
+}
 export interface IConfigManager {
     nodes: INode[];
     options: IOptionsManager;
@@ -26,5 +51,6 @@ export interface IOptionsManager {
     partialTrack?: any;
 }
 export interface IExtendable {
-
+    Node: typeof Node;
+    Rest: typeof Rest;
 }
