@@ -1,5 +1,5 @@
 import { INode } from "../typings/Interfaces";
-import { Node } from "../../index";
+import { Structure, Node } from "../../index";
 import { validateProperty } from "src/Utils";
 export class NodeManager {
     public cache: Map<string | number, Node> = new Map();
@@ -24,7 +24,7 @@ export class NodeManager {
             this.check(node);
             this.cache.set(
                 node.id ?? node.identifier ?? node.host,
-                new Node(node)
+            new (Structure.get("Node"))(node)
             );
         });
     }

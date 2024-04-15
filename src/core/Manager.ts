@@ -1,13 +1,34 @@
 import { EventEmitter } from "node:events";
 import {
+    IEvents,
     IConfigManager,
     IOptionsManager,
 } from "../typings/Interfaces";
-import { NodeManager } from "index";
+import { NodeManager } from "../../index";
+
+export declare interface MoonlinkManager {
+    on<K extends keyof IEvents>(
+        event: K,
+        listener: IEvents[K]
+    ): this;
+    once<K extends keyof IEvents>(
+        event: K,
+        listener: IEvents[K]
+    ): this;
+    emit<K extends keyof IEvents>(
+        event: K,
+        ...args: Parameters<IEvents[K]>
+    ): boolean;
+    off<K extends keyof IEvents>(
+        event: K,
+        listener: IEvents[K]
+    ): this;
+} 
+
 export class Manager extends EventEmitter {
     public clientId: string;
-    public options: IOptionsManager;
-    public sendPayload: Function;
+    public readonly options: IOptionsManager;
+    public readonly sendPayload: Function;
     public nodes: NodeManager;
     public version: string = require("../../index").version;
     constructor(config: IConfigManager) {
