@@ -10,7 +10,7 @@ body:
   attributes:
     label: "Description of the problem"
     description: "Describe the problem"
-    value: ""
+    value: "value"
     render: bash
   validations:
     required: true
@@ -19,7 +19,7 @@ body:
   attributes:
     label: "Step by Step"
     description: "Steps to reproduce the problem"
-    value: ""
+    value: "value"
     render: bash
   validations:
     required: true
