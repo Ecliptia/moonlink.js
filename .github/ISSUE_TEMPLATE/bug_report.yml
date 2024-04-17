@@ -1,5 +1,5 @@
-name: "Bug report"
-description: "Report problems with the package"
+name: Bug report
+description: Report problems with the package
 title: "Bug(FILE.EXTENSION): TITLE"
 labels: ["bug"]
 assignees: ["1Lucas1apk"]
