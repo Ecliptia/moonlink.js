@@ -1,14 +1,14 @@
-name: Bug report
-description: Report problems with the package
+name: "Bug report"
+description: "Report problems with the package"
 title: "Bug(FILE.EXTENSION): TITLE"
-labels: bug
-assignees: 1Lucas1apk
+labels: ["bug"]
+assignees: ["1Lucas1apk"]
 
 body: 
 - type: textarea
   id: description
   attributes:
-    label: Description of the problem
+    label: "Description of the problem"
     description: "Describe the problem"
     value: ""
     render: bash
@@ -17,7 +17,7 @@ body:
  - type: textarea
   id: steps
   attributes:
-    label: step by step
+    label: "step by step"
     description: "To make the problem occur"
     value: ""
     render: bash
@@ -26,7 +26,7 @@ body:
 - type: input
   id: version
   attributes:
-    label: package version
+    label: "package version"
     description: "enter the version you are using, look in package.json"
     placeholder: "1.0.0 (NPM OR GIT CLONE)"
   validations:
@@ -34,7 +34,7 @@ body:
 - type: checkboxes
   id: check
   attributes:
-    label: first of all confirm:
+    label: "first of all confirm:"
     description: "confirm"
     options:
       - label: "have you checked that there isn't already another issue with the same problem either on github or on the discord server?"
