@@ -8,34 +8,34 @@ body:
 - type: textarea
   id: description
   attributes:
-      label: Description of the problem
-      description: "Describe the problem"
-      value: ""
-      render: bash
+    label: Description of the problem
+    description: "Describe the problem"
+    value: ""
+    render: bash
   validations:
-      required: true
+    required: true
  - type: textarea
   id: steps
   attributes:
-      label: step by step
-      description: "To make the problem occur"
-      value: ""
-      render: bash
+    label: step by step
+    description: "To make the problem occur"
+    value: ""
+    render: bash
   validations:
-      required: true
+    required: true
 - type: input
   id: version
   attributes:
-      label: package version
-      description: "enter the version you are using, look in package.json"
-      placeholder: "1.0.0 (NPM OR GIT CLONE)"
+    label: package version
+    description: "enter the version you are using, look in package.json"
+    placeholder: "1.0.0 (NPM OR GIT CLONE)"
   validations:
-      required: true
+    required: true
 - type: checkboxes
   id: check
   attributes:
-      label: first of all confirm:
-      description: "confirm"
+    label: first of all confirm:
+    description: "confirm"
     options:
       - label: "have you checked that there isn't already another issue with the same problem either on github or on the discord server?"
         required: true
