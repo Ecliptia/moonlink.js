@@ -1,0 +1,45 @@
+name: Bug report
+description: Report problems with the package
+title: "Bug(FILE.EXTENSION): TITLE"
+labels: bug
+assignees: 1Lucas1apk
+
+body: 
+- type: textarea
+  id: description
+  attributes:
+      label: Description of the problem
+      description: "Describe the problem"
+      value: ""
+      render: bash
+  validations:
+      required: true
+ - type: textarea
+  id: steps
+  attributes:
+      label: step by step
+      description: "To make the problem occur"
+      value: ""
+      render: bash
+  validations:
+      required: true
+- type: input
+  id: version
+  attributes:
+      label: package version
+      description: "enter the version you are using, look in package.json"
+      placeholder: "1.0.0 (NPM OR GIT CLONE)"
+  validations:
+      required: true
+- type: checkboxes
+  id: check
+  attributes:
+      label: first of all confirm:
+      description: "confirm"
+    options:
+      - label: "have you checked that there isn't already another issue with the same problem either on github or on the discord server?"
+        required: true
+      - label: "have you checked that there hasn't been a recent commit fixing this problem?"
+        required: true
+      - label: "are you using the latest version?"
+      - label: "I agree to behave and wait patiently"
