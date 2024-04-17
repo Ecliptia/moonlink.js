@@ -14,11 +14,11 @@ body:
     render: bash
   validations:
     required: true
- - type: textarea
+- type: textarea
   id: steps
   attributes:
-    label: "step by step"
-    description: "To make the problem occur"
+    label: "Step by Step"
+    description: "Steps to reproduce the problem"
     value: ""
     render: bash
   validations:
@@ -26,20 +26,20 @@ body:
 - type: input
   id: version
   attributes:
-    label: "package version"
-    description: "enter the version you are using, look in package.json"
-    placeholder: "1.0.0 (NPM OR GIT CLONE)"
+    label: "Package Version"
+    description: "Enter the version you are using (e.g., from package.json)"
+    placeholder: "1.0.0 (NPM or Git Clone)"
   validations:
     required: true
 - type: checkboxes
   id: check
   attributes:
-    label: "first of all confirm:"
-    description: "confirm"
+    label: "First of all, please confirm:"
+    description: "Confirm the following:"
     options:
-      - label: "have you checked that there isn't already another issue with the same problem either on github or on the discord server?"
+      - label: "Have you checked if there isn't already another issue with the same problem either on GitHub or on the Discord server?"
         required: true
-      - label: "have you checked that there hasn't been a recent commit fixing this problem?"
+      - label: "Have you checked if there hasn't been a recent commit fixing this problem?"
         required: true
-      - label: "are you using the latest version?"
+      - label: "Are you using the latest version?"
       - label: "I agree to behave and wait patiently"
