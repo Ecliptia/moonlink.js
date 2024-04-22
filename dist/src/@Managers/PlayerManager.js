@@ -45,9 +45,10 @@ class PlayerManager {
     async attemptConnection(guildId) {
         if (!this.cache[guildId])
             return false;
-        if (this.voices[guildId] &&
-            !this.voices[guildId]?.token &&
-            !this.voices[guildId]?.endpoint &&
+        if (!this.voices[guildId])
+            return false;
+        if (!this.voices[guildId]?.token ||
+            !this.voices[guildId]?.endpoint ||
             !this.voices[guildId]?.sessionId)
             return false;
         if (this._manager.options?.balancingPlayersByRegion) {
