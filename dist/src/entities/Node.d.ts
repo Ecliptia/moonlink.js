@@ -2,6 +2,7 @@
 /// <reference types="node" />
 import WebSocket from 'ws';
 import { INodeStats, INode } from '../typings/Interfaces';
+import { Rest } from '../../index';
 export declare class Node {
     host: string;
     port: number;
@@ -17,8 +18,9 @@ export declare class Node {
     secure: boolean;
     sessionId: string;
     socket: WebSocket;
-    stats: INodeStats;
+    stats?: INodeStats;
     url: string;
+    rest: Rest;
     constructor(config: INode);
     get address(): string;
     connect(): void;
@@ -27,4 +29,5 @@ export declare class Node {
     protected close(code: number, reason?: string): void;
     protected message(data: Buffer): Promise<void>;
     protected error(): void;
+    destroy(): void;
 }

@@ -1,10 +1,11 @@
 import { INode } from "../typings/Interfaces";
-import { Structure, Node } from "../../index";
-import { validateProperty } from "src/Utils";
+import { Structure, Node, validateProperty } from "../../index";
 export class NodeManager {
     public cache: Map<string | number, Node> = new Map();
     constructor(nodes: INode[]) {
-        this.addNodes(nodes);
+        nodes.forEach(node => {
+           this.add(node);
+        });
     }
     public check(node: INode): void {
         validateProperty(node.host, (value) => !!value, '(Moonlink.js) - Node > Host is required');
@@ -18,15 +19,20 @@ export class NodeManager {
         validateProperty(node.retryDelay, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid retryDelay value. ReconnectTimeout must be a number greater than or equal to 0.');
         validateProperty(node.retryAmount, (value) => value === undefined || value >= 0, '(Moonlink.js) - Node > Invalid retryAmount value. ReconnectAmount must be a number greater than or equal to 0.');
     }
-    
-    public addNodes(nodes: INode[]): void {
-        nodes?.forEach(node => {
-            this.check(node);
-            this.cache.set(
-                node.id ?? node.identifier ?? node.host,
-            new (Structure.get("Node"))(node)
-            );
+    public init(): void {
+        this.cache.forEach(node => {
+            node.connect();
         });
     }
-
+    public add(node: INode): void {
+        this.check(node);
+        this.cache.set(node.id || node.identifier || node.identifier, new (Structure.get("Node"))(node));
+    }
+    public remove(identifier: string | number): void {
+        this.cache.get(identifier)?.destroy();
+        this.cache.delete(identifier);
+    }
+    public get(identifier: string | number): Node {
+        return this.cache.get(identifier);
+    }
 }

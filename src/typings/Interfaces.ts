@@ -1,4 +1,4 @@
-import { Plugin, Node, Rest } from "../../index"
+import { Plugin, Node, Rest, Player } from "../../index"
 
 export interface IEvents {
     debug: (...args: string[]) => void;
@@ -50,7 +50,14 @@ export interface IOptionsManager {
     plugins?: Plugin[];
     partialTrack?: any;
 }
+export interface IPlayerConfig {
+    guildId: string;
+    voiceChannelId: string;
+    textChannelId: string;
+    volume?: number;
+}
 export interface IExtendable {
     Node: typeof Node;
     Rest: typeof Rest;
+    Player: typeof Player;
 }

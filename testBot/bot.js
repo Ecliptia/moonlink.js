@@ -1,10 +1,12 @@
 const Discord = require('discord.js');
 const { Manager } = require('../dist/index.js');
+require('dotenv').config();
 
 const client = new Discord.Client({
     intents: [
-        Discord.Intents.FLAGS.GUILDS,
-        Discord.Intents.FLAGS.GUILD_MESSAGES
+        Discord.GatewayIntentBits.Guilds,
+        Discord.GatewayIntentBits.GuildMessages,
+        Discord.GatewayIntentBits.GuildVoiceStates,
     ]
 });
 client.manager = new Manager({
