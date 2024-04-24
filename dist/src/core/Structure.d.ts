@@ -5,4 +5,6 @@ export declare abstract class Structure {
     initialize(manager: Manager): void;
     static extend<K extends keyof IExtendable, T extends IExtendable[K]>(name: K, extender: (target: IExtendable[K]) => T): T;
     static get<K extends keyof IExtendable>(name: K): IExtendable[K];
+    static setManager(manager: Manager): void;
+    static getManager(): Manager;
 }

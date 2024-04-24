@@ -31,7 +31,6 @@ export class Node {
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? 'https' : 'http'}://${this.address}/v4/`;
         this.rest = new (Structure.get("Rest"))(this);
-        this.connect();
     }
     public get address(): string {
         return `${this.host}:${this.port}`;
@@ -93,4 +92,8 @@ export class Node {
         }
     }
     protected error(): void {}
+    public destroy(): void {
+        this.socket.close();
+        this.destroyed = true;
+    }
 }

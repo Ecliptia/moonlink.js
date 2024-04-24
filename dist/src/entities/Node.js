@@ -23,6 +23,7 @@ class Node {
     socket;
     stats;
     url;
+    rest;
     constructor(config) {
         this.host = config.host;
         this.port = config.port;
@@ -34,7 +35,7 @@ class Node {
         this.secure = config.secure;
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? 'https' : 'http'}://${this.address}/v4/`;
-        this.connect();
+        this.rest = new (index_1.Structure.get("Rest"))(this);
     }
     get address() {
         return `${this.host}:${this.port}`;
@@ -95,5 +96,10 @@ class Node {
         }
     }
     error() { }
+    destroy() {
+        this.socket.close();
+        this.destroyed = true;
+    }
 }
 exports.Node = Node;
+//# sourceMappingURL=Node.js.map

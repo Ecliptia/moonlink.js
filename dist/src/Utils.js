@@ -19,3 +19,4 @@ class Plugin {
     unload(manager) { }
 }
 exports.Plugin = Plugin;
+//# sourceMappingURL=Utils.js.map

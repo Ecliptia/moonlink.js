@@ -1,9 +1,10 @@
-import { Manager, Node, Rest } from '../../index'
+import { Manager, Node, Player, Rest } from '../../index'
 import { IExtendable } from '../typings/Interfaces'
 
 const structures: IExtendable = {
     Node: Node,
-    Rest: Rest
+    Rest: Rest,
+    Player: Player,
 };
 export abstract class Structure {
     public static manager: Manager;
@@ -17,5 +18,11 @@ export abstract class Structure {
     }
     public static get <K extends keyof IExtendable> (name: K): IExtendable[K] {
         return structures[name];
+    }
+    public static setManager(manager: Manager) {
+        Structure.manager = manager;
+    }
+    public static getManager(): Manager {      
+        return Structure.manager;
     }
 }
