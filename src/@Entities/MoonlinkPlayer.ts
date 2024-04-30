@@ -9,7 +9,7 @@ import {
     Structure
 } from "../../index";
 
-import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
+import WebSocket from "ws";
 
 import { IPlayerData, connectOptions } from "../@Typings";
 
@@ -33,7 +33,7 @@ export class MoonlinkPlayer {
     public previous: MoonlinkTrack[] | MoonlinkTrack | Record<string, any>;
     public data: Record<string, any>;
     public node: MoonlinkNode | any;
-    public voiceReceiverWs: MoonlinkWebSocket | any;
+    public voiceReceiverWs: WebSocket | any;
 
     /**
      * Creates an instance of MoonlinkPlayer.
@@ -585,7 +585,7 @@ export class MoonlinkPlayer {
     public listenVoice(): EventEmitter | boolean {
         if (!this.node.info.isNodeLink) return false;
 
-        this.voiceReceiverWs = new MoonlinkWebSocket(
+        this.voiceReceiverWs = new WebSocket(
             `ws${this.node.secure ? "s" : ""}://${
                 this.node.address
             }/connection/data`,

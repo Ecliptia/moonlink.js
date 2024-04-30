@@ -44,12 +44,15 @@
     "node": ">=16.6.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^18.19.31",
     "discord.js": "^14.14.1",
     "get-image-colors": "^4.0.1",
     "mongoose": "^8.1.1",
     "typecript": "^0.0.1-security",
     "typedoc": "^0.25.4",
     "typedoc-plugin-markdown": "^3.17.1"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
   }
 }

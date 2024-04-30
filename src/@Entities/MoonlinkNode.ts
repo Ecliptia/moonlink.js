@@ -5,7 +5,7 @@ import {
     PreviousInfosPlayer
 } from "../@Typings";
 
-import { MoonlinkWebSocket } from "../@Services/MoonlinkWebSocket";
+import WebSocket from "ws";
 
 import {
     MoonlinkManager,
@@ -38,7 +38,7 @@ export class MoonlinkNode {
     public autoResume?: boolean = Structure.manager.options?.autoResume;
     public resumeTimeout?: number = 30000;
     public sessionId: string;
-    public socket: MoonlinkWebSocket | null;
+    public socket: WebSocket | null;
     public state: string = "DISCONNECTED";
     public stats: INodeStats | Record<string, any> = {};
     public calls: number = 0;
@@ -142,7 +142,7 @@ export class MoonlinkNode {
             headers["Session-Id"] = Structure.db.get(
                 `sessionId.${this.identifier ?? this.host.replace(/\./g, "-")}`
             );
-        this.socket = new MoonlinkWebSocket(
+        this.socket = new WebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
             { headers }
         );
