@@ -13,6 +13,7 @@ class Player {
     current;
     queue;
     node;
+    data = {};
     constructor(config) {
         this.guildId = config.guildId;
         this.voiceChannelId = config.voiceChannelId;
@@ -23,21 +24,27 @@ class Player {
         this.paused = false;
         this.queue = new index_1.Queue();
     }
+    set(key, data) {
+        this.data[key] = data;
+    }
+    get(key) {
+        return this.data[key];
+    }
     connect(options) {
-        index_1.Structure.getManager().sendPayload({
+        index_1.Structure.getManager().sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
                 channel_id: this.voiceChannelId,
-                self_mute: options.setMute || false,
-                self_deaf: options.setDeaf || false
+                self_mute: options?.setMute || false,
+                self_deaf: options?.setDeaf || false
             }
-        });
+        }));
         this.connected = true;
         return true;
     }
     disconnect() {
-        index_1.Structure.getManager().sendPayload({
+        index_1.Structure.getManager().sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -45,7 +52,7 @@ class Player {
                 self_mute: false,
                 self_deaf: false
             }
-        });
+        }));
         this.connected = false;
         return true;
     }

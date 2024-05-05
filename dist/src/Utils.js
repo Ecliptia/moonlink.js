@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Plugin = exports.makeRequest = exports.validateProperty = void 0;
 function validateProperty(prop, validator, errorMessage) {
-    if (prop !== undefined && !validator(prop)) {
+    if (!validator(prop)) {
         throw new Error(errorMessage);
     }
 }

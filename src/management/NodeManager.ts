@@ -1,5 +1,6 @@
 import { INode } from "../typings/Interfaces";
 import { Structure, Node, validateProperty } from "../../index";
+import { connected } from "process";
 export class NodeManager {
     public cache: Map<string | number, Node> = new Map();
     constructor(nodes: INode[]) {
@@ -34,5 +35,9 @@ export class NodeManager {
     }
     public get(identifier: string | number): Node {
         return this.cache.get(identifier);
+    }
+    public get best(): Node {
+        return [...this.cache.values()].filter(node => node.connected === true)
+        .sort((a, b) => a.stats.players - b.stats.players)[0];
     }
 }

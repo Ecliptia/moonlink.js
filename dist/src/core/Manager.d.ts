@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { IEvents, IConfigManager, IOptionsManager } from "../typings/Interfaces";
-import { NodeManager, PlayerManager } from "../../index";
+import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
+import { NodeManager, PlayerManager, Player } from "../../index";
 export declare interface Manager {
     on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
     once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -17,6 +17,7 @@ export declare class Manager extends EventEmitter {
     version: string;
     constructor(config: IConfigManager);
     init(clientId: string): void;
-    packetHandler(packet: any): void;
-    attemptConnection(): void;
+    packetUpdate(packet: any): void;
+    attemptConnection(guildId: string): Promise<boolean>;
+    createPlayer(config: IPlayerConfig): Player;
 }

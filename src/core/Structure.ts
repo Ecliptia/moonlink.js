@@ -1,11 +1,25 @@
-import { Manager, Node, Player, Rest } from '../../index'
 import { IExtendable } from '../typings/Interfaces'
+import { 
+    Manager, 
+    PlayerManager,
+    NodeManager,
+    Node, 
+    Player,
+    Rest, 
+    Queue, 
+    Track
+ } from '../../index'
 
 const structures: IExtendable = {
-    Node: Node,
-    Rest: Rest,
-    Player: Player,
-};
+    PlayerManager,
+    NodeManager,
+    Node,
+    Player,
+    Rest,
+    Queue,
+    Track
+}
+// TODO - A Classe pode trazer problemas com multiplas aplicações, por exemplo, se tiver duas aplicações em um ambiente pode dá um replace no manager, deixando apenas uma aplicação funcional
 export abstract class Structure {
     public static manager: Manager;
     public initialize(manager: Manager) {
