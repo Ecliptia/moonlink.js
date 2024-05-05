@@ -11,7 +11,10 @@ export declare class Player {
     current: Track;
     queue: Queue;
     node: Node;
+    data: Record<string, unknown>;
     constructor(config: IPlayerConfig);
+    set(key: string, data: unknown): void;
+    get<T>(key: string): T;
     connect(options: {
         setMute?: boolean;
         setDeaf?: boolean;

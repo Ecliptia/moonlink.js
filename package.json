@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "dotenv": "^16.4.5",
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
   }
 }

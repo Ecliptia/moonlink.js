@@ -1,4 +1,4 @@
-import { Plugin, Node, Rest, Player } from "../../index";
+import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
 export interface IEvents {
     debug: (...args: string[]) => void;
     nodeCreate: (node: INode) => void;
@@ -47,7 +47,7 @@ export interface IOptionsManager {
     clientId?: string;
     defaultPlatformSearch?: string;
     plugins?: Plugin[];
-    partialTrack?: any;
+    noReplace?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -55,8 +55,37 @@ export interface IPlayerConfig {
     textChannelId: string;
     volume?: number;
 }
+export interface IVoiceState {
+    token?: string;
+    session_id?: string;
+    endpoint?: string;
+}
+export interface IRESTOptions {
+    guildId: string;
+    data: IRESTData;
+}
+export interface IRESTData {
+    track?: IObjectTrack;
+    identifier?: string;
+    startTime?: number;
+    endTime?: number;
+    volume?: number;
+    position?: number;
+    paused?: Boolean;
+    filters?: Object;
+    voice?: IVoiceState;
+}
+export interface IObjectTrack {
+    encoded?: string;
+    identifier?: string;
+    userData?: unknown;
+}
 export interface IExtendable {
     Node: typeof Node;
     Rest: typeof Rest;
     Player: typeof Player;
+    Track: typeof Track;
+    Queue: typeof Queue;
+    PlayerManager: typeof PlayerManager;
+    NodeManager: typeof NodeManager;
 }

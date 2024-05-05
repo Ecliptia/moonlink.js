@@ -1,5 +1,6 @@
 import { IPlayerConfig } from '../typings/Interfaces';
 import { Structure, Node, Queue, Track } from '../../index';
+
 export class Player {
     public guildId: string;
     public voiceChannelId: string;
@@ -20,7 +21,7 @@ export class Player {
         this.playing = false;
         this.volume = config.volume || 80;
         this.paused = false;
-        this.queue = new Queue();
+        this.queue = new (Structure.get("Queue"))();
     }
     public set(key: string, data: unknown): void {
         this.data[key] = data;
@@ -29,21 +30,21 @@ export class Player {
         return this.data[key] as T;
     }
     public connect(options: { setMute?: boolean, setDeaf?: boolean }): boolean {
-        Structure.getManager().sendPayload({
+        Structure.getManager().sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
                 channel_id: this.voiceChannelId,
-                self_mute: options.setMute || false,
-                self_deaf: options.setDeaf || false
+                self_mute: options?.setMute || false,
+                self_deaf: options?.setDeaf || false
             }
-        })
+        }))
 
         this.connected = true;
         return true;
     }
     public disconnect(): boolean {
-        Structure.getManager().sendPayload({
+        Structure.getManager().sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -51,7 +52,7 @@ export class Player {
                 self_mute: false,
                 self_deaf: false
             }
-        })
+        }))
 
         this.connected = false;
         return true;
