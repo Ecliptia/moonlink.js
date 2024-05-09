@@ -296,6 +296,7 @@ class MoonlinkNode {
                     player.autoPlay === true) {
                     if (payload.reason == "stopped")
                         return;
+                    this._manager.emit("trackEnd", player, track, payload);
                     let uri = `https://www.youtube.com/watch?v=${track.identifier}&list=RD${track.identifier}`;
                     let req = await this._manager.search(uri);
                     if (!req ||
