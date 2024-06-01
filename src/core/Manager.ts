@@ -7,8 +7,7 @@ import {
     IPlayerConfig
 } from "../typings/Interfaces";
 import { ISearchSources } from "../typings/types";
-import { 
-    Structure, 
+import {
     NodeManager, 
     PlayerManager, 
     Player, 
@@ -39,7 +38,7 @@ export class Manager extends EventEmitter {
     public readonly options: IOptionsManager;
     public readonly sendPayload: Function;
     public nodes: NodeManager;
-    public players: PlayerManager = new (Structure.get("PlayerManager"))();
+    public players: PlayerManager = new PlayerManager(this);
     public version: string = require("../../index").version;
     constructor(config: IConfigManager) {
         super();
@@ -50,12 +49,11 @@ export class Manager extends EventEmitter {
             ...config.options
         };
 
-        this.nodes = new (Structure.get("NodeManager"))(config.nodes);
+        this.nodes = new NodeManager(this, config.nodes);
     }
     public init(clientId: string): void {
         if (this.initialize) return;
         this.options.clientId = clientId;
-        Structure.setManager(this);
         this.nodes.init();
         this.initialize = true;
     }

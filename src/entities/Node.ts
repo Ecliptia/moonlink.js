@@ -1,7 +1,8 @@
 import WebSocket from 'ws'; 
 import { INodeStats, INode } from '../typings/Interfaces';
-import { Structure, Rest } from '../../index';
+import { Manager, Rest } from '../../index';
 export class Node {
+    public readonly manager: Manager;
     public host: string;
     public port: number;
     public identifier: string;
@@ -19,7 +20,7 @@ export class Node {
     public stats?: INodeStats;
     public url: string;
     public rest: Rest;
-    constructor(config: INode) {
+    constructor(manager: Manager, config: INode) {
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;
@@ -30,7 +31,7 @@ export class Node {
         this.secure = config.secure;
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? 'https' : 'http'}://${this.address}/v4/`;
-        this.rest = new (Structure.get("Rest"))(this);
+        this.rest = new Rest(this);
     }
     public get address(): string {
         return `${this.host}:${this.port}`;
@@ -38,8 +39,8 @@ export class Node {
     public connect(): void {
         let headers = {
             Authorization: this.password,
-            "User-Id": Structure.manager.options.clientId,
-            "Client-Name": Structure.manager.options.clientName
+            "User-Id": this.manager.options.clientId,
+            "Client-Name": this.manager.options.clientName
         };
         this.socket = new WebSocket(
             `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,

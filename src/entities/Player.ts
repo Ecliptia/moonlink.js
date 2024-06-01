@@ -1,5 +1,5 @@
 import { IPlayerConfig } from '../typings/Interfaces';
-import { Structure, Node, Queue, Track } from '../../index';
+import { Manager, Node, Queue, Track } from '../../index';
 
 export class Player {
     public guildId: string;
@@ -13,7 +13,10 @@ export class Player {
     public queue: Queue;
     public node: Node;
     public data: Record<string, unknown> = {};
-    constructor(config: IPlayerConfig) {
+
+    readonly manager: Manager;
+    constructor(manager: Manager, config: IPlayerConfig) {
+        this.manager = manager;
         this.guildId = config.guildId;
         this.voiceChannelId = config.voiceChannelId;
         this.textChannelId = config.textChannelId;
@@ -21,7 +24,7 @@ export class Player {
         this.playing = false;
         this.volume = config.volume || 80;
         this.paused = false;
-        this.queue = new (Structure.get("Queue"))();
+        this.queue = new Queue();
     }
     public set(key: string, data: unknown): void {
         this.data[key] = data;
@@ -30,7 +33,7 @@ export class Player {
         return this.data[key] as T;
     }
     public connect(options: { setMute?: boolean, setDeaf?: boolean }): boolean {
-        Structure.getManager().sendPayload(this.guildId, JSON.stringify({
+        this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -44,7 +47,7 @@ export class Player {
         return true;
     }
     public disconnect(): boolean {
-        Structure.getManager().sendPayload(this.guildId, JSON.stringify({
+        this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
