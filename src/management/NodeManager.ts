@@ -1,9 +1,9 @@
 import { INode } from "../typings/Interfaces";
-import { Structure, Node, validateProperty } from "../../index";
-import { connected } from "process";
+import { Manager, Node, validateProperty } from "../../index";
 export class NodeManager {
+    public readonly manager: Manager;
     public cache: Map<string | number, Node> = new Map();
-    constructor(nodes: INode[]) {
+    constructor(manager: Manager, nodes: INode[]) {
         nodes.forEach(node => {
            this.add(node);
         });
@@ -27,7 +27,7 @@ export class NodeManager {
     }
     public add(node: INode): void {
         this.check(node);
-        this.cache.set(node.id || node.identifier || node.identifier, new (Structure.get("Node"))(node));
+        this.cache.set(node.id || node.identifier || node.identifier, new Node(this.manager, node));
     }
     public remove(identifier: string | number): void {
         this.cache.get(identifier)?.destroy();

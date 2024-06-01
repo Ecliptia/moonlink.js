@@ -6,5 +6,5 @@ export class Queue {
     public add(track: Track): boolean {
         this.tracks.push(track)
         return true
-    }
+    } 
 }
