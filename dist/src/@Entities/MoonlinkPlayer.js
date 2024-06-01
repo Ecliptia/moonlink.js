@@ -248,7 +248,7 @@ class MoonlinkPlayer {
     async skip(position) {
         if (position) {
             this.validateNumberParam(position, "position");
-            let queue = this.queue.all();
+            let queue = this.queue.all;
             if (!queue[position - 1]) {
                 throw new Error(`@Moonlink(Player) - the indicated position does not exist, make security in your code to avoid errors`);
             }
