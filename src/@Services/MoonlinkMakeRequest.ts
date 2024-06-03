@@ -3,7 +3,8 @@ export function makeRequest<T>(url: string, options: RequestInit, data?: any): P
     options.headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'Moonlink/3* (https://github.com/Ecliptia/moonlink.js)'
+        'User-Agent': 'Moonlink/3* (https://github.com/Ecliptia/moonlink.js)',
+        ...options.headers
     };
 
         return fetch(url, options)

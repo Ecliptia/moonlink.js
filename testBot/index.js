@@ -2,7 +2,7 @@ const {
   Client,
   Collection
 } = require("discord.js");
-
+require("dotenv").config();
 const {
   MoonlinkManager,
   Plugin,
@@ -92,4 +92,4 @@ client.on("error", (error) => {
   log(`[ Client ]: Client error: ${error}`);
 });
 
-client.login(require("../config.json").token);
+client.login(process.env.TOKEN);
