@@ -21,6 +21,7 @@ export class Node {
     public url: string;
     public rest: Rest;
     constructor(manager: Manager, config: INode) {
+        this.manager = manager;
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;

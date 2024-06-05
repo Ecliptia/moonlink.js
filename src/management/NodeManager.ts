@@ -4,6 +4,7 @@ export class NodeManager {
     public readonly manager: Manager;
     public cache: Map<string | number, Node> = new Map();
     constructor(manager: Manager, nodes: INode[]) {
+        this.manager = manager;
         nodes.forEach(node => {
            this.add(node);
         });
@@ -34,6 +35,8 @@ export class NodeManager {
         this.cache.delete(identifier);
     }
     public get(identifier: string | number): Node {
+        if (identifier == "default" && this.cache.size === 1) return this.cache.values().next().value;
+        if (!this.cache.has(identifier)) throw new Error(`(Moonlink.js) - Node > Node with identifier ${identifier} not found.`);
         return this.cache.get(identifier);
     }
     public get best(): Node {

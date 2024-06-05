@@ -54,6 +54,7 @@ export interface IPlayerConfig {
     voiceChannelId: string;
     textChannelId: string;
     volume?: number;
+    node?: string;
 }
 export interface IVoiceState {
     token?: string;

@@ -3,8 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NodeManager = void 0;
 const index_1 = require("../../index");
 class NodeManager {
+    manager;
     cache = new Map();
-    constructor(nodes) {
+    constructor(manager, nodes) {
+        this.manager = manager;
         nodes.forEach(node => {
             this.add(node);
         });
@@ -28,14 +30,22 @@ class NodeManager {
     }
     add(node) {
         this.check(node);
-        this.cache.set(node.id || node.identifier || node.identifier, new (index_1.Structure.get("Node"))(node));
+        this.cache.set(node.id || node.identifier || node.identifier, new index_1.Node(this.manager, node));
     }
     remove(identifier) {
         this.cache.get(identifier)?.destroy();
         this.cache.delete(identifier);
     }
     get(identifier) {
+        if (identifier == "default" && this.cache.size === 1)
+            return this.cache.values().next().value;
+        if (!this.cache.has(identifier))
+            throw new Error(`(Moonlink.js) - Node > Node with identifier ${identifier} not found.`);
         return this.cache.get(identifier);
+    }
+    get best() {
+        return [...this.cache.values()].filter(node => node.connected === true)
+            .sort((a, b) => a.stats.players - b.stats.players)[0];
     }
 }
 exports.NodeManager = NodeManager;

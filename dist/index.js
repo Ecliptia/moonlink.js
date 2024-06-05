@@ -20,11 +20,11 @@ __exportStar(require("./src/core/Manager"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/management/PlayerManager"), exports);
 __exportStar(require("./src/typings/Interfaces"), exports);
+__exportStar(require("./src/typings/types"), exports);
 __exportStar(require("./src/Utils"), exports);
 __exportStar(require("./src/entities/Player"), exports);
 __exportStar(require("./src/entities/Node"), exports);
 __exportStar(require("./src/entities/Rest"), exports);
 __exportStar(require("./src/entities/Track"), exports);
 __exportStar(require("./src/entities/Queue"), exports);
-__exportStar(require("./src/core/Structure"), exports);
 //# sourceMappingURL=index.js.map

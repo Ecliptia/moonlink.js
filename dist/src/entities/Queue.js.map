@@ -1,1 +1,1 @@
-{"version":3,"file":"Queue.js","sourceRoot":"","sources":["../../../src/entities/Queue.ts"],"names":[],"mappings":";;;AACA,MAAa,KAAK;IACP,MAAM,GAAY,EAAE,CAAC;IAC5B,gBAAe,CAAC;IAET,GAAG,CAAC,KAAY;QACnB,IAAI,CAAC,MAAM,CAAC,IAAI,CAAC,KAAK,CAAC,CAAA;QACvB,OAAO,IAAI,CAAA;IACf,CAAC;CACJ;AARD,sBAQC"}
+{"version":3,"file":"Queue.js","sourceRoot":"","sources":["../../../src/entities/Queue.ts"],"names":[],"mappings":";;;AACA,MAAa,KAAK;IACP,MAAM,GAAY,EAAE,CAAC;IAErB,GAAG,CAAC,KAAY;QACnB,IAAI,CAAC,MAAM,CAAC,IAAI,CAAC,KAAK,CAAC,CAAA;QACvB,OAAO,IAAI,CAAA;IACf,CAAC;CACJ;AAPD,sBAOC"}

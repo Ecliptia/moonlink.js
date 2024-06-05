@@ -1,10 +1,9 @@
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Manager, Player, validateProperty } from "../../index";
 export class PlayerManager {
-    public cache: Map<string, Player> = new Map();
-
     readonly manager: Manager;
-    constructor(manager) {
+    public cache: Map<string, Player> = new Map();
+    constructor(manager: Manager) {
         this.manager = manager;
     }
     public create(config: IPlayerConfig): Player {

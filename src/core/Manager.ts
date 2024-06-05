@@ -79,8 +79,8 @@ export class Manager extends EventEmitter {
     }
     public packetUpdate(packet: any): void {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
-        if (!packet.d.token && !packet.session_id) return;
-        
+        if (!packet.d.token && !packet.d.session_id) return;
+        console.log(packet)
         const player = this.players.get(packet.d.guild_id);
         if (!player) return;
 
@@ -120,7 +120,7 @@ export class Manager extends EventEmitter {
         const voiceState: IVoiceState = player.get("voiceState");
 
         if(!voiceState.token || !voiceState.session_id || !voiceState.endpoint) return;
-
+        console.log(voiceState)
         await player.node.rest.update({
             guildId, data: {
               voice: {
