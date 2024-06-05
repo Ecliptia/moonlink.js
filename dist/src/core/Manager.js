@@ -8,7 +8,7 @@ class Manager extends node_events_1.EventEmitter {
     options;
     sendPayload;
     nodes;
-    players = new (index_1.Structure.get("PlayerManager"))();
+    players = new index_1.PlayerManager(this);
     version = require("../../index").version;
     constructor(config) {
         super();
@@ -18,21 +18,32 @@ class Manager extends node_events_1.EventEmitter {
             defaultPlatformSearch: "youtube",
             ...config.options
         };
-        this.nodes = new (index_1.Structure.get("NodeManager"))(config.nodes);
+        this.nodes = new index_1.NodeManager(this, config.nodes);
     }
     init(clientId) {
         if (this.initialize)
             return;
         this.options.clientId = clientId;
-        index_1.Structure.setManager(this);
         this.nodes.init();
         this.initialize = true;
+    }
+    async search(options) {
+        (0, index_1.validateProperty)(options, (value) => value !== undefined, '(Moonlink.js) - Manager > Search > Options is required');
+        (0, index_1.validateProperty)(options.query, (value) => value !== undefined || value !== "string", '(Moonlink.js) - Manager > Search > Query is required');
+        let query = options.query;
+        let source = options.source || this.options.defaultPlatformSearch;
+        let requester = options.requester || null;
+        if (![...this.nodes.cache.values()].filter(node => node.connected))
+            throw new Error("No available nodes to search from.");
+        let node = this.nodes.get(options?.node) ?? this.nodes.best;
+        let req = await node.rest.loadTracks(source, query);
     }
     packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
-        if (!packet.d.token && !packet.session_id)
+        if (!packet.d.token && !packet.d.session_id)
             return;
+        console.log(packet);
         const player = this.players.get(packet.d.guild_id);
         if (!player)
             return;
@@ -67,6 +78,7 @@ class Manager extends node_events_1.EventEmitter {
         const voiceState = player.get("voiceState");
         if (!voiceState.token || !voiceState.session_id || !voiceState.endpoint)
             return;
+        console.log(voiceState);
         await player.node.rest.update({
             guildId, data: {
                 voice: {
@@ -80,6 +92,9 @@ class Manager extends node_events_1.EventEmitter {
     }
     createPlayer(config) {
         return this.players.create(config);
+    }
+    getPlayer(guildId) {
+        return this.players.get(guildId);
     }
 }
 exports.Manager = Manager;

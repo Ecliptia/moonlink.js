@@ -7,6 +7,7 @@ export function validateProperty<T>(prop: T | undefined, validator: (value: T) =
 }
 
 export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
+    console.log(url, options)
     return fetch(url, options)
         .then(res => res.json())
         .then(json => json as T);

@@ -2,6 +2,7 @@ import { IPlayerConfig } from '../typings/Interfaces';
 import { Manager, Node, Queue, Track } from '../../index';
 
 export class Player {
+    readonly manager: Manager;
     public guildId: string;
     public voiceChannelId: string;
     public textChannelId: string;
@@ -13,8 +14,6 @@ export class Player {
     public queue: Queue;
     public node: Node;
     public data: Record<string, unknown> = {};
-
-    readonly manager: Manager;
     constructor(manager: Manager, config: IPlayerConfig) {
         this.manager = manager;
         this.guildId = config.guildId;
@@ -25,6 +24,7 @@ export class Player {
         this.volume = config.volume || 80;
         this.paused = false;
         this.queue = new Queue();
+        this.node = this.manager.nodes.get(config.node || "default");
     }
     public set(key: string, data: unknown): void {
         this.data[key] = data;

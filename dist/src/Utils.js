@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.makeRequest = exports.validateProperty = void 0;
+exports.Plugin = exports.sources = exports.makeRequest = exports.validateProperty = void 0;
 function validateProperty(prop, validator, errorMessage) {
     if (!validator(prop)) {
         throw new Error(errorMessage);
@@ -8,11 +8,20 @@ function validateProperty(prop, validator, errorMessage) {
 }
 exports.validateProperty = validateProperty;
 function makeRequest(url, options) {
+    console.log(url, options);
     return fetch(url, options)
         .then(res => res.json())
         .then(json => json);
 }
 exports.makeRequest = makeRequest;
+exports.sources = {
+    youtube: "youtube",
+    soundcloud: "soundcloud",
+    twitch: "twitch",
+    vimeo: "vimeo",
+    http: "http",
+    local: "local"
+};
 class Plugin {
     name;
     load(manager) { }

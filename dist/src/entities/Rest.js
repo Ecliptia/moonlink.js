@@ -7,17 +7,22 @@ class Rest {
     constructor(node) {
         this.node = node;
     }
+    async loadTracks(source, query) {
+        let request = await this.makeRequest(`loadtracks?identifier=${source}:${encodeURIComponent(query)}`, "GET");
+        return request;
+    }
     async update(data) {
-        let request = await this.makeRequest(`sessions/${this.node.sessionId}/players/${data.guildId}`, "PATCH", data.data);
+        let request = await this.makeRequest(`sessions/${this.node.sessionId}/players/${data.guildId}`, "patch", data.data);
         return request;
     }
     async makeRequest(endpoint, method, data) {
-        let request = await (0, index_1.makeRequest)(`http${this.node.secure ? "s" : ""}${this.node.address}/${endpoint}?noReplace=${index_1.Structure.getManager().options?.noReplace ? true : false}`, {
+        let request = await (0, index_1.makeRequest)(`http${this.node.secure ? "s" : ""}://${this.node.address}/${endpoint}?noReplace=${this.node.manager.options?.noReplace ? true : false}`, {
             method,
-            body: data ? JSON.stringify(data) : null,
+            body: data ? data : null,
             headers: {
                 "Authorization": this.node.password,
-                "User-Agent": index_1.Structure.getManager().options.clientName
+                "User-Agent": this.node.manager.options.clientName,
+                "content-type": "application/json"
             }
         });
         return request;

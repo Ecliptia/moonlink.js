@@ -7,6 +7,7 @@ exports.Node = void 0;
 const ws_1 = __importDefault(require("ws"));
 const index_1 = require("../../index");
 class Node {
+    manager;
     host;
     port;
     identifier;
@@ -24,7 +25,8 @@ class Node {
     stats;
     url;
     rest;
-    constructor(config) {
+    constructor(manager, config) {
+        this.manager = manager;
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;
@@ -35,7 +37,7 @@ class Node {
         this.secure = config.secure;
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? 'https' : 'http'}://${this.address}/v4/`;
-        this.rest = new (index_1.Structure.get("Rest"))(this);
+        this.rest = new index_1.Rest(this);
     }
     get address() {
         return `${this.host}:${this.port}`;
@@ -43,8 +45,8 @@ class Node {
     connect() {
         let headers = {
             Authorization: this.password,
-            "User-Id": index_1.Structure.manager.options.clientId,
-            "Client-Name": index_1.Structure.manager.options.clientName
+            "User-Id": this.manager.options.clientId,
+            "Client-Name": this.manager.options.clientName
         };
         this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));

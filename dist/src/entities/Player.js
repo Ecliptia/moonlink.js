@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
 const index_1 = require("../../index");
 class Player {
+    manager;
     guildId;
     voiceChannelId;
     textChannelId;
@@ -14,7 +15,8 @@ class Player {
     queue;
     node;
     data = {};
-    constructor(config) {
+    constructor(manager, config) {
+        this.manager = manager;
         this.guildId = config.guildId;
         this.voiceChannelId = config.voiceChannelId;
         this.textChannelId = config.textChannelId;
@@ -23,6 +25,7 @@ class Player {
         this.volume = config.volume || 80;
         this.paused = false;
         this.queue = new index_1.Queue();
+        this.node = this.manager.nodes.get(config.node || "default");
     }
     set(key, data) {
         this.data[key] = data;
@@ -31,7 +34,7 @@ class Player {
         return this.data[key];
     }
     connect(options) {
-        index_1.Structure.getManager().sendPayload(this.guildId, JSON.stringify({
+        this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,
@@ -44,7 +47,7 @@ class Player {
         return true;
     }
     disconnect() {
-        index_1.Structure.getManager().sendPayload(this.guildId, JSON.stringify({
+        this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
                 guild_id: this.guildId,

@@ -22,7 +22,9 @@
     }
   },
   "scripts": {
-    "start": ""
+    "start": "npm run build && npm run test",
+    "build": "tsc",
+    "test": "node testBot/bot.js"
   },
   "homepage": "https://moonlink.js.org",
   "bugs": {

@@ -2,8 +2,6 @@ const Discord = require('discord.js');
 const { Manager } = require('../dist/index.js');
 require('dotenv').config();
 
-console.log(require('../dist/index.js'));
-
 const client = new Discord.Client({
     intents: [
         Discord.GatewayIntentBits.Guilds,
@@ -31,7 +29,7 @@ client.manager = new Manager({
 
 client.on('ready', () => {
     client.manager.init(client.user.id);
-    console.log('Bot is ready');
+    console.log(client.user.tag + ' is ready!');
 });
 
 client.on('raw', (d) => client.manager.packetUpdate(d));
