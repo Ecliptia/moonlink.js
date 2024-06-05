@@ -242,7 +242,7 @@ class MoonlinkNode {
                 break;
             }
             case "TrackEndEvent": {
-                let track = player.current;
+                let track = new index_1.MoonlinkTrack(payload.track);
                 let queue = player.queue.all;
                 player.playing = false;
                 if (this._manager.options.previousTracksInArray)

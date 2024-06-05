@@ -366,7 +366,7 @@ export class MoonlinkNode {
                 break;
             }
             case "TrackEndEvent": {
-                let track = player.current;
+                let track = new MoonlinkTrack(payload.track);
                 let queue: string[] = player.queue.all;
                 player.playing = false;
 
