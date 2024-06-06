@@ -10,8 +10,8 @@ exports.validateProperty = validateProperty;
 function makeRequest(url, options) {
     console.log(url, options);
     return fetch(url, options)
-        .then(res => res.json())
-        .then(json => json);
+        .then((res) => res.json())
+        .then((json) => json);
 }
 exports.makeRequest = makeRequest;
 exports.sources = {
@@ -20,7 +20,7 @@ exports.sources = {
     twitch: "twitch",
     vimeo: "vimeo",
     http: "http",
-    local: "local"
+    local: "local",
 };
 class Plugin {
     name;
