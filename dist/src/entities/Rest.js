@@ -4,26 +4,30 @@ exports.Rest = void 0;
 const index_1 = require("../../index");
 class Rest {
     node;
+    url;
+    defaultHeaders;
     constructor(node) {
         this.node = node;
+        this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}`;
+        this.defaultHeaders = {
+            Authorization: this.node.password,
+            Accept: "application/json",
+            "User-Agent": "Moonlink.js/4 (Ghost)",
+            "Content-Type": "application/json",
+        };
     }
     async loadTracks(source, query) {
-        let request = await this.makeRequest(`loadtracks?identifier=${source}:${encodeURIComponent(query)}`, "GET");
+        let request = await (0, index_1.makeRequest)(`${this.url}/loadtracks?identifier=${source}:${encodeURIComponent(query)}`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
         return request;
     }
     async update(data) {
-        let request = await this.makeRequest(`sessions/${this.node.sessionId}/players/${data.guildId}`, "patch", data.data);
-        return request;
-    }
-    async makeRequest(endpoint, method, data) {
-        let request = await (0, index_1.makeRequest)(`http${this.node.secure ? "s" : ""}://${this.node.address}/${endpoint}?noReplace=${this.node.manager.options?.noReplace ? true : false}`, {
-            method,
-            body: data ? data : null,
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options.clientName,
-                "content-type": "application/json"
-            }
+        let request = await (0, index_1.makeRequest)(`${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`, {
+            method: "PATCH",
+            body: JSON.stringify(data.data),
+            headers: this.defaultHeaders,
         });
         return request;
     }
