@@ -36,7 +36,7 @@ class Node {
         this.retryAmount = config.retryAmount;
         this.secure = config.secure;
         this.sessionId = config.sessionId;
-        this.url = `${this.secure ? 'https' : 'http'}://${this.address}/v4/`;
+        this.url = `${this.secure ? "https" : "http"}://${this.address}/v4/`;
         this.rest = new index_1.Rest(this);
     }
     get address() {
@@ -46,7 +46,7 @@ class Node {
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.options.clientId,
-            "Client-Name": this.manager.options.clientName
+            "Client-Name": this.manager.options.clientName,
         };
         this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
         this.socket.on("open", this.open.bind(this));
@@ -61,11 +61,13 @@ class Node {
         }, this.retryDelay);
     }
     open() {
+        console.log("Connected to the Node");
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.connected = true;
     }
     close(code, reason) {
+        console.log(code, reason);
         if (this.connected)
             this.connected = false;
         this.socket.removeAllListeners();

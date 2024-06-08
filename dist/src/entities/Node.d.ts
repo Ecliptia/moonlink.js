@@ -1,8 +1,8 @@
 /// <reference types="node" />
 /// <reference types="node" />
-import WebSocket from 'ws';
-import { INodeStats, INode } from '../typings/Interfaces';
-import { Manager, Rest } from '../../index';
+import WebSocket from "ws";
+import { INodeStats, INode } from "../typings/Interfaces";
+import { Manager, Rest } from "../../index";
 export declare class Node {
     readonly manager: Manager;
     host: string;

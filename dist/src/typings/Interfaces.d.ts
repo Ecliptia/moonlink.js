@@ -1,4 +1,5 @@
 import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
+import { TLoadResultType } from "./types";
 export interface IEvents {
     debug: (...args: string[]) => void;
     nodeCreate: (node: INode) => void;
@@ -75,6 +76,38 @@ export interface IRESTData {
     paused?: Boolean;
     filters?: Object;
     voice?: IVoiceState;
+}
+export interface IRESTLoadTracks {
+    loadType: TLoadResultType;
+    data?: ILoadResultData;
+}
+export interface ILoadResultData {
+    info: IPlaylistInfo;
+    tracks?: ITrack[];
+    pluginInfo: Object;
+}
+export interface ITrack {
+    encoded: string;
+    info: ITrackInfo;
+    pluginInfo: Object;
+    userData: Object;
+}
+export interface ITrackInfo {
+    title: string;
+    uri?: string;
+    author: string;
+    length: number;
+    isStream: boolean;
+    isSeekable: boolean;
+    position: number;
+    artworkUrl?: string;
+    identifier?: string;
+    isrc?: string;
+    sourceName?: string;
+}
+export interface IPlaylistInfo {
+    name: string;
+    selectedTrack?: number;
 }
 export interface IObjectTrack {
     encoded?: string;

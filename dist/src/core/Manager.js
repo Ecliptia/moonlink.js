@@ -16,7 +16,7 @@ class Manager extends node_events_1.EventEmitter {
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
-            ...config.options
+            ...config.options,
         };
         this.nodes = new index_1.NodeManager(this, config.nodes);
     }
@@ -28,15 +28,29 @@ class Manager extends node_events_1.EventEmitter {
         this.initialize = true;
     }
     async search(options) {
-        (0, index_1.validateProperty)(options, (value) => value !== undefined, '(Moonlink.js) - Manager > Search > Options is required');
-        (0, index_1.validateProperty)(options.query, (value) => value !== undefined || value !== "string", '(Moonlink.js) - Manager > Search > Query is required');
-        let query = options.query;
-        let source = options.source || this.options.defaultPlatformSearch;
-        let requester = options.requester || null;
-        if (![...this.nodes.cache.values()].filter(node => node.connected))
-            throw new Error("No available nodes to search from.");
-        let node = this.nodes.get(options?.node) ?? this.nodes.best;
-        let req = await node.rest.loadTracks(source, query);
+        return new Promise(async (resolve) => {
+            (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
+            (0, index_1.validateProperty)(options.query, (value) => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
+            let query = options.query;
+            let source = options.source || this.options.defaultPlatformSearch;
+            let requester = options.requester || null;
+            if (![...this.nodes.cache.values()].filter((node) => node.connected))
+                throw new Error("No available nodes to search from.");
+            let node = this.nodes.get(options?.node) ?? this.nodes.best;
+            let req = await node.rest.loadTracks(source, query);
+            console.log(req);
+            if (req.loadType == "error" || req.loadType == "empty")
+                resolve(req);
+            if (req.loadType == "track")
+                req.data.tracks = [req.data];
+            if (req.loadType == "search")
+                req.data.tracks = req.data;
+            let tracks = req.data.tracks.map((data) => new index_1.Track(data, requester));
+            return resolve({
+                ...req,
+                tracks,
+            });
+        });
     }
     packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
@@ -80,13 +94,14 @@ class Manager extends node_events_1.EventEmitter {
             return;
         console.log(voiceState);
         await player.node.rest.update({
-            guildId, data: {
+            guildId,
+            data: {
                 voice: {
                     session_id: voiceState.session_id,
                     token: voiceState.token,
-                    endpoint: voiceState.endpoint
-                }
-            }
+                    endpoint: voiceState.endpoint,
+                },
+            },
         });
         return true;
     }
