@@ -5,6 +5,6 @@ export declare class Rest {
     url: string;
     defaultHeaders: Record<string, string>;
     constructor(node: Node);
-    loadTracks(source: string, query: string): Promise<unknown>;
+    loadTracks(source: string, query: string): Promise<any>;
     update(data: IRESTOptions): Promise<unknown>;
 }

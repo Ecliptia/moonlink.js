@@ -1,13 +1,17 @@
 import { Agent } from "node:https";
-import { Node, makeRequest } from "../../index";
-import { IVoiceState, IRESTOptions } from "../typings/Interfaces";
+import { Node, makeRequest, sources } from "../../index";
+import {
+  IVoiceState,
+  IRESTOptions,
+  IRESTLoadTracks,
+} from "../typings/Interfaces";
 export class Rest {
   public node: Node;
   public url: string;
   public defaultHeaders: Record<string, string>;
   constructor(node: Node) {
     this.node = node;
-    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}`;
+    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/v4`;
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
@@ -15,15 +19,20 @@ export class Rest {
       "Content-Type": "application/json",
     };
   }
-  public async loadTracks(source: string, query: string): Promise<unknown> {
-    let request = await makeRequest(
-      `${this.url}/loadtracks?identifier=${source}:${encodeURIComponent(query)}`,
-      {
-        method: "GET",
-        headers: this.defaultHeaders,
-      },
-    );
-    return request;
+  public async loadTracks(source: string, query: string): Promise<any> {
+    return new Promise(async (resolve) => {
+      let params = new URLSearchParams({
+        identifier: `${sources[source] ?? source}:${query}`,
+      });
+      let request: IRESTLoadTracks = await makeRequest(
+        `${this.url}/loadtracks?${params}`,
+        {
+          method: "GET",
+          headers: this.defaultHeaders,
+        },
+      );
+      return resolve(request);
+    });
   }
   public async update(data: IRESTOptions): Promise<unknown> {
     let request = await makeRequest(

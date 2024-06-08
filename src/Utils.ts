@@ -11,18 +11,15 @@ export function validateProperty<T>(
 }
 
 export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
-  console.log(url, options);
   return fetch(url, options)
     .then((res) => res.json())
     .then((json) => json as T);
 }
 
 export const sources = {
-  youtube: "youtube",
-  soundcloud: "soundcloud",
-  twitch: "twitch",
-  vimeo: "vimeo",
-  http: "http",
+  youtube: "ytsearch",
+  youtubemusic: "ytmsearch",
+  soundcloud: "scsearch",
   local: "local",
 };
 

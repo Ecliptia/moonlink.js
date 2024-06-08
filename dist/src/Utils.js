@@ -8,18 +8,15 @@ function validateProperty(prop, validator, errorMessage) {
 }
 exports.validateProperty = validateProperty;
 function makeRequest(url, options) {
-    console.log(url, options);
     return fetch(url, options)
         .then((res) => res.json())
         .then((json) => json);
 }
 exports.makeRequest = makeRequest;
 exports.sources = {
-    youtube: "youtube",
-    soundcloud: "soundcloud",
-    twitch: "twitch",
-    vimeo: "vimeo",
-    http: "http",
+    youtube: "ytsearch",
+    youtubemusic: "ytmsearch",
+    soundcloud: "scsearch",
     local: "local",
 };
 class Plugin {

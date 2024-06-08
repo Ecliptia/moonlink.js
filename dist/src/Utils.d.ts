@@ -4,10 +4,8 @@ export declare function validateProperty<T>(prop: T | undefined, validator: (val
 export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
 export declare const sources: {
     youtube: string;
+    youtubemusic: string;
     soundcloud: string;
-    twitch: string;
-    vimeo: string;
-    http: string;
     local: string;
 };
 export declare class Plugin {
