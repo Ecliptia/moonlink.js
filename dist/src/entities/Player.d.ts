@@ -1,12 +1,14 @@
-import { IPlayerConfig } from '../typings/Interfaces';
-import { Manager, Node, Queue, Track } from '../../index';
+import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { Manager, Node, Queue, Track } from "../../index";
 export declare class Player {
     readonly manager: Manager;
     guildId: string;
     voiceChannelId: string;
     textChannelId: string;
+    voiceState: IVoiceState;
     connected: boolean;
     playing: boolean;
+    ping: number;
     volume: number;
     paused: boolean;
     current: Track;
@@ -21,4 +23,5 @@ export declare class Player {
         setDeaf?: boolean;
     }): boolean;
     disconnect(): boolean;
+    play(): boolean;
 }

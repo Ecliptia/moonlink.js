@@ -65,6 +65,27 @@ client.on("messageCreate", async (message) => {
     message.reply({
       content: `Search results for ${args.join(" ")}:\n${req.tracks.map((track, i) => `${i + 1}. **${track.title}**`).join("\n")}`,
     });
+  } else if (command === "play") {
+    if (!args.length)
+      return message.reply("You need to provide a search query!");
+    const channel = message.member.voice.channel;
+    if (!channel)
+      return message.reply("You need to join a voice channel first!");
+    const player = client.manager.createPlayer({
+      guildId: message.guild.id,
+      voiceChannelId: channel.id,
+      textChannelId: message.channel.id,
+    });
+
+    player.connect();
+
+    let req = await client.manager.search({
+      query: args.join(" "),
+      source: "youtube",
+    });
+
+    player.queue.add(req.tracks[0]);
+    player.play();
   }
 });
 

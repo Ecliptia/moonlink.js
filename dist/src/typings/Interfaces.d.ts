@@ -59,7 +59,7 @@ export interface IPlayerConfig {
 }
 export interface IVoiceState {
     token?: string;
-    session_id?: string;
+    sessionId?: string;
     endpoint?: string;
 }
 export interface IRESTOptions {

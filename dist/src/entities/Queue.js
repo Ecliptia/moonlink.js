@@ -7,6 +7,30 @@ class Queue {
         this.tracks.push(track);
         return true;
     }
+    get(position) {
+        return this.tracks[position];
+    }
+    remove(position) {
+        this.tracks.splice(position, 1);
+        return true;
+    }
+    shift() {
+        return this.tracks.shift();
+    }
+    unshift(track) {
+        this.tracks.unshift(track);
+        return true;
+    }
+    pop() {
+        return this.tracks.pop();
+    }
+    clear() {
+        this.tracks = [];
+        return true;
+    }
+    get size() {
+        return this.tracks.length;
+    }
 }
 exports.Queue = Queue;
 //# sourceMappingURL=Queue.js.map
