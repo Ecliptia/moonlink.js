@@ -1,64 +1,88 @@
-import { IPlayerConfig } from '../typings/Interfaces';
-import { Manager, Node, Queue, Track } from '../../index';
+import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { Manager, Node, Queue, Track } from "../../index";
 
 export class Player {
-    readonly manager: Manager;
-    public guildId: string;
-    public voiceChannelId: string;
-    public textChannelId: string;
-    public connected: boolean;
-    public playing: boolean;
-    public volume: number;
-    public paused: boolean;
-    public current: Track;
-    public queue: Queue;
-    public node: Node;
-    public data: Record<string, unknown> = {};
-    constructor(manager: Manager, config: IPlayerConfig) {
-        this.manager = manager;
-        this.guildId = config.guildId;
-        this.voiceChannelId = config.voiceChannelId;
-        this.textChannelId = config.textChannelId;
-        this.connected = false;
-        this.playing = false;
-        this.volume = config.volume || 80;
-        this.paused = false;
-        this.queue = new Queue();
-        this.node = this.manager.nodes.get(config.node || "default");
-    }
-    public set(key: string, data: unknown): void {
-        this.data[key] = data;
-    }
-    public get<T>(key: string): T {
-        return this.data[key] as T;
-    }
-    public connect(options: { setMute?: boolean, setDeaf?: boolean }): boolean {
-        this.manager.sendPayload(this.guildId, JSON.stringify({
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: this.voiceChannelId,
-                self_mute: options?.setMute || false,
-                self_deaf: options?.setDeaf || false
-            }
-        }))
+  readonly manager: Manager;
+  public guildId: string;
+  public voiceChannelId: string;
+  public textChannelId: string;
+  public voiceState: IVoiceState = {};
+  public connected: boolean;
+  public playing: boolean;
+  public ping: number = 0;
+  public volume: number = 80;
+  public paused: boolean;
+  public current: Track;
+  public queue: Queue;
+  public node: Node;
+  public data: Record<string, unknown> = {};
+  constructor(manager: Manager, config: IPlayerConfig) {
+    this.manager = manager;
+    this.guildId = config.guildId;
+    this.voiceChannelId = config.voiceChannelId;
+    this.textChannelId = config.textChannelId;
+    this.connected = false;
+    this.playing = false;
+    this.volume = config.volume || 80;
+    this.paused = false;
+    this.queue = new Queue();
+    this.node = this.manager.nodes.get(config.node || "default");
+  }
+  public set(key: string, data: unknown): void {
+    this.data[key] = data;
+  }
+  public get<T>(key: string): T {
+    return this.data[key] as T;
+  }
+  public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
+    this.manager.sendPayload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: this.voiceChannelId,
+          self_mute: options?.setMute || false,
+          self_deaf: options?.setDeaf || false,
+        },
+      }),
+    );
 
-        this.connected = true;
-        return true;
-    }
-    public disconnect(): boolean {
-        this.manager.sendPayload(this.guildId, JSON.stringify({
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: null,
-                self_mute: false,
-                self_deaf: false
-            }
-        }))
+    this.connected = true;
+    return true;
+  }
+  public disconnect(): boolean {
+    this.manager.sendPayload(
+      this.guildId,
+      JSON.stringify({
+        op: 4,
+        d: {
+          guild_id: this.guildId,
+          channel_id: null,
+          self_mute: false,
+          self_deaf: false,
+        },
+      }),
+    );
 
-        this.connected = false;
-        return true;
-    }
-    
+    this.connected = false;
+    return true;
+  }
+  public play(): boolean {
+    if (!this.queue.size) return false;
+
+    this.current = this.queue.shift();
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        track: {
+          encoded: this.current.encoded,
+        },
+        volume: this.volume,
+      },
+    });
+
+    return true;
+  }
 }

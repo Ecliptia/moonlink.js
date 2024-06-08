@@ -38,7 +38,6 @@ class Manager extends node_events_1.EventEmitter {
                 throw new Error("No available nodes to search from.");
             let node = this.nodes.get(options?.node) ?? this.nodes.best;
             let req = await node.rest.loadTracks(source, query);
-            console.log(req);
             if (req.loadType == "error" || req.loadType == "empty")
                 resolve(req);
             if (req.loadType == "track")
@@ -57,15 +56,14 @@ class Manager extends node_events_1.EventEmitter {
             return;
         if (!packet.d.token && !packet.d.session_id)
             return;
-        console.log(packet);
-        const player = this.players.get(packet.d.guild_id);
+        const player = this.getPlayer(packet.d.guild_id);
         if (!player)
             return;
+        if (!player.voiceState)
+            player.voiceState = {};
         if (packet.t === "VOICE_SERVER_UPDATE") {
-            let voiceState = player.get("voiceState") || {};
-            voiceState.token = packet.d.token;
-            voiceState.endpoint = packet.d.endpoint;
-            player.set("voiceState", voiceState);
+            player.voiceState.token = packet.d.token;
+            player.voiceState.endpoint = packet.d.endpoint;
             this.attemptConnection(player.guildId);
         }
         else if (packet.t === "VOICE_STATE_UPDATE") {
@@ -75,29 +73,28 @@ class Manager extends node_events_1.EventEmitter {
                 player.connected = false;
                 player.playing = false;
                 player.voiceChannelId = null;
-                player.set("voiceState", {});
                 return;
             }
             if (packet.d.channel_id !== player.voiceChannelId) {
                 player.voiceChannelId = packet.d.channel_id;
             }
-            let voiceState = player.get("voiceState") || {};
-            voiceState.session_id = packet.d.session_id;
-            player.set("voiceState", voiceState);
+            player.voiceState.sessionId = packet.d.session_id;
             this.attemptConnection(player.guildId);
         }
     }
     async attemptConnection(guildId) {
-        const player = this.players.get(guildId);
-        const voiceState = player.get("voiceState");
-        if (!voiceState.token || !voiceState.session_id || !voiceState.endpoint)
+        console.log(guildId);
+        const player = this.getPlayer(guildId);
+        if (!player)
             return;
-        console.log(voiceState);
+        const voiceState = player.voiceState;
+        if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint)
+            return;
         await player.node.rest.update({
             guildId,
             data: {
                 voice: {
-                    session_id: voiceState.session_id,
+                    sessionId: voiceState.sessionId,
                     token: voiceState.token,
                     endpoint: voiceState.endpoint,
                 },

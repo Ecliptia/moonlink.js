@@ -96,17 +96,17 @@ export class Manager extends EventEmitter {
   public packetUpdate(packet: any): void {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
       return;
+
     if (!packet.d.token && !packet.d.session_id) return;
-    console.log(packet);
-    const player = this.players.get(packet.d.guild_id);
+
+    const player = this.getPlayer(packet.d.guild_id);
     if (!player) return;
 
-    if (packet.t === "VOICE_SERVER_UPDATE") {
-      let voiceState: IVoiceState = player.get("voiceState") || {};
-      voiceState.token = packet.d.token;
-      voiceState.endpoint = packet.d.endpoint;
+    if (!player.voiceState) player.voiceState = {};
 
-      player.set("voiceState", voiceState);
+    if (packet.t === "VOICE_SERVER_UPDATE") {
+      player.voiceState.token = packet.d.token;
+      player.voiceState.endpoint = packet.d.endpoint;
 
       this.attemptConnection(player.guildId);
     } else if (packet.t === "VOICE_STATE_UPDATE") {
@@ -116,7 +116,6 @@ export class Manager extends EventEmitter {
         player.connected = false;
         player.playing = false;
         player.voiceChannelId = null;
-        player.set("voiceState", {});
         return;
       }
 
@@ -124,26 +123,25 @@ export class Manager extends EventEmitter {
         player.voiceChannelId = packet.d.channel_id;
       }
 
-      let voiceState: IVoiceState = player.get("voiceState") || {};
-      voiceState.session_id = packet.d.session_id;
-
-      player.set("voiceState", voiceState);
+      player.voiceState.sessionId = packet.d.session_id;
 
       this.attemptConnection(player.guildId);
     }
   }
   public async attemptConnection(guildId: string): Promise<boolean> {
-    const player = this.players.get(guildId);
-    const voiceState: IVoiceState = player.get("voiceState");
+    const player = this.getPlayer(guildId);
+    if (!player) return;
 
-    if (!voiceState.token || !voiceState.session_id || !voiceState.endpoint)
+    const voiceState: IVoiceState = player.voiceState;
+
+    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint)
       return;
-    console.log(voiceState);
+
     await player.node.rest.update({
       guildId,
       data: {
         voice: {
-          session_id: voiceState.session_id,
+          sessionId: voiceState.sessionId,
           token: voiceState.token,
           endpoint: voiceState.endpoint,
         },

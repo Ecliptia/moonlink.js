@@ -7,9 +7,11 @@ class Player {
     guildId;
     voiceChannelId;
     textChannelId;
+    voiceState = {};
     connected;
     playing;
-    volume;
+    ping = 0;
+    volume = 80;
     paused;
     current;
     queue;
@@ -40,8 +42,8 @@ class Player {
                 guild_id: this.guildId,
                 channel_id: this.voiceChannelId,
                 self_mute: options?.setMute || false,
-                self_deaf: options?.setDeaf || false
-            }
+                self_deaf: options?.setDeaf || false,
+            },
         }));
         this.connected = true;
         return true;
@@ -53,10 +55,25 @@ class Player {
                 guild_id: this.guildId,
                 channel_id: null,
                 self_mute: false,
-                self_deaf: false
-            }
+                self_deaf: false,
+            },
         }));
         this.connected = false;
+        return true;
+    }
+    play() {
+        if (!this.queue.size)
+            return false;
+        this.current = this.queue.shift();
+        this.node.rest.update({
+            guildId: this.guildId,
+            data: {
+                track: {
+                    encoded: this.current.encoded,
+                },
+                volume: this.volume,
+            },
+        });
         return true;
     }
 }

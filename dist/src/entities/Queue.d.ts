@@ -1,5 +1,12 @@
-import { Track } from '../../index';
+import { Track } from "../../index";
 export declare class Queue {
     tracks: Track[];
     add(track: Track): boolean;
+    get(position: number): Track;
+    remove(position: number): boolean;
+    shift(): Track;
+    unshift(track: Track): boolean;
+    pop(): Track;
+    clear(): boolean;
+    get size(): number;
 }
