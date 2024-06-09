@@ -1,5 +1,5 @@
 import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
-import { TLoadResultType } from "./types";
+import { TLoadResultType, TSortTypeNode } from "./types";
 export interface IEvents {
     debug: (...args: string[]) => void;
     nodeCreate: (node: INode) => void;
@@ -47,6 +47,7 @@ export interface IOptionsManager {
     clientName?: string;
     clientId?: string;
     defaultPlatformSearch?: string;
+    sortTypeNode?: TSortTypeNode;
     plugins?: Plugin[];
     noReplace?: boolean;
 }

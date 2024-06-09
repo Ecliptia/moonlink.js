@@ -15,8 +15,8 @@ class Node {
     connected = false;
     destroyed = false;
     reconnectTimeout;
-    reconnectAttempts = 1;
-    retryAmount = 6;
+    reconnectAttempts = 0;
+    retryAmount;
     retryDelay = 60000;
     regions;
     secure;
@@ -32,8 +32,8 @@ class Node {
         this.identifier = config.identifier;
         this.password = config.password;
         this.regions = config.regions;
-        this.retryDelay = config.retryDelay;
-        this.retryAmount = config.retryAmount;
+        this.retryDelay = config.retryDelay || 30000;
+        this.retryAmount = config.retryAmount || 5;
         this.secure = config.secure;
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? "https" : "http"}://${this.address}/v4/`;
@@ -55,6 +55,7 @@ class Node {
         this.socket.on("error", this.error.bind(this));
     }
     reconnect() {
+        console.log("Reconnecting to the Node");
         this.reconnectTimeout = setTimeout(() => {
             this.reconnectAttempts++;
             this.connect();
@@ -66,14 +67,15 @@ class Node {
             clearTimeout(this.reconnectTimeout);
         this.connected = true;
     }
-    close(code, reason) {
-        console.log(code, reason);
+    close() {
+        console.log("Disconnected from the Node");
         if (this.connected)
             this.connected = false;
         this.socket.removeAllListeners();
         this.socket.close();
-        if (this.retryAmount <= this.reconnectAttempts)
+        if (this.retryAmount > this.reconnectAttempts) {
             this.reconnect();
+        }
         else {
             this.socket = null;
             this.destroyed = true;

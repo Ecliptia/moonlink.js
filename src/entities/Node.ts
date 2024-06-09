@@ -10,8 +10,8 @@ export class Node {
   public connected: boolean = false;
   public destroyed: boolean = false;
   public reconnectTimeout?: NodeJS.Timeout;
-  public reconnectAttempts: number = 1;
-  public retryAmount: number = 6;
+  public reconnectAttempts: number = 0;
+  public retryAmount: number;
   public retryDelay: number = 60000;
   public regions: String[];
   public secure: boolean;
@@ -27,8 +27,8 @@ export class Node {
     this.identifier = config.identifier;
     this.password = config.password;
     this.regions = config.regions;
-    this.retryDelay = config.retryDelay;
-    this.retryAmount = config.retryAmount;
+    this.retryDelay = config.retryDelay || 30000;
+    this.retryAmount = config.retryAmount || 5;
     this.secure = config.secure;
     this.sessionId = config.sessionId;
     this.url = `${this.secure ? "https" : "http"}://${this.address}/v4/`;
@@ -53,6 +53,7 @@ export class Node {
     this.socket.on("error", this.error.bind(this));
   }
   public reconnect(): void {
+    console.log("Reconnecting to the Node");
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       this.connect();
@@ -63,14 +64,16 @@ export class Node {
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     this.connected = true;
   }
-  protected close(code: number, reason?: string): void {
-    console.log(code, reason);
+  protected close(): void {
+    console.log("Disconnected from the Node");
     if (this.connected) this.connected = false;
 
     this.socket.removeAllListeners();
     this.socket.close();
-    if (this.retryAmount <= this.reconnectAttempts) this.reconnect();
-    else {
+
+    if (this.retryAmount > this.reconnectAttempts) {
+      this.reconnect();
+    } else {
       this.socket = null;
       this.destroyed = true;
     }

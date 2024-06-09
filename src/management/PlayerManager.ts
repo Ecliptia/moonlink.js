@@ -12,6 +12,9 @@ export class PlayerManager {
       (value) => value !== undefined || value !== "string",
       "(Moonlink.js) - Player > GuildId is required",
     );
+
+    if (this.has(config.guildId)) return this.get(config.guildId);
+
     validateProperty(
       config.voiceChannelId,
       (value) => value !== undefined || value == "string",
@@ -27,6 +30,21 @@ export class PlayerManager {
       (value) => value === undefined || value >= 0,
       "(Moonlink.js) - Player > Invalid volume value. Volume must be a number between 0.",
     );
+
+    if (config.node) {
+      validateProperty(
+        this.manager.nodes.get(config.node),
+        (value) => value !== undefined,
+        "(Moonlink.js) - Player > Invalid node",
+      );
+    } else {
+      let node = this.manager.nodes.sortByUsage(
+        this.manager.options.sortTypeNode || "players",
+      );
+      if (!node) throw new Error("(Moonlink.js) - Player > No available nodes");
+
+      config.node = node.identifier ?? node.host;
+    }
 
     const player: Player = new Player(this.manager, config);
     this.cache.set(config.guildId, player);

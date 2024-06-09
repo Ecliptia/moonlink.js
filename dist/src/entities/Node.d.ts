@@ -27,7 +27,7 @@ export declare class Node {
     connect(): void;
     reconnect(): void;
     protected open(): void;
-    protected close(code: number, reason?: string): void;
+    protected close(): void;
     protected message(data: Buffer): Promise<void>;
     protected error(): void;
     destroy(): void;

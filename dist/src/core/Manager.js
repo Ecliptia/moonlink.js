@@ -83,7 +83,6 @@ class Manager extends node_events_1.EventEmitter {
         }
     }
     async attemptConnection(guildId) {
-        console.log(guildId);
         const player = this.getPlayer(guildId);
         if (!player)
             return;
