@@ -24,4 +24,9 @@ export declare class Player {
     }): boolean;
     disconnect(): boolean;
     play(): boolean;
+    pause(): boolean;
+    resume(): boolean;
+    stop(): boolean;
+    skip(position?: number): boolean;
+    setVolume(volume: number): boolean;
 }

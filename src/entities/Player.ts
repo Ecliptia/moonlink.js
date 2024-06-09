@@ -1,5 +1,5 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
-import { Manager, Node, Queue, Track } from "../../index";
+import { Manager, Node, Queue, Track, validateProperty } from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -26,7 +26,7 @@ export class Player {
     this.volume = config.volume || 80;
     this.paused = false;
     this.queue = new Queue();
-    this.node = this.manager.nodes.get(config.node || "default");
+    this.node = this.manager.nodes.get(config.node);
   }
   public set(key: string, data: unknown): void {
     this.data[key] = data;
@@ -79,6 +79,94 @@ export class Player {
         track: {
           encoded: this.current.encoded,
         },
+        volume: this.volume,
+      },
+    });
+
+    return true;
+  }
+  public pause(): boolean {
+    if (this.paused) return true;
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        paused: true,
+      },
+    });
+
+    this.paused = true;
+    return true;
+  }
+  public resume(): boolean {
+    if (!this.paused) return true;
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        paused: false,
+      },
+    });
+
+    this.paused = false;
+    return true;
+  }
+  public stop(): boolean {
+    if (!this.playing) return false;
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        track: {
+          encoded: null,
+        },
+      },
+    });
+
+    this.playing = false;
+    return true;
+  }
+  public skip(position?: number): boolean {
+    if (!this.queue.size) return false;
+    validateProperty(
+      position,
+      (value) =>
+        value !== undefined ||
+        isNaN(value) ||
+        value < 0 ||
+        value > this.queue.size - 1,
+      "Moonlink.js > Player#skip - position not a number or out of range",
+    );
+
+    if (position) {
+      this.current = this.queue.get(position);
+      this.queue.remove(position);
+
+      this.node.rest.update({
+        guildId: this.guildId,
+        data: {
+          track: {
+            encoded: this.current.encoded,
+          },
+        },
+      });
+    } else this.play();
+
+    return true;
+  }
+  public setVolume(volume: number): boolean {
+    validateProperty(
+      volume,
+      (value) =>
+        value !== undefined || isNaN(value) || value < 0 || value > 100,
+      "Moonlink.js > Player#setVolume - volume not a number or out of range",
+    );
+
+    this.volume = volume;
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
         volume: this.volume,
       },
     });

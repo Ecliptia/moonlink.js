@@ -9,6 +9,9 @@ export class Queue {
   public get(position: number): Track {
     return this.tracks[position];
   }
+  public has(track: Track): boolean {
+    return this.tracks.includes(track);
+  }
   public remove(position: number): boolean {
     this.tracks.splice(position, 1);
     return true;

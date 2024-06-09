@@ -1,5 +1,5 @@
 import { INode } from "../typings/Interfaces";
-import { Manager, Node } from "../../index";
+import { Manager, Node, TSortTypeNode } from "../../index";
 export declare class NodeManager {
     readonly manager: Manager;
     cache: Map<string | number, Node>;
@@ -10,4 +10,5 @@ export declare class NodeManager {
     remove(identifier: string | number): void;
     get(identifier: string | number): Node;
     get best(): Node;
+    sortByUsage(sortType: TSortTypeNode): Node;
 }

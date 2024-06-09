@@ -6,7 +6,6 @@ import {
   IOptionsManager,
   IPlayerConfig,
   ITrack,
-  ITrackInfo,
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import {

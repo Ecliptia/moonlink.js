@@ -10,6 +10,9 @@ class Queue {
     get(position) {
         return this.tracks[position];
     }
+    has(track) {
+        return this.tracks.includes(track);
+    }
     remove(position) {
         this.tracks.splice(position, 1);
         return true;

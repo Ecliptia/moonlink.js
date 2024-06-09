@@ -1,10 +1,5 @@
-import { Agent } from "node:https";
 import { Node, makeRequest, sources } from "../../index";
-import {
-  IVoiceState,
-  IRESTOptions,
-  IRESTLoadTracks,
-} from "../typings/Interfaces";
+import { IRESTOptions, IRESTLoadTracks } from "../typings/Interfaces";
 export class Rest {
   public node: Node;
   public url: string;
