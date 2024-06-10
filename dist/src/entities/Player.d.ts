@@ -1,4 +1,5 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { TPlayerLoop } from "../typings/types";
 import { Manager, Node, Queue, Track } from "../../index";
 export declare class Player {
     readonly manager: Manager;
@@ -6,12 +7,14 @@ export declare class Player {
     voiceChannelId: string;
     textChannelId: string;
     voiceState: IVoiceState;
+    autoPlay: boolean;
     connected: boolean;
     playing: boolean;
-    ping: number;
-    volume: number;
     paused: boolean;
+    volume: number;
+    loop: TPlayerLoop;
     current: Track;
+    ping: number;
     queue: Queue;
     node: Node;
     data: Record<string, unknown>;

@@ -5,6 +5,7 @@ import {
   IConfigManager,
   IOptionsManager,
   IPlayerConfig,
+  ISearchResult,
   ITrack,
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
@@ -55,7 +56,7 @@ export class Manager extends EventEmitter {
     source?: TSearchSources;
     node?: string;
     requester?: unknown;
-  }) {
+  }): Promise<ISearchResult> {
     return new Promise(async (resolve) => {
       validateProperty(
         options,

@@ -1,4 +1,5 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { TPlayerLoop } from "../typings/types";
 import { Manager, Node, Queue, Track, validateProperty } from "../../index";
 
 export class Player {
@@ -7,12 +8,14 @@ export class Player {
   public voiceChannelId: string;
   public textChannelId: string;
   public voiceState: IVoiceState = {};
+  public autoPlay: boolean;
   public connected: boolean;
   public playing: boolean;
-  public ping: number = 0;
-  public volume: number = 80;
   public paused: boolean;
+  public volume: number = 80;
+  public loop: TPlayerLoop;
   public current: Track;
+  public ping: number = 0;
   public queue: Queue;
   public node: Node;
   public data: Record<string, unknown> = {};
@@ -24,6 +27,8 @@ export class Player {
     this.connected = false;
     this.playing = false;
     this.volume = config.volume || 80;
+    this.loop = config.loop || "off";
+    this.autoPlay = config.autoPlay || false;
     this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);

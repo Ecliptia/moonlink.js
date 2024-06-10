@@ -11,6 +11,7 @@ export declare class Track {
     isStream: boolean;
     artworkUrl?: string;
     isrc?: string;
+    time?: number;
     sourceName?: string;
     requestedBy?: Object;
     constructor(trackData: ITrack, requester?: Object);

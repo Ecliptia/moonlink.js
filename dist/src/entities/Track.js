@@ -13,6 +13,7 @@ class Track {
     isStream;
     artworkUrl;
     isrc;
+    time = 0;
     sourceName;
     requestedBy = {
         user_id: null,

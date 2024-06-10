@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Rest } from "../../index";
+import { Manager, Rest, Track } from "../../index";
 export class Node {
   public readonly manager: Manager;
   public host: string;
@@ -92,9 +92,92 @@ export class Node {
         this.stats = payload as INodeStats;
         break;
       case "playerUpdate":
+        const player = this.manager.getPlayer(payload.guildId);
+        if (!player) return;
+        if (!player.current) return;
+        if (player.connected !== payload.state.connected)
+          player.connected = payload.state.connected;
+        player.current.position = payload.state.position;
+        player.current.time = payload.state.time;
+        player.ping = payload.state.ping;
         break;
-      case "event":
+      case "event": {
+        let player = this.manager.getPlayer(payload.guildId);
+        if (!player) return;
+
+        switch (payload.type) {
+          case "TrackStartEvent":
+            player.playing = true;
+            player.paused = false;
+
+            this.manager.emit("trackStart", player, player.current);
+            break;
+          case "TrackEndEvent":
+            player.playing = false;
+            player.paused = false;
+
+            this.manager.emit(
+              "trackEnd",
+              player,
+              player.current,
+              payload.reason,
+              payload,
+            );
+
+            if (["loadFailed", "cleanup"].includes(payload.reason)) {
+              if (player.queue.size) {
+                player.play();
+              } else {
+                player.queue.clear();
+              }
+              return;
+            }
+            if (payload.reason === "replaced") {
+              return;
+            }
+            if (player.loop === "track") {
+              await this.rest.update({
+                guildId: player.guildId,
+                data: {
+                  track: {
+                    encoded: player.current.encoded,
+                  },
+                },
+              });
+              return;
+            } else if (player.loop === "queue") {
+              player.current.position = 0;
+              player.current.time = 0;
+              player.queue.add(player.current);
+              player.play();
+              return;
+            }
+            if (player.queue.size) {
+              player.play();
+              return;
+            }
+            if (player.autoPlay === true) {
+              let uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
+              let res = await this.manager.search({
+                query: uri,
+              });
+              if (
+                !res ||
+                !res.tracks ||
+                ["loadFailed", "cleanup"].includes(res.loadType)
+              )
+                return;
+              let randomTrack =
+                res.tracks[Math.floor(Math.random() * res.tracks.length)];
+              player.queue.add(randomTrack as Track);
+              player.play();
+              return;
+            }
+
+            break;
+        }
         break;
+      }
     }
   }
   protected error(): void {}
