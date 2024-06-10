@@ -13,3 +13,11 @@ export type TSortTypeNode =
   | "cpuSystem"
   | "uptime"
   | "random";
+export type TPlayerLoop = "off" | "track" | "queue";
+export type TTrackEndType =
+  | "queueEnd"
+  | "loadFailed"
+  | "stopped"
+  | "replaced"
+  | "cleanup"
+  | "finish";

@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
+import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig, ISearchResult } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import { NodeManager, PlayerManager, Player } from "../../index";
 export declare interface Manager {
@@ -23,7 +23,7 @@ export declare class Manager extends EventEmitter {
         source?: TSearchSources;
         node?: string;
         requester?: unknown;
-    }): Promise<unknown>;
+    }): Promise<ISearchResult>;
     packetUpdate(packet: any): void;
     attemptConnection(guildId: string): Promise<boolean>;
     createPlayer(config: IPlayerConfig): Player;

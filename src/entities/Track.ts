@@ -12,6 +12,7 @@ export class Track {
   public isStream: boolean;
   public artworkUrl?: string;
   public isrc?: string;
+  public time?: number = 0;
   public sourceName?: string;
   public requestedBy?: Object = {
     user_id: null,

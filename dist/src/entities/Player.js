@@ -8,12 +8,14 @@ class Player {
     voiceChannelId;
     textChannelId;
     voiceState = {};
+    autoPlay;
     connected;
     playing;
-    ping = 0;
-    volume = 80;
     paused;
+    volume = 80;
+    loop;
     current;
+    ping = 0;
     queue;
     node;
     data = {};
@@ -25,6 +27,8 @@ class Player {
         this.connected = false;
         this.playing = false;
         this.volume = config.volume || 80;
+        this.loop = config.loop || "off";
+        this.autoPlay = config.autoPlay || false;
         this.paused = false;
         this.queue = new index_1.Queue();
         this.node = this.manager.nodes.get(config.node);

@@ -8,11 +8,32 @@ import {
   PlayerManager,
   NodeManager,
 } from "../../index";
-import { TLoadResultType, TSortTypeNode } from "./types";
+import {
+  TLoadResultType,
+  TPlayerLoop,
+  TSortTypeNode,
+  TTrackEndType,
+} from "./types";
 export interface IEvents {
   debug: (...args: string[]) => void;
   nodeCreate: (node: INode) => void;
+  nodeConnected: (node: INode) => void;
+  nodeError: (node: INode, error: Error) => void;
+  nodeReconnect: (node: INode) => void;
+  nodeDisconnect: (node: INode, error: Error) => void;
   nodeDestroy: (node: INode) => void;
+  playerCreate: (player: Player) => void;
+  playerDestroy: (player: Player) => void;
+  trackStart: (player: Player, track: Track) => void;
+  trackEnd: (
+    player: Player,
+    track: Track,
+    type: TTrackEndType,
+    payload?: any,
+  ) => void;
+  trackStuck: (player: Player, track: Track, threshold: number) => void;
+  trackError: (player: Player, track: Track, error: Error) => void;
+  trackException: (player: Player, track: Track, exception: Error) => void;
 }
 export interface INode {
   host: string;
@@ -65,6 +86,8 @@ export interface IPlayerConfig {
   voiceChannelId: string;
   textChannelId: string;
   volume?: number;
+  loop?: TPlayerLoop;
+  autoPlay?: boolean;
   node?: string;
 }
 export interface IVoiceState {
@@ -123,6 +146,11 @@ export interface IObjectTrack {
   encoded?: string;
   identifier?: string;
   userData?: unknown;
+}
+export interface ISearchResult {
+  loadType: TLoadResultType;
+  tracks: Track[];
+  playlistInfo: IPlaylistInfo;
 }
 export interface IExtendable {
   Node: typeof Node;
