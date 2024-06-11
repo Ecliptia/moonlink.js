@@ -34,7 +34,8 @@ class PlayerManager {
     get(guildId) {
         return this.cache.get(guildId);
     }
-    remove(guildId) {
+    async delete(guildId) {
+        await this.get(guildId).node.rest.destroy(guildId);
         this.cache.delete(guildId);
     }
 }

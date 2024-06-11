@@ -8,6 +8,7 @@ export declare class Player {
     textChannelId: string;
     voiceState: IVoiceState;
     autoPlay: boolean;
+    autoLeave: boolean;
     connected: boolean;
     playing: boolean;
     paused: boolean;
@@ -32,4 +33,8 @@ export declare class Player {
     stop(): boolean;
     skip(position?: number): boolean;
     setVolume(volume: number): boolean;
+    setLoop(loop: TPlayerLoop): boolean;
+    setAutoPlay(autoPlay: boolean): boolean;
+    setAutoLeave(autoLeave: boolean): boolean;
+    destroy(): boolean;
 }

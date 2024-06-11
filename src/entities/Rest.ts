@@ -46,4 +46,15 @@ export class Rest {
 
     return request;
   }
+  public async destroy(guildId: string): Promise<unknown> {
+    let request = await makeRequest(
+      `${this.url}/sessions/${this.node.sessionId}/players/${guildId}`,
+      {
+        method: "DELETE",
+        headers: this.defaultHeaders,
+      },
+    );
+
+    return request;
+  }
 }

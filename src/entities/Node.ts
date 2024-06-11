@@ -156,7 +156,7 @@ export class Node {
               player.play();
               return;
             }
-            if (player.autoPlay === true) {
+            if (player.autoPlay && player.current.sourceName === "youtube") {
               let uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
               let res = await this.manager.search({
                 query: uri,
@@ -173,9 +173,48 @@ export class Node {
               player.play();
               return;
             }
-
+            if (player.autoLeave) {
+              player.destroy();
+              return;
+            }
+            if (!player.queue.size) {
+              player.current = null;
+              player.queue.clear();
+            }
             break;
+
+          case "TrackStuckEvent": {
+            this.manager.emit(
+              "trackStuck",
+              player,
+              player.current,
+              payload.thresholdMs,
+            );
+            player.stop();
+            break;
+          }
+          case "TrackExceptionEvent": {
+            this.manager.emit(
+              "trackException",
+              player,
+              player.current,
+              payload.exception,
+            );
+            player.stop();
+            break;
+          }
+          case "WebSocketClosedEvent": {
+            this.manager.emit(
+              "socketClosed",
+              player,
+              payload.code,
+              payload.reason,
+              payload.byRemote,
+            );
+            break;
+          }
         }
+
         break;
       }
     }

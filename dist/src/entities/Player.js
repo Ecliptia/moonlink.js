@@ -9,6 +9,7 @@ class Player {
     textChannelId;
     voiceState = {};
     autoPlay;
+    autoLeave;
     connected;
     playing;
     paused;
@@ -29,6 +30,7 @@ class Player {
         this.volume = config.volume || 80;
         this.loop = config.loop || "off";
         this.autoPlay = config.autoPlay || false;
+        this.autoLeave = config.autoLeave || false;
         this.paused = false;
         this.queue = new index_1.Queue();
         this.node = this.manager.nodes.get(config.node);
@@ -150,6 +152,28 @@ class Player {
                 volume: this.volume,
             },
         });
+        return true;
+    }
+    setLoop(loop) {
+        (0, index_1.validateProperty)(loop, (value) => value !== undefined ||
+            value !== "off" ||
+            value !== "track" ||
+            value !== "queue", "Moonlink.js > Player#setLoop - loop not a valid value");
+        this.loop = loop;
+        return true;
+    }
+    setAutoPlay(autoPlay) {
+        (0, index_1.validateProperty)(autoPlay, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean");
+        this.autoPlay = autoPlay;
+        return true;
+    }
+    setAutoLeave(autoLeave) {
+        (0, index_1.validateProperty)(autoLeave, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean");
+        this.autoLeave = autoLeave;
+        return true;
+    }
+    destroy() {
+        this.manager.players.delete(this.guildId);
         return true;
     }
 }

@@ -9,6 +9,7 @@ export class Player {
   public textChannelId: string;
   public voiceState: IVoiceState = {};
   public autoPlay: boolean;
+  public autoLeave: boolean;
   public connected: boolean;
   public playing: boolean;
   public paused: boolean;
@@ -29,6 +30,7 @@ export class Player {
     this.volume = config.volume || 80;
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
+    this.autoLeave = config.autoLeave || false;
     this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);
@@ -175,6 +177,48 @@ export class Player {
         volume: this.volume,
       },
     });
+
+    return true;
+  }
+  public setLoop(loop: TPlayerLoop): boolean {
+    validateProperty(
+      loop,
+      (value: any) =>
+        value !== undefined ||
+        value !== "off" ||
+        value !== "track" ||
+        value !== "queue",
+      "Moonlink.js > Player#setLoop - loop not a valid value",
+    );
+
+    this.loop = loop;
+
+    return true;
+  }
+  public setAutoPlay(autoPlay: boolean): boolean {
+    validateProperty(
+      autoPlay,
+      (value) => value !== undefined || typeof value !== "boolean",
+      "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean",
+    );
+
+    this.autoPlay = autoPlay;
+
+    return true;
+  }
+  public setAutoLeave(autoLeave: boolean): boolean {
+    validateProperty(
+      autoLeave,
+      (value) => value !== undefined || typeof value !== "boolean",
+      "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean",
+    );
+
+    this.autoLeave = autoLeave;
+
+    return true;
+  }
+  public destroy(): boolean {
+    this.manager.players.delete(this.guildId);
 
     return true;
   }

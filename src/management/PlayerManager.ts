@@ -56,7 +56,8 @@ export class PlayerManager {
   public get(guildId: string): Player {
     return this.cache.get(guildId);
   }
-  public remove(guildId: string): void {
+  public async delete(guildId: string): Promise<void> {
+    await this.get(guildId).node.rest.destroy(guildId);
     this.cache.delete(guildId);
   }
 }

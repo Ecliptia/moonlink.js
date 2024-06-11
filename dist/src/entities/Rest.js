@@ -41,6 +41,13 @@ class Rest {
         });
         return request;
     }
+    async destroy(guildId) {
+        let request = await (0, index_1.makeRequest)(`${this.url}/sessions/${this.node.sessionId}/players/${guildId}`, {
+            method: "DELETE",
+            headers: this.defaultHeaders,
+        });
+        return request;
+    }
 }
 exports.Rest = Rest;
 //# sourceMappingURL=Rest.js.map
