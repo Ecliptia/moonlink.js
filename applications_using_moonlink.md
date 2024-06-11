@@ -13,4 +13,11 @@ Here are some Discord applications that use the **moonlink.js** library:
 - **Invite:** Private bot, but you can clone the code and create your own
 - **Repository:** [GitHub Repository](https://github.com/gavenda/vivy)
 
+### 3. HStudio
+- **Description** A music bot for your Discord server. Play your favorite songs from YouTube or Spotify, and it supports multiple languages.
+- **Invite**  [Invite Link](https://discord.com/oauth2/authorize?client_id=1105873690022924450)
+- **Repository** [Github](https://github.com/HStudioDiscordBot/HStudioSource)
+- **Document** https://docs.hstudio.hewkawar.xyz/
+- **Website** https://hstudio.hewkawar.xyz/
+
 A big thank you to the creators of these amazing Discord applications for their hard work and dedication!
