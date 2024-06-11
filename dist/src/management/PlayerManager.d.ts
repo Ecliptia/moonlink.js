@@ -7,5 +7,5 @@ export declare class PlayerManager {
     create(config: IPlayerConfig): Player;
     has(guildId: string): boolean;
     get(guildId: string): Player;
-    remove(guildId: string): void;
+    delete(guildId: string): Promise<void>;
 }

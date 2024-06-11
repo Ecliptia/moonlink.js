@@ -13,8 +13,8 @@ export interface IEvents {
     trackStart: (player: Player, track: Track) => void;
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;
-    trackError: (player: Player, track: Track, error: Error) => void;
-    trackException: (player: Player, track: Track, exception: Error) => void;
+    trackException: (player: Player, track: Track, exception: any) => void;
+    socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
 }
 export interface INode {
     host: string;
@@ -69,6 +69,7 @@ export interface IPlayerConfig {
     volume?: number;
     loop?: TPlayerLoop;
     autoPlay?: boolean;
+    autoLeave?: boolean;
     node?: string;
 }
 export interface IVoiceState {

@@ -7,4 +7,5 @@ export declare class Rest {
     constructor(node: Node);
     loadTracks(source: string, query: string): Promise<any>;
     update(data: IRESTOptions): Promise<unknown>;
+    destroy(guildId: string): Promise<unknown>;
 }
