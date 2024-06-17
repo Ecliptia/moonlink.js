@@ -30,6 +30,10 @@ export class Queue {
     this.tracks = [];
     return true;
   }
+  public shuffle(): boolean {
+    this.tracks = this.tracks.sort(() => Math.random() - 0.5);
+    return true;
+  }
   public get size(): number {
     return this.tracks.length;
   }

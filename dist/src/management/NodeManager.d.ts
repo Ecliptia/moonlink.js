@@ -7,7 +7,7 @@ export declare class NodeManager {
     check(node: INode): void;
     init(): void;
     add(node: INode): void;
-    remove(identifier: string | number): void;
+    remove(identifier: string): void;
     get(identifier: string | number): Node;
     get best(): Node;
     sortByUsage(sortType: TSortTypeNode): Node;

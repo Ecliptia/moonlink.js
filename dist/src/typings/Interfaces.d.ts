@@ -1,13 +1,13 @@
 import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
-    debug: (...args: string[]) => void;
+    debug: (...args: any) => void;
     nodeCreate: (node: INode) => void;
     nodeConnected: (node: INode) => void;
     nodeError: (node: INode, error: Error) => void;
     nodeReconnect: (node: INode) => void;
     nodeDisconnect: (node: INode, error: Error) => void;
-    nodeDestroy: (node: INode) => void;
+    nodeDestroy: (identifier: string) => void;
     playerCreate: (player: Player) => void;
     playerDestroy: (player: Player) => void;
     trackStart: (player: Player, track: Track) => void;

@@ -19,6 +19,7 @@ class Manager extends node_events_1.EventEmitter {
             ...config.options,
         };
         this.nodes = new index_1.NodeManager(this, config.nodes);
+        this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
     }
     init(clientId) {
         if (this.initialize)
@@ -26,6 +27,7 @@ class Manager extends node_events_1.EventEmitter {
         this.options.clientId = clientId;
         this.nodes.init();
         this.initialize = true;
+        this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
     }
     async search(options) {
         return new Promise(async (resolve) => {
@@ -36,7 +38,9 @@ class Manager extends node_events_1.EventEmitter {
             let requester = options.requester || null;
             if (![...this.nodes.cache.values()].filter((node) => node.connected))
                 throw new Error("No available nodes to search from.");
-            let node = this.nodes.get(options?.node) ?? this.nodes.best;
+            let node = this.nodes.cache.has(options?.node)
+                ? this.nodes.get(options?.node)
+                : this.nodes.best;
             let req = await node.rest.loadTracks(source, query);
             if (req.loadType == "error" || req.loadType == "empty")
                 resolve(req);
@@ -45,6 +49,7 @@ class Manager extends node_events_1.EventEmitter {
             if (req.loadType == "search")
                 req.data.tracks = req.data;
             let tracks = req.data.tracks.map((data) => new index_1.Track(data, requester));
+            this.emit("debug", `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`);
             return resolve({
                 ...req,
                 tracks,
@@ -99,6 +104,7 @@ class Manager extends node_events_1.EventEmitter {
                 },
             },
         });
+        this.emit("debug", `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`);
         return true;
     }
     createPlayer(config) {

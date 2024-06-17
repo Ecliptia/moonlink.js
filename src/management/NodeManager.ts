@@ -68,14 +68,25 @@ export class NodeManager {
   }
   public add(node: INode): void {
     this.check(node);
-    this.cache.set(
-      node.id || node.identifier || node.identifier,
-      new Node(this.manager, node),
+    this.cache.set(node.identifier ?? node.host, new Node(this.manager, node));
+
+    this.manager.emit(
+      "nodeCreate",
+      this.cache.get(node.identifier ?? node.host),
+    );
+    this.manager.emit(
+      "debug",
+      `NodeManager > Node with identifier ${node.identifier ?? node.host} has been created.`,
     );
   }
-  public remove(identifier: string | number): void {
+  public remove(identifier: string): void {
     this.cache.get(identifier)?.destroy();
     this.cache.delete(identifier);
+    this.manager.emit("nodeDestroy", identifier);
+    this.manager.emit(
+      "debug",
+      `NodeManager > Node with identifier ${identifier} has been destroyed.`,
+    );
   }
   public get(identifier: string | number): Node {
     if (identifier == "default" && this.cache.size === 1)

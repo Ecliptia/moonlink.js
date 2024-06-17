@@ -42,14 +42,19 @@ export class Manager extends EventEmitter {
       defaultPlatformSearch: "youtube",
       ...config.options,
     };
-
     this.nodes = new NodeManager(this, config.nodes);
+
+    this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
   }
   public init(clientId: string): void {
     if (this.initialize) return;
     this.options.clientId = clientId;
     this.nodes.init();
     this.initialize = true;
+    this.emit(
+      "debug",
+      "Moonlink.js > initialized with clientId(" + clientId + ")",
+    );
   }
   public async search(options: {
     query: string;
@@ -75,7 +80,9 @@ export class Manager extends EventEmitter {
       if (![...this.nodes.cache.values()].filter((node) => node.connected))
         throw new Error("No available nodes to search from.");
 
-      let node = this.nodes.get(options?.node) ?? this.nodes.best;
+      let node = this.nodes.cache.has(options?.node)
+        ? this.nodes.get(options?.node)
+        : this.nodes.best;
 
       let req = await node.rest.loadTracks(source, query);
 
@@ -83,10 +90,14 @@ export class Manager extends EventEmitter {
       if (req.loadType == "track") req.data.tracks = [req.data as any];
       if (req.loadType == "search") req.data.tracks = req.data as any;
 
-      let tracks: Track = req.data.tracks.map(
+      let tracks: Track[] = req.data.tracks.map(
         (data: ITrack) => new Track(data, requester),
       ) as any;
 
+      this.emit(
+        "debug",
+        `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`,
+      );
       return resolve({
         ...req,
         tracks,
@@ -108,6 +119,10 @@ export class Manager extends EventEmitter {
       player.voiceState.token = packet.d.token;
       player.voiceState.endpoint = packet.d.endpoint;
 
+      this.emit(
+        "debug",
+        `Moonlink.js > Received voice server update for guild ${player.guildId}`,
+      );
       this.attemptConnection(player.guildId);
     } else if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.options.clientId) return;
@@ -125,6 +140,10 @@ export class Manager extends EventEmitter {
 
       player.voiceState.sessionId = packet.d.session_id;
 
+      this.emit(
+        "debug",
+        `Moonlink.js > Received voice state update for guild ${player.guildId}`,
+      );
       this.attemptConnection(player.guildId);
     }
   }
@@ -147,7 +166,10 @@ export class Manager extends EventEmitter {
         },
       },
     });
-
+    this.emit(
+      "debug",
+      `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`,
+    );
     return true;
   }
   public createPlayer(config: IPlayerConfig): Player {
