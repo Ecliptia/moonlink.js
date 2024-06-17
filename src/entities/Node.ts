@@ -190,7 +190,6 @@ export class Node {
               player.current,
               payload.thresholdMs,
             );
-            player.stop();
             break;
           }
           case "TrackExceptionEvent": {
@@ -200,7 +199,6 @@ export class Node {
               player.current,
               payload.exception,
             );
-            player.stop();
             break;
           }
           case "WebSocketClosedEvent": {

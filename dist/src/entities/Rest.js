@@ -19,10 +19,10 @@ class Rest {
     async loadTracks(source, query) {
         return new Promise(async (resolve) => {
             let identifier;
-            if (query.startsWith("https://") || query.startsWith("http://"))
+            if (query.startsWith("http://") || query.startsWith("https://"))
                 identifier = query;
             else
-                identifier = `${index_1.sources[source]};${query}`;
+                identifier = `${index_1.sources[source]}:${query}`;
             let params = new URLSearchParams({
                 identifier,
             });

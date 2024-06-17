@@ -48,6 +48,15 @@ export class PlayerManager {
 
     const player: Player = new Player(this.manager, config);
     this.cache.set(config.guildId, player);
+
+    this.manager.emit(
+      "debug",
+      "Moonlink.js - Player > Player for guildId " +
+        config.guildId +
+        " has been created",
+      config,
+    );
+
     return player;
   }
   public has(guildId: string): boolean {
@@ -57,7 +66,15 @@ export class PlayerManager {
     return this.cache.get(guildId);
   }
   public async delete(guildId: string): Promise<void> {
+    if (!this.has(guildId)) return;
     await this.get(guildId).node.rest.destroy(guildId);
     this.cache.delete(guildId);
+
+    this.manager.emit(
+      "debug",
+      "Moonlink.js - Player > Player for guildId " +
+        guildId +
+        " has been deleted",
+    );
   }
 }

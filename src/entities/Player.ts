@@ -41,6 +41,50 @@ export class Player {
   public get<T>(key: string): T {
     return this.data[key] as T;
   }
+  public setVoiceChannelId(voiceChannelId: string): boolean {
+    validateProperty(
+      voiceChannelId,
+      (value) => value !== undefined || typeof value !== "string",
+      "Moonlink.js > Player#setVoiceChannelId - voiceChannelId not a string",
+    );
+
+    this.voiceChannelId = voiceChannelId;
+
+    return true;
+  }
+  public setTextChannelId(textChannelId: string): boolean {
+    validateProperty(
+      textChannelId,
+      (value) => value !== undefined || typeof value !== "string",
+      "Moonlink.js > Player#setTextChannelId - textChannelId not a string",
+    );
+
+    this.textChannelId = textChannelId;
+
+    return true;
+  }
+  public setAutoPlay(autoPlay: boolean): boolean {
+    validateProperty(
+      autoPlay,
+      (value) => value !== undefined || typeof value !== "boolean",
+      "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean",
+    );
+
+    this.autoPlay = autoPlay;
+
+    return true;
+  }
+  public setAutoLeave(autoLeave: boolean): boolean {
+    validateProperty(
+      autoLeave,
+      (value) => value !== undefined || typeof value !== "boolean",
+      "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean",
+    );
+
+    this.autoLeave = autoLeave;
+
+    return true;
+  }
   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
     this.manager.sendPayload(
       this.guildId,
@@ -161,6 +205,30 @@ export class Player {
 
     return true;
   }
+  public seek(position: number): boolean {
+    validateProperty(
+      position,
+      (value) =>
+        value !== undefined ||
+        isNaN(value) ||
+        value < 0 ||
+        value > this.current.duration,
+      "Moonlink.js > Player#seek - position not a number or out of range",
+    );
+
+    this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        position: position,
+      },
+    });
+
+    return true;
+  }
+  public shuffle(): boolean {
+    this.queue.shuffle();
+    return true;
+  }
   public setVolume(volume: number): boolean {
     validateProperty(
       volume,
@@ -195,29 +263,9 @@ export class Player {
 
     return true;
   }
-  public setAutoPlay(autoPlay: boolean): boolean {
-    validateProperty(
-      autoPlay,
-      (value) => value !== undefined || typeof value !== "boolean",
-      "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean",
-    );
-
-    this.autoPlay = autoPlay;
-
-    return true;
-  }
-  public setAutoLeave(autoLeave: boolean): boolean {
-    validateProperty(
-      autoLeave,
-      (value) => value !== undefined || typeof value !== "boolean",
-      "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean",
-    );
-
-    this.autoLeave = autoLeave;
-
-    return true;
-  }
   public destroy(): boolean {
+    if (this.connected) this.disconnect();
+    this.queue.clear();
     this.manager.players.delete(this.guildId);
 
     return true;

@@ -75,9 +75,10 @@ client.on("messageCreate", async (message) => {
       guildId: message.guild.id,
       voiceChannelId: channel.id,
       textChannelId: message.channel.id,
+      autoPlay: true,
     });
 
-    player.connect();
+    if (!player.connected) player.connect();
 
     let req = await client.manager.search({
       query: args.join(" "),
@@ -85,7 +86,7 @@ client.on("messageCreate", async (message) => {
     });
 
     player.queue.add(req.tracks[0]);
-    player.play();
+    if (!player.playing) player.play();
   }
 });
 

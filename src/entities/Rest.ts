@@ -17,9 +17,9 @@ export class Rest {
   public async loadTracks(source: string, query: string): Promise<any> {
     return new Promise(async (resolve) => {
       let identifier: string;
-      if (query.startsWith("https://") || query.startsWith("http://"))
+      if (query.startsWith("http://") || query.startsWith("https://"))
         identifier = query;
-      else identifier = `${sources[source]};${query}`;
+      else identifier = `${sources[source]}:${query}`;
 
       let params = new URLSearchParams({
         identifier,

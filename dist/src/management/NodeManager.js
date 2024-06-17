@@ -30,11 +30,15 @@ class NodeManager {
     }
     add(node) {
         this.check(node);
-        this.cache.set(node.id || node.identifier || node.identifier, new index_1.Node(this.manager, node));
+        this.cache.set(node.identifier ?? node.host, new index_1.Node(this.manager, node));
+        this.manager.emit("nodeCreate", this.cache.get(node.identifier ?? node.host));
+        this.manager.emit("debug", `NodeManager > Node with identifier ${node.identifier ?? node.host} has been created.`);
     }
     remove(identifier) {
         this.cache.get(identifier)?.destroy();
         this.cache.delete(identifier);
+        this.manager.emit("nodeDestroy", identifier);
+        this.manager.emit("debug", `NodeManager > Node with identifier ${identifier} has been destroyed.`);
     }
     get(identifier) {
         if (identifier == "default" && this.cache.size === 1)
