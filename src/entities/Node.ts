@@ -53,19 +53,20 @@ export class Node {
     this.socket.on("error", this.error.bind(this));
   }
   public reconnect(): void {
-    console.log("Reconnecting to the Node");
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       this.connect();
     }, this.retryDelay);
+
+    this.manager.emit("nodeReconnect", this);
   }
   protected open(): void {
-    console.log("Connected to the Node");
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     this.connected = true;
+
+    this.manager.emit("nodeConnected", this);
   }
-  protected close(): void {
-    console.log("Disconnected from the Node");
+  protected close(code: number, reason: string): void {
     if (this.connected) this.connected = false;
 
     this.socket.removeAllListeners();
@@ -77,6 +78,8 @@ export class Node {
       this.socket = null;
       this.destroyed = true;
     }
+
+    this.manager.emit("nodeDisconnect", this, code, reason);
   }
   protected async message(data: Buffer): Promise<void> {
     if (Array.isArray(data)) data = Buffer.concat(data);
@@ -100,17 +103,30 @@ export class Node {
         player.current.position = payload.state.position;
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;
+
+        this.manager.emit("playerUpdate", player, player.current, payload);
+        this.manager.emit(
+          "debug",
+          "Moonlink.js > Player " + player.guildId + " has updated the player.",
+        );
         break;
       case "event": {
         let player = this.manager.getPlayer(payload.guildId);
         if (!player) return;
 
+        this.manager.emit("nodeRaw", this, player, payload);
         switch (payload.type) {
           case "TrackStartEvent":
             player.playing = true;
             player.paused = false;
 
             this.manager.emit("trackStart", player, player.current);
+            this.manager.emit(
+              "debug",
+              "Moonlink.js > Player " +
+                player.guildId +
+                " has started the track.",
+            );
             break;
           case "TrackEndEvent":
             player.playing = false;
@@ -130,6 +146,15 @@ export class Node {
               } else {
                 player.queue.clear();
               }
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " has ended the track for reason " +
+                  payload.reason +
+                  ".",
+              );
               return;
             }
             if (payload.reason === "replaced") {
@@ -144,12 +169,26 @@ export class Node {
                   },
                 },
               });
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " is looping the track.",
+              );
               return;
             } else if (player.loop === "queue") {
               player.current.position = 0;
               player.current.time = 0;
               player.queue.add(player.current);
               player.play();
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " is looping the queue.",
+              );
               return;
             }
             if (player.queue.size) {
@@ -171,15 +210,37 @@ export class Node {
                 res.tracks[Math.floor(Math.random() * res.tracks.length)];
               player.queue.add(randomTrack as Track);
               player.play();
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " is autoplaying track " +
+                  randomTrack.title,
+              );
               return;
             }
             if (player.autoLeave) {
               player.destroy();
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " has been destroyed because of autoLeave.",
+              );
               return;
             }
             if (!player.queue.size) {
               player.current = null;
               player.queue.clear();
+
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " has been cleared because of empty queue.",
+              );
             }
             break;
 
@@ -190,6 +251,14 @@ export class Node {
               player.current,
               payload.thresholdMs,
             );
+            this.manager.emit(
+              "debug",
+              "Moonlink.js > Player " +
+                player.guildId +
+                " has been stuck for " +
+                payload.thresholdMs +
+                "ms.",
+            );
             break;
           }
           case "TrackExceptionEvent": {
@@ -198,6 +267,13 @@ export class Node {
               player,
               player.current,
               payload.exception,
+            );
+            this.manager.emit(
+              "debug",
+              "Moonlink.js > Player " +
+                player.guildId +
+                " has an exception: " +
+                payload.exception,
             );
             break;
           }
@@ -209,6 +285,15 @@ export class Node {
               payload.reason,
               payload.byRemote,
             );
+            this.manager.emit(
+              "debug",
+              "Moonlink.js > Player " +
+                player.guildId +
+                " has been closed with code " +
+                payload.code +
+                " and reason " +
+                payload.reason,
+            );
             break;
           }
         }
@@ -217,7 +302,9 @@ export class Node {
       }
     }
   }
-  protected error(): void {}
+  protected error(error: Error): void {
+    this.manager.emit("nodeError", this, error);
+  }
   public destroy(): void {
     this.socket.close();
     this.destroyed = true;
