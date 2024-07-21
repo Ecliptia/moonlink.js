@@ -9,5 +9,6 @@ export declare class Queue {
     unshift(track: Track): boolean;
     pop(): Track;
     clear(): boolean;
+    shuffle(): boolean;
     get size(): number;
 }

@@ -87,9 +87,10 @@ export class Manager extends EventEmitter {
       let req = await node.rest.loadTracks(source, query);
 
       if (req.loadType == "error" || req.loadType == "empty") resolve(req);
-      if (req.loadType == "track") req.data.tracks = [req.data as any];
+      if (req.loadType == "track" || req.loadType == "short")
+        req.data.tracks = [req.data as any];
       if (req.loadType == "search") req.data.tracks = req.data as any;
-
+      
       let tracks: Track[] = req.data.tracks.map(
         (data: ITrack) => new Track(data, requester),
       ) as any;

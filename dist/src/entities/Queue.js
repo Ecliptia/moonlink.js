@@ -31,6 +31,10 @@ class Queue {
         this.tracks = [];
         return true;
     }
+    shuffle() {
+        this.tracks = this.tracks.sort(() => Math.random() - 0.5);
+        return true;
+    }
     get size() {
         return this.tracks.length;
     }

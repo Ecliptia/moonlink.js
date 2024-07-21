@@ -22,6 +22,10 @@ export declare class Player {
     constructor(manager: Manager, config: IPlayerConfig);
     set(key: string, data: unknown): void;
     get<T>(key: string): T;
+    setVoiceChannelId(voiceChannelId: string): boolean;
+    setTextChannelId(textChannelId: string): boolean;
+    setAutoPlay(autoPlay: boolean): boolean;
+    setAutoLeave(autoLeave: boolean): boolean;
     connect(options: {
         setMute?: boolean;
         setDeaf?: boolean;
@@ -32,9 +36,9 @@ export declare class Player {
     resume(): boolean;
     stop(): boolean;
     skip(position?: number): boolean;
+    seek(position: number): boolean;
+    shuffle(): boolean;
     setVolume(volume: number): boolean;
     setLoop(loop: TPlayerLoop): boolean;
-    setAutoPlay(autoPlay: boolean): boolean;
-    setAutoLeave(autoLeave: boolean): boolean;
     destroy(): boolean;
 }

@@ -41,6 +41,26 @@ class Player {
     get(key) {
         return this.data[key];
     }
+    setVoiceChannelId(voiceChannelId) {
+        (0, index_1.validateProperty)(voiceChannelId, (value) => value !== undefined || typeof value !== "string", "Moonlink.js > Player#setVoiceChannelId - voiceChannelId not a string");
+        this.voiceChannelId = voiceChannelId;
+        return true;
+    }
+    setTextChannelId(textChannelId) {
+        (0, index_1.validateProperty)(textChannelId, (value) => value !== undefined || typeof value !== "string", "Moonlink.js > Player#setTextChannelId - textChannelId not a string");
+        this.textChannelId = textChannelId;
+        return true;
+    }
+    setAutoPlay(autoPlay) {
+        (0, index_1.validateProperty)(autoPlay, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean");
+        this.autoPlay = autoPlay;
+        return true;
+    }
+    setAutoLeave(autoLeave) {
+        (0, index_1.validateProperty)(autoLeave, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean");
+        this.autoLeave = autoLeave;
+        return true;
+    }
     connect(options) {
         this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
@@ -143,6 +163,23 @@ class Player {
             this.play();
         return true;
     }
+    seek(position) {
+        (0, index_1.validateProperty)(position, (value) => value !== undefined ||
+            isNaN(value) ||
+            value < 0 ||
+            value > this.current.duration, "Moonlink.js > Player#seek - position not a number or out of range");
+        this.node.rest.update({
+            guildId: this.guildId,
+            data: {
+                position: position,
+            },
+        });
+        return true;
+    }
+    shuffle() {
+        this.queue.shuffle();
+        return true;
+    }
     setVolume(volume) {
         (0, index_1.validateProperty)(volume, (value) => value !== undefined || isNaN(value) || value < 0 || value > 100, "Moonlink.js > Player#setVolume - volume not a number or out of range");
         this.volume = volume;
@@ -162,17 +199,10 @@ class Player {
         this.loop = loop;
         return true;
     }
-    setAutoPlay(autoPlay) {
-        (0, index_1.validateProperty)(autoPlay, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean");
-        this.autoPlay = autoPlay;
-        return true;
-    }
-    setAutoLeave(autoLeave) {
-        (0, index_1.validateProperty)(autoLeave, (value) => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean");
-        this.autoLeave = autoLeave;
-        return true;
-    }
     destroy() {
+        if (this.connected)
+            this.disconnect();
+        this.queue.clear();
         this.manager.players.delete(this.guildId);
         return true;
     }

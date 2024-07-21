@@ -18,6 +18,7 @@ export interface IEvents {
   debug: (...args: any) => void;
   nodeRaw: (node: INode, player: Player, payload: any) => void;
   nodeCreate: (node: INode) => void;
+  nodeReady: (node: INode, stats: INodeStats) => void;
   nodeConnected: (node: INode) => void;
   nodeError: (node: INode, error: Error) => void;
   nodeReconnect: (node: INode) => void;
@@ -87,6 +88,7 @@ export interface IOptionsManager {
   sortTypeNode?: TSortTypeNode;
   plugins?: Plugin[];
   noReplace?: boolean;
+  NodeLinkFeatures?: boolean;
 }
 export interface IPlayerConfig {
   guildId: string;
@@ -168,4 +170,57 @@ export interface IExtendable {
   Queue: typeof Queue;
   PlayerManager: typeof PlayerManager;
   NodeManager: typeof NodeManager;
+}
+export interface Equalizer {
+  band: number;
+  gain: number;
+}
+
+export interface Karaoke {
+  level?: number;
+  monoLevel?: number;
+  filterBand?: number;
+  filterWidth?: number;
+}
+
+export interface Timescale {
+  speed?: number;
+  pitch?: number;
+  rate?: number;
+}
+
+export interface Tremolo {
+  frequency?: number;
+  depth?: number;
+}
+
+export interface Vibrato {
+  frequency?: number;
+  depth?: number;
+}
+
+export interface Rotation {
+  rotationHz?: number;
+}
+
+export interface Distortion {
+  sinOffset?: number;
+  sinScale?: number;
+  cosOffset?: number;
+  cosScale?: number;
+  tanOffset?: number;
+  tanScale?: number;
+  offset?: number;
+  scale?: number;
+}
+
+export interface ChannelMix {
+  leftToLeft?: number;
+  leftToRight?: number;
+  rightToLeft?: number;
+  rightToRight?: number;
+}
+
+export interface LowPass {
+  smoothing?: number;
 }
