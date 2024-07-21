@@ -4,7 +4,16 @@ export type TLoadResultType =
   | "playlist"
   | "search"
   | "empty"
-  | "error";
+  | "error"
+  | TLoadResultNodeLinkType
+export type TLoadResultNodeLinkType = 
+  | "short"
+  | "album"
+  | "artist"
+  | "playlist"
+  | "station"
+  | "podcast"
+  | "show";
 export type TSortTypeNode =
   | "players"
   | "playingPlayers"

@@ -18,6 +18,8 @@ export class Node {
   public sessionId: string;
   public socket: WebSocket;
   public stats?: INodeStats;
+  public info?: any
+  public version?: string
   public url: string;
   public rest: Rest;
   constructor(manager: Manager, config: INode) {
@@ -89,6 +91,10 @@ export class Node {
     switch (payload.op) {
       case "ready":
         this.sessionId = payload.sessionId;
+        this.info = this.rest.getInfo();
+        this.version = this.info.version;
+
+        this.manager.emit("nodeReady", this, payload);
         break;
       case "stats":
         delete payload.op;

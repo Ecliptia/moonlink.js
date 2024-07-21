@@ -10,7 +10,7 @@ export class Rest {
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
-      "User-Agent": "Moonlink.js/4 (Ghost)",
+      "User-Agent": `Moonlink.js/${node.manager.version} (FALLING STAR)`,
       "Content-Type": "application/json",
     };
   }
@@ -56,5 +56,23 @@ export class Rest {
     );
 
     return request;
+  }
+  public getInfo(): Promise<unknown> {
+    return makeRequest(`${this.url}/info`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public getStats(): Promise<unknown> {
+    return makeRequest(`${this.url}/stats`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public getVersion(): Promise<unknown> {
+    return makeRequest(`http${this.node.secure ? "s" : ""}://${this.node.address}/version`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
   }
 }

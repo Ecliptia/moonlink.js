@@ -44,7 +44,7 @@ class Manager extends node_events_1.EventEmitter {
             let req = await node.rest.loadTracks(source, query);
             if (req.loadType == "error" || req.loadType == "empty")
                 resolve(req);
-            if (req.loadType == "track")
+            if (req.loadType == "track" || req.loadType == "short")
                 req.data.tracks = [req.data];
             if (req.loadType == "search")
                 req.data.tracks = req.data;
@@ -69,6 +69,7 @@ class Manager extends node_events_1.EventEmitter {
         if (packet.t === "VOICE_SERVER_UPDATE") {
             player.voiceState.token = packet.d.token;
             player.voiceState.endpoint = packet.d.endpoint;
+            this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
             this.attemptConnection(player.guildId);
         }
         else if (packet.t === "VOICE_STATE_UPDATE") {
@@ -84,6 +85,7 @@ class Manager extends node_events_1.EventEmitter {
                 player.voiceChannelId = packet.d.channel_id;
             }
             player.voiceState.sessionId = packet.d.session_id;
+            this.emit("debug", `Moonlink.js > Received voice state update for guild ${player.guildId}`);
             this.attemptConnection(player.guildId);
         }
     }

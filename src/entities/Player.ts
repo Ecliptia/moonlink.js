@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Manager, Node, Queue, Track, validateProperty } from "../../index";
+import { Listen, Manager, Node, Queue, Track, validateProperty } from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -20,6 +20,7 @@ export class Player {
   public queue: Queue;
   public node: Node;
   public data: Record<string, unknown> = {};
+  public listen: Listen;
   constructor(manager: Manager, config: IPlayerConfig) {
     this.manager = manager;
     this.guildId = config.guildId;
@@ -34,6 +35,7 @@ export class Player {
     this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);
+    if(manager.options.NodeLinkFeatures) this.listen = new Listen(this);
   }
   public set(key: string, data: unknown): void {
     this.data[key] = data;
