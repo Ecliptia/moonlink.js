@@ -12,7 +12,7 @@ class Rest {
         this.defaultHeaders = {
             Authorization: this.node.password,
             Accept: "application/json",
-            "User-Agent": "Moonlink.js/4 (Ghost)",
+            "User-Agent": `Moonlink.js/${node.manager.version} (FALLING STAR)`,
             "Content-Type": "application/json",
         };
     }
@@ -47,6 +47,81 @@ class Rest {
             headers: this.defaultHeaders,
         });
         return request;
+    }
+    getInfo() {
+        return (0, index_1.makeRequest)(`${this.url}/info`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    getStats() {
+        return (0, index_1.makeRequest)(`${this.url}/stats`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    getVersion() {
+        return (0, index_1.makeRequest)(`http${this.node.secure ? "s" : ""}://${this.node.address}/version`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    getLyrics(data) {
+        return (0, index_1.makeRequest)(`${this.url}/loadlyrics?encodedTrack=${encodeURIComponent(data.encoded)}`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async updateSession(sessionId, data) {
+        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+            headers: this.defaultHeaders,
+        });
+    }
+    async decodeTrack(encodedTrack) {
+        return (0, index_1.makeRequest)(`${this.url}/decodetrack?encodedTrack=${encodeURIComponent(encodedTrack)}`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async decodeTracks(encodedTracks) {
+        return (0, index_1.makeRequest)(`${this.url}/decodetracks`, {
+            method: "POST",
+            body: JSON.stringify(encodedTracks),
+            headers: this.defaultHeaders,
+        });
+    }
+    async getPlayers(sessionId) {
+        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}/players`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async getPlayer(sessionId, guildId) {
+        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}/players/${guildId}`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async getRoutePlannerStatus() {
+        return (0, index_1.makeRequest)(`${this.url}/routeplanner/status`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async unmarkFailedAddress(address) {
+        return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/address`, {
+            method: "POST",
+            body: JSON.stringify({ address }),
+            headers: this.defaultHeaders,
+        });
+    }
+    async unmarkAllFailedAddresses() {
+        return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/all`, {
+            method: "POST",
+            headers: this.defaultHeaders,
+        });
     }
 }
 exports.Rest = Rest;

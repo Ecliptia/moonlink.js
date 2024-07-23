@@ -91,7 +91,7 @@ export class Node {
     switch (payload.op) {
       case "ready":
         this.sessionId = payload.sessionId;
-        this.info = this.rest.getInfo();
+        this.info = await this.rest.getInfo();
         this.version = this.info.version;
 
         this.manager.emit("nodeReady", this, payload);

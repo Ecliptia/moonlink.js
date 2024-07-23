@@ -132,10 +132,14 @@ export class Manager extends EventEmitter {
         player.connected = false;
         player.playing = false;
         player.voiceChannelId = null;
+        player.voiceState = {};
+        
+        this.emit("playerDisconnected", player);
         return;
       }
 
       if (packet.d.channel_id !== player.voiceChannelId) {
+        this.emit("playerMoved", player, player.voiceChannelId, packet.d.channel_id);
         player.voiceChannelId = packet.d.channel_id;
       }
 

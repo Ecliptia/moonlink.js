@@ -23,6 +23,8 @@ class Node {
     sessionId;
     socket;
     stats;
+    info;
+    version;
     url;
     rest;
     constructor(manager, config) {
@@ -90,6 +92,9 @@ class Node {
         switch (payload.op) {
             case "ready":
                 this.sessionId = payload.sessionId;
+                this.info = await this.rest.getInfo();
+                this.version = this.info.version;
+                this.manager.emit("nodeReady", this, payload);
                 break;
             case "stats":
                 delete payload.op;

@@ -20,6 +20,8 @@ export declare class Node {
     sessionId: string;
     socket: WebSocket;
     stats?: INodeStats;
+    info?: any;
+    version?: string;
     url: string;
     rest: Rest;
     constructor(manager: Manager, config: INode);
