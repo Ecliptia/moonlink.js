@@ -27,4 +27,6 @@ __exportStar(require("./src/entities/Node"), exports);
 __exportStar(require("./src/entities/Rest"), exports);
 __exportStar(require("./src/entities/Track"), exports);
 __exportStar(require("./src/entities/Queue"), exports);
+__exportStar(require("./src/entities/Listen"), exports);
+__exportStar(require("./src/entities/Lyrics"), exports);
 //# sourceMappingURL=index.js.map

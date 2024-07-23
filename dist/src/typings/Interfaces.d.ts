@@ -4,6 +4,7 @@ export interface IEvents {
     debug: (...args: any) => void;
     nodeRaw: (node: INode, player: Player, payload: any) => void;
     nodeCreate: (node: INode) => void;
+    nodeReady: (node: INode, stats: INodeStats) => void;
     nodeConnected: (node: INode) => void;
     nodeError: (node: INode, error: Error) => void;
     nodeReconnect: (node: INode) => void;
@@ -12,6 +13,24 @@ export interface IEvents {
     playerCreate: (player: Player) => void;
     playerUpdate: (player: Player, track: Track, payload: any) => void;
     playerDestroy: (player: Player) => void;
+    playerTriggeredPlay: (player: Player, track: Track) => void;
+    playerTriggeredPause: (player: Player) => void;
+    playerTriggeredResume: (player: Player) => void;
+    playerTriggeredStop: (player: Player) => void;
+    playerTriggeredSkip: (player: Player, oldTrack: Record<string, any>, currentTrack: Track, postion: number) => void;
+    playerTriggeredSeek: (player: Player, position: number) => void;
+    playerTriggeredShuffle: (player: Player, oldQueue: Record<string, any>, currentQueue: Track[]) => void;
+    playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
+    playerChangedLoop: (player: Player, oldLoop: TPlayerLoop, loop: TPlayerLoop) => void;
+    playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
+    playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
+    playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerNodeSet: (player: Player, oldNode: string, newNode: string) => void;
+    playerConnected: (player: Player) => void;
+    playerDisconnected: (player: Player) => void;
+    playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerDestroyed: (player: Player) => void;
     trackStart: (player: Player, track: Track) => void;
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;
@@ -63,6 +82,7 @@ export interface IOptionsManager {
     sortTypeNode?: TSortTypeNode;
     plugins?: Plugin[];
     noReplace?: boolean;
+    NodeLinkFeatures?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -97,6 +117,19 @@ export interface IRESTData {
 export interface IRESTLoadTracks {
     loadType: TLoadResultType;
     data?: ILoadResultData;
+}
+export interface IRESTGetLyrics {
+    loadType: TLoadResultType;
+    data?: {
+        name: string;
+        synced: boolean;
+        data: {
+            startTime: number;
+            endTime: number;
+            text: string;
+        }[];
+        rtl: boolean;
+    };
 }
 export interface ILoadResultData {
     info: IPlaylistInfo;
@@ -144,4 +177,49 @@ export interface IExtendable {
     Queue: typeof Queue;
     PlayerManager: typeof PlayerManager;
     NodeManager: typeof NodeManager;
+}
+export interface Equalizer {
+    band: number;
+    gain: number;
+}
+export interface Karaoke {
+    level?: number;
+    monoLevel?: number;
+    filterBand?: number;
+    filterWidth?: number;
+}
+export interface Timescale {
+    speed?: number;
+    pitch?: number;
+    rate?: number;
+}
+export interface Tremolo {
+    frequency?: number;
+    depth?: number;
+}
+export interface Vibrato {
+    frequency?: number;
+    depth?: number;
+}
+export interface Rotation {
+    rotationHz?: number;
+}
+export interface Distortion {
+    sinOffset?: number;
+    sinScale?: number;
+    cosOffset?: number;
+    cosScale?: number;
+    tanOffset?: number;
+    tanScale?: number;
+    offset?: number;
+    scale?: number;
+}
+export interface ChannelMix {
+    leftToLeft?: number;
+    leftToRight?: number;
+    rightToLeft?: number;
+    rightToRight?: number;
+}
+export interface LowPass {
+    smoothing?: number;
 }

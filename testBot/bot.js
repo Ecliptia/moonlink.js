@@ -19,6 +19,7 @@ client.manager = new Manager({
   ],
   options: {
     clientName: "moonlink.js blobit/1.0.0",
+    NodeLinkFeatures: true
   },
   sendPayload: (guildId, payload) => {
     console.log("Sending payload to shard");
@@ -26,6 +27,8 @@ client.manager = new Manager({
     if (guild) guild.shard.send(JSON.parse(payload));
   },
 });
+
+client.manager.on("debug", (message) => console.log("[DEBUG]", message));
 
 client.on("ready", () => {
   client.manager.init(client.user.id);
@@ -87,6 +90,18 @@ client.on("messageCreate", async (message) => {
 
     player.queue.add(req.tracks[0]);
     if (!player.playing) player.play();
+  } else if (command === "pause") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.pause();
+  } else if (command === "resume") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.resume();
+  } else if (command === "stop") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.stop();
   }
 });
 

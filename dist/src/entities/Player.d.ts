@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Manager, Node, Queue, Track } from "../../index";
+import { Lyrics, Listen, Manager, Node, Queue, Track } from "../../index";
 export declare class Player {
     readonly manager: Manager;
     guildId: string;
@@ -19,6 +19,8 @@ export declare class Player {
     queue: Queue;
     node: Node;
     data: Record<string, unknown>;
+    listen: Listen;
+    lyrics: Lyrics;
     constructor(manager: Manager, config: IPlayerConfig);
     set(key: string, data: unknown): void;
     get<T>(key: string): T;

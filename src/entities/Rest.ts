@@ -1,5 +1,5 @@
 import { Node, makeRequest, sources } from "../../index";
-import { IRESTOptions, IRESTLoadTracks } from "../typings/Interfaces";
+import { IRESTOptions, IRESTLoadTracks, IRESTGetLyrics } from "../typings/Interfaces";
 export class Rest {
   public node: Node;
   public url: string;
@@ -75,4 +75,62 @@ export class Rest {
       headers: this.defaultHeaders,
     });
   }
+  public getLyrics(data: { encoded: string }): Promise<IRESTGetLyrics> {
+    return makeRequest(`${this.url}/loadlyrics?encodedTrack=${encodeURIComponent(data.encoded)}`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async updateSession(sessionId: string, data: any): Promise<any> {
+    return makeRequest(`${this.url}/sessions/${sessionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async decodeTrack(encodedTrack: string): Promise<any> {
+    return makeRequest(`${this.url}/decodetrack?encodedTrack=${encodeURIComponent(encodedTrack)}`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async decodeTracks(encodedTracks: string[]): Promise<any> {
+    return makeRequest(`${this.url}/decodetracks`, {
+      method: "POST",
+      body: JSON.stringify(encodedTracks),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async getPlayers(sessionId: string): Promise<any> {
+    return makeRequest(`${this.url}/sessions/${sessionId}/players`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async getPlayer(sessionId: string, guildId: string): Promise<any> {
+    return makeRequest(`${this.url}/sessions/${sessionId}/players/${guildId}`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async getRoutePlannerStatus(): Promise<any> {
+    return makeRequest(`${this.url}/routeplanner/status`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async unmarkFailedAddress(address: string): Promise<any> {
+    return makeRequest(`${this.url}/routeplanner/free/address`, {
+      method: "POST",
+      body: JSON.stringify({ address }),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async unmarkAllFailedAddresses(): Promise<any> {
+    return makeRequest(`${this.url}/routeplanner/free/all`, {
+      method: "POST",
+      headers: this.defaultHeaders,
+    });
+  }
 }
+
