@@ -1,4 +1,4 @@
-<img src="https://media.discordapp.net/attachments/979497984481972335/1220155063004299364/48_Sem_Titulo_20240320204025.png?ex=66795b34&is=667809b4&hm=6a64d3223349643a48fe49934993ecee97df21c73c0eb62e4d148687ac4bd93a&=&format=webp&quality=lossless&width=1440&height=417" alt="Moonlink.js - v4">
+<img src="/assets/moonlink_banner.png" alt="Moonlink.js - v4">
 <div align = "center">
 <hr>
 <a href="https://discord.gg/q8HzGuHuDY">
