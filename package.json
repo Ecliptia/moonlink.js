@@ -42,6 +42,9 @@
   "engines": {
     "node": ">=20.x.x"
   },
+  "dependencies": {
+    "ws": "latest"
+  },
   "devDependencies": {
     "@types/node": "^18.15.11",
     "discord.js": "^14.14.1",
