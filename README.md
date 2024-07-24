@@ -62,26 +62,26 @@ const { Manager } = require("moonlink.js")
 
 const client = new Discord.Client({
     intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildVoiceStates
+        Discord.GatewayIntentBits.Guilds,
+        Discord.GatewayIntentBits.GuildMessages,
+        Discord.GatewayIntentBits.GuildVoiceStates
     ]
 });
 
 // Configuring the Moonlink.js package
 client.moonlink = new Manager({
   nodes: [{
-    identifier: "node_1",
-    host: "localhost_exemple.com",
-    port: 2333,
-    secure: false,
+      identifier: "node_1",
+      host: "localhost_exemple.com",
+      port: 2333,
+      secure: false,
     }],
   options: {
-    // clientName: "MyApp/1.0.1"
+      // clientName: "MyApp/1.0.1"
     },
   sendPayload: (guildId, payload) => {
-    const guild = client.guilds.cache.get(guildId);
-    if (guild) guild.shard.send(JSON.parse(payload));
+      const guild = client.guilds.cache.get(guildId);
+      if (guild) guild.shard.send(JSON.parse(payload));
     }
 })
 
