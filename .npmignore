@@ -2,7 +2,6 @@
 .gitignore
 .npmignore
 .github
-package-lock.json
 /src
 index.ts
 testBot
