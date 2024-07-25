@@ -43,7 +43,7 @@ class Manager extends node_events_1.EventEmitter {
                 : this.nodes.best;
             let req = await node.rest.loadTracks(source, query);
             if (req.loadType == "error" || req.loadType == "empty")
-                resolve(req);
+                return resolve(req);
             if (req.loadType == "track" || req.loadType == "short")
                 req.data.tracks = [req.data];
             if (req.loadType == "search")
