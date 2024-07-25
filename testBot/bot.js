@@ -103,6 +103,10 @@ client.on("messageCreate", async (message) => {
     const player = client.manager.players.get(message.guild.id);
     if (!player) return message.reply("I'm not connected to a voice channel!");
     player.stop();
+  } else if (command === "destroy") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.destroy();
   }
 });
 
