@@ -11,9 +11,12 @@ export function validateProperty<T>(
 }
 
 export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
-  return fetch(url, options)
-    .then((res) => res.json())
-    .then((json) => json as T);
+    let request = fetch(url, options)
+    .then((res) => res.json().catch(() => res.text()))
+    .then((json) => json as T)
+    
+    if (!request) return;
+    return request;
 }
 
 export const sources = {

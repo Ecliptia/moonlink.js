@@ -37,7 +37,7 @@ export class Player {
     this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);
-    if (manager.options.NodeLinkFeatures) {
+    if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new Listen(this);
       this.lyrics = new Lyrics(this);
     }
