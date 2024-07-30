@@ -144,7 +144,7 @@ class Player {
         this.manager.emit("playerTriggeredResume", this);
         return true;
     }
-    stop() {
+    stop(options) {
         if (!this.playing)
             return false;
         this.node.rest.update({
@@ -155,6 +155,8 @@ class Player {
                 },
             },
         });
+        options?.destroy ? this.destroy()
+            : this.queue.clear();
         this.playing = false;
         this.manager.emit("playerTriggeredStop", this);
         return true;
