@@ -188,7 +188,9 @@ export class Player {
     return true;
   }
 
-  public stop(): boolean {
+  public stop(options?: {
+    destroy?: boolean;
+  }): boolean {
     if (!this.playing) return false;
 
     this.node.rest.update({
@@ -199,6 +201,9 @@ export class Player {
         },
       },
     });
+    
+    options?.destroy ? this.destroy()
+            : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
