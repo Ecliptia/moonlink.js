@@ -279,7 +279,7 @@ export class Node {
               "Moonlink.js > Player " +
                 player.guildId +
                 " has an exception: " +
-                payload.exception,
+                JSON.stringify(payload.exception),
             );
             break;
           }
