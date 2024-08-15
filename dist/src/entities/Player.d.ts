@@ -36,7 +36,9 @@ export declare class Player {
     play(): boolean;
     pause(): boolean;
     resume(): boolean;
-    stop(): boolean;
+    stop(options?: {
+        destroy?: boolean;
+    }): boolean;
     skip(position?: number): boolean;
     seek(position: number): boolean;
     shuffle(): boolean;

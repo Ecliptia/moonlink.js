@@ -14,6 +14,7 @@ class Rest {
             Accept: "application/json",
             "User-Agent": `Moonlink.js/${node.manager.version} (FALLING STAR)`,
             "Content-Type": "application/json",
+            'accept-encoding': 'br, gzip, deflate',
         };
     }
     async loadTracks(source, query) {
@@ -22,7 +23,7 @@ class Rest {
             if (query.startsWith("http://") || query.startsWith("https://"))
                 identifier = query;
             else
-                identifier = `${index_1.sources[source]}:${query}`;
+                identifier = `${index_1.sources[source] ?? source}:${query}`;
             let params = new URLSearchParams({
                 identifier,
             });

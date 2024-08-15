@@ -32,7 +32,7 @@ class Node {
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;
-        this.password = config.password;
+        this.password = config.password || "youshallnotpass";
         this.regions = config.regions;
         this.retryDelay = config.retryDelay || 30000;
         this.retryAmount = config.retryAmount || 5;
