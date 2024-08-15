@@ -87,7 +87,8 @@ client.on("messageCreate", async (message) => {
       query: args.join(" "),
       source: "youtube",
     });
-
+    if (req.loadType === "empty" || req.loadType === "error")
+      return message.reply("No tracks found!");
     player.queue.add(req.tracks[0]);
     if (!player.playing) player.play();
   } else if (command === "pause") {
@@ -102,6 +103,10 @@ client.on("messageCreate", async (message) => {
     const player = client.manager.players.get(message.guild.id);
     if (!player) return message.reply("I'm not connected to a voice channel!");
     player.stop();
+  } else if (command === "destroy") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.destroy();
   }
 });
 

@@ -36,7 +36,7 @@ class Player {
         this.paused = false;
         this.queue = new index_1.Queue();
         this.node = this.manager.nodes.get(config.node);
-        if (manager.options.NodeLinkFeatures) {
+        if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
             this.listen = new index_1.Listen(this);
             this.lyrics = new index_1.Lyrics(this);
         }
@@ -144,7 +144,7 @@ class Player {
         this.manager.emit("playerTriggeredResume", this);
         return true;
     }
-    stop() {
+    stop(options) {
         if (!this.playing)
             return false;
         this.node.rest.update({
@@ -155,6 +155,8 @@ class Player {
                 },
             },
         });
+        options?.destroy ? this.destroy()
+            : this.queue.clear();
         this.playing = false;
         this.manager.emit("playerTriggeredStop", this);
         return true;

@@ -37,7 +37,7 @@ export class Player {
     this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);
-    if (manager.options.NodeLinkFeatures) {
+    if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new Listen(this);
       this.lyrics = new Lyrics(this);
     }
@@ -188,7 +188,9 @@ export class Player {
     return true;
   }
 
-  public stop(): boolean {
+  public stop(options?: {
+    destroy?: boolean;
+  }): boolean {
     if (!this.playing) return false;
 
     this.node.rest.update({
@@ -199,6 +201,9 @@ export class Player {
         },
       },
     });
+    
+    options?.destroy ? this.destroy()
+            : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);

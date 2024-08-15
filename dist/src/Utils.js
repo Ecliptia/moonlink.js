@@ -8,9 +8,12 @@ function validateProperty(prop, validator, errorMessage) {
 }
 exports.validateProperty = validateProperty;
 function makeRequest(url, options) {
-    return fetch(url, options)
-        .then((res) => res.json())
+    let request = fetch(url, options)
+        .then((res) => res.json().catch(() => res.text()))
         .then((json) => json);
+    if (!request)
+        return;
+    return request;
 }
 exports.makeRequest = makeRequest;
 exports.sources = {
