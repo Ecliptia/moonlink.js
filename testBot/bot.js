@@ -95,7 +95,12 @@ client.on("messageCreate", async (message) => {
     const player = client.manager.players.get(message.guild.id);
     if (!player) return message.reply("I'm not connected to a voice channel!");
     player.pause();
-  } else if (command === "resume") {
+} else if(command === "skip") {
+    const player = client.manager.players.get(message.guild.id);
+    if (!player) return message.reply("I'm not connected to a voice channel!");
+    player.skip();
+    return message.reply("Skipped the current track!");
+} else if (command === "resume") {
     const player = client.manager.players.get(message.guild.id);
     if (!player) return message.reply("I'm not connected to a voice channel!");
     player.resume();

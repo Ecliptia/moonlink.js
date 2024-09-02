@@ -162,7 +162,7 @@ class Player {
         return true;
     }
     skip(position) {
-        if (!this.queue.size)
+        if (!this.queue.size && !this.autoPlay)
             return false;
         (0, index_1.validateProperty)(position, (value) => value !== undefined ||
             isNaN(value) ||
