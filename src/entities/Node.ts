@@ -206,6 +206,7 @@ export class Node {
               let res = await this.manager.search({
                 query: uri,
               });
+              if (payload.reason === "stopped") return;
               if (
                 !res ||
                 !res.tracks ||

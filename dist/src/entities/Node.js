@@ -182,6 +182,8 @@ class Node {
                             let res = await this.manager.search({
                                 query: uri,
                             });
+                            if (payload.reason === "stopped")
+                                return;
                             if (!res ||
                                 !res.tracks ||
                                 ["loadFailed", "cleanup"].includes(res.loadType))
@@ -224,7 +226,7 @@ class Node {
                         this.manager.emit("debug", "Moonlink.js > Player " +
                             player.guildId +
                             " has an exception: " +
-                            payload.exception);
+                            JSON.stringify(payload.exception));
                         break;
                     }
                     case "WebSocketClosedEvent": {

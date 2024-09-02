@@ -210,8 +210,18 @@ export class Player {
     return true;
   }
 
-  public skip(position?: number): boolean {
-    if (!this.queue.size) return false;
+  public async skip(position?: number): Promise<boolean> {
+    if(!this.queue.size && this.autoPlay) {
+      await this.node.rest.update({
+        guildId: this.guildId,
+        data: {
+          track: {
+            encoded: null,
+          },
+        },
+      });
+    } else if (!this.queue.size) return false;
+    
     validateProperty(
       position,
       (value) =>
