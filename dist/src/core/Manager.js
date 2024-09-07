@@ -12,6 +12,7 @@ class Manager extends node_events_1.EventEmitter {
     version = require("../../index").version;
     constructor(config) {
         super();
+        this.emit("debug", "Moonlink.js > Debugging enabled.");
         this.sendPayload = config?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
@@ -19,6 +20,12 @@ class Manager extends node_events_1.EventEmitter {
             ...config.options,
         };
         this.nodes = new index_1.NodeManager(this, config.nodes);
+        if (this.options.plugins) {
+            this.options.plugins.forEach((plugin) => {
+                plugin.load(this);
+                this.emit("debug", "Moonlink.js > Loaded plugin: " + plugin.name);
+            });
+        }
         this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
     }
     init(clientId) {
