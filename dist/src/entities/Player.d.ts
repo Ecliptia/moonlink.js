@@ -39,7 +39,7 @@ export declare class Player {
     stop(options?: {
         destroy?: boolean;
     }): boolean;
-    skip(position?: number): boolean;
+    skip(position?: number): Promise<boolean>;
     seek(position: number): boolean;
     shuffle(): boolean;
     setVolume(volume: number): boolean;
