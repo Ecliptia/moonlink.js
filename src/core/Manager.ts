@@ -44,7 +44,11 @@ export class Manager extends EventEmitter {
     };
     this.nodes = new NodeManager(this, config.nodes);
 
-    this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
+    if (this.options.plugins) {
+      this.options.plugins.forEach((plugin) => {
+        plugin.load(this);
+       });
+    }
   }
   public init(clientId: string): void {
     if (this.initialize) return;
