@@ -57,82 +57,79 @@ bun install moonlink.js
 ## How to Use
 
 ```javascript
-const Discord = require("discord.js")
-const { Manager } = require("moonlink.js")
+const { Client, GatewayIntentBits, REST, Routes } = require("discord.js");
+const { Manager } = require("moonlink.js");
+require("dotenv").config(); // Load environment variables, such as your bot token
 
-const client = new Discord.Client({
+// Creating the client with the necessary intents
+const client = new Client({
     intents: [
-        Discord.GatewayIntentBits.Guilds,
-        Discord.GatewayIntentBits.GuildMessages,
-        Discord.GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates
     ]
 });
 
-// Configuring the Moonlink.js package
+// Setting up the Moonlink.js manager with your Lavalink nodes
 client.moonlink = new Manager({
-  nodes: [{
-      identifier: "node_1",
-      host: "localhost_exemple.com",
-      port: 2333,
-      secure: false,
+    nodes: [{
+        identifier: "node_1",
+        host: "localhost",
+        password: "youshallnotpass",
+        port: 2333,
+        secure: false,
     }],
-  options: {
-      // clientName: "MyApp/1.0.1"
-    },
-  sendPayload: (guildId, payload) => {
-      const guild = client.guilds.cache.get(guildId);
-      if (guild) guild.shard.send(JSON.parse(payload));
+    options: {},
+    sendPayload: (guildId, payload) => {
+        const guild = client.guilds.cache.get(guildId);
+        if (guild) guild.shard.send(payload); // Sending data to the shard if the guild is available
     }
-})
+});
 
-// Event: Node created
+// Event: When a node is successfully created and connected
 client.moonlink.on("nodeCreate", node => {
-    console.log(`${node.host} was connected, and the magic is in the air`);
+    console.log(`${node.host} was connected`);
 });
 
-// Event: Track start
+// Event: When a track starts playing
 client.moonlink.on("trackStart", async (player, track) => {
-    // Sending a message when the track starts playing
     client.channels.cache
         .get(player.textChannelId)
-        .send(`${track.title} is playing now, bringing holiday joy`);
+        .send(`Now playing: ${track.title}`);
 });
 
-// Event: Track end
+// Event: When a track finishes playing
 client.moonlink.on("trackEnd", async (player, track) => {
-    // Sending a message when the track finishes playing
     client.channels.cache
         .get(player.textChannelId)
-        .send(`The track is over, but the magic continues`);
+        .send(`Track ended: ${track.title}`);
 });
 
-// Event: Ready
+// Event: When the bot is ready to start working
 client.on("ready", () => {
-    // Initializing the Moonlink.js package with the client's user ID
-    client.moonlink.init(client.user.id);
+    client.moonlink.init(client.user.id); // Initializing Moonlink.js with the bot's ID
+    console.log(`${client.user.tag} is ready!`);
 });
 
-// Event: Raw data
+// Event: Handling raw WebSocket events
 client.on("raw", data => {
-    // Updating the Moonlink.js package with the necessary data
-    client.moonlink.packetUpdate(data);
+    client.moonlink.packetUpdate(data); // Passing raw data to Moonlink.js for handling
 });
 
-// Event: Interaction created
+// Event: Handling interactions (slash commands)
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
-    let commandName = interaction.commandName;
-    if (commandName === "play") {
+
+    if (interaction.commandName === "play") {
         if (!interaction.member.voice.channel) {
-            // Responding with a message if the user is not in a voice channel
             return interaction.reply({
-                content: `You are not in a voice channel`,
+                content: `Error: You must be in a voice channel to execute this command.`,
                 ephemeral: true
             });
         }
 
-        let query = interaction.options.getString("query");
-        let player = client.moonlink.createPlayer({
+        const query = interaction.options.getString("query");
+        const player = client.moonlink.createPlayer({
             guildId: interaction.guild.id,
             voiceChannelId: interaction.member.voice.channel.id,
             textChannelId: interaction.channel.id,
@@ -140,55 +137,86 @@ client.on("interactionCreate", async interaction => {
         });
 
         if (!player.connected) {
-            // Connecting to the voice channel if not already connected
             player.connect({
-                setDeaf: true,
-                setMute: false
+                setDeaf: true, // Deafens the bot upon joining
+                setMute: false // Ensures the bot isn't muted
             });
         }
 
-        let res = await client.moonlink.search({
+        const res = await client.moonlink.search({
             query,
             source: "youtube",
             requester: interaction.user.id
         });
 
         if (res.loadType === "loadfailed") {
-            // Responding with an error message if loading fails
             return interaction.reply({
-                content: `:x: Load failed - the system is not cooperating.`
+                content: `Error: Failed to load the requested track.`,
+                ephemeral: true
             });
         } else if (res.loadType === "empty") {
-            // Responding with a message if the search returns no results
             return interaction.reply({
-                content: `:x: No matches found!`
+                content: `Error: No results found for the query.`,
+                ephemeral: true
             });
         }
 
         if (res.loadType === "playlist") {
             interaction.reply({
-                content: `${res.playlistInfo.name} This playlist has been added to the waiting list, spreading joy`
+                content: `Playlist ${res.playlistInfo.name} has been added to the queue.`
             });
 
             for (const track of res.tracks) {
-                // Adding tracks to the queue if it's a playlist
-                player.queue.add(track);
+                player.queue.add(track); // Add all tracks from the playlist to the queue
             }
         } else {
-            player.queue.add(res.tracks[0]);
+            player.queue.add(res.tracks[0]); // Add the first track from the search results
             interaction.reply({
-                content: `${res.tracks[0].title} was added to the waiting list`
+                content: `Track added to the queue: ${res.tracks[0].title}`
             });
         }
 
         if (!player.playing) {
-            // Starting playback if not already playing
-            player.play();
+            player.play(); // Start playing if not already doing so
         }
+    }
 });
 
-// Logging in with the Discord token
-client.login(process.env["DISCORD_TOKEN"]);
+// Register slash commands with Discord
+const commands = [
+    {
+        name: 'play',
+        description: 'Play a song from YouTube',
+        options: [
+            {
+                name: 'query',
+                type: 3,
+                description: 'The song you want to play',
+                required: true,
+            },
+        ],
+    },
+];
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+
+(async () => {
+    try {
+        console.log('Updating slash commands...');
+
+        await rest.put(
+            Routes.applicationCommands(process.env.APPLICATION_ID),
+            { body: commands },
+        );
+
+        console.log('Slash commands have been successfully registered!');
+    } catch (error) {
+        console.error('There was an error registering the slash commands:', error);
+    }
+})();
+
+// Logging in the client
+client.login(process.env.DISCORD_TOKEN);
 ```
 
 ## Support

@@ -161,8 +161,18 @@ class Player {
         this.manager.emit("playerTriggeredStop", this);
         return true;
     }
-    skip(position) {
-        if (!this.queue.size && !this.autoPlay)
+    async skip(position) {
+        if (!this.queue.size && this.autoPlay) {
+            await this.node.rest.update({
+                guildId: this.guildId,
+                data: {
+                    track: {
+                        encoded: null,
+                    },
+                },
+            });
+        }
+        else if (!this.queue.size)
             return false;
         (0, index_1.validateProperty)(position, (value) => value !== undefined ||
             isNaN(value) ||
