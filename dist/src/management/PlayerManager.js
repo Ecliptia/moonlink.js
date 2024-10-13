@@ -24,7 +24,7 @@ class PlayerManager {
                 throw new Error("(Moonlink.js) - Player > No available nodes");
             config.node = node.identifier ?? node.host;
         }
-        const player = new index_1.Player(this.manager, config);
+        const player = new (index_1.Structure.get("Player"))(this.manager, config);
         this.cache.set(config.guildId, player);
         this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " +
             config.guildId +

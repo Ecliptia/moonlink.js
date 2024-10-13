@@ -29,7 +29,9 @@ client.manager = new Manager({
 });
 
 client.manager.on("debug", (message) => console.log("[DEBUG]", message));
-
+client.manager.on("trackEnd", (player, track) => {
+  client.channels.cache.get(player.textChannelId).send(`Track ${track.title} ended!\nprevious track: ${player.previous.title}`);
+});
 client.on("ready", () => {
   client.manager.init(client.user.id);
   console.log(client.user.tag + " is ready!");
@@ -66,7 +68,7 @@ client.on("messageCreate", async (message) => {
     });
 
     message.reply({
-      content: `Search results for ${args.join(" ")}:\n${req.tracks.map((track, i) => `${i + 1}. **${track.title}**`).join("\n")}`,
+      content: `LoadType: ${req.loadType}\nSearch results for ${args.join(" ")}:\n${req.tracks.map((track, i) => `${i + 1}. **${track.title}**`).join("\n")}`,
     });
   } else if (command === "play") {
     if (!args.length)

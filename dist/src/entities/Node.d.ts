@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="node" />
 import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
 import { Manager, Rest } from "../../index";

@@ -8,25 +8,22 @@ class Manager extends node_events_1.EventEmitter {
     options;
     sendPayload;
     nodes;
-    players = new index_1.PlayerManager(this);
+    players = new (index_1.Structure.get("PlayerManager"))(this);
     version = require("../../index").version;
     constructor(config) {
         super();
-        this.emit("debug", "Moonlink.js > Debugging enabled.");
         this.sendPayload = config?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
             ...config.options,
         };
-        this.nodes = new index_1.NodeManager(this, config.nodes);
+        this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
         if (this.options.plugins) {
             this.options.plugins.forEach((plugin) => {
                 plugin.load(this);
-                this.emit("debug", "Moonlink.js > Loaded plugin: " + plugin.name);
             });
         }
-        this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
     }
     init(clientId) {
         if (this.initialize)

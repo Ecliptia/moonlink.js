@@ -10,6 +10,7 @@ import {
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import {
+  Structure,
   NodeManager,
   PlayerManager,
   Player,
@@ -32,7 +33,7 @@ export class Manager extends EventEmitter {
   public readonly options: IOptionsManager;
   public readonly sendPayload: Function;
   public nodes: NodeManager;
-  public players: PlayerManager = new PlayerManager(this);
+  public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
   constructor(config: IConfigManager) {
     super();
@@ -42,7 +43,7 @@ export class Manager extends EventEmitter {
       defaultPlatformSearch: "youtube",
       ...config.options,
     };
-    this.nodes = new NodeManager(this, config.nodes);
+    this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
 
     if (this.options.plugins) {
       this.options.plugins.forEach((plugin) => {

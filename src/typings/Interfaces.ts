@@ -5,6 +5,9 @@ import {
   Player,
   Queue,
   Track,
+  Filters,
+  Lyrics,
+  Listen,
   PlayerManager,
   NodeManager,
 } from "../../index";
@@ -107,6 +110,7 @@ export interface IOptionsManager {
   plugins?: Plugin[];
   noReplace?: boolean;
   NodeLinkFeatures?: boolean;
+  previousInArray?: boolean;
 }
 export interface IPlayerConfig {
   guildId: string;
@@ -254,4 +258,16 @@ export interface ChannelMix {
 
 export interface LowPass {
   smoothing?: number;
+}
+export interface Extendable {
+  Node: typeof Node;
+  Rest: typeof Rest;
+  Player: typeof Player;
+  Track: typeof Track;
+  Queue: typeof Queue;
+  Filters: typeof Filters;
+  Lyrics: typeof Lyrics;
+  Listen: typeof Listen;
+  PlayerManager: typeof PlayerManager;
+  NodeManager: typeof NodeManager;
 }

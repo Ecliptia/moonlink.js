@@ -16,6 +16,7 @@ class Player {
     volume = 80;
     loop = "off";
     current;
+    previous;
     ping = 0;
     queue;
     node;
@@ -29,11 +30,12 @@ class Player {
         this.textChannelId = config.textChannelId;
         this.connected = false;
         this.playing = false;
+        this.paused = false;
+        this.previous = manager.options.previousInArray ? [] : null;
         this.volume = config.volume || 80;
         this.loop = config.loop || "off";
         this.autoPlay = config.autoPlay || false;
         this.autoLeave = config.autoLeave || false;
-        this.paused = false;
         this.queue = new index_1.Queue();
         this.node = this.manager.nodes.get(config.node);
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {

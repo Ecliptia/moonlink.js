@@ -137,6 +137,7 @@ export class Node {
           case "TrackEndEvent":
             player.playing = false;
             player.paused = false;
+            this.manager.options.previousInArray ? (player.previous as Track[]).push(player.current) : player.previous = player.current;
 
             this.manager.emit(
               "trackEnd",
@@ -145,6 +146,7 @@ export class Node {
               payload.reason,
               payload,
             );
+            
 
             if (["loadFailed", "cleanup"].includes(payload.reason)) {
               if (player.queue.size) {

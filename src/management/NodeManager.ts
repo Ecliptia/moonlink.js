@@ -1,5 +1,5 @@
 import { INode } from "../typings/Interfaces";
-import { Manager, Node, TSortTypeNode, validateProperty } from "../../index";
+import { Structure, Manager, Node, TSortTypeNode, validateProperty } from "../../index";
 export class NodeManager {
   public readonly manager: Manager;
   public cache: Map<string | number, Node> = new Map();
@@ -68,7 +68,7 @@ export class NodeManager {
   }
   public add(node: INode): void {
     this.check(node);
-    this.cache.set(node.identifier ?? node.host, new Node(this.manager, node));
+    this.cache.set(node.identifier ?? node.host, new (Structure.get("Node"))(this.manager, node));
 
     this.manager.emit(
       "nodeCreate",
