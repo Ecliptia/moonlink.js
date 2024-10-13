@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { EventEmitter } from "node:events";
 import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig, ISearchResult } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";

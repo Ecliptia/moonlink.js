@@ -1,6 +1,6 @@
 import { Player } from "../../index";
 import { Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, ChannelMix, LowPass } from "../typings/Interfaces";
-export declare class MoonlinkFilters {
+export declare class Filters {
     private player;
     private manager;
     private rest;

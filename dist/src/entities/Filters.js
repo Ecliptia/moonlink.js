@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MoonlinkFilters = void 0;
-class MoonlinkFilters {
+exports.Filters = void 0;
+class Filters {
     player;
     manager;
     rest;
@@ -76,5 +76,5 @@ class MoonlinkFilters {
         return true;
     }
 }
-exports.MoonlinkFilters = MoonlinkFilters;
+exports.Filters = Filters;
 //# sourceMappingURL=Filters.js.map

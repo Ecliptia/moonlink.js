@@ -15,6 +15,7 @@ export declare class Player {
     volume: number;
     loop: TPlayerLoop;
     current: Track;
+    previous: Track | Track[];
     ping: number;
     queue: Queue;
     node: Node;

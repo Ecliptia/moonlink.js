@@ -15,7 +15,7 @@ import {
     LowPass 
 } from "../typings/Interfaces";
 
-export class MoonlinkFilters {
+export class Filters {
     private player: Player;
     private manager: Manager;
     private rest: Rest;
@@ -50,7 +50,7 @@ export class MoonlinkFilters {
         };
     }
 
-    private setFilter(filterName: keyof MoonlinkFilters['filters'], value: any): this {
+    private setFilter(filterName: keyof Filters['filters'], value: any): this {
         this.player.set(filterName, value);
         this.filters[filterName] = value;
         this.updateFiltersFromRest();
@@ -99,7 +99,7 @@ export class MoonlinkFilters {
 
     public resetFilters(): this {
         Object.keys(this.filters).forEach(key => {
-            this.setFilter(key as keyof MoonlinkFilters['filters'], null);
+            this.setFilter(key as keyof Filters['filters'], null);
         });
         return this;
     }

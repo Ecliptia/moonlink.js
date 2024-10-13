@@ -16,6 +16,7 @@ export class Player {
   public volume: number = 80;
   public loop: TPlayerLoop = "off";
   public current: Track;
+  public previous: Track | Track[];
   public ping: number = 0;
   public queue: Queue;
   public node: Node;
@@ -30,11 +31,12 @@ export class Player {
     this.textChannelId = config.textChannelId;
     this.connected = false;
     this.playing = false;
+    this.paused = false;
+    this.previous = manager.options.previousInArray ? [] : null;
     this.volume = config.volume || 80;
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
-    this.paused = false;
     this.queue = new Queue();
     this.node = this.manager.nodes.get(config.node);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {

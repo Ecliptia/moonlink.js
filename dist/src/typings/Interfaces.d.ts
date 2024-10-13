@@ -1,4 +1,4 @@
-import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
+import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
     debug: (...args: any) => void;
@@ -83,6 +83,7 @@ export interface IOptionsManager {
     plugins?: Plugin[];
     noReplace?: boolean;
     NodeLinkFeatures?: boolean;
+    previousInArray?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -222,4 +223,16 @@ export interface ChannelMix {
 }
 export interface LowPass {
     smoothing?: number;
+}
+export interface Extendable {
+    Node: typeof Node;
+    Rest: typeof Rest;
+    Player: typeof Player;
+    Track: typeof Track;
+    Queue: typeof Queue;
+    Filters: typeof Filters;
+    Lyrics: typeof Lyrics;
+    Listen: typeof Listen;
+    PlayerManager: typeof PlayerManager;
+    NodeManager: typeof NodeManager;
 }
