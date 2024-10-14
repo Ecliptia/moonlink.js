@@ -50,7 +50,6 @@ export abstract class Structure {
   
   public static get<K extends keyof Extendable>(name: K): Extendable[K] {
     const structure = structures[name];
-    console.log(structure)
     if (!structure) {
         throw new TypeError(`"${name}" structure must be provided.`);
     }

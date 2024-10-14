@@ -45,7 +45,6 @@ class Structure {
     }
     static get(name) {
         const structure = exports.structures[name];
-        console.log(structure);
         if (!structure) {
             throw new TypeError(`"${name}" structure must be provided.`);
         }
