@@ -196,6 +196,16 @@ export interface ISearchResult {
   loadType: TLoadResultType;
   tracks: Track[];
   playlistInfo: IPlaylistInfo;
+  // lavalink generic data
+  data: {
+    playlistInfo: IPlaylistInfo;
+    tracks: ITrack[];
+    pluginInfo: any;
+  };
+  exception?: {
+    message: string;
+    severity: string;
+  }
 }
 export interface IExtendable {
   Node: typeof Node;

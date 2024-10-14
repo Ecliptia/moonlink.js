@@ -169,6 +169,15 @@ export interface ISearchResult {
     loadType: TLoadResultType;
     tracks: Track[];
     playlistInfo: IPlaylistInfo;
+    data: {
+        playlistInfo: IPlaylistInfo;
+        tracks: ITrack[];
+        pluginInfo: any;
+    };
+    exception?: {
+        message: string;
+        severity: string;
+    };
 }
 export interface IExtendable {
     Node: typeof Node;
