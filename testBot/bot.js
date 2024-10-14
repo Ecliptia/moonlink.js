@@ -19,7 +19,8 @@ client.manager = new Manager({
   ],
   options: {
     clientName: "moonlink.js blobit/1.0.0",
-    NodeLinkFeatures: true
+    NodeLinkFeatures: true,
+    previousInArray: true
   },
   sendPayload: (guildId, payload) => {
     console.log("Sending payload to shard");

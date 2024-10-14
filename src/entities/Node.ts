@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Rest, Track } from "../../index";
+import { Manager, Rest, Structure, Track } from "../../index";
 export class Node {
   public readonly manager: Manager;
   public host: string;
@@ -138,9 +138,8 @@ export class Node {
             player.playing = false;
             player.paused = false;
             this.manager.options.previousInArray
-    ? (player.previous as Track[]).push(Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current))
-    : player.previous = Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current);
-
+    ? (player.previous as Track[]).push(new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded})) : player.previous = new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded});
+        
             this.manager.emit(
               "trackEnd",
               player,

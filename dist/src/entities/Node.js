@@ -132,8 +132,7 @@ class Node {
                         player.playing = false;
                         player.paused = false;
                         this.manager.options.previousInArray
-                            ? player.previous.push(Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current))
-                            : player.previous = Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current);
+                            ? player.previous.push(new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded })) : player.previous = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded });
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (["loadFailed", "cleanup"].includes(payload.reason)) {
                             if (player.queue.size) {
