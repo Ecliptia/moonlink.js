@@ -30,7 +30,7 @@ client.manager = new Manager({
 
 client.manager.on("debug", (message) => console.log("[DEBUG]", message));
 client.manager.on("trackEnd", (player, track) => {
-  client.channels.cache.get(player.textChannelId).send(`Track ${track.title} ended!\nprevious track: ${player.previous.title}`);
+  client.channels.cache.get(player.textChannelId).send(`Track ${track.title} ended!`);
 });
 client.on("ready", () => {
   client.manager.init(client.user.id);
@@ -114,6 +114,9 @@ client.on("messageCreate", async (message) => {
     const player = client.manager.players.get(message.guild.id);
     if (!player) return message.reply("I'm not connected to a voice channel!");
     player.destroy();
+  } else if(command === "previous") {
+    const player = client.manager.players.get(message.guild.id);
+    return message.reply(`${player?.previous?.title}`);
   }
 });
 

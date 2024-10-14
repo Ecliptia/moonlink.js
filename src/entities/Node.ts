@@ -137,7 +137,9 @@ export class Node {
           case "TrackEndEvent":
             player.playing = false;
             player.paused = false;
-            this.manager.options.previousInArray ? (player.previous as Track[]).push(player.current) : player.previous = player.current;
+            this.manager.options.previousInArray
+    ? (player.previous as Track[]).push(Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current))
+    : player.previous = Object.assign(Object.create(Object.getPrototypeOf(player.current)), player.current);
 
             this.manager.emit(
               "trackEnd",
