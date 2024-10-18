@@ -23,7 +23,7 @@ export declare class Manager extends EventEmitter {
         node?: string;
         requester?: unknown;
     }): Promise<ISearchResult>;
-    packetUpdate(packet: any): void;
+    packetUpdate(packet: any): Promise<void>;
     attemptConnection(guildId: string): Promise<boolean>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;
