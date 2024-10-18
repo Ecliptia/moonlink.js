@@ -93,8 +93,8 @@ export class Manager extends EventEmitter {
 
       if (req.loadType == "error" || req.loadType == "empty") return resolve(req);
       if (req.loadType == "track" || req.loadType == "short")
-        req.data.tracks = [req.data as any];
-      if (req.loadType == "search") req.data.tracks = req.data as any;
+        req.data.tracks = [req.data as Object];
+      if (req.loadType == "search") req.data.tracks = req.data as Object;
       
       let tracks: Track[] = req.data.tracks.map(
         (data: ITrack) => new Track(data, requester),
@@ -110,7 +110,7 @@ export class Manager extends EventEmitter {
       });
     });
   }
-  public packetUpdate(packet: any): void {
+  public async packetUpdate(packet: any): Promise<void> {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
       return;
 
@@ -129,7 +129,7 @@ export class Manager extends EventEmitter {
         "debug",
         `Moonlink.js > Received voice server update for guild ${player.guildId}`,
       );
-      this.attemptConnection(player.guildId);
+      await this.attemptConnection(player.guildId);
     } else if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.options.clientId) return;
 
@@ -154,7 +154,7 @@ export class Manager extends EventEmitter {
         "debug",
         `Moonlink.js > Received voice state update for guild ${player.guildId}`,
       );
-      this.attemptConnection(player.guildId);
+      await this.attemptConnection(player.guildId);
     }
   }
   public async attemptConnection(guildId: string): Promise<boolean> {
@@ -163,8 +163,13 @@ export class Manager extends EventEmitter {
 
     const voiceState: IVoiceState = player.voiceState;
 
-    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint)
-      return;
+    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint) {
+      this.emit(
+        "debug",
+        `Moonlink.js > Missing voice server data for guild ${guildId}, wait...`,
+      );
+      return false;
+    }
 
     await player.node.rest.update({
       guildId,
@@ -176,6 +181,7 @@ export class Manager extends EventEmitter {
         },
       },
     });
+
     this.emit(
       "debug",
       `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`,
