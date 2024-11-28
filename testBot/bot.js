@@ -124,7 +124,7 @@ client.on("messageCreate", async (message) => {
         const searchResult = await client.manager.search({
           query: args.join(" ")
         })
-
+        console.log(searchResult)
         if (!searchResult.tracks.length) return message.reply("No results found.");
         
         player.queue.add(searchResult.tracks[0]);
