@@ -113,7 +113,7 @@ export class Manager extends EventEmitter {
   public async packetUpdate(packet: any): Promise<void> {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
       return;
-
+    
     if (!packet.d.token && !packet.d.session_id) return;
 
     const player = this.getPlayer(packet.d.guild_id);
@@ -171,7 +171,7 @@ export class Manager extends EventEmitter {
       return false;
     }
 
-    await player.node.rest.update({
+    let attempts: any = await player.node.rest.update({
       guildId,
       data: {
         voice: {
@@ -186,6 +186,8 @@ export class Manager extends EventEmitter {
       "debug",
       `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`,
     );
+
+    if (attempts) player.voiceState.attempt = true;
     return true;
   }
   public createPlayer(config: IPlayerConfig): Player {

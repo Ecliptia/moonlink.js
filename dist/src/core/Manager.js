@@ -105,7 +105,7 @@ class Manager extends node_events_1.EventEmitter {
             this.emit("debug", `Moonlink.js > Missing voice server data for guild ${guildId}, wait...`);
             return false;
         }
-        await player.node.rest.update({
+        let attempts = await player.node.rest.update({
             guildId,
             data: {
                 voice: {
@@ -116,6 +116,8 @@ class Manager extends node_events_1.EventEmitter {
             },
         });
         this.emit("debug", `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`);
+        if (attempts)
+            player.voiceState.attempt = true;
         return true;
     }
     createPlayer(config) {

@@ -34,7 +34,7 @@ export declare class Player {
         setDeaf?: boolean;
     }): boolean;
     disconnect(): boolean;
-    play(): boolean;
+    play(): Promise<boolean>;
     pause(): boolean;
     resume(): boolean;
     stop(options?: {

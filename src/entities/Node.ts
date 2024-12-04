@@ -112,7 +112,7 @@ export class Node {
         if (!player) return;
         if (!player.current) return;
         if (player.connected !== payload.state.connected)
-          player.connected = payload.state.connected;
+        player.connected = payload.state.connected;
         player.current.position = payload.state.position;
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;

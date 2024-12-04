@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Queue, Track, validateProperty } from "../../index";
+import { Lyrics, Listen, Manager, Node, Queue, Track, validateProperty, isVoiceStateAttempt } from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -102,7 +102,7 @@ export class Player {
     return true;
   }
 
-  public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
+   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
     this.manager.sendPayload(
       this.guildId,
       JSON.stringify({
@@ -115,7 +115,7 @@ export class Player {
         },
       })
     );
-
+    
     this.connected = true;
     this.manager.emit("playerConnected", this);
     return true;
@@ -140,8 +140,9 @@ export class Player {
     return true;
   }
 
-  public play(): boolean {
+  public async play(): Promise<boolean> {
     if (!this.queue.size) return false;
+    await isVoiceStateAttempt(this);
 
     this.current = this.queue.shift();
 

@@ -103,9 +103,10 @@ class Player {
         this.manager.emit("playerDisconnected", this);
         return true;
     }
-    play() {
+    async play() {
         if (!this.queue.size)
             return false;
+        await (0, index_1.isVoiceStateAttempt)(this);
         this.current = this.queue.shift();
         this.node.rest.update({
             guildId: this.guildId,

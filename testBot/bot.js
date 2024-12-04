@@ -15,7 +15,7 @@ client.manager = new Manager({
     },
   ],
   options: {
-    clientName: "moonlink.js blobit/1.0.0",
+    clientName: "TRISTAR/1.1",
     NodeLinkFeatures: true,
     previousInArray: true,
   },
@@ -124,7 +124,7 @@ client.on("messageCreate", async (message) => {
         const searchResult = await client.manager.search({
           query: args.join(" ")
         })
-        console.log(searchResult)
+        
         if (!searchResult.tracks.length) return message.reply("No results found.");
         
         player.queue.add(searchResult.tracks[0]);
@@ -174,7 +174,19 @@ client.on("messageCreate", async (message) => {
         player.setLoop(nextLoop);
         await message.reply(`Loop mode set to ${nextLoop}`);
         break;
-
+      case 'queue':
+        const queue = player.queue.map((track, index) => `${index + 1}. ${track.title}`).join("\n");
+        await message.reply(`**Queue**\n${queue}`);
+        break;
+      case 'eval':
+        if (message.author.id !== '978981769661513758') return;
+        try {
+          const result = eval(args.join(" "));
+          await message.reply(`\`\`\`js\n${result}\`\`\``);
+        } catch (e) {
+          await message.reply(`\`\`\`js\n${e}\`\`\``);
+        }
+        break;
       default:
         await message.reply("Unknown command.");
     }

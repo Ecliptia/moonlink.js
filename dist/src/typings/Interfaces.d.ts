@@ -99,6 +99,7 @@ export interface IVoiceState {
     token?: string;
     sessionId?: string;
     endpoint?: string;
+    attempt?: boolean;
 }
 export interface IRESTOptions {
     guildId: string;

@@ -1,5 +1,6 @@
 import { Manager, Extendable } from "../index";
 export declare function validateProperty<T>(prop: T | undefined, validator: (value: T) => boolean, errorMessage: string): void;
+export declare function isVoiceStateAttempt(player: any): Promise<boolean>;
 export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
 export declare const sources: {
     youtube: string;
