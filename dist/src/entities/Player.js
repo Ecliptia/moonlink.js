@@ -21,6 +21,7 @@ class Player {
     queue;
     node;
     data = {};
+    filters;
     listen;
     lyrics;
     constructor(manager, config) {
@@ -36,11 +37,12 @@ class Player {
         this.loop = config.loop || "off";
         this.autoPlay = config.autoPlay || false;
         this.autoLeave = config.autoLeave || false;
-        this.queue = new index_1.Queue();
+        this.queue = new (index_1.Structure.get("Queue"))();
+        this.filters = new (index_1.Structure.get("Filters"))(this);
         this.node = this.manager.nodes.get(config.node);
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
-            this.listen = new index_1.Listen(this);
-            this.lyrics = new index_1.Lyrics(this);
+            this.listen = new (index_1.Structure.get("Listen"))(this);
+            this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
         }
     }
     set(key, data) {

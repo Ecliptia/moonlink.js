@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Queue, Track, validateProperty, isVoiceStateAttempt } from "../../index";
+import { Lyrics, Listen, Manager, Node, Filters, Queue, Track, Structure, validateProperty, isVoiceStateAttempt } from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -21,6 +21,7 @@ export class Player {
   public queue: Queue;
   public node: Node;
   public data: Record<string, unknown> = {};
+  public filters: Filters;
   public listen: Listen;
   public lyrics: Lyrics;
 
@@ -37,11 +38,12 @@ export class Player {
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
-    this.queue = new Queue();
+    this.queue = new (Structure.get("Queue"))();
+    this.filters = new (Structure.get("Filters"))(this);
     this.node = this.manager.nodes.get(config.node);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
-      this.listen = new Listen(this);
-      this.lyrics = new Lyrics(this);
+      this.listen = new (Structure.get("Listen"))(this);
+      this.lyrics = new (Structure.get("Lyrics"))(this);
     }
   }
 
