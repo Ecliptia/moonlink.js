@@ -38,8 +38,8 @@ class Player {
         this.autoPlay = config.autoPlay || false;
         this.autoLeave = config.autoLeave || false;
         this.queue = new (index_1.Structure.get("Queue"))();
-        this.filters = new (index_1.Structure.get("Filters"))(this);
         this.node = this.manager.nodes.get(config.node);
+        this.filters = new (index_1.Structure.get("Filters"))(this);
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
             this.listen = new (index_1.Structure.get("Listen"))(this);
             this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
