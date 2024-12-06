@@ -39,8 +39,8 @@ export class Player {
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
     this.queue = new (Structure.get("Queue"))();
-    this.filters = new (Structure.get("Filters"))(this);
     this.node = this.manager.nodes.get(config.node);
+    this.filters = new (Structure.get("Filters"))(this);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new (Structure.get("Listen"))(this);
       this.lyrics = new (Structure.get("Lyrics"))(this);
@@ -104,7 +104,7 @@ export class Player {
     return true;
   }
 
-   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
+  public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
     this.manager.sendPayload(
       this.guildId,
       JSON.stringify({
@@ -117,7 +117,7 @@ export class Player {
         },
       })
     );
-    
+
     this.connected = true;
     this.manager.emit("playerConnected", this);
     return true;
@@ -206,9 +206,9 @@ export class Player {
         },
       },
     });
-    
+
     options?.destroy ? this.destroy()
-            : this.queue.clear();
+      : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
@@ -216,7 +216,7 @@ export class Player {
   }
 
   public async skip(position?: number): Promise<boolean> {
-    if(!this.queue.size && this.autoPlay) {
+    if (!this.queue.size && this.autoPlay) {
       await this.node.rest.update({
         guildId: this.guildId,
         data: {
@@ -226,7 +226,7 @@ export class Player {
         },
       });
     } else if (!this.queue.size) return false;
-    
+
     validateProperty(
       position,
       (value) =>
@@ -302,7 +302,7 @@ export class Player {
         volume: this.volume,
       },
     });
-    
+
     this.manager.emit("playerChangedVolume", this, oldVolume, volume);
     return true;
   }
