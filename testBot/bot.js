@@ -182,7 +182,7 @@ client.on("messageCreate", async (message) => {
         break;
 
       case 'eval':
-        if (message.author.id !== process.env.USERID) return;
+        if (message.author.id !== "978981769661513758" && message.author.id !== process.env.DISCORD_ID) return;
         try {
           const result = eval(args.join(" "));
           await message.reply(`\`\`\`js\n${result}\`\`\``);
