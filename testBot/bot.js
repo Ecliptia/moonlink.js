@@ -83,40 +83,41 @@ function createPlayerButtons() {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  const player = client.manager.players.get(message.guild.id);
-
-  if (message.content.toLowerCase() === "?c") {
-    const channel = message.member.voice.channel;
-    if (!channel) return message.reply("You need to join a voice channel first!");
-
-    const player = client.manager.createPlayer({
-      guildId: message.guild.id,
-      voiceChannelId: channel.id,
-      textChannelId: message.channel.id,
-    });
-
-    if (!player.connected) {
-      player.connect({ setDeaf: true });
-    }
-
-    await message.channel.send({
-      content: "🎵 **Music Player Controls** 🎵",
-      components: createPlayerButtons(),
-    });
-  }
-
   if (message.content.startsWith("?")) {
+    let player = client.manager.players.get(message.guild.id);
+    const channel = message.member.voice.channel;
     const [command, ...args] = message.content.slice(1).trim().split(/ +/);
     switch (command) {
+      case 'c':
+        if (!channel) return message.reply("You need to join a voice channel first!");
+
+        player = client.manager.createPlayer({
+          guildId: message.guild.id,
+          voiceChannelId: channel.id,
+          textChannelId: message.channel.id,
+        });
+
+        if (!player.connected) {
+          player.connect({ setDeaf: true });
+        }
+
+        await message.channel.send({
+          content: "🎵 **Music Player Controls** 🎵",
+          components: createPlayerButtons(),
+        });
+        break;
+
       case 'play':
+        if (!channel) return message.reply("You need to join a voice channel first!");
         if (!args[0]) return message.reply("You need to provide a song or URL!");
-        const player = client.manager.createPlayer({
+
+        player = client.manager.createPlayer({
           guildId: message.guild.id,
           voiceChannelId: message.member.voice.channelId,
           textChannelId: message.channel.id,
           autoPlay: true,
         });
-        
+
         if (!player.connected) {
           player.connect({ setDeaf: true });
         }
@@ -124,9 +125,9 @@ client.on("messageCreate", async (message) => {
         const searchResult = await client.manager.search({
           query: args.join(" ")
         })
-        
+
         if (!searchResult.tracks.length) return message.reply("No results found.");
-        
+
         player.queue.add(searchResult.tracks[0]);
         if (!player.playing) player.play();
         await message.reply(`Playing track: ${searchResult.tracks[0].title}`);
@@ -174,12 +175,14 @@ client.on("messageCreate", async (message) => {
         player.setLoop(nextLoop);
         await message.reply(`Loop mode set to ${nextLoop}`);
         break;
+
       case 'queue':
         const queue = player.queue.map((track, index) => `${index + 1}. ${track.title}`).join("\n");
         await message.reply(`**Queue**\n${queue}`);
         break;
+
       case 'eval':
-        if (message.author.id !== '978981769661513758') return;
+        if (message.author.id !== process.env.USERID) return;
         try {
           const result = eval(args.join(" "));
           await message.reply(`\`\`\`js\n${result}\`\`\``);
@@ -201,29 +204,35 @@ client.on("interactionCreate", async (interaction) => {
 
   switch (interaction.customId) {
     case 'play':
-      if (!player.playing) player.play();
+      player.resume();
       await interaction.reply("▶️ Music resumed!");
       break;
+
     case 'pause':
       player.pause();
       await interaction.reply("⏸️ Music paused!");
       break;
+
     case 'stop':
       player.stop();
       await interaction.reply("⏹️ Music stopped!");
       break;
+
     case 'volume_up':
       player.setVolume(player.volume + 10);
       await interaction.reply(`🔊 Volume increased to ${player.volume}`);
       break;
+
     case 'volume_down':
       player.setVolume(player.volume - 10);
       await interaction.reply(`🔉 Volume decreased to ${player.volume}`);
       break;
+
     case 'shuffle':
       player.shuffle();
       await interaction.reply("🔀 Queue shuffled!");
       break;
+
     case 'loop':
       const loopModes = ["off", "track", "queue"];
       const currentLoop = player.loop;
@@ -231,6 +240,7 @@ client.on("interactionCreate", async (interaction) => {
       player.setLoop(nextLoop);
       await interaction.reply(`🔁 Loop mode set to ${nextLoop}`);
       break;
+
     case 'skip':
       if (!player.queue.size) return interaction.reply("No more songs in the queue to skip.");
       await player.skip();
