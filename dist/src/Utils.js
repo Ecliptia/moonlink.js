@@ -55,6 +55,7 @@ exports.sources = {
 exports.structures = {
     NodeManager: index_1.NodeManager,
     PlayerManager: index_1.PlayerManager,
+    SearchResult: index_1.SearchResult,
     Player: index_1.Player,
     Queue: index_1.Queue,
     Node: index_1.Node,

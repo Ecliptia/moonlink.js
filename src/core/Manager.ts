@@ -16,6 +16,7 @@ import {
   Player,
   validateProperty,
   Track,
+  SearchResult,
 } from "../../index";
 
 export declare interface Manager {
@@ -66,7 +67,7 @@ export class Manager extends EventEmitter {
     source?: TSearchSources;
     node?: string;
     requester?: unknown;
-  }): Promise<ISearchResult> {
+  }): Promise<SearchResult> {
     return new Promise(async (resolve) => {
       validateProperty(
         options,
@@ -90,24 +91,8 @@ export class Manager extends EventEmitter {
         : this.nodes.best;
 
       let req = await node.rest.loadTracks(source, query);
-
-      if (req.loadType == "error" || req.loadType == "empty") return resolve(req);
-      if (req.loadType == "track" || req.loadType == "short")
-        req.data.tracks = [req.data as Object];
-      if (req.loadType == "search") req.data.tracks = req.data as Object;
       
-      let tracks: Track[] = req.data.tracks.map(
-        (data: ITrack) => new Track(data, requester),
-      ) as any;
-
-      this.emit(
-        "debug",
-        `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`,
-      );
-      return resolve({
-        ...req,
-        tracks,
-      });
+      return resolve(new (Structure.get("SearchResult"))(req, options));
     });
   }
   public async packetUpdate(packet: any): Promise<void> {

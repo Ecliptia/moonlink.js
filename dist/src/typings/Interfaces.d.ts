@@ -1,4 +1,4 @@
-import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager } from "../../index";
+import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
     debug: (...args: any) => void;
@@ -159,7 +159,8 @@ export interface ITrackInfo {
 }
 export interface IPlaylistInfo {
     name: string;
-    selectedTrack?: number;
+    selectedTrack: number;
+    duration: number;
 }
 export interface IObjectTrack {
     encoded?: string;
@@ -179,15 +180,6 @@ export interface ISearchResult {
         message: string;
         severity: string;
     };
-}
-export interface IExtendable {
-    Node: typeof Node;
-    Rest: typeof Rest;
-    Player: typeof Player;
-    Track: typeof Track;
-    Queue: typeof Queue;
-    PlayerManager: typeof PlayerManager;
-    NodeManager: typeof NodeManager;
 }
 export interface Equalizer {
     band: number;
@@ -245,4 +237,5 @@ export interface Extendable {
     Listen: typeof Listen;
     PlayerManager: typeof PlayerManager;
     NodeManager: typeof NodeManager;
+    SearchResult: typeof SearchResult;
 }
