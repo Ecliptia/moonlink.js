@@ -19,6 +19,7 @@ exports.version = require("../package.json").version;
 __exportStar(require("./src/core/Manager"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/management/PlayerManager"), exports);
+__exportStar(require("./src/structures/SearchResult"), exports);
 __exportStar(require("./src/entities/Filters"), exports);
 __exportStar(require("./src/typings/Interfaces"), exports);
 __exportStar(require("./src/typings/types"), exports);

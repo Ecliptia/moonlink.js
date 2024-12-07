@@ -10,6 +10,7 @@ import {
   Listen,
   PlayerManager,
   NodeManager,
+  SearchResult,
 } from "../../index";
 import {
   TLoadResultType,
@@ -200,7 +201,8 @@ export interface ITrackInfo {
 
 export interface IPlaylistInfo {
   name: string;
-  selectedTrack?: number;
+  selectedTrack: number;
+  duration: number;
 }
 
 export interface IObjectTrack {
@@ -224,17 +226,6 @@ export interface ISearchResult {
     severity: string;
   }
 }
-
-export interface IExtendable {
-  Node: typeof Node;
-  Rest: typeof Rest;
-  Player: typeof Player;
-  Track: typeof Track;
-  Queue: typeof Queue;
-  PlayerManager: typeof PlayerManager;
-  NodeManager: typeof NodeManager;
-}
-
 export interface Equalizer {
   band: number;
   gain: number;
@@ -300,4 +291,5 @@ export interface Extendable {
   Listen: typeof Listen;
   PlayerManager: typeof PlayerManager;
   NodeManager: typeof NodeManager;
+  SearchResult: typeof SearchResult;
 }

@@ -1,4 +1,4 @@
-export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud";
+export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud" | string;
 export type TLoadResultType = "track" | "playlist" | "search" | "empty" | "error" | TLoadResultNodeLinkType;
 export type TLoadResultNodeLinkType = "short" | "album" | "artist" | "playlist" | "station" | "podcast" | "show";
 export type TSortTypeNode = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "random";

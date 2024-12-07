@@ -46,18 +46,7 @@ class Manager extends node_events_1.EventEmitter {
                 ? this.nodes.get(options?.node)
                 : this.nodes.best;
             let req = await node.rest.loadTracks(source, query);
-            if (req.loadType == "error" || req.loadType == "empty")
-                return resolve(req);
-            if (req.loadType == "track" || req.loadType == "short")
-                req.data.tracks = [req.data];
-            if (req.loadType == "search")
-                req.data.tracks = req.data;
-            let tracks = req.data.tracks.map((data) => new index_1.Track(data, requester));
-            this.emit("debug", `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`);
-            return resolve({
-                ...req,
-                tracks,
-            });
+            return resolve(new (index_1.Structure.get("SearchResult"))(req, options));
         });
     }
     async packetUpdate(packet) {
