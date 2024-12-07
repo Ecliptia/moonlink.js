@@ -327,21 +327,12 @@ export class Player {
   }
 
   public destroy(): boolean {
-    if (this.isDeleting) {
-      return false;
-    }
-
-    this.isDeleting = true;
-
     if (this.connected) this.disconnect();
+    
     this.queue.clear();
     this.manager.players.delete(this.guildId);
+    this.manager.emit("playerDestroyed", this);
 
-    if (!this.isDeleting) {
-      this.manager.emit("playerDestroyed", this);
-    }
-
-    this.isDeleting = false;
     return true;
   }
 }
