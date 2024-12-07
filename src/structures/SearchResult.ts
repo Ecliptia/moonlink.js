@@ -43,6 +43,6 @@ export class SearchResult {
         break;
     }
 
-    return rawTracks.map((data: any) => new Track(data, requester));
+    return rawTracks.map((data) => new Track(data, requester));
   }
 }
