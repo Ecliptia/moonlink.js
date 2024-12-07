@@ -22,6 +22,7 @@ export class Player {
   public node: Node;
   public data: Record<string, unknown> = {};
   public filters: Filters;
+  public isDeleting: boolean;
   public listen: Listen;
   public lyrics: Lyrics;
 
@@ -41,6 +42,7 @@ export class Player {
     this.queue = new (Structure.get("Queue"))();
     this.node = this.manager.nodes.get(config.node);
     this.filters = new (Structure.get("Filters"))(this);
+    this.isDeleting = false;
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new (Structure.get("Listen"))(this);
       this.lyrics = new (Structure.get("Lyrics"))(this);
@@ -325,11 +327,21 @@ export class Player {
   }
 
   public destroy(): boolean {
+    if (this.isDeleting) {
+      return false;
+    }
+
+    this.isDeleting = true;
+
     if (this.connected) this.disconnect();
     this.queue.clear();
     this.manager.players.delete(this.guildId);
 
-    this.manager.emit("playerDestroyed", this);
+    if (!this.isDeleting) {
+      this.manager.emit("playerDestroyed", this);
+    }
+
+    this.isDeleting = false;
     return true;
   }
 }
