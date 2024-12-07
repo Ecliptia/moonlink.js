@@ -22,7 +22,6 @@ export class Player {
   public node: Node;
   public data: Record<string, unknown> = {};
   public filters: Filters;
-  public isDeleting: boolean;
   public listen: Listen;
   public lyrics: Lyrics;
 
@@ -42,7 +41,6 @@ export class Player {
     this.queue = new (Structure.get("Queue"))();
     this.node = this.manager.nodes.get(config.node);
     this.filters = new (Structure.get("Filters"))(this);
-    this.isDeleting = false;
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new (Structure.get("Listen"))(this);
       this.lyrics = new (Structure.get("Lyrics"))(this);
