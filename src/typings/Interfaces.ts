@@ -65,6 +65,7 @@ export interface IEvents {
     byRemote: boolean,
   ) => void;
 }
+
 export interface INode {
   host: string;
   id?: number;
@@ -77,6 +78,7 @@ export interface INode {
   secure?: boolean;
   sessionId?: string;
 }
+
 export interface INodeStats {
   players: number;
   playingPlayers: number;
@@ -98,11 +100,13 @@ export interface INodeStats {
     lavalinkLoad: number;
   };
 }
+
 export interface IConfigManager {
   nodes: INode[];
   options: IOptionsManager;
   sendPayload: Function;
 }
+
 export interface IOptionsManager {
   clientName?: string;
   clientId?: string;
@@ -113,6 +117,7 @@ export interface IOptionsManager {
   NodeLinkFeatures?: boolean;
   previousInArray?: boolean;
 }
+
 export interface IPlayerConfig {
   guildId: string;
   voiceChannelId: string;
@@ -123,16 +128,19 @@ export interface IPlayerConfig {
   autoLeave?: boolean;
   node?: string;
 }
+
 export interface IVoiceState {
   token?: string;
   sessionId?: string;
   endpoint?: string;
   attempt?: boolean;
 }
+
 export interface IRESTOptions {
   guildId: string;
   data: IRESTData;
 }
+
 export interface IRESTData {
   track?: IObjectTrack;
   identifier?: string;
@@ -144,34 +152,39 @@ export interface IRESTData {
   filters?: Object;
   voice?: IVoiceState;
 }
+
 export interface IRESTLoadTracks {
   loadType: TLoadResultType;
   data?: ILoadResultData;
 }
+
 export interface IRESTGetLyrics {
-   loadType: TLoadResultType;
-    data?: {
-          name: string;
-          synced: boolean;
-          data: {
-            startTime: number;
-            endTime: number;
-            text: string;
-          }[];
-          rtl: boolean;
-        }
+  loadType: TLoadResultType;
+  data?: {
+    name: string;
+    synced: boolean;
+    data: {
+      startTime: number;
+      endTime: number;
+      text: string;
+    }[];
+    rtl: boolean;
+  }
 }
+
 export interface ILoadResultData {
   info: IPlaylistInfo;
   tracks?: ITrack[];
   pluginInfo: Object;
 }
+
 export interface ITrack {
   encoded: string;
   info: ITrackInfo;
   pluginInfo: Object;
   userData: Object;
 }
+
 export interface ITrackInfo {
   title: string;
   uri?: string;
@@ -185,16 +198,19 @@ export interface ITrackInfo {
   isrc?: string;
   sourceName?: string;
 }
+
 export interface IPlaylistInfo {
   name: string;
   selectedTrack: number;
   duration: number;
 }
+
 export interface IObjectTrack {
   encoded?: string;
   identifier?: string;
   userData?: unknown;
 }
+
 export interface ISearchResult {
   loadType: TLoadResultType;
   tracks: Track[];
@@ -262,6 +278,7 @@ export interface ChannelMix {
 export interface LowPass {
   smoothing?: number;
 }
+
 export interface Extendable {
   Node: typeof Node;
   Rest: typeof Rest;

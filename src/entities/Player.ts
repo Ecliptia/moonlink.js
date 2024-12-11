@@ -326,10 +326,11 @@ export class Player {
 
   public destroy(): boolean {
     if (this.connected) this.disconnect();
+    
     this.queue.clear();
     this.manager.players.delete(this.guildId);
-
     this.manager.emit("playerDestroyed", this);
+
     return true;
   }
 }

@@ -21,6 +21,7 @@ export declare class Player {
     node: Node;
     data: Record<string, unknown>;
     filters: Filters;
+    isDeleting: boolean;
     listen: Listen;
     lyrics: Lyrics;
     constructor(manager: Manager, config: IPlayerConfig);
