@@ -22,7 +22,6 @@ class Player {
     node;
     data = {};
     filters;
-    isDeleting;
     listen;
     lyrics;
     constructor(manager, config) {
@@ -41,7 +40,6 @@ class Player {
         this.queue = new (index_1.Structure.get("Queue"))();
         this.node = this.manager.nodes.get(config.node);
         this.filters = new (index_1.Structure.get("Filters"))(this);
-        this.isDeleting = false;
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
             this.listen = new (index_1.Structure.get("Listen"))(this);
             this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
@@ -249,18 +247,11 @@ class Player {
         return true;
     }
     destroy() {
-        if (this.isDeleting) {
-            return false;
-        }
-        this.isDeleting = true;
         if (this.connected)
             this.disconnect();
         this.queue.clear();
         this.manager.players.delete(this.guildId);
-        if (!this.isDeleting) {
-            this.manager.emit("playerDestroyed", this);
-        }
-        this.isDeleting = false;
+        this.manager.emit("playerDestroyed", this);
         return true;
     }
 }
