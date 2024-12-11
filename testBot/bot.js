@@ -127,7 +127,7 @@ client.on("messageCreate", async (message) => {
         })
 
         if (!searchResult.tracks.length) return message.reply("No results found.");
-
+        console.log(searchResult.tracks[0])
         player.queue.add(searchResult.tracks[0]);
         if (!player.playing) player.play();
         await message.reply(`Playing track: ${searchResult.tracks[0].title}`);

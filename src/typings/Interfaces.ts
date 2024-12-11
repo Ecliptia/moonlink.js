@@ -199,7 +199,6 @@ export interface ISearchResult {
   loadType: TLoadResultType;
   tracks: Track[];
   playlistInfo: IPlaylistInfo;
-  // lavalink generic data
   data: {
     playlistInfo: IPlaylistInfo;
     tracks: ITrack[];
