@@ -239,7 +239,11 @@ export class Node {
             }
             if (player.autoLeave) {
               player.destroy();
-
+              this.manager.emit(
+                "autoLeaved",
+                player,
+                player.current,
+              )
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
