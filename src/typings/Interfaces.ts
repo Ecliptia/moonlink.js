@@ -19,6 +19,7 @@ import {
   TTrackEndType,
 } from "./types";
 export interface IEvents {
+  autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
   nodeRaw: (node: INode, player: Player, payload: any) => void;
   nodeCreate: (node: INode) => void;
