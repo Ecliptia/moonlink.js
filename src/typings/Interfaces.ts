@@ -59,6 +59,7 @@ export interface IEvents {
   ) => void;
   trackStuck: (player: Player, track: Track, threshold: number) => void;
   trackException: (player: Player, track: Track, exception: any) => void;
+  queueEnd: (player: Player, track?: any) => void;
   socketClosed: (
     player: Player,
     code: number,

@@ -250,11 +250,16 @@ export class Node {
                   player.guildId +
                   " has been destroyed because of autoLeave.",
               );
-              return;
             }
             if (!player.queue.size) {
               player.current = null;
               player.queue.clear();
+
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",
