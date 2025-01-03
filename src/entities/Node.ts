@@ -244,6 +244,13 @@ export class Node {
                 player,
                 player.current,
               )
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
+
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
@@ -255,6 +262,12 @@ export class Node {
             if (!player.queue.size) {
               player.current = null;
               player.queue.clear();
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",
