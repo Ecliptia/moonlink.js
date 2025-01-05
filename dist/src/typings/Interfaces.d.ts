@@ -1,4 +1,4 @@
-import { Plugin, Node, Rest, Player, Queue, Track, PlayerManager, NodeManager } from "../../index";
+import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
     debug: (...args: any) => void;
@@ -83,6 +83,7 @@ export interface IOptionsManager {
     plugins?: Plugin[];
     noReplace?: boolean;
     NodeLinkFeatures?: boolean;
+    previousInArray?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -98,6 +99,7 @@ export interface IVoiceState {
     token?: string;
     sessionId?: string;
     endpoint?: string;
+    attempt?: boolean;
 }
 export interface IRESTOptions {
     guildId: string;
@@ -157,7 +159,8 @@ export interface ITrackInfo {
 }
 export interface IPlaylistInfo {
     name: string;
-    selectedTrack?: number;
+    selectedTrack: number;
+    duration: number;
 }
 export interface IObjectTrack {
     encoded?: string;
@@ -168,15 +171,15 @@ export interface ISearchResult {
     loadType: TLoadResultType;
     tracks: Track[];
     playlistInfo: IPlaylistInfo;
-}
-export interface IExtendable {
-    Node: typeof Node;
-    Rest: typeof Rest;
-    Player: typeof Player;
-    Track: typeof Track;
-    Queue: typeof Queue;
-    PlayerManager: typeof PlayerManager;
-    NodeManager: typeof NodeManager;
+    data: {
+        playlistInfo: IPlaylistInfo;
+        tracks: ITrack[];
+        pluginInfo: any;
+    };
+    exception?: {
+        message: string;
+        severity: string;
+    };
 }
 export interface Equalizer {
     band: number;
@@ -222,4 +225,17 @@ export interface ChannelMix {
 }
 export interface LowPass {
     smoothing?: number;
+}
+export interface Extendable {
+    Node: typeof Node;
+    Rest: typeof Rest;
+    Player: typeof Player;
+    Track: typeof Track;
+    Queue: typeof Queue;
+    Filters: typeof Filters;
+    Lyrics: typeof Lyrics;
+    Listen: typeof Listen;
+    PlayerManager: typeof PlayerManager;
+    NodeManager: typeof NodeManager;
+    SearchResult: typeof SearchResult;
 }

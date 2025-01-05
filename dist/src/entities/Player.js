@@ -16,10 +16,12 @@ class Player {
     volume = 80;
     loop = "off";
     current;
+    previous;
     ping = 0;
     queue;
     node;
     data = {};
+    filters;
     listen;
     lyrics;
     constructor(manager, config) {
@@ -29,16 +31,18 @@ class Player {
         this.textChannelId = config.textChannelId;
         this.connected = false;
         this.playing = false;
+        this.paused = false;
+        this.previous = manager.options.previousInArray ? [] : null;
         this.volume = config.volume || 80;
         this.loop = config.loop || "off";
         this.autoPlay = config.autoPlay || false;
         this.autoLeave = config.autoLeave || false;
-        this.paused = false;
-        this.queue = new index_1.Queue();
+        this.queue = new (index_1.Structure.get("Queue"))();
         this.node = this.manager.nodes.get(config.node);
+        this.filters = new (index_1.Structure.get("Filters"))(this);
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
-            this.listen = new index_1.Listen(this);
-            this.lyrics = new index_1.Lyrics(this);
+            this.listen = new (index_1.Structure.get("Listen"))(this);
+            this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
         }
     }
     set(key, data) {
@@ -101,9 +105,10 @@ class Player {
         this.manager.emit("playerDisconnected", this);
         return true;
     }
-    play() {
+    async play() {
         if (!this.queue.size)
             return false;
+        await (0, index_1.isVoiceStateAttempt)(this);
         this.current = this.queue.shift();
         this.node.rest.update({
             guildId: this.guildId,

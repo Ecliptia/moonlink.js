@@ -8,25 +8,22 @@ class Manager extends node_events_1.EventEmitter {
     options;
     sendPayload;
     nodes;
-    players = new index_1.PlayerManager(this);
+    players = new (index_1.Structure.get("PlayerManager"))(this);
     version = require("../../index").version;
     constructor(config) {
         super();
-        this.emit("debug", "Moonlink.js > Debugging enabled.");
         this.sendPayload = config?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
             ...config.options,
         };
-        this.nodes = new index_1.NodeManager(this, config.nodes);
+        this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
         if (this.options.plugins) {
             this.options.plugins.forEach((plugin) => {
                 plugin.load(this);
-                this.emit("debug", "Moonlink.js > Loaded plugin: " + plugin.name);
             });
         }
-        this.emit("debug", "Moonlink.js > Created Manager instance.", this.options);
     }
     init(clientId) {
         if (this.initialize)
@@ -49,21 +46,10 @@ class Manager extends node_events_1.EventEmitter {
                 ? this.nodes.get(options?.node)
                 : this.nodes.best;
             let req = await node.rest.loadTracks(source, query);
-            if (req.loadType == "error" || req.loadType == "empty")
-                return resolve(req);
-            if (req.loadType == "track" || req.loadType == "short")
-                req.data.tracks = [req.data];
-            if (req.loadType == "search")
-                req.data.tracks = req.data;
-            let tracks = req.data.tracks.map((data) => new index_1.Track(data, requester));
-            this.emit("debug", `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`);
-            return resolve({
-                ...req,
-                tracks,
-            });
+            return resolve(new (index_1.Structure.get("SearchResult"))(req, options));
         });
     }
-    packetUpdate(packet) {
+    async packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         if (!packet.d.token && !packet.d.session_id)
@@ -77,7 +63,7 @@ class Manager extends node_events_1.EventEmitter {
             player.voiceState.token = packet.d.token;
             player.voiceState.endpoint = packet.d.endpoint;
             this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
-            this.attemptConnection(player.guildId);
+            await this.attemptConnection(player.guildId);
         }
         else if (packet.t === "VOICE_STATE_UPDATE") {
             if (packet.d.user_id !== this.options.clientId)
@@ -96,7 +82,7 @@ class Manager extends node_events_1.EventEmitter {
             }
             player.voiceState.sessionId = packet.d.session_id;
             this.emit("debug", `Moonlink.js > Received voice state update for guild ${player.guildId}`);
-            this.attemptConnection(player.guildId);
+            await this.attemptConnection(player.guildId);
         }
     }
     async attemptConnection(guildId) {
@@ -104,9 +90,11 @@ class Manager extends node_events_1.EventEmitter {
         if (!player)
             return;
         const voiceState = player.voiceState;
-        if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint)
-            return;
-        await player.node.rest.update({
+        if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint) {
+            this.emit("debug", `Moonlink.js > Missing voice server data for guild ${guildId}, wait...`);
+            return false;
+        }
+        let attempts = await player.node.rest.update({
             guildId,
             data: {
                 voice: {
@@ -117,6 +105,8 @@ class Manager extends node_events_1.EventEmitter {
             },
         });
         this.emit("debug", `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`);
+        if (attempts)
+            player.voiceState.attempt = true;
         return true;
     }
     createPlayer(config) {

@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Queue, Track } from "../../index";
+import { Lyrics, Listen, Manager, Node, Filters, Queue, Track } from "../../index";
 export declare class Player {
     readonly manager: Manager;
     guildId: string;
@@ -15,10 +15,12 @@ export declare class Player {
     volume: number;
     loop: TPlayerLoop;
     current: Track;
+    previous: Track | Track[];
     ping: number;
     queue: Queue;
     node: Node;
     data: Record<string, unknown>;
+    filters: Filters;
     listen: Listen;
     lyrics: Lyrics;
     constructor(manager: Manager, config: IPlayerConfig);
@@ -33,7 +35,7 @@ export declare class Player {
         setDeaf?: boolean;
     }): boolean;
     disconnect(): boolean;
-    play(): boolean;
+    play(): Promise<boolean>;
     pause(): boolean;
     resume(): boolean;
     stop(options?: {

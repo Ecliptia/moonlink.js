@@ -6,3 +6,4 @@ package-lock.json
 .gitignore
 .env
 desktop.ini
+docs/

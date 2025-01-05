@@ -55,6 +55,8 @@ class Node {
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
         this.socket.on("error", this.error.bind(this));
+        this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
+        this.manager.emit("nodeCreate", this);
     }
     reconnect() {
         this.reconnectTimeout = setTimeout(() => {
@@ -67,6 +69,7 @@ class Node {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.connected = true;
+        this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
         this.manager.emit("nodeConnected", this);
     }
     close(code, reason) {
@@ -81,6 +84,7 @@ class Node {
             this.socket = null;
             this.destroyed = true;
         }
+        this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
         this.manager.emit("nodeDisconnect", this, code, reason);
     }
     async message(data) {
@@ -94,6 +98,7 @@ class Node {
                 this.sessionId = payload.sessionId;
                 this.info = await this.rest.getInfo();
                 this.version = this.info.version;
+                this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has been ready.`);
                 this.manager.emit("nodeReady", this, payload);
                 break;
             case "stats":
@@ -131,6 +136,8 @@ class Node {
                     case "TrackEndEvent":
                         player.playing = false;
                         player.paused = false;
+                        this.manager.options.previousInArray
+                            ? player.previous.push(new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded })) : player.previous = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded });
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (["loadFailed", "cleanup"].includes(payload.reason)) {
                             if (player.queue.size) {

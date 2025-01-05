@@ -1,5 +1,5 @@
 import { IPlayerConfig } from "../typings/Interfaces";
-import { Manager, Player, validateProperty } from "../../index";
+import { Structure, Manager, Player, validateProperty } from "../../index";
 export class PlayerManager {
   readonly manager: Manager;
   public cache: Map<string, Player> = new Map();
@@ -46,7 +46,7 @@ export class PlayerManager {
       config.node = node.identifier ?? node.host;
     }
 
-    const player: Player = new Player(this.manager, config);
+    const player: Player = new (Structure.get("Player"))(this.manager, config);
     this.cache.set(config.guildId, player);
 
     this.manager.emit(

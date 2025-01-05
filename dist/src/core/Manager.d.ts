@@ -1,8 +1,7 @@
-/// <reference types="node" />
 import { EventEmitter } from "node:events";
-import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig, ISearchResult } from "../typings/Interfaces";
+import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
-import { NodeManager, PlayerManager, Player } from "../../index";
+import { NodeManager, PlayerManager, Player, SearchResult } from "../../index";
 export declare interface Manager {
     on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
     once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -23,8 +22,8 @@ export declare class Manager extends EventEmitter {
         source?: TSearchSources;
         node?: string;
         requester?: unknown;
-    }): Promise<ISearchResult>;
-    packetUpdate(packet: any): void;
+    }): Promise<SearchResult>;
+    packetUpdate(packet: any): Promise<void>;
     attemptConnection(guildId: string): Promise<boolean>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;

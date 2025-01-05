@@ -1,4 +1,4 @@
-export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud";
+export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud" | string;
 export type TLoadResultType =
   | "track"
   | "playlist"

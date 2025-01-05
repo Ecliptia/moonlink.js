@@ -1,6 +1,6 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Queue, Track, validateProperty } from "../../index";
+import { Lyrics, Listen, Manager, Node, Filters, Queue, Track, Structure, validateProperty, isVoiceStateAttempt } from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -16,10 +16,12 @@ export class Player {
   public volume: number = 80;
   public loop: TPlayerLoop = "off";
   public current: Track;
+  public previous: Track | Track[];
   public ping: number = 0;
   public queue: Queue;
   public node: Node;
   public data: Record<string, unknown> = {};
+  public filters: Filters;
   public listen: Listen;
   public lyrics: Lyrics;
 
@@ -30,16 +32,18 @@ export class Player {
     this.textChannelId = config.textChannelId;
     this.connected = false;
     this.playing = false;
+    this.paused = false;
+    this.previous = manager.options.previousInArray ? [] : null;
     this.volume = config.volume || 80;
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
-    this.paused = false;
-    this.queue = new Queue();
+    this.queue = new (Structure.get("Queue"))();
     this.node = this.manager.nodes.get(config.node);
+    this.filters = new (Structure.get("Filters"))(this);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
-      this.listen = new Listen(this);
-      this.lyrics = new Lyrics(this);
+      this.listen = new (Structure.get("Listen"))(this);
+      this.lyrics = new (Structure.get("Lyrics"))(this);
     }
   }
 
@@ -138,8 +142,9 @@ export class Player {
     return true;
   }
 
-  public play(): boolean {
+  public async play(): Promise<boolean> {
     if (!this.queue.size) return false;
+    await isVoiceStateAttempt(this);
 
     this.current = this.queue.shift();
 
@@ -201,9 +206,9 @@ export class Player {
         },
       },
     });
-    
+
     options?.destroy ? this.destroy()
-            : this.queue.clear();
+      : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
@@ -211,7 +216,7 @@ export class Player {
   }
 
   public async skip(position?: number): Promise<boolean> {
-    if(!this.queue.size && this.autoPlay) {
+    if (!this.queue.size && this.autoPlay) {
       await this.node.rest.update({
         guildId: this.guildId,
         data: {
@@ -221,7 +226,7 @@ export class Player {
         },
       });
     } else if (!this.queue.size) return false;
-    
+
     validateProperty(
       position,
       (value) =>
@@ -297,7 +302,7 @@ export class Player {
         volume: this.volume,
       },
     });
-    
+
     this.manager.emit("playerChangedVolume", this, oldVolume, volume);
     return true;
   }
@@ -321,10 +326,11 @@ export class Player {
 
   public destroy(): boolean {
     if (this.connected) this.disconnect();
+    
     this.queue.clear();
     this.manager.players.delete(this.guildId);
-
     this.manager.emit("playerDestroyed", this);
+
     return true;
   }
 }

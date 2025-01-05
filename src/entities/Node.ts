@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Rest, Track } from "../../index";
+import { Manager, Rest, Structure, Track } from "../../index";
 export class Node {
   public readonly manager: Manager;
   public host: string;
@@ -53,19 +53,24 @@ export class Node {
     this.socket.on("close", this.close.bind(this));
     this.socket.on("message", this.message.bind(this));
     this.socket.on("error", this.error.bind(this));
+    
+    this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
+    this.manager.emit("nodeCreate", this);
   }
   public reconnect(): void {
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       this.connect();
     }, this.retryDelay);
-
+    
+    
     this.manager.emit("nodeReconnect", this);
   }
   protected open(): void {
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     this.connected = true;
-
+    
+    this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
     this.manager.emit("nodeConnected", this);
   }
   protected close(code: number, reason: string): void {
@@ -80,7 +85,8 @@ export class Node {
       this.socket = null;
       this.destroyed = true;
     }
-
+    
+    this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
     this.manager.emit("nodeDisconnect", this, code, reason);
   }
   protected async message(data: Buffer): Promise<void> {
@@ -93,7 +99,8 @@ export class Node {
         this.sessionId = payload.sessionId;
         this.info = await this.rest.getInfo();
         this.version = this.info.version;
-
+        
+        this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has been ready.`);
         this.manager.emit("nodeReady", this, payload);
         break;
       case "stats":
@@ -105,7 +112,7 @@ export class Node {
         if (!player) return;
         if (!player.current) return;
         if (player.connected !== payload.state.connected)
-          player.connected = payload.state.connected;
+        player.connected = payload.state.connected;
         player.current.position = payload.state.position;
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;
@@ -137,7 +144,9 @@ export class Node {
           case "TrackEndEvent":
             player.playing = false;
             player.paused = false;
-
+            this.manager.options.previousInArray
+    ? (player.previous as Track[]).push(new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded})) : player.previous = new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded});
+        
             this.manager.emit(
               "trackEnd",
               player,
@@ -145,6 +154,7 @@ export class Node {
               payload.reason,
               payload,
             );
+            
 
             if (["loadFailed", "cleanup"].includes(payload.reason)) {
               if (player.queue.size) {
@@ -229,6 +239,17 @@ export class Node {
             }
             if (player.autoLeave) {
               player.destroy();
+              this.manager.emit(
+                "autoLeaved",
+                player,
+                player.current,
+              )
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",
@@ -241,6 +262,12 @@ export class Node {
             if (!player.queue.size) {
               player.current = null;
               player.queue.clear();
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",

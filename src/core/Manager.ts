@@ -10,11 +10,13 @@ import {
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import {
+  Structure,
   NodeManager,
   PlayerManager,
   Player,
   validateProperty,
   Track,
+  SearchResult,
 } from "../../index";
 
 export declare interface Manager {
@@ -32,7 +34,7 @@ export class Manager extends EventEmitter {
   public readonly options: IOptionsManager;
   public readonly sendPayload: Function;
   public nodes: NodeManager;
-  public players: PlayerManager = new PlayerManager(this);
+  public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
   constructor(config: IConfigManager) {
     super();
@@ -42,7 +44,7 @@ export class Manager extends EventEmitter {
       defaultPlatformSearch: "youtube",
       ...config.options,
     };
-    this.nodes = new NodeManager(this, config.nodes);
+    this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
 
     if (this.options.plugins) {
       this.options.plugins.forEach((plugin) => {
@@ -65,7 +67,7 @@ export class Manager extends EventEmitter {
     source?: TSearchSources;
     node?: string;
     requester?: unknown;
-  }): Promise<ISearchResult> {
+  }): Promise<SearchResult> {
     return new Promise(async (resolve) => {
       validateProperty(
         options,
@@ -89,30 +91,14 @@ export class Manager extends EventEmitter {
         : this.nodes.best;
 
       let req = await node.rest.loadTracks(source, query);
-
-      if (req.loadType == "error" || req.loadType == "empty") return resolve(req);
-      if (req.loadType == "track" || req.loadType == "short")
-        req.data.tracks = [req.data as any];
-      if (req.loadType == "search") req.data.tracks = req.data as any;
       
-      let tracks: Track[] = req.data.tracks.map(
-        (data: ITrack) => new Track(data, requester),
-      ) as any;
-
-      this.emit(
-        "debug",
-        `Moonlink.js > Searched for ${query} on ${source} with ${node.identifier ?? node.host}: returning ${tracks.length} tracks`,
-      );
-      return resolve({
-        ...req,
-        tracks,
-      });
+      return resolve(new (Structure.get("SearchResult"))(req, options));
     });
   }
-  public packetUpdate(packet: any): void {
+  public async packetUpdate(packet: any): Promise<void> {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
       return;
-
+    
     if (!packet.d.token && !packet.d.session_id) return;
 
     const player = this.getPlayer(packet.d.guild_id);
@@ -128,7 +114,7 @@ export class Manager extends EventEmitter {
         "debug",
         `Moonlink.js > Received voice server update for guild ${player.guildId}`,
       );
-      this.attemptConnection(player.guildId);
+      await this.attemptConnection(player.guildId);
     } else if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.options.clientId) return;
 
@@ -153,7 +139,7 @@ export class Manager extends EventEmitter {
         "debug",
         `Moonlink.js > Received voice state update for guild ${player.guildId}`,
       );
-      this.attemptConnection(player.guildId);
+      await this.attemptConnection(player.guildId);
     }
   }
   public async attemptConnection(guildId: string): Promise<boolean> {
@@ -162,10 +148,15 @@ export class Manager extends EventEmitter {
 
     const voiceState: IVoiceState = player.voiceState;
 
-    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint)
-      return;
+    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint) {
+      this.emit(
+        "debug",
+        `Moonlink.js > Missing voice server data for guild ${guildId}, wait...`,
+      );
+      return false;
+    }
 
-    await player.node.rest.update({
+    let attempts: any = await player.node.rest.update({
       guildId,
       data: {
         voice: {
@@ -175,10 +166,13 @@ export class Manager extends EventEmitter {
         },
       },
     });
+
     this.emit(
       "debug",
       `Moonlink.js > Attempting to connect to ${player.node.identifier ?? player.node.host} for guild ${guildId}`,
     );
+
+    if (attempts) player.voiceState.attempt = true;
     return true;
   }
   public createPlayer(config: IPlayerConfig): Player {

@@ -30,7 +30,7 @@ class NodeManager {
     }
     add(node) {
         this.check(node);
-        this.cache.set(node.identifier ?? node.host, new index_1.Node(this.manager, node));
+        this.cache.set(node.identifier ?? node.host, new (index_1.Structure.get("Node"))(this.manager, node));
         this.manager.emit("nodeCreate", this.cache.get(node.identifier ?? node.host));
         this.manager.emit("debug", `NodeManager > Node with identifier ${node.identifier ?? node.host} has been created.`);
     }
