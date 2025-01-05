@@ -71,8 +71,7 @@ class Database {
             this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
         }
         else {
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id}) - creating new data object`);
-            this.data = {};
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
         }
     }
     saveData() {

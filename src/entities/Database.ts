@@ -71,8 +71,7 @@ export class Database {
             Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`); 
             this.data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
         } else {
-            Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id}) - creating new data object`);
-            this.data = {};
+            Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
         }
     }
 
