@@ -134,10 +134,13 @@ class Node {
                             " has started the track.");
                         break;
                     case "TrackEndEvent":
+                        if (!player.current)
+                            this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has ended the track for reason " + payload.reason + ". But the current track is null. " + player.current?.encoded);
+                        let track = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded ?? payload.track.encoded }, player.current.requestedBy.userData);
                         player.playing = false;
                         player.paused = false;
                         this.manager.options.previousInArray
-                            ? player.previous.push(new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded })) : player.previous = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded });
+                            ? player.previous.push(track) : player.previous = track;
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (["loadFailed", "cleanup"].includes(payload.reason)) {
                             if (player.queue.size) {
@@ -206,6 +209,8 @@ class Node {
                         }
                         if (player.autoLeave) {
                             player.destroy();
+                            this.manager.emit("autoLeaved", player, player.current);
+                            this.manager.emit("queueEnd", player, player.current);
                             this.manager.emit("debug", "Moonlink.js > Player " +
                                 player.guildId +
                                 " has been destroyed because of autoLeave.");
@@ -214,6 +219,7 @@ class Node {
                         if (!player.queue.size) {
                             player.current = null;
                             player.queue.clear();
+                            this.manager.emit("queueEnd", player, player.current);
                             this.manager.emit("debug", "Moonlink.js > Player " +
                                 player.guildId +
                                 " has been cleared because of empty queue.");

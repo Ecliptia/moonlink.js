@@ -79,13 +79,12 @@ export const structures: Extendable = {
 
 export abstract class Structure {
   public static manager: Manager;
-  public static setManager(manager: Manager) {
+  public static setManager(manager: Manager): void { 
     this.manager = manager;
   }
   public static getManager(): Manager {
     return this.manager;
   }
-  
   public static get<K extends keyof Extendable>(name: K): Extendable[K] {
     const structure = structures[name];
     if (!structure) {

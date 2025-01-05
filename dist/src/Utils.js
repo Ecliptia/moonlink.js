@@ -53,6 +53,7 @@ exports.sources = {
     local: "local",
 };
 exports.structures = {
+    Database: index_1.Database,
     NodeManager: index_1.NodeManager,
     PlayerManager: index_1.PlayerManager,
     SearchResult: index_1.SearchResult,

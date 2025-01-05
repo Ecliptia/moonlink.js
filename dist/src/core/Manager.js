@@ -10,12 +10,15 @@ class Manager extends node_events_1.EventEmitter {
     nodes;
     players = new (index_1.Structure.get("PlayerManager"))(this);
     version = require("../../index").version;
+    database;
     constructor(config) {
         super();
         this.sendPayload = config?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
+            NodeLinkFeatures: false,
+            previousInArray: false,
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
@@ -31,7 +34,9 @@ class Manager extends node_events_1.EventEmitter {
         this.options.clientId = clientId;
         this.nodes.init();
         this.initialize = true;
+        index_1.Structure.manager = this;
         this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
+        this.database = new (index_1.Structure.get("Database"))(this);
     }
     async search(options) {
         return new Promise(async (resolve) => {

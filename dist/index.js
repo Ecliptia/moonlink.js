@@ -17,6 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.version = void 0;
 exports.version = require("../package.json").version;
 __exportStar(require("./src/core/Manager"), exports);
+__exportStar(require("./src/entities/Database"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/management/PlayerManager"), exports);
 __exportStar(require("./src/structures/SearchResult"), exports);
