@@ -42,6 +42,8 @@ export class Manager extends EventEmitter {
     this.options = {
       clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
       defaultPlatformSearch: "youtube",
+      NodeLinkFeatures: false,
+      previousInArray: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
