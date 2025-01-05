@@ -142,10 +142,13 @@ export class Node {
             );
             break;
           case "TrackEndEvent":
+            if(!player.current) this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has ended the track for reason " + payload.reason + ". But the current track is null. " + player.current?.encoded);
+            let track: Track = new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded ?? payload.track.encoded}, player.current.requestedBy.userData);
             player.playing = false;
             player.paused = false;
+
             this.manager.options.previousInArray
-    ? (player.previous as Track[]).push(new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded})) : player.previous = new (Structure.get("Track"))({...payload.track, encoded: player.current.encoded});
+    ? (player.previous as Track[]).push(track) : player.previous = track
         
             this.manager.emit(
               "trackEnd",

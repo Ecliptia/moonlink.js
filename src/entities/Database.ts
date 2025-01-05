@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-
+import { Structure } from "../../index"
 type Data = Record<string, any>;
 
 export class Database {
@@ -9,6 +9,7 @@ export class Database {
 
     constructor(clientId: string) {
         this.id = clientId;
+
         this.loadData();
     }
 

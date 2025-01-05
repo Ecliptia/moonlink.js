@@ -153,6 +153,7 @@ export class Player {
       data: {
         track: {
           encoded: this.current.encoded,
+          userData: this.current?.requestedBy?.userData
         },
         volume: this.volume,
       },

@@ -11,6 +11,7 @@ import {
 import { TSearchSources } from "../typings/types";
 import {
   Structure,
+  Database,
   NodeManager,
   PlayerManager,
   Player,
@@ -36,6 +37,7 @@ export class Manager extends EventEmitter {
   public nodes: NodeManager;
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
+  public database: Database;
   constructor(config: IConfigManager) {
     super();
     this.sendPayload = config?.sendPayload;
@@ -57,6 +59,7 @@ export class Manager extends EventEmitter {
   public init(clientId: string): void {
     if (this.initialize) return;
     this.options.clientId = clientId;
+    this.database = new (Structure.get("Database"))(clientId);
     this.nodes.init();
     this.initialize = true;
     this.emit(

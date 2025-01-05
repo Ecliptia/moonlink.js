@@ -11,6 +11,7 @@ import {
   PlayerManager,
   NodeManager,
   SearchResult,
+  Database,
 } from "../../index";
 import {
   TLoadResultType,
@@ -282,6 +283,7 @@ export interface LowPass {
 }
 
 export interface Extendable {
+  Database: typeof Database;
   Node: typeof Node;
   Rest: typeof Rest;
   Player: typeof Player;

@@ -1,4 +1,4 @@
-import { Manager, Player, Queue, Node, Rest, Filters, Track, Lyrics, Listen, NodeManager, PlayerManager, SearchResult ,Extendable } from "../index";
+import { Manager, Database, Player, Queue, Node, Rest, Filters, Track, Lyrics, Listen, NodeManager, PlayerManager, SearchResult ,Extendable } from "../index";
 
 export function validateProperty<T>(
   prop: T | undefined,
@@ -63,6 +63,7 @@ export const sources = {
 };
 
 export const structures: Extendable = {
+  Database: Database,
   NodeManager: NodeManager,
   PlayerManager: PlayerManager,
   SearchResult: SearchResult,
