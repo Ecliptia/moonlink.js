@@ -239,6 +239,17 @@ export class Node {
             }
             if (player.autoLeave) {
               player.destroy();
+              this.manager.emit(
+                "autoLeaved",
+                player,
+                player.current,
+              )
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",
@@ -251,6 +262,12 @@ export class Node {
             if (!player.queue.size) {
               player.current = null;
               player.queue.clear();
+              
+              this.manager.emit(
+                "queueEnd",
+                player,
+                player.current
+              )
 
               this.manager.emit(
                 "debug",

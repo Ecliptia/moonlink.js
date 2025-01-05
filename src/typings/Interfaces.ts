@@ -19,6 +19,7 @@ import {
   TTrackEndType,
 } from "./types";
 export interface IEvents {
+  autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
   nodeRaw: (node: INode, player: Player, payload: any) => void;
   nodeCreate: (node: INode) => void;
@@ -58,6 +59,7 @@ export interface IEvents {
   ) => void;
   trackStuck: (player: Player, track: Track, threshold: number) => void;
   trackException: (player: Player, track: Track, exception: any) => void;
+  queueEnd: (player: Player, track?: any) => void;
   socketClosed: (
     player: Player,
     code: number,
