@@ -1,4 +1,3 @@
-import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
 import { Manager, Rest, Structure, Track } from "../../index";
 export class Node {
@@ -49,10 +48,10 @@ export class Node {
       `ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`,
       { headers },
     );
-    this.socket.on("open", this.open.bind(this));
-    this.socket.on("close", this.close.bind(this));
-    this.socket.on("message", this.message.bind(this));
-    this.socket.on("error", this.error.bind(this));
+    this.socket.addEventListener("open", this.open.bind(this), { once: true });
+    this.socket.addEventListener("close", this.close.bind(this), { once: true });
+    this.socket.addEventListener("message", this.message.bind(this));
+    this.socket.addEventListener("error", this.error.bind(this));
     
     this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
     this.manager.emit("nodeCreate", this);
@@ -73,10 +72,9 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
     this.manager.emit("nodeConnected", this);
   }
-  protected close(code: number, reason: string): void {
+  protected close({ code, reason }): void {
     if (this.connected) this.connected = false;
 
-    this.socket.removeAllListeners();
     this.socket.close();
 
     if (this.retryAmount > this.reconnectAttempts) {
@@ -89,11 +87,8 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
     this.manager.emit("nodeDisconnect", this, code, reason);
   }
-  protected async message(data: Buffer): Promise<void> {
-    if (Array.isArray(data)) data = Buffer.concat(data);
-    else if (data instanceof ArrayBuffer) data = Buffer.from(data);
-
-    let payload = JSON.parse(data.toString("utf8"));
+  protected async message({ data }): Promise<void> {
+    let payload = JSON.parse(data);
     switch (payload.op) {
       case "ready":
         this.sessionId = payload.sessionId;
@@ -339,7 +334,7 @@ export class Node {
       }
     }
   }
-  protected error(error: Error): void {
+  protected error({ error }): void {
     this.manager.emit("nodeError", this, error);
   }
   public destroy(): void {
