@@ -1,10 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
-const ws_1 = __importDefault(require("ws"));
 const index_1 = require("../../index");
 class Node {
     manager;
@@ -50,11 +46,11 @@ class Node {
             "User-Id": this.manager.options.clientId,
             "Client-Name": this.manager.options.clientName,
         };
-        this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
-        this.socket.on("open", this.open.bind(this));
-        this.socket.on("close", this.close.bind(this));
-        this.socket.on("message", this.message.bind(this));
-        this.socket.on("error", this.error.bind(this));
+        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
+        this.socket.addEventListener("open", this.open.bind(this), { once: true });
+        this.socket.addEventListener("close", this.close.bind(this), { once: true });
+        this.socket.addEventListener("message", this.message.bind(this));
+        this.socket.addEventListener("error", this.error.bind(this));
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
         this.manager.emit("nodeCreate", this);
     }
@@ -72,10 +68,9 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
         this.manager.emit("nodeConnected", this);
     }
-    close(code, reason) {
+    close({ code, reason }) {
         if (this.connected)
             this.connected = false;
-        this.socket.removeAllListeners();
         this.socket.close();
         if (this.retryAmount > this.reconnectAttempts) {
             this.reconnect();
@@ -87,12 +82,8 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
         this.manager.emit("nodeDisconnect", this, code, reason);
     }
-    async message(data) {
-        if (Array.isArray(data))
-            data = Buffer.concat(data);
-        else if (data instanceof ArrayBuffer)
-            data = Buffer.from(data);
-        let payload = JSON.parse(data.toString("utf8"));
+    async message({ data }) {
+        let payload = JSON.parse(data);
         switch (payload.op) {
             case "ready":
                 this.sessionId = payload.sessionId;
@@ -257,7 +248,7 @@ class Node {
             }
         }
     }
-    error(error) {
+    error({ error }) {
         this.manager.emit("nodeError", this, error);
     }
     destroy() {
