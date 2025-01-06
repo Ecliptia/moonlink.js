@@ -214,26 +214,39 @@ export class Node {
               let res = await this.manager.search({
                 query: uri,
               });
-              if (payload.reason === "stopped") return;
-              if (
+              if (payload.reason === "stopped"){
+                this.manager.emit("debug", "Moonlink.js > Player " +
+                  player.guildId +
+                  " is autoplay payload reason stopped " );
+              }else if (
                 !res ||
                 !res.tracks ||
                 ["loadFailed", "cleanup"].includes(res.loadType)
-              )
-                return;
-              let randomTrack =
-                res.tracks[Math.floor(Math.random() * res.tracks.length)];
-              player.queue.add(randomTrack as Track);
-              player.play();
-
-              this.manager.emit(
-                "debug",
-                "Moonlink.js > Player " +
+              ){
+                this.manager.emit("debug", "Moonlink.js > Player " +
                   player.guildId +
-                  " is autoplaying track " +
-                  randomTrack.title,
-              );
-              return;
+                  " is autoplay payload is error loadType " );
+              }else{
+                let randomTrack =
+                  res.tracks[Math.floor(Math.random() * res.tracks.length)];
+                if (randomTrack){
+                  player.queue.add(randomTrack as Track);
+                  player.play();
+
+                  this.manager.emit(
+                    "debug",
+                    "Moonlink.js > Player " +
+                      player.guildId +
+                      " is autoplaying track " +
+                      randomTrack.title,
+                  );
+                  return;
+                }else{
+                  this.manager.emit("debug", "Moonlink.js > Player " +
+                    player.guildId +
+                    " is autoplay failed " );
+                }
+              }
             }
             if (player.autoLeave) {
               player.destroy();
