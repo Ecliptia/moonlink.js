@@ -46,7 +46,9 @@ class Node {
             "User-Id": this.manager.options.clientId,
             "Client-Name": this.manager.options.clientName,
         };
-        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, { headers });
+        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, {
+            headers,
+        });
         this.socket.addEventListener("open", this.open.bind(this), { once: true });
         this.socket.addEventListener("close", this.close.bind(this), { once: true });
         this.socket.addEventListener("message", this.message.bind(this));
@@ -108,7 +110,18 @@ class Node {
                 player.current.time = payload.state.time;
                 player.ping = payload.state.ping;
                 this.manager.emit("playerUpdate", player, player.current, payload);
-                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has updated the player.");
+                if (!player.get("sendPlayerUpdateDebug")) {
+                    this.manager.emit("debug", "Moonlink.js > Player " +
+                        player.guildId +
+                        " has been updated with position " +
+                        payload.state.position +
+                        " and time " +
+                        payload.state.time +
+                        " and ping " +
+                        payload.state.ping +
+                        "ms.");
+                    player.set("sendPlayerUpdateDebug", true);
+                }
                 break;
             case "event": {
                 let player = this.manager.getPlayer(payload.guildId);
@@ -122,16 +135,24 @@ class Node {
                         this.manager.emit("trackStart", player, player.current);
                         this.manager.emit("debug", "Moonlink.js > Player " +
                             player.guildId +
-                            " has started the track.");
+                            " has started the track: " +
+                            player.current.title);
                         break;
                     case "TrackEndEvent":
                         if (!player.current)
-                            this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has ended the track for reason " + payload.reason + ". But the current track is null. " + player.current?.encoded);
+                            this.manager.emit("debug", "Moonlink.js > Player " +
+                                player.guildId +
+                                " has ended the track for reason " +
+                                payload.reason +
+                                ". But the current track is null. " +
+                                player.current?.encoded);
                         let track = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded ?? payload.track.encoded }, player.current.requestedBy.userData);
                         player.playing = false;
                         player.paused = false;
+                        player.set("sendPlayerUpdateDebug", false);
                         this.manager.options.previousInArray
-                            ? player.previous.push(track) : player.previous = track;
+                            ? player.previous.push(track)
+                            : (player.previous = track);
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (["loadFailed", "cleanup"].includes(payload.reason)) {
                             if (player.queue.size) {
@@ -159,9 +180,7 @@ class Node {
                                     },
                                 },
                             });
-                            this.manager.emit("debug", "Moonlink.js > Player " +
-                                player.guildId +
-                                " is looping the track.");
+                            this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is looping the track.");
                             return;
                         }
                         else if (player.loop === "queue") {
@@ -169,9 +188,7 @@ class Node {
                             player.current.time = 0;
                             player.queue.add(player.current);
                             player.play();
-                            this.manager.emit("debug", "Moonlink.js > Player " +
-                                player.guildId +
-                                " is looping the queue.");
+                            this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is looping the queue.");
                             return;
                         }
                         if (player.queue.size) {
@@ -184,13 +201,9 @@ class Node {
                                 query: uri,
                             });
                             if (payload.reason === "stopped") {
-                                this.manager.emit("debug", "Moonlink.js > Player " +
-                                    player.guildId +
-                                    " is autoplay payload reason stopped ");
+                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay payload reason stopped ");
                             }
-                            else if (!res ||
-                                !res.tracks ||
-                                ["loadFailed", "cleanup"].includes(res.loadType)) {
+                            else if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
                                 this.manager.emit("debug", "Moonlink.js > Player " +
                                     player.guildId +
                                     " is autoplay payload is error loadType ");
@@ -207,9 +220,7 @@ class Node {
                                     return;
                                 }
                                 else {
-                                    this.manager.emit("debug", "Moonlink.js > Player " +
-                                        player.guildId +
-                                        " is autoplay failed ");
+                                    this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay failed ");
                                 }
                             }
                         }
