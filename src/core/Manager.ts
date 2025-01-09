@@ -33,7 +33,6 @@ export declare interface Manager {
 
 export class Manager extends EventEmitter {
   public initialize: boolean = false;
-  public logfile: {path:string, log:boolean} = {path:'', log:false};
   public readonly options: IOptionsManager;
   public readonly sendPayload: Function;
   public nodes: NodeManager;
@@ -48,13 +47,14 @@ export class Manager extends EventEmitter {
       defaultPlatformSearch: "youtube",
       NodeLinkFeatures: false,
       previousInArray: false,
+      logfile: { path: undefined, log: false },
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
 
-    if (config.logfile && typeof config.logfile === "object") {
-      this.logfile = config.logfile as {path:string, log:boolean};
-      if (this.logfile.log) this.on('debug', (message: string) => Log(message, this.logfile.path));
+    if (this.options.logFile?.log) {
+      validateProperty(this.options.logFile?.path, (value) => !value, "Moonlink.js > Options > A path to save the log was not provided")
+      this.on('debug', (message: string) => Log(message, this.logFile.path));
     }
 
     if (this.options.plugins) {
