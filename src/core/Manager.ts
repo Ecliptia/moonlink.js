@@ -184,4 +184,14 @@ export class Manager extends EventEmitter {
 	public getPlayer(guildId: string): Player {
 		return this.players.get(guildId);
 	}
+	public hasPlayer(guildId: string): boolean {
+		return this.players.has(guildId);
+	}
+	public deletePlayer(guildId: string): boolean {
+		this.players.delete(guildId);
+		return true;
+	}
+	public getAllPlayers(): Map<string, Player> {
+		return this.players.cache;
+	}
 }
