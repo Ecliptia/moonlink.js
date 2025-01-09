@@ -19,11 +19,12 @@ class Manager extends node_events_1.EventEmitter {
             defaultPlatformSearch: "youtube",
             NodeLinkFeatures: false,
             previousInArray: false,
+            logFile: { path: undefined, log: false },
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
         if (this.options.plugins) {
-            this.options.plugins.forEach((plugin) => {
+            this.options.plugins.forEach(plugin => {
                 plugin.load(this);
             });
         }
@@ -31,6 +32,11 @@ class Manager extends node_events_1.EventEmitter {
     init(clientId) {
         if (this.initialize)
             return;
+        if (this.options.logFile?.log) {
+            (0, index_1.validateProperty)(this.options.logFile?.path, value => value !== undefined || typeof value !== "string", "Moonlink.js > Options > A path to save the log was not provided");
+            this.on("debug", (message) => (0, index_1.Log)(message, this.options.logFile?.path));
+            console.log("Moonlink.js > Log file enabled");
+        }
         this.options.clientId = clientId;
         this.nodes.init();
         this.initialize = true;
@@ -40,12 +46,12 @@ class Manager extends node_events_1.EventEmitter {
     }
     async search(options) {
         return new Promise(async (resolve) => {
-            (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
-            (0, index_1.validateProperty)(options.query, (value) => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
+            (0, index_1.validateProperty)(options, value => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
+            (0, index_1.validateProperty)(options.query, value => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
             let query = options.query;
             let source = options.source || this.options.defaultPlatformSearch;
             let requester = options.requester || null;
-            if (![...this.nodes.cache.values()].filter((node) => node.connected))
+            if (![...this.nodes.cache.values()].filter(node => node.connected))
                 throw new Error("No available nodes to search from.");
             let node = this.nodes.cache.has(options?.node)
                 ? this.nodes.get(options?.node)

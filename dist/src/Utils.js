@@ -1,9 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Plugin = exports.Structure = exports.structures = exports.sources = void 0;
 exports.validateProperty = validateProperty;
 exports.isVoiceStateAttempt = isVoiceStateAttempt;
+exports.Log = Log;
 exports.makeRequest = makeRequest;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const index_1 = require("../index");
 function validateProperty(prop, validator, errorMessage) {
     if (!validator(prop)) {
@@ -37,6 +43,23 @@ async function isVoiceStateAttempt(player) {
 }
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+function Log(message, LogPath) {
+    const timestamp = new Date().toISOString();
+    const logmessage = `[${timestamp}] ${message}\n`;
+    const logpath = path_1.default.resolve(LogPath);
+    fs_1.default.exists(logpath, (exists) => {
+        if (!exists) {
+            fs_1.default.mkdirSync(path_1.default.dirname(logpath), { recursive: true });
+            fs_1.default.writeFileSync(logpath, '');
+        }
+        try {
+            fs_1.default.appendFileSync(logpath, logmessage);
+        }
+        catch (error) {
+            return false;
+        }
+    });
 }
 function makeRequest(url, options) {
     let request = fetch(url, options)

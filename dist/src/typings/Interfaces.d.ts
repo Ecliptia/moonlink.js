@@ -86,6 +86,10 @@ export interface IOptionsManager {
     noReplace?: boolean;
     NodeLinkFeatures?: boolean;
     previousInArray?: boolean;
+    logFile?: {
+        path: string;
+        log: boolean;
+    };
 }
 export interface IPlayerConfig {
     guildId: string;
