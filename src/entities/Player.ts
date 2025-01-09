@@ -1,6 +1,17 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Filters, Queue, Track, Structure, validateProperty, isVoiceStateAttempt } from "../../index";
+import {
+  Lyrics,
+  Listen,
+  Manager,
+  Node,
+  Filters,
+  Queue,
+  Track,
+  Structure,
+  validateProperty,
+  isVoiceStateAttempt,
+} from "../../index";
 
 export class Player {
   readonly manager: Manager;
@@ -58,7 +69,7 @@ export class Player {
   public setVoiceChannelId(voiceChannelId: string): boolean {
     validateProperty(
       voiceChannelId,
-      (value) => value !== undefined || typeof value !== "string",
+      value => value !== undefined || typeof value !== "string",
       "Moonlink.js > Player#setVoiceChannelId - voiceChannelId not a string"
     );
     let oldVoiceChannelId = String(this.voiceChannelId);
@@ -71,7 +82,7 @@ export class Player {
   public setTextChannelId(textChannelId: string): boolean {
     validateProperty(
       textChannelId,
-      (value) => value !== undefined || typeof value !== "string",
+      value => value !== undefined || typeof value !== "string",
       "Moonlink.js > Player#setTextChannelId - textChannelId not a string"
     );
     let oldTextChannelId = String(this.textChannelId);
@@ -83,7 +94,7 @@ export class Player {
   public setAutoPlay(autoPlay: boolean): boolean {
     validateProperty(
       autoPlay,
-      (value) => value !== undefined || typeof value !== "boolean",
+      value => value !== undefined || typeof value !== "boolean",
       "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean"
     );
 
@@ -95,7 +106,7 @@ export class Player {
   public setAutoLeave(autoLeave: boolean): boolean {
     validateProperty(
       autoLeave,
-      (value) => value !== undefined || typeof value !== "boolean",
+      value => value !== undefined || typeof value !== "boolean",
       "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean"
     );
 
@@ -194,9 +205,7 @@ export class Player {
     return true;
   }
 
-  public stop(options?: {
-    destroy?: boolean;
-  }): boolean {
+  public stop(options?: { destroy?: boolean }): boolean {
     if (!this.playing) return false;
 
     this.node.rest.update({
@@ -208,8 +217,7 @@ export class Player {
       },
     });
 
-    options?.destroy ? this.destroy()
-      : this.queue.clear();
+    options?.destroy ? this.destroy() : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
@@ -230,11 +238,7 @@ export class Player {
 
     validateProperty(
       position,
-      (value) =>
-        value !== undefined ||
-        isNaN(value) ||
-        value < 0 ||
-        value > this.queue.size - 1,
+      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
       "Moonlink.js > Player#skip - position not a number or out of range"
     );
     let oldTrack = { ...this.current };
@@ -259,11 +263,7 @@ export class Player {
   public seek(position: number): boolean {
     validateProperty(
       position,
-      (value) =>
-        value !== undefined ||
-        isNaN(value) ||
-        value < 0 ||
-        value > this.current.duration,
+      value => value !== undefined || isNaN(value) || value < 0 || value > this.current.duration,
       "Moonlink.js > Player#seek - position not a number or out of range"
     );
 
@@ -290,8 +290,7 @@ export class Player {
   public setVolume(volume: number): boolean {
     validateProperty(
       volume,
-      (value) =>
-        value !== undefined || isNaN(value) || value < 0 || value > 100,
+      value => value !== undefined || isNaN(value) || value < 0 || value > 100,
       "Moonlink.js > Player#setVolume - volume not a number or out of range"
     );
     let oldVolume = Number(this.volume);
@@ -312,10 +311,7 @@ export class Player {
     validateProperty(
       loop,
       (value: any) =>
-        value !== undefined ||
-        value !== "off" ||
-        value !== "track" ||
-        value !== "queue",
+        value !== undefined || value !== "off" || value !== "track" || value !== "queue",
       "Moonlink.js > Player#setLoop - loop not a valid value"
     );
     let oldLoop: TPlayerLoop = this.loop;
@@ -327,7 +323,7 @@ export class Player {
 
   public destroy(): boolean {
     if (this.connected) this.disconnect();
-    
+
     this.queue.clear();
     this.manager.players.delete(this.guildId);
     this.manager.emit("playerDestroyed", this);
