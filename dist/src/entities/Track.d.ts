@@ -13,6 +13,8 @@ export declare class Track {
     isrc?: string;
     time?: number;
     sourceName?: string;
-    requestedBy?: Object;
+    requestedBy?: {
+        userData: any;
+    };
     constructor(trackData: ITrack, requester?: Object);
 }

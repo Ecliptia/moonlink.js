@@ -1,6 +1,7 @@
-import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult } from "../../index";
+import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult, Database } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
+    autoLeaved: (player: Player, track: Track) => void;
     debug: (...args: any) => void;
     nodeRaw: (node: INode, player: Player, payload: any) => void;
     nodeCreate: (node: INode) => void;
@@ -35,6 +36,7 @@ export interface IEvents {
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;
     trackException: (player: Player, track: Track, exception: any) => void;
+    queueEnd: (player: Player, track?: any) => void;
     socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
 }
 export interface INode {
@@ -227,6 +229,7 @@ export interface LowPass {
     smoothing?: number;
 }
 export interface Extendable {
+    Database: typeof Database;
     Node: typeof Node;
     Rest: typeof Rest;
     Player: typeof Player;

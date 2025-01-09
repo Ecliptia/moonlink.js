@@ -1,6 +1,7 @@
 export const version: string = require("../package.json").version as string;
 
 export * from "./src/core/Manager";
+export * from "./src/entities/Database";
 export * from "./src/management/NodeManager";
 export * from "./src/management/PlayerManager";
 export * from "./src/structures/SearchResult";

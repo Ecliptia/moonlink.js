@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Manager, Player, Queue, Node, Rest, Filters, Track, Lyrics, Listen, NodeManager, PlayerManager, SearchResult ,Extendable } from "../index";
+import { Manager, Database, Player, Queue, Node, Rest, Filters, Track, Lyrics, Listen, NodeManager, PlayerManager, SearchResult ,Extendable } from "../index";
 
 export function validateProperty<T>(
   prop: T | undefined,
@@ -84,6 +84,7 @@ export const sources = {
 };
 
 export const structures: Extendable = {
+  Database: Database,
   NodeManager: NodeManager,
   PlayerManager: PlayerManager,
   SearchResult: SearchResult,
@@ -99,13 +100,12 @@ export const structures: Extendable = {
 
 export abstract class Structure {
   public static manager: Manager;
-  public static setManager(manager: Manager) {
+  public static setManager(manager: Manager): void { 
     this.manager = manager;
   }
   public static getManager(): Manager {
     return this.manager;
   }
-  
   public static get<K extends keyof Extendable>(name: K): Extendable[K] {
     const structure = structures[name];
     if (!structure) {

@@ -14,9 +14,10 @@ export class Track {
   public isrc?: string;
   public time?: number = 0;
   public sourceName?: string;
-  public requestedBy?: Object = {
-    user_id: null,
+  public requestedBy?: { userData: any } = {
+    userData: null,
   };
+
   constructor(trackData: ITrack, requester?: Object) {
     this.encoded = trackData.encoded;
     this.url = trackData.info.uri;
@@ -31,6 +32,6 @@ export class Track {
     this.isrc = trackData.info.isrc;
     this.sourceName = trackData.info.sourceName;
 
-    if (requester) this.requestedBy = requester;
+    if (requester) this.requestedBy = { userData: requester }
   }
 }

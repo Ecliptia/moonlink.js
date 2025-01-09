@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const index_1 = require("../../index");
 class Database {
     data = {};
     id;
-    constructor(clientId) {
-        this.id = clientId;
+    constructor(manager) {
+        this.id = manager.options.clientId;
+        index_1.Structure.getManager().emit("debug", `Moonlink.js > Database initialized with clientId(${this.id})`);
         this.loadData();
     }
     set(key, value) {
@@ -63,14 +65,13 @@ class Database {
         });
     }
     loadData() {
-        try {
-            const filePath = this.getFilePath();
-            if (fs_1.default.existsSync(filePath)) {
-                this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
-            }
+        const filePath = this.getFilePath();
+        if (fs_1.default.existsSync(filePath)) {
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`);
+            this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
         }
-        catch {
-            this.data = {};
+        else {
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
         }
     }
     saveData() {

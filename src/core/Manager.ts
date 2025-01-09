@@ -12,6 +12,7 @@ import { TSearchSources } from "../typings/types";
 import {
   Log,
   Structure,
+  Database,
   NodeManager,
   PlayerManager,
   Player,
@@ -38,12 +39,15 @@ export class Manager extends EventEmitter {
   public nodes: NodeManager;
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
+  public database: Database;
   constructor(config: IConfigManager) {
     super();
     this.sendPayload = config?.sendPayload;
     this.options = {
       clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
       defaultPlatformSearch: "youtube",
+      NodeLinkFeatures: false,
+      previousInArray: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
@@ -64,10 +68,12 @@ export class Manager extends EventEmitter {
     this.options.clientId = clientId;
     this.nodes.init();
     this.initialize = true;
+    Structure.manager = this;
     this.emit(
       "debug",
       "Moonlink.js > initialized with clientId(" + clientId + ")",
     );
+    this.database = new (Structure.get("Database"))(this);
   }
   public async search(options: {
     query: string;

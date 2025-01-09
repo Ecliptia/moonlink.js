@@ -1,4 +1,3 @@
-import WebSocket from "ws";
 import { INodeStats, INode } from "../typings/Interfaces";
 import { Manager, Rest } from "../../index";
 export declare class Node {
@@ -27,8 +26,15 @@ export declare class Node {
     connect(): void;
     reconnect(): void;
     protected open(): void;
-    protected close(code: number, reason: string): void;
-    protected message(data: Buffer): Promise<void>;
-    protected error(error: Error): void;
+    protected close({ code, reason }: {
+        code: any;
+        reason: any;
+    }): void;
+    protected message({ data }: {
+        data: any;
+    }): Promise<void>;
+    protected error({ error }: {
+        error: any;
+    }): void;
     destroy(): void;
 }

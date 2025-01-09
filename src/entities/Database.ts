@@ -1,14 +1,14 @@
 import fs from "fs";
 import path from "path";
-
+import { Manager, Structure } from "../../index"
 type Data = Record<string, any>;
 
 export class Database {
     private data: Data = {};
     private id: string;
-
-    constructor(clientId: string) {
-        this.id = clientId;
+    constructor(manager: Manager) {
+        this.id = manager.options.clientId;
+        Structure.getManager().emit("debug", `Moonlink.js > Database initialized with clientId(${this.id})`);
         this.loadData();
     }
 
@@ -65,13 +65,13 @@ export class Database {
     }
 
     private loadData(): void {
-        try {
-            const filePath = this.getFilePath();
-            if (fs.existsSync(filePath)) {
-                this.data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-            }
-        } catch {
-            this.data = {};
+
+        const filePath = this.getFilePath();
+        if (fs.existsSync(filePath)) {
+            Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`); 
+            this.data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        } else {
+            Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
         }
     }
 
