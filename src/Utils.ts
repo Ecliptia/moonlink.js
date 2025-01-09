@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Manager, Database, Player, Queue, Node, Rest, Filters, Track, Lyrics, Listen, NodeManager, PlayerManager, SearchResult ,Extendable } from "../index";
 
 export function validateProperty<T>(
@@ -44,6 +46,25 @@ export async function isVoiceStateAttempt(player): Promise<boolean> {
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function Log(message: string, LogPath: string): void {
+  const timestamp = new Date().toISOString();
+  const logmessage = `[${timestamp}] ${message}\n`;
+
+  const logpath = path.resolve(LogPath); 
+
+  fs.exists(logpath, (exists: boolean) => {
+    if (!exists) {
+      fs.mkdirSync(path.dirname(logpath), { recursive: true });  
+      fs.writeFileSync(logpath, ''); 
+    }
+    try {
+      fs.appendFileSync(logpath, logmessage);
+    } catch (error) {
+      return false;
+    }
+  });
 }
 
 export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {

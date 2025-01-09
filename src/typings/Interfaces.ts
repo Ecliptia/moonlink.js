@@ -119,6 +119,7 @@ export interface IOptionsManager {
   noReplace?: boolean;
   NodeLinkFeatures?: boolean;
   previousInArray?: boolean;
+  logFile?: Object
 }
 
 export interface IPlayerConfig {
