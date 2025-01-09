@@ -105,7 +105,6 @@ export interface INodeStats {
 }
 
 export interface IConfigManager {
-  logfile?: object;
   nodes: INode[];
   options: IOptionsManager;
   sendPayload: Function;
@@ -120,6 +119,7 @@ export interface IOptionsManager {
   noReplace?: boolean;
   NodeLinkFeatures?: boolean;
   previousInArray?: boolean;
+  logFile?: Object
 }
 
 export interface IPlayerConfig {
