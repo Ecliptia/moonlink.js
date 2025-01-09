@@ -10,6 +10,7 @@ import {
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import {
+  Log,
   Structure,
   Database,
   NodeManager,
@@ -46,9 +47,15 @@ export class Manager extends EventEmitter {
       defaultPlatformSearch: "youtube",
       NodeLinkFeatures: false,
       previousInArray: false,
+      logfile: { path: undefined, log: false },
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
+
+    if (this.options.logFile?.log) {
+      validateProperty(this.options.logFile?.path, (value) => !value, "Moonlink.js > Options > A path to save the log was not provided")
+      this.on('debug', (message: string) => Log(message, this.logFile.path));
+    }
 
     if (this.options.plugins) {
       this.options.plugins.forEach((plugin) => {
