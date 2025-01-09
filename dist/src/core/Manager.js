@@ -126,6 +126,16 @@ class Manager extends node_events_1.EventEmitter {
     getPlayer(guildId) {
         return this.players.get(guildId);
     }
+    hasPlayer(guildId) {
+        return this.players.has(guildId);
+    }
+    deletePlayer(guildId) {
+        this.players.delete(guildId);
+        return true;
+    }
+    getAllPlayers() {
+        return this.players.cache;
+    }
 }
 exports.Manager = Manager;
 //# sourceMappingURL=Manager.js.map

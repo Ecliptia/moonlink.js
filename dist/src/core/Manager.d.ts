@@ -28,4 +28,7 @@ export declare class Manager extends EventEmitter {
     attemptConnection(guildId: string): Promise<boolean>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;
+    hasPlayer(guildId: string): boolean;
+    deletePlayer(guildId: string): boolean;
+    getAllPlayers(): Map<string, Player>;
 }
