@@ -104,6 +104,7 @@ export interface INodeStats {
 }
 
 export interface IConfigManager {
+  logfile?: object;
   nodes: INode[];
   options: IOptionsManager;
   sendPayload: Function;

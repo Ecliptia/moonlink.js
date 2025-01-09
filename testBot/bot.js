@@ -24,6 +24,10 @@ client.manager = new Manager({
     const guild = client.guilds.cache.get(guildId);
     if (guild) guild.shard.send(JSON.parse(payload));
   },
+  logfile : {
+    log : true,
+    path : "log.log"
+  }
 });
 
 client.manager.on("debug", (message) => console.log("[DEBUG]", message));

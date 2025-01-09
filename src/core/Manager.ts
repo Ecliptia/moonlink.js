@@ -10,6 +10,7 @@ import {
 } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import {
+  Log,
   Structure,
   NodeManager,
   PlayerManager,
@@ -31,6 +32,7 @@ export declare interface Manager {
 
 export class Manager extends EventEmitter {
   public initialize: boolean = false;
+  public logfile: {path:string, log:boolean} = {path:'', log:false};
   public readonly options: IOptionsManager;
   public readonly sendPayload: Function;
   public nodes: NodeManager;
@@ -45,6 +47,11 @@ export class Manager extends EventEmitter {
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
+
+    if (config.logfile && typeof config.logfile === "object") {
+      this.logfile = config.logfile as {path:string, log:boolean};
+      if (this.logfile.log) this.on('debug', (message: string) => Log(message, this.logfile.path));
+    }
 
     if (this.options.plugins) {
       this.options.plugins.forEach((plugin) => {
