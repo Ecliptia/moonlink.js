@@ -114,6 +114,21 @@ class Node {
                 this.version = this.info.version;
                 this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has been ready.`);
                 this.manager.emit("nodeReady", this, payload);
+                if (this.getPlayersCount > 0 && this.manager.options.autoResume) {
+                    this.manager.emit("debug", "Moonlink.js > Node > Auto-resuming " +
+                        this.getPlayersCount +
+                        " players from node " +
+                        this.uuid +
+                        ".");
+                    await this.getPlayers().forEach(player => {
+                        player.restart();
+                    });
+                    this.manager.emit("debug", "Moonlink.js > Node > Auto-resumed " +
+                        this.getPlayersCount +
+                        " players from node " +
+                        this.uuid +
+                        ".");
+                }
                 break;
             case "stats":
                 delete payload.op;
