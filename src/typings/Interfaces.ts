@@ -115,6 +115,7 @@ export interface IOptionsManager {
   NodeLinkFeatures?: boolean;
   previousInArray?: boolean;
   logFile?: { path: string; log: boolean };
+  movePlayersOnReconnect?: boolean;
 }
 
 export interface IPlayerConfig {

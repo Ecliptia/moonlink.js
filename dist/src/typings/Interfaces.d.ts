@@ -91,6 +91,7 @@ export interface IOptionsManager {
         path: string;
         log: boolean;
     };
+    movePlayersOnReconnect?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
