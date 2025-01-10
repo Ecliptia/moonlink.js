@@ -72,7 +72,6 @@ export class NodeManager {
   public add(node: INode): void {
     this.check(node);
     let uuid = generateShortUUID(node.host, node.port);
-    console.log(uuid, node);
     this.cache.set(node.identifier ?? uuid, new (Structure.get("Node"))(this.manager, node));
 
     this.manager.emit("nodeCreate", this.cache.get(node.identifier ?? uuid));
