@@ -14,7 +14,7 @@ class Rest {
             Accept: "application/json",
             "User-Agent": `Moonlink.js/${node.manager.version} (SNOWBALL/11.12.24)`,
             "Content-Type": "application/json",
-            'accept-encoding': 'br, gzip, deflate',
+            "accept-encoding": "br, gzip, deflate",
         };
     }
     async loadTracks(source, query) {
@@ -121,6 +121,13 @@ class Rest {
     async unmarkAllFailedAddresses() {
         return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/all`, {
             method: "POST",
+            headers: this.defaultHeaders,
+        });
+    }
+    async patch(path, data) {
+        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
+            method: "PATCH",
+            body: JSON.stringify(data.data),
             headers: this.defaultHeaders,
         });
     }

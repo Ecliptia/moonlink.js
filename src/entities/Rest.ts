@@ -1,5 +1,10 @@
 import { Node, makeRequest, sources } from "../../index";
-import { IRESTOptions, IRESTLoadTracks, IRESTGetLyrics } from "../typings/Interfaces";
+import {
+  IRESTOptions,
+  IRESTLoadTracks,
+  IRESTGetLyrics,
+  IRESTGetPlayers,
+} from "../typings/Interfaces";
 export class Rest {
   public node: Node;
   public url: string;
@@ -12,26 +17,22 @@ export class Rest {
       Accept: "application/json",
       "User-Agent": `Moonlink.js/${node.manager.version} (SNOWBALL/11.12.24)`,
       "Content-Type": "application/json",
-      'accept-encoding': 'br, gzip, deflate',
+      "accept-encoding": "br, gzip, deflate",
     };
   }
   public async loadTracks(source: string, query: string): Promise<any> {
-    return new Promise(async (resolve) => {
+    return new Promise(async resolve => {
       let identifier: string;
-      if (query.startsWith("http://") || query.startsWith("https://"))
-        identifier = query;
+      if (query.startsWith("http://") || query.startsWith("https://")) identifier = query;
       else identifier = `${sources[source] ?? source}:${query}`;
 
       let params = new URLSearchParams({
         identifier,
       });
-      let request: IRESTLoadTracks = await makeRequest(
-        `${this.url}/loadtracks?${params}`,
-        {
-          method: "GET",
-          headers: this.defaultHeaders,
-        },
-      );
+      let request: IRESTLoadTracks = await makeRequest(`${this.url}/loadtracks?${params}`, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
       return resolve(request);
     });
   }
@@ -42,7 +43,7 @@ export class Rest {
         method: "PATCH",
         body: JSON.stringify(data.data) as any,
         headers: this.defaultHeaders,
-      },
+      }
     );
 
     return request;
@@ -53,7 +54,7 @@ export class Rest {
       {
         method: "DELETE",
         headers: this.defaultHeaders,
-      },
+      }
     );
 
     return request;
@@ -102,7 +103,7 @@ export class Rest {
       headers: this.defaultHeaders,
     });
   }
-  public async getPlayers(sessionId: string): Promise<any> {
+  public async getPlayers(sessionId: string): Promise<IRESTGetPlayers> {
     return makeRequest(`${this.url}/sessions/${sessionId}/players`, {
       method: "GET",
       headers: this.defaultHeaders,
@@ -133,5 +134,11 @@ export class Rest {
       headers: this.defaultHeaders,
     });
   }
+  public async patch(path: string, data: any): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "PATCH",
+      body: JSON.stringify(data.data),
+      headers: this.defaultHeaders,
+    });
+  }
 }
-
