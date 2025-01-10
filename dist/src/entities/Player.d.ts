@@ -44,7 +44,7 @@ export declare class Player {
         endTime?: number;
     }): Promise<boolean>;
     replay(): boolean;
-    restart(): boolean;
+    restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
     pause(): boolean;
     resume(): boolean;

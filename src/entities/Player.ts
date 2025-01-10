@@ -118,7 +118,7 @@ export class Player {
   }
 
   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
-    this.voiceState = {};
+    this.voiceState.attempt = false;
     this.manager.sendPayload(
       this.guildId,
       JSON.stringify({
@@ -202,10 +202,10 @@ export class Player {
     return true;
   }
 
-  public restart(): boolean {
+  public async restart(): Promise<boolean> {
     if (!this.playing || this.queue.size) return false;
 
-    this.connect({ setMute: false, setDeaf: false });
+    await this.connect({ setMute: false, setDeaf: false });
 
     if (this.current)
       this.play({

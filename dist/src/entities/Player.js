@@ -78,7 +78,7 @@ class Player {
         return true;
     }
     connect(options) {
-        this.voiceState = {};
+        this.voiceState.attempt = false;
         this.manager.sendPayload(this.guildId, JSON.stringify({
             op: 4,
             d: {
@@ -140,10 +140,10 @@ class Player {
         });
         return true;
     }
-    restart() {
+    async restart() {
         if (!this.playing || this.queue.size)
             return false;
-        this.connect({ setMute: false, setDeaf: false });
+        await this.connect({ setMute: false, setDeaf: false });
         if (this.current)
             this.play({
                 encoded: this.current.encoded,
