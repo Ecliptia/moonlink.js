@@ -17,25 +17,25 @@ class Database {
     }
     set(key, value) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         this.modifyData(key, value);
         this.saveData();
     }
     get(key) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
     }
     push(key, value) {
         const arr = this.get(key) || [];
         if (!Array.isArray(arr))
-            throw new Error('Key does not point to an array');
+            throw new Error("Key does not point to an array");
         arr.push(value);
         this.set(key, arr);
     }
     delete(key) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         const keys = key.split(".");
         const lastKey = keys.pop();
         let current = this.data;
@@ -85,7 +85,7 @@ class Database {
         }
     }
     getFilePath() {
-        return path_1.default.resolve(__dirname, "../Datastore", `data.${this.id}.json`);
+        return path_1.default.resolve(__dirname, "../datastore", `data.${this.id}.json`);
     }
 }
 exports.Database = Database;
