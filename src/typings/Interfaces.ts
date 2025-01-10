@@ -25,6 +25,7 @@ export interface IEvents {
   nodeReconnect: (node: INode) => void;
   nodeDisconnect: (node: INode, code: number, reason: string) => void;
   nodeDestroy: (identifier: string) => void;
+  nodeAutoResumed: (node: INode, players: Player[]) => void;
   playerCreate: (player: Player) => void;
   playerUpdate: (player: Player, track: Track, payload: any) => void;
   playerDestroy: (player: Player) => void;
@@ -116,6 +117,7 @@ export interface IOptionsManager {
   previousInArray?: boolean;
   logFile?: { path: string; log: boolean };
   movePlayersOnReconnect?: boolean;
+  autoResume?: boolean;
 }
 
 export interface IPlayerConfig {
