@@ -118,6 +118,7 @@ export interface IOptionsManager {
   logFile?: { path: string; log: boolean };
   movePlayersOnReconnect?: boolean;
   autoResume?: boolean;
+  resume?: boolean;
 }
 
 export interface IPlayerConfig {
@@ -294,4 +295,14 @@ export interface Extendable {
   PlayerManager: typeof PlayerManager;
   NodeManager: typeof NodeManager;
   SearchResult: typeof SearchResult;
+}
+
+export interface IRESTGetPlayers {
+  guildId: string;
+  track: ITrack;
+  volume: number;
+  paused: boolean;
+  state: Object;
+  voice: IVoiceState;
+  filters: Object;
 }

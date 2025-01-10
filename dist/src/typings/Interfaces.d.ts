@@ -11,6 +11,7 @@ export interface IEvents {
     nodeReconnect: (node: INode) => void;
     nodeDisconnect: (node: INode, code: number, reason: string) => void;
     nodeDestroy: (identifier: string) => void;
+    nodeAutoResumed: (node: INode, players: Player[]) => void;
     playerCreate: (player: Player) => void;
     playerUpdate: (player: Player, track: Track, payload: any) => void;
     playerDestroy: (player: Player) => void;
@@ -93,6 +94,7 @@ export interface IOptionsManager {
     };
     movePlayersOnReconnect?: boolean;
     autoResume?: boolean;
+    resume?: boolean;
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -248,4 +250,13 @@ export interface Extendable {
     PlayerManager: typeof PlayerManager;
     NodeManager: typeof NodeManager;
     SearchResult: typeof SearchResult;
+}
+export interface IRESTGetPlayers {
+    guildId: string;
+    track: ITrack;
+    volume: number;
+    paused: boolean;
+    state: Object;
+    voice: IVoiceState;
+    filters: Object;
 }
