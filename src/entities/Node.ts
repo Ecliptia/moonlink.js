@@ -32,7 +32,7 @@ export class Node {
   public rest: Rest;
   constructor(manager: Manager, config: INode) {
     this.manager = manager;
-    this.uuid = generateShortUUID(this.host, this.port, this.identifier);
+    this.uuid = generateShortUUID(config.host, config.port);
     this.host = config.host;
     this.port = config.port;
     this.identifier = config.identifier;
@@ -99,7 +99,6 @@ export class Node {
       this.socket = null;
       this.destroyed = true;
     }
-    this.players.forEach(player => player.destroy());
     this.manager.emit(
       "debug",
       `Moonlink.js > Node (${
@@ -185,10 +184,9 @@ export class Node {
                   player.current?.encoded
               );
             let track: Track = new (Structure.get("Track"))(
-              { ...payload.track, encoded: player.current.encoded ?? payload.track.encoded },
+              { ...payload.track },
               player.current.requestedBy
             );
-            console.log(decodeTrack(track.encoded));
             player.playing = false;
             player.paused = false;
             player.set("sendPlayerUpdateDebug", false);
@@ -368,13 +366,14 @@ export class Node {
   protected error({ error }): void {
     this.manager.emit("nodeError", this, error);
   }
-  public get players(): Player[] {
-    return Object.values(this.manager.players.cache).filter(
-      player => player.node.uuid === this.uuid
-    );
-  }
   public destroy(): void {
     this.socket.close();
     this.destroyed = true;
+  }
+  public getPlayers() {
+    return this.manager.players.all.filter(player => player.node.uuid === this.uuid);
+  }
+  public getPlayersCount() {
+    return this.getPlayers().length;
   }
 }

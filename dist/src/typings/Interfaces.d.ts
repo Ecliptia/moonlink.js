@@ -14,6 +14,7 @@ export interface IEvents {
     playerCreate: (player: Player) => void;
     playerUpdate: (player: Player, track: Track, payload: any) => void;
     playerDestroy: (player: Player) => void;
+    playerSwitchedNode: (player: Player, oldNode: Node, newNode: Node) => void;
     playerTriggeredPlay: (player: Player, track: Track) => void;
     playerTriggeredPause: (player: Player) => void;
     playerTriggeredResume: (player: Player) => void;
