@@ -76,6 +76,33 @@ export class Node {
       this.connect();
     }, this.retryDelay);
 
+    if (this.getPlayersCount > 0 && this.manager.options.movePlayersOnReconnect) {
+      let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players");
+      if (!node) {
+        this.manager.emit("debug", "Moonlink.js > Node > Wait node is avaliable.");
+      } else {
+        this.manager.emit(
+          "debug",
+          "Moonlink.js > Node > Moving " +
+            this.getPlayersCount +
+            "players from node " +
+            this.uuid +
+            " to node " +
+            node.uuid +
+            "."
+        );
+        this.getPlayers().forEach(player => {
+          player.transferNode(node);
+        });
+      }
+    }
+
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Node (${
+        this.identifier ? this.identifier : this.address
+      }) is attempting to reconnect.`
+    );
     this.manager.emit("nodeReconnect", this);
   }
   protected open(): void {
@@ -373,7 +400,7 @@ export class Node {
   public getPlayers() {
     return this.manager.players.all.filter(player => player.node.uuid === this.uuid);
   }
-  public getPlayersCount() {
+  public get getPlayersCount() {
     return this.getPlayers().length;
   }
 }

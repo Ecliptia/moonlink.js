@@ -39,5 +39,5 @@ export declare class Node {
     }): void;
     destroy(): void;
     getPlayers(): Player[];
-    getPlayersCount(): number;
+    get getPlayersCount(): number;
 }
