@@ -9,3 +9,4 @@ export declare class PlayerManager {
     get(guildId: string): Player;
     delete(guildId: string): Promise<void>;
 }
+export declare function isVoiceStateAttempt(player: any): Promise<boolean>;
