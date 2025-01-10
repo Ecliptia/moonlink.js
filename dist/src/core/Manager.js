@@ -35,7 +35,6 @@ class Manager extends node_events_1.EventEmitter {
         if (this.options.logFile?.log) {
             (0, index_1.validateProperty)(this.options.logFile?.path, value => value !== undefined || typeof value !== "string", "Moonlink.js > Options > A path to save the log was not provided");
             this.on("debug", (message) => (0, index_1.Log)(message, this.options.logFile?.path));
-            console.log("Moonlink.js > Log file enabled");
         }
         this.options.clientId = clientId;
         this.nodes.init();

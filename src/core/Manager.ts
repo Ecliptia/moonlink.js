@@ -64,7 +64,6 @@ export class Manager extends EventEmitter {
         "Moonlink.js > Options > A path to save the log was not provided"
       );
       this.on("debug", (message: string) => Log(message, this.options.logFile?.path));
-      console.log("Moonlink.js > Log file enabled");
     }
     this.options.clientId = clientId;
     this.nodes.init();
