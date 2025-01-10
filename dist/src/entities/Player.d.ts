@@ -35,7 +35,16 @@ export declare class Player {
         setDeaf?: boolean;
     }): boolean;
     disconnect(): boolean;
-    play(): Promise<boolean>;
+    play(options?: {
+        encoded?: string;
+        requestedBy?: {
+            userData: any;
+        };
+        position?: number;
+        endTime?: number;
+    }): Promise<boolean>;
+    replay(): boolean;
+    restart(): boolean;
     pause(): boolean;
     resume(): boolean;
     stop(options?: {

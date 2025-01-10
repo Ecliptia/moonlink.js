@@ -11,7 +11,9 @@ import {
   Structure,
   validateProperty,
   isVoiceStateAttempt,
+  decodeTrack,
 } from "../../index";
+import { request } from "node:http";
 
 export class Player {
   readonly manager: Manager;
@@ -153,25 +155,60 @@ export class Player {
     return true;
   }
 
-  public async play(): Promise<boolean> {
-    if (!this.queue.size) return false;
+  public async play(
+    options: {
+      encoded?: string;
+      requestedBy?: { userData: any };
+      position?: number;
+      endTime?: number;
+    } = {}
+  ): Promise<boolean> {
+    if (!options.encoded || !this.queue.size) return false;
     await isVoiceStateAttempt(this);
 
-    this.current = this.queue.shift();
+    if (options.encoded) {
+      let decodedTrack = decodeTrack(options.encoded);
+      this.current = new Track(decodedTrack, options.requestedBy ?? undefined);
+    } else {
+      this.current = this.queue.shift();
+    }
 
     this.node.rest.update({
       guildId: this.guildId,
       data: {
         track: {
           encoded: this.current.encoded,
-          userData: this.current?.requestedBy?.userData ?? undefined,
+          userData:
+            options.requestedBy?.userData ?? this.current?.requestedBy?.userData ?? undefined,
         },
+        endTime: options.endTime ?? undefined,
         volume: this.volume,
       },
     });
 
     this.playing = true;
     this.manager.emit("playerTriggeredPlay", this, this.current);
+    return true;
+  }
+
+  public replay(): boolean {
+    this.play({
+      encoded: this.current.encoded,
+      requestedBy: this.current.requestedBy,
+      position: 0,
+    });
+
+    return true;
+  }
+
+  public restart(): boolean {
+    if (!this.playing) return false;
+    this.play({
+      encoded: this.current.encoded,
+      requestedBy: this.current.requestedBy,
+      position: this.current.position,
+    });
+
     return true;
   }
 
