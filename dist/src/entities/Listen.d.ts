@@ -1,6 +1,5 @@
-import { Player } from './Player';
-import { EventEmitter } from 'events';
-import WebSocket from 'ws';
+import { Player } from "./Player";
+import { EventEmitter } from "events";
 export declare class Listen {
     player: Player;
     voiceReceiverWs: WebSocket;
