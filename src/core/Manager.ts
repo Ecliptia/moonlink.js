@@ -66,12 +66,12 @@ export class Manager extends EventEmitter {
       );
       this.on("debug", (message: string) => Log(message, this.options.logFile?.path));
     }
+    Structure.manager = this;
     this.options.clientId = clientId;
+    this.database = new (Structure.get("Database"))(this);
     this.nodes.init();
     this.initialize = true;
-    Structure.manager = this;
     this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
-    this.database = new (Structure.get("Database"))(this);
   }
   public async search(options: {
     query: string;

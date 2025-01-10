@@ -37,12 +37,12 @@ class Manager extends node_events_1.EventEmitter {
             (0, index_1.validateProperty)(this.options.logFile?.path, value => value !== undefined || typeof value !== "string", "Moonlink.js > Options > A path to save the log was not provided");
             this.on("debug", (message) => (0, index_1.Log)(message, this.options.logFile?.path));
         }
+        index_1.Structure.manager = this;
         this.options.clientId = clientId;
+        this.database = new (index_1.Structure.get("Database"))(this);
         this.nodes.init();
         this.initialize = true;
-        index_1.Structure.manager = this;
         this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
-        this.database = new (index_1.Structure.get("Database"))(this);
     }
     async search(options) {
         return new Promise(async (resolve) => {
