@@ -32,6 +32,7 @@ client.manager = new Manager({
     },
     movePlayersOnReconnect: true,
     autoResume: true,
+    resume: true,
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
