@@ -51,13 +51,15 @@ export class Player {
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
-    this.queue = new (Structure.get("Queue"))();
+    this.queue = new (Structure.get("Queue"))(this);
     this.node = this.manager.nodes.get(config.node);
     this.filters = new (Structure.get("Filters"))(this);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new (Structure.get("Listen"))(this);
       this.lyrics = new (Structure.get("Lyrics"))(this);
     }
+
+    this.manager.database.set(`players.${this.guildId}`, config);
   }
 
   public set(key: string, data: unknown): void {
@@ -102,6 +104,7 @@ export class Player {
 
     this.autoPlay = autoPlay;
     this.manager.emit("playerAutoPlaySet", this, autoPlay);
+    this.manager.database.set(`players.${this.guildId}.autoPlay`, autoPlay);
     return true;
   }
 
@@ -114,6 +117,7 @@ export class Player {
 
     this.autoLeave = autoLeave;
     this.manager.emit("playerAutoLeaveSet", this, autoLeave);
+    this.manager.database.set(`players.${this.guildId}.autoLeave`, autoLeave);
     return true;
   }
 
@@ -173,6 +177,12 @@ export class Player {
     } else {
       this.current = this.queue.shift();
     }
+
+    this.manager.database.set(`players.${this.guildId}.current`, {
+      encoded: this.current.encoded,
+      position: options.position ?? 0,
+      requestedBy: this.current.requestedBy,
+    });
 
     this.node.rest.update({
       guildId: this.guildId,
@@ -247,6 +257,7 @@ export class Player {
 
     this.paused = true;
     this.manager.emit("playerTriggeredPause", this);
+    this.manager.database.set(`players.${this.guildId}.paused`, true);
     return true;
   }
 
@@ -262,6 +273,7 @@ export class Player {
 
     this.paused = false;
     this.manager.emit("playerTriggeredResume", this);
+    this.manager.database.set(`players.${this.guildId}.paused`, false);
     return true;
   }
 
@@ -306,6 +318,12 @@ export class Player {
       this.current = this.queue.get(position);
       this.queue.remove(position);
 
+      this.manager.database.set(`players.${this.guildId}.current`, {
+        encoded: this.current.encoded,
+        position: 0,
+        requestedBy: this.current.requestedBy,
+      });
+
       this.node.rest.update({
         guildId: this.guildId,
         data: {
@@ -335,6 +353,7 @@ export class Player {
     });
 
     this.manager.emit("playerTriggeredSeek", this, position);
+    this.manager.database.set(`players.${this.guildId}.current.position`, position);
     return true;
   }
 
@@ -364,6 +383,7 @@ export class Player {
     });
 
     this.manager.emit("playerChangedVolume", this, oldVolume, volume);
+    this.manager.database.set(`players.${this.guildId}.volume`, volume);
     return true;
   }
 
@@ -378,6 +398,7 @@ export class Player {
 
     this.loop = loop;
     this.manager.emit("playerChangedLoop", this, oldLoop, loop);
+    this.manager.database.set(`players.${this.guildId}.loop`, loop);
     return true;
   }
 

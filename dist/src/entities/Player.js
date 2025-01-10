@@ -37,13 +37,14 @@ class Player {
         this.loop = config.loop || "off";
         this.autoPlay = config.autoPlay || false;
         this.autoLeave = config.autoLeave || false;
-        this.queue = new (index_1.Structure.get("Queue"))();
+        this.queue = new (index_1.Structure.get("Queue"))(this);
         this.node = this.manager.nodes.get(config.node);
         this.filters = new (index_1.Structure.get("Filters"))(this);
         if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
             this.listen = new (index_1.Structure.get("Listen"))(this);
             this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
         }
+        this.manager.database.set(`players.${this.guildId}`, config);
     }
     set(key, data) {
         this.data[key] = data;
@@ -69,12 +70,14 @@ class Player {
         (0, index_1.validateProperty)(autoPlay, value => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean");
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
+        this.manager.database.set(`players.${this.guildId}.autoPlay`, autoPlay);
         return true;
     }
     setAutoLeave(autoLeave) {
         (0, index_1.validateProperty)(autoLeave, value => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean");
         this.autoLeave = autoLeave;
         this.manager.emit("playerAutoLeaveSet", this, autoLeave);
+        this.manager.database.set(`players.${this.guildId}.autoLeave`, autoLeave);
         return true;
     }
     connect(options) {
@@ -117,6 +120,11 @@ class Player {
         else {
             this.current = this.queue.shift();
         }
+        this.manager.database.set(`players.${this.guildId}.current`, {
+            encoded: this.current.encoded,
+            position: options.position ?? 0,
+            requestedBy: this.current.requestedBy,
+        });
         this.node.rest.update({
             guildId: this.guildId,
             data: {
@@ -183,6 +191,7 @@ class Player {
         });
         this.paused = true;
         this.manager.emit("playerTriggeredPause", this);
+        this.manager.database.set(`players.${this.guildId}.paused`, true);
         return true;
     }
     resume() {
@@ -196,6 +205,7 @@ class Player {
         });
         this.paused = false;
         this.manager.emit("playerTriggeredResume", this);
+        this.manager.database.set(`players.${this.guildId}.paused`, false);
         return true;
     }
     stop(options) {
@@ -232,6 +242,11 @@ class Player {
         if (position) {
             this.current = this.queue.get(position);
             this.queue.remove(position);
+            this.manager.database.set(`players.${this.guildId}.current`, {
+                encoded: this.current.encoded,
+                position: 0,
+                requestedBy: this.current.requestedBy,
+            });
             this.node.rest.update({
                 guildId: this.guildId,
                 data: {
@@ -255,6 +270,7 @@ class Player {
             },
         });
         this.manager.emit("playerTriggeredSeek", this, position);
+        this.manager.database.set(`players.${this.guildId}.current.position`, position);
         return true;
     }
     shuffle() {
@@ -276,6 +292,7 @@ class Player {
             },
         });
         this.manager.emit("playerChangedVolume", this, oldVolume, volume);
+        this.manager.database.set(`players.${this.guildId}.volume`, volume);
         return true;
     }
     setLoop(loop) {
@@ -283,6 +300,7 @@ class Player {
         let oldLoop = this.loop;
         this.loop = loop;
         this.manager.emit("playerChangedLoop", this, oldLoop, loop);
+        this.manager.database.set(`players.${this.guildId}.loop`, loop);
         return true;
     }
     destroy() {
