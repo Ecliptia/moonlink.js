@@ -118,6 +118,7 @@ export class Player {
   }
 
   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
+    this.voiceState = {};
     this.manager.sendPayload(
       this.guildId,
       JSON.stringify({
@@ -163,7 +164,7 @@ export class Player {
       endTime?: number;
     } = {}
   ): Promise<boolean> {
-    if (!options.encoded || !this.queue.size) return false;
+    if (!options.encoded && !this.queue.size) return false;
     await isVoiceStateAttempt(this);
 
     if (options.encoded) {
@@ -202,16 +203,37 @@ export class Player {
   }
 
   public restart(): boolean {
-    if (!this.playing) return false;
-    this.play({
-      encoded: this.current.encoded,
-      requestedBy: this.current.requestedBy,
-      position: this.current.position,
-    });
+    if (!this.playing || this.queue.size) return false;
 
+    this.connect({ setMute: false, setDeaf: false });
+
+    if (this.current)
+      this.play({
+        encoded: this.current.encoded,
+        requestedBy: this.current.requestedBy,
+        position: this.current.position,
+      });
+    else this.play();
     return true;
   }
-
+  public async transferNode(node: Node | string): Promise<boolean> {
+    validateProperty(
+      node,
+      value => value !== undefined || value instanceof Node || typeof value === "string",
+      "Moonlink.js > Player#switch - node not a valid node"
+    );
+    if (typeof node === "string") node = this.manager.nodes.get(node);
+    if (!node) return false;
+    if (this.current || this.queue.size) {
+      this.restart();
+    } else {
+      this.connect({ setMute: false, setDeaf: false });
+    }
+    let oldNode = this.node.uuid;
+    this.node = node;
+    this.manager.emit("playerSwitchedNode", this, this.manager.nodes.get(oldNode), node);
+    return true;
+  }
   public pause(): boolean {
     if (this.paused) return true;
 

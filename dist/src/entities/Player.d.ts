@@ -45,6 +45,7 @@ export declare class Player {
     }): Promise<boolean>;
     replay(): boolean;
     restart(): boolean;
+    transferNode(node: Node | string): Promise<boolean>;
     pause(): boolean;
     resume(): boolean;
     stop(options?: {
