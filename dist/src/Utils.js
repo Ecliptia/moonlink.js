@@ -127,8 +127,8 @@ function encodeTrack(track) {
     write("long", track.position);
     return Buffer.concat(bufferArray).toString("base64");
 }
-function generateShortUUID(host, port, identifier = "") {
-    const data = `${host}:${port}:${identifier}`;
+function generateShortUUID(host, port) {
+    const data = `${host}:${port}`;
     const hash = (0, crypto_1.createHash)("sha256").update(data).digest("hex");
     return parseInt(hash.slice(0, 8), 16).toString(36).padEnd(8, "0");
 }
