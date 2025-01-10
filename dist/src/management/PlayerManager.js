@@ -41,6 +41,8 @@ class PlayerManager {
             return;
         await this.get(guildId).node.rest.destroy(guildId);
         this.cache.delete(guildId);
+        this.manager.database.delete(`players.${guildId}`);
+        this.manager.database.delete(`queues.${guildId}`);
         this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " + guildId + " has been deleted");
     }
     get all() {
