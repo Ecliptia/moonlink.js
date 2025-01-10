@@ -182,6 +182,7 @@ export class Player {
           userData:
             options.requestedBy?.userData ?? this.current?.requestedBy?.userData ?? undefined,
         },
+        position: options.position ?? 0,
         endTime: options.endTime ?? undefined,
         volume: this.volume,
       },
