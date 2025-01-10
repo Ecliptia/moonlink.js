@@ -45,6 +45,7 @@ export class Manager extends EventEmitter {
       NodeLinkFeatures: false,
       previousInArray: false,
       logFile: { path: undefined, log: false },
+      movePlayersOnReconnect: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);

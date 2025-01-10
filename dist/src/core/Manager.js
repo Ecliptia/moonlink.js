@@ -20,6 +20,7 @@ class Manager extends node_events_1.EventEmitter {
             NodeLinkFeatures: false,
             previousInArray: false,
             logFile: { path: undefined, log: false },
+            movePlayersOnReconnect: false,
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
