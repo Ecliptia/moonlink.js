@@ -4,6 +4,7 @@ exports.Node = void 0;
 const index_1 = require("../../index");
 class Node {
     manager;
+    uuid;
     host;
     port;
     identifier;
@@ -25,6 +26,7 @@ class Node {
     rest;
     constructor(manager, config) {
         this.manager = manager;
+        this.uuid = (0, index_1.generateShortUUID)(this.host, this.port, this.identifier);
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;
@@ -81,6 +83,7 @@ class Node {
             this.socket = null;
             this.destroyed = true;
         }
+        this.players.forEach(player => player.destroy());
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
         this.manager.emit("nodeDisconnect", this, code, reason);
     }
@@ -146,7 +149,8 @@ class Node {
                                 payload.reason +
                                 ". But the current track is null. " +
                                 player.current?.encoded);
-                        let track = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded ?? payload.track.encoded }, player.current.requestedBy.userData);
+                        let track = new (index_1.Structure.get("Track"))({ ...payload.track, encoded: player.current.encoded ?? payload.track.encoded }, player.current.requestedBy);
+                        console.log((0, index_1.decodeTrack)(track.encoded));
                         player.playing = false;
                         player.paused = false;
                         player.set("sendPlayerUpdateDebug", false);
@@ -276,6 +280,9 @@ class Node {
     }
     error({ error }) {
         this.manager.emit("nodeError", this, error);
+    }
+    get players() {
+        return Object.values(this.manager.players.cache).filter(player => player.node.uuid === this.uuid);
     }
     destroy() {
         this.socket.close();

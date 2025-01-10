@@ -1,7 +1,8 @@
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Rest } from "../../index";
+import { Manager, Player, Rest } from "../../index";
 export declare class Node {
     readonly manager: Manager;
+    readonly uuid: string;
     host: string;
     port: number;
     identifier: string;
@@ -36,5 +37,6 @@ export declare class Node {
     protected error({ error }: {
         error: any;
     }): void;
+    get players(): Player[];
     destroy(): void;
 }
