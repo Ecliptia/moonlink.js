@@ -15,6 +15,8 @@ class Node {
     reconnectAttempts = 0;
     retryAmount;
     retryDelay = 60000;
+    resumed = false;
+    resumeTimeout = 60000;
     regions;
     secure;
     sessionId;
@@ -43,10 +45,12 @@ class Node {
         return `${this.host}:${this.port}`;
     }
     connect() {
+        let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.options.clientId,
             "Client-Name": this.manager.options.clientName,
+            "Session-Id": sessionId || undefined,
         };
         this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, {
             headers,
@@ -112,6 +116,17 @@ class Node {
                 this.sessionId = payload.sessionId;
                 this.info = await this.rest.getInfo();
                 this.version = this.info.version;
+                this.resumed = payload.resumed;
+                this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+                if (this.manager.options.resume) {
+                    this.rest.patch(`sessions/${this.sessionId}`, {
+                        data: {
+                            resuming: this.manager.options.resume,
+                            timeout: this.resumeTimeout,
+                        },
+                    });
+                    this.manager.emit("debug", "Moonlink.js > Node > Resuming node " + this.uuid + ".");
+                }
                 this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has been ready.`);
                 this.manager.emit("nodeReady", this, payload);
                 if (this.getPlayersCount > 0 && this.manager.options.autoResume) {
@@ -128,6 +143,35 @@ class Node {
                         " players from node " +
                         this.uuid +
                         ".");
+                    this.manager.emit("nodeAutoResumed", this, this.getPlayers());
+                }
+                if (this.manager.options.resume && this.resumed) {
+                    let players = await this.rest.getPlayers(this.sessionId);
+                    players.forEach(async (player) => {
+                        let guildId = player.guildId;
+                        let storage = this.manager.database.get(`players.${guildId}`);
+                        let queue = this.manager.database.get(`queues.${guildId}`);
+                        let current = storage.current;
+                        if (!storage)
+                            return;
+                        let reconstructedPlayer = this.manager.createPlayer({
+                            ...storage,
+                            node: this.uuid,
+                        });
+                        await reconstructedPlayer.connect({
+                            setDeaf: false,
+                            setMute: false,
+                        });
+                        reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
+                        if (queue?.tracks) {
+                            let tracks = queue.tracks.map(track => new index_1.Track((0, index_1.decodeTrack)(track)));
+                            this.manager.database.delete(`queues.${guildId}`);
+                            for (let track of tracks) {
+                                reconstructedPlayer.queue.add(track);
+                            }
+                        }
+                        this.manager.emit("debug", "Moonlink.js > Player " + guildId + " has been resumed on node " + this.uuid + ".");
+                    });
                 }
                 break;
             case "stats":
