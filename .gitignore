@@ -8,3 +8,4 @@ package-lock.json
 desktop.ini
 docs/
 moonlink.log
+dist/src/datastore
