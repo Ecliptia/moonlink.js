@@ -23,7 +23,7 @@ class PlayerManager {
             let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players");
             if (!node)
                 throw new Error("(Moonlink.js) - Player > No available nodes");
-            config.node = node.identifier ?? node.host;
+            config.node = node.identifier ?? node.uuid;
         }
         const player = new (index_1.Structure.get("Player"))(this.manager, config);
         this.cache.set(config.guildId, player);
@@ -43,29 +43,40 @@ class PlayerManager {
         this.cache.delete(guildId);
         this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " + guildId + " has been deleted");
     }
+    get all() {
+        return [...this.cache.values()];
+    }
 }
 exports.PlayerManager = PlayerManager;
 async function isVoiceStateAttempt(player) {
     const voiceState = await player.node.rest.getPlayer(player.node.sessionId, player.guildId).voice;
-    if (!player.voiceState && player.voiceChannelId && player.guildId && !player.connected) {
-        await player.connect();
-        player.manager.emit("debug", `Moonlink.js > Attempting to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}`);
-        await (0, index_1.delay)(2000);
-        if (!player.voiceState.attempt) {
-            player.manager.emit("debug", `Moonlink.js > Failed to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}. Check if the packetUpdate function is getting data from Discord client side.`);
-            return false;
+    const logDebug = (message) => player.manager.emit("debug", `Moonlink.js > ${message}`);
+    const ensureConnection = async () => {
+        if (!player.voiceState?.attempt &&
+            player.voiceChannelId &&
+            player.guildId &&
+            !player.connected) {
+            logDebug(`Attempting to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}`);
+            await player.connect();
+            await (0, index_1.delay)(2000);
         }
-    }
-    if (!player.voiceState.attempt && player.connected) {
-        player.manager.emit("debug", `Moonlink.js > Waiting for voice state update for guild ${player.guildId}`);
-        await (0, index_1.delay)(2000);
-        if (!player.voiceState.attempt) {
-            player.manager.emit("debug", `Moonlink.js > Failed to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}. Check if the packetUpdate function is getting data from Discord client side.`);
-            return false;
+        return player.voiceState?.attempt;
+    };
+    const verifyUpdate = async () => {
+        if (!player.voiceState?.attempt && player.connected) {
+            logDebug(`Waiting for voice state update for guild ${player.guildId}`);
+            await (0, index_1.delay)(2000);
         }
+        return player.voiceState?.attempt;
+    };
+    const validateSession = () => voiceState?.sessionId === player.voiceState?.session_id;
+    const isConnected = await ensureConnection();
+    if (!isConnected && !(await verifyUpdate())) {
+        logDebug(`Failed to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}. Check if the packetUpdate function is getting data from Discord client side.`);
+        return false;
     }
-    if (player.voiceState.attempt && voiceState?.sessionId === player.voiceState.session_id) {
-        player.manager.emit("debug", `Moonlink.js > The voice state update for guild ${player.guildId} has been received`);
+    if (validateSession()) {
+        logDebug(`The voice state update for guild ${player.guildId} has been received`);
         return true;
     }
     return false;
