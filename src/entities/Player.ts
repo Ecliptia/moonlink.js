@@ -1,6 +1,19 @@
 import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
-import { Lyrics, Listen, Manager, Node, Filters, Queue, Track, Structure, validateProperty, isVoiceStateAttempt } from "../../index";
+import {
+  Lyrics,
+  Listen,
+  Manager,
+  Node,
+  Filters,
+  Queue,
+  Track,
+  Structure,
+  validateProperty,
+  isVoiceStateAttempt,
+  decodeTrack,
+} from "../../index";
+import { request } from "node:http";
 
 export class Player {
   readonly manager: Manager;
@@ -38,13 +51,15 @@ export class Player {
     this.loop = config.loop || "off";
     this.autoPlay = config.autoPlay || false;
     this.autoLeave = config.autoLeave || false;
-    this.queue = new (Structure.get("Queue"))();
+    this.queue = new (Structure.get("Queue"))(this);
     this.node = this.manager.nodes.get(config.node);
     this.filters = new (Structure.get("Filters"))(this);
     if (manager.options.NodeLinkFeatures || this.node.info.isNodeLink) {
       this.listen = new (Structure.get("Listen"))(this);
       this.lyrics = new (Structure.get("Lyrics"))(this);
     }
+
+    this.manager.database.set(`players.${this.guildId}`, config);
   }
 
   public set(key: string, data: unknown): void {
@@ -58,7 +73,7 @@ export class Player {
   public setVoiceChannelId(voiceChannelId: string): boolean {
     validateProperty(
       voiceChannelId,
-      (value) => value !== undefined || typeof value !== "string",
+      value => value !== undefined || typeof value !== "string",
       "Moonlink.js > Player#setVoiceChannelId - voiceChannelId not a string"
     );
     let oldVoiceChannelId = String(this.voiceChannelId);
@@ -71,7 +86,7 @@ export class Player {
   public setTextChannelId(textChannelId: string): boolean {
     validateProperty(
       textChannelId,
-      (value) => value !== undefined || typeof value !== "string",
+      value => value !== undefined || typeof value !== "string",
       "Moonlink.js > Player#setTextChannelId - textChannelId not a string"
     );
     let oldTextChannelId = String(this.textChannelId);
@@ -83,28 +98,31 @@ export class Player {
   public setAutoPlay(autoPlay: boolean): boolean {
     validateProperty(
       autoPlay,
-      (value) => value !== undefined || typeof value !== "boolean",
+      value => value !== undefined || typeof value !== "boolean",
       "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean"
     );
 
     this.autoPlay = autoPlay;
     this.manager.emit("playerAutoPlaySet", this, autoPlay);
+    this.manager.database.set(`players.${this.guildId}.autoPlay`, autoPlay);
     return true;
   }
 
   public setAutoLeave(autoLeave: boolean): boolean {
     validateProperty(
       autoLeave,
-      (value) => value !== undefined || typeof value !== "boolean",
+      value => value !== undefined || typeof value !== "boolean",
       "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean"
     );
 
     this.autoLeave = autoLeave;
     this.manager.emit("playerAutoLeaveSet", this, autoLeave);
+    this.manager.database.set(`players.${this.guildId}.autoLeave`, autoLeave);
     return true;
   }
 
   public connect(options: { setMute?: boolean; setDeaf?: boolean }): boolean {
+    this.voiceState.attempt = false;
     this.manager.sendPayload(
       this.guildId,
       JSON.stringify({
@@ -142,18 +160,40 @@ export class Player {
     return true;
   }
 
-  public async play(): Promise<boolean> {
-    if (!this.queue.size) return false;
+  public async play(
+    options: {
+      encoded?: string;
+      requestedBy?: { userData: any };
+      position?: number;
+      endTime?: number;
+    } = {}
+  ): Promise<boolean> {
+    if (!options.encoded && !this.queue.size) return false;
     await isVoiceStateAttempt(this);
 
-    this.current = this.queue.shift();
+    if (options.encoded) {
+      let decodedTrack = decodeTrack(options.encoded);
+      this.current = new Track(decodedTrack, options.requestedBy ?? undefined);
+    } else {
+      this.current = this.queue.shift();
+    }
+
+    this.manager.database.set(`players.${this.guildId}.current`, {
+      encoded: this.current.encoded,
+      position: options.position ?? 0,
+      requestedBy: this.current.requestedBy,
+    });
 
     this.node.rest.update({
       guildId: this.guildId,
       data: {
         track: {
           encoded: this.current.encoded,
+          userData:
+            options.requestedBy?.userData ?? this.current?.requestedBy?.userData ?? undefined,
         },
+        position: options.position ?? 0,
+        endTime: options.endTime ?? undefined,
         volume: this.volume,
       },
     });
@@ -163,6 +203,48 @@ export class Player {
     return true;
   }
 
+  public replay(): boolean {
+    this.play({
+      encoded: this.current.encoded,
+      requestedBy: this.current.requestedBy,
+      position: 0,
+    });
+
+    return true;
+  }
+
+  public async restart(): Promise<boolean> {
+    if (!this.playing || this.queue.size) return false;
+
+    await this.connect({ setMute: false, setDeaf: false });
+
+    if (this.current)
+      this.play({
+        encoded: this.current.encoded,
+        requestedBy: this.current.requestedBy,
+        position: this.current.position,
+      });
+    else this.play();
+    return true;
+  }
+  public async transferNode(node: Node | string): Promise<boolean> {
+    validateProperty(
+      node,
+      value => value !== undefined || value instanceof Node || typeof value === "string",
+      "Moonlink.js > Player#switch - node not a valid node"
+    );
+    if (typeof node === "string") node = this.manager.nodes.get(node);
+    if (!node) return false;
+    if (this.current || this.queue.size) {
+      this.restart();
+    } else {
+      this.connect({ setMute: false, setDeaf: false });
+    }
+    let oldNode = this.node.uuid;
+    this.node = node;
+    this.manager.emit("playerSwitchedNode", this, this.manager.nodes.get(oldNode), node);
+    return true;
+  }
   public pause(): boolean {
     if (this.paused) return true;
 
@@ -175,6 +257,7 @@ export class Player {
 
     this.paused = true;
     this.manager.emit("playerTriggeredPause", this);
+    this.manager.database.set(`players.${this.guildId}.paused`, true);
     return true;
   }
 
@@ -190,12 +273,11 @@ export class Player {
 
     this.paused = false;
     this.manager.emit("playerTriggeredResume", this);
+    this.manager.database.set(`players.${this.guildId}.paused`, false);
     return true;
   }
 
-  public stop(options?: {
-    destroy?: boolean;
-  }): boolean {
+  public stop(options?: { destroy?: boolean }): boolean {
     if (!this.playing) return false;
 
     this.node.rest.update({
@@ -207,8 +289,7 @@ export class Player {
       },
     });
 
-    options?.destroy ? this.destroy()
-      : this.queue.clear();
+    options?.destroy ? this.destroy() : this.queue.clear();
 
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
@@ -229,17 +310,19 @@ export class Player {
 
     validateProperty(
       position,
-      (value) =>
-        value !== undefined ||
-        isNaN(value) ||
-        value < 0 ||
-        value > this.queue.size - 1,
+      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
       "Moonlink.js > Player#skip - position not a number or out of range"
     );
     let oldTrack = { ...this.current };
     if (position) {
       this.current = this.queue.get(position);
       this.queue.remove(position);
+
+      this.manager.database.set(`players.${this.guildId}.current`, {
+        encoded: this.current.encoded,
+        position: 0,
+        requestedBy: this.current.requestedBy,
+      });
 
       this.node.rest.update({
         guildId: this.guildId,
@@ -258,11 +341,7 @@ export class Player {
   public seek(position: number): boolean {
     validateProperty(
       position,
-      (value) =>
-        value !== undefined ||
-        isNaN(value) ||
-        value < 0 ||
-        value > this.current.duration,
+      value => value !== undefined || isNaN(value) || value < 0 || value > this.current.duration,
       "Moonlink.js > Player#seek - position not a number or out of range"
     );
 
@@ -274,6 +353,7 @@ export class Player {
     });
 
     this.manager.emit("playerTriggeredSeek", this, position);
+    this.manager.database.set(`players.${this.guildId}.current.position`, position);
     return true;
   }
 
@@ -289,8 +369,7 @@ export class Player {
   public setVolume(volume: number): boolean {
     validateProperty(
       volume,
-      (value) =>
-        value !== undefined || isNaN(value) || value < 0 || value > 100,
+      value => value !== undefined || isNaN(value) || value < 0 || value > 100,
       "Moonlink.js > Player#setVolume - volume not a number or out of range"
     );
     let oldVolume = Number(this.volume);
@@ -304,6 +383,7 @@ export class Player {
     });
 
     this.manager.emit("playerChangedVolume", this, oldVolume, volume);
+    this.manager.database.set(`players.${this.guildId}.volume`, volume);
     return true;
   }
 
@@ -311,22 +391,20 @@ export class Player {
     validateProperty(
       loop,
       (value: any) =>
-        value !== undefined ||
-        value !== "off" ||
-        value !== "track" ||
-        value !== "queue",
+        value !== undefined || value !== "off" || value !== "track" || value !== "queue",
       "Moonlink.js > Player#setLoop - loop not a valid value"
     );
     let oldLoop: TPlayerLoop = this.loop;
 
     this.loop = loop;
     this.manager.emit("playerChangedLoop", this, oldLoop, loop);
+    this.manager.database.set(`players.${this.guildId}.loop`, loop);
     return true;
   }
 
   public destroy(): boolean {
     if (this.connected) this.disconnect();
-    
+
     this.queue.clear();
     this.manager.players.delete(this.guildId);
     this.manager.emit("playerDestroyed", this);

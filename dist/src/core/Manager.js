@@ -10,17 +10,22 @@ class Manager extends node_events_1.EventEmitter {
     nodes;
     players = new (index_1.Structure.get("PlayerManager"))(this);
     version = require("../../index").version;
+    database;
     constructor(config) {
         super();
         this.sendPayload = config?.sendPayload;
         this.options = {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
+            NodeLinkFeatures: false,
+            previousInArray: false,
+            logFile: { path: undefined, log: false },
+            movePlayersOnReconnect: false,
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
         if (this.options.plugins) {
-            this.options.plugins.forEach((plugin) => {
+            this.options.plugins.forEach(plugin => {
                 plugin.load(this);
             });
         }
@@ -28,19 +33,25 @@ class Manager extends node_events_1.EventEmitter {
     init(clientId) {
         if (this.initialize)
             return;
+        if (this.options.logFile?.log) {
+            (0, index_1.validateProperty)(this.options.logFile?.path, value => value !== undefined || typeof value !== "string", "Moonlink.js > Options > A path to save the log was not provided");
+            this.on("debug", (message) => (0, index_1.Log)(message, this.options.logFile?.path));
+        }
+        index_1.Structure.manager = this;
         this.options.clientId = clientId;
+        this.database = new (index_1.Structure.get("Database"))(this);
         this.nodes.init();
         this.initialize = true;
         this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
     }
     async search(options) {
         return new Promise(async (resolve) => {
-            (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
-            (0, index_1.validateProperty)(options.query, (value) => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
+            (0, index_1.validateProperty)(options, value => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
+            (0, index_1.validateProperty)(options.query, value => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
             let query = options.query;
             let source = options.source || this.options.defaultPlatformSearch;
             let requester = options.requester || null;
-            if (![...this.nodes.cache.values()].filter((node) => node.connected))
+            if (![...this.nodes.cache.values()].filter(node => node.connected))
                 throw new Error("No available nodes to search from.");
             let node = this.nodes.cache.has(options?.node)
                 ? this.nodes.get(options?.node)
@@ -114,6 +125,16 @@ class Manager extends node_events_1.EventEmitter {
     }
     getPlayer(guildId) {
         return this.players.get(guildId);
+    }
+    hasPlayer(guildId) {
+        return this.players.has(guildId);
+    }
+    deletePlayer(guildId) {
+        this.players.delete(guildId);
+        return true;
+    }
+    getAllPlayers() {
+        return this.players.cache;
     }
 }
 exports.Manager = Manager;

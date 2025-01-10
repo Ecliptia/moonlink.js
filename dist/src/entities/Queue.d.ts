@@ -1,5 +1,8 @@
-import { Track } from "../../index";
+import { Database, Player, Track } from "../../index";
 export declare class Queue {
+    database: Database;
+    guildId: string;
+    constructor(player: Player);
     tracks: Track[];
     add(track: Track): boolean;
     get(position: number): Track;

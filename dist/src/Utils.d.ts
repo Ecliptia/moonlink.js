@@ -1,6 +1,10 @@
-import { Manager, Extendable } from "../index";
+import { Manager, Extendable, ITrack, ITrackInfo } from "../index";
 export declare function validateProperty<T>(prop: T | undefined, validator: (value: T) => boolean, errorMessage: string): void;
-export declare function isVoiceStateAttempt(player: any): Promise<boolean>;
+export declare function delay(ms: number): Promise<void>;
+export declare function decodeTrack(encoded: string): ITrack;
+export declare function encodeTrack(track: ITrackInfo): string;
+export declare function generateShortUUID(host: string, port: number): string;
+export declare function Log(message: string, LogPath: string): void;
 export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
 export declare const sources: {
     youtube: string;

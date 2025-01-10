@@ -1,27 +1,26 @@
 {
-  "compilerOptions": {
-    "lib": ["ESNext"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ESNext",
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "package.json": ["./package.json"]
-    },
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "declaration": true,
-    "alwaysStrict": true,
-    "resolveJsonModule": true,
-    "removeComments": true,
-    "forceConsistentCasingInFileNames": true,
-    "sourceMap": true
-  },
-  "include": ["src",
-    "index.ts"]
+	"compilerOptions": {
+		"lib": ["ESNext"],
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "ESNext",
+		"outDir": "./dist",
+		"baseUrl": ".",
+		"paths": {
+			"package.json": ["./package.json"]
+		},
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
+		"declaration": true,
+		"alwaysStrict": true,
+		"resolveJsonModule": true,
+		"removeComments": true,
+		"forceConsistentCasingInFileNames": true,
+		"sourceMap": true
+	},
+	"include": ["src", "index.ts"]
 }

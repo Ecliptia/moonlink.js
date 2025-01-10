@@ -6,34 +6,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const index_1 = require("../../index");
 class Database {
     data = {};
     id;
-    constructor(clientId) {
-        this.id = clientId;
+    constructor(manager) {
+        this.id = manager.options.clientId;
+        index_1.Structure.getManager().emit("debug", `Moonlink.js > Database initialized with clientId(${this.id})`);
         this.loadData();
     }
     set(key, value) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         this.modifyData(key, value);
         this.saveData();
     }
     get(key) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
     }
     push(key, value) {
         const arr = this.get(key) || [];
         if (!Array.isArray(arr))
-            throw new Error('Key does not point to an array');
+            throw new Error("Key does not point to an array");
         arr.push(value);
         this.set(key, arr);
     }
     delete(key) {
         if (!key)
-            throw new Error('Key cannot be empty');
+            throw new Error("Key cannot be empty");
         const keys = key.split(".");
         const lastKey = keys.pop();
         let current = this.data;
@@ -63,14 +65,13 @@ class Database {
         });
     }
     loadData() {
-        try {
-            const filePath = this.getFilePath();
-            if (fs_1.default.existsSync(filePath)) {
-                this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
-            }
+        const filePath = this.getFilePath();
+        if (fs_1.default.existsSync(filePath)) {
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`);
+            this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
         }
-        catch {
-            this.data = {};
+        else {
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
         }
     }
     saveData() {
@@ -84,7 +85,7 @@ class Database {
         }
     }
     getFilePath() {
-        return path_1.default.resolve(__dirname, "../Datastore", `data.${this.id}.json`);
+        return path_1.default.resolve(__dirname, "../datastore", `data.${this.id}.json`);
     }
 }
 exports.Database = Database;

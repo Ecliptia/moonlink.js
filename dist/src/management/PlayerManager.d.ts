@@ -8,4 +8,6 @@ export declare class PlayerManager {
     has(guildId: string): boolean;
     get(guildId: string): Player;
     delete(guildId: string): Promise<void>;
+    get all(): Player[];
 }
+export declare function isVoiceStateAttempt(player: any): Promise<boolean>;

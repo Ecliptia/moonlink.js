@@ -1,6 +1,6 @@
 {
   "name": "moonlink.js",
-  "version": "4.2.2",
+  "version": "4.4.4",
   "description": "Imagine a Music... 🌙✨ Welcome to Moonlink.js! We invite you to create your own music bot on Discord using Lavalink, in a simple and easy way! 🎶🤖",
   "keywords": [
     "bot",
@@ -40,13 +40,10 @@
     "url": "https://github.com/Ecliptia/moonlink.js"
   },
   "engines": {
-    "node": ">=20.x.x"
-  },
-  "dependencies": {
-    "ws": "^8.18.0"
+    "node": ">=22.x.x"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^22.10.5",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5"
   }

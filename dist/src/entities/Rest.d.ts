@@ -1,5 +1,5 @@
 import { Node } from "../../index";
-import { IRESTOptions, IRESTGetLyrics } from "../typings/Interfaces";
+import { IRESTOptions, IRESTGetLyrics, IRESTGetPlayers } from "../typings/Interfaces";
 export declare class Rest {
     node: Node;
     url: string;
@@ -17,9 +17,10 @@ export declare class Rest {
     updateSession(sessionId: string, data: any): Promise<any>;
     decodeTrack(encodedTrack: string): Promise<any>;
     decodeTracks(encodedTracks: string[]): Promise<any>;
-    getPlayers(sessionId: string): Promise<any>;
+    getPlayers(sessionId: string): Promise<IRESTGetPlayers>;
     getPlayer(sessionId: string, guildId: string): Promise<any>;
     getRoutePlannerStatus(): Promise<any>;
     unmarkFailedAddress(address: string): Promise<any>;
     unmarkAllFailedAddresses(): Promise<any>;
+    patch(path: string, data: any): Promise<unknown>;
 }

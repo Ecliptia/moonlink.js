@@ -11,13 +11,9 @@ import {
   PlayerManager,
   NodeManager,
   SearchResult,
+  Database,
 } from "../../index";
-import {
-  TLoadResultType,
-  TPlayerLoop,
-  TSortTypeNode,
-  TTrackEndType,
-} from "./types";
+import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
 export interface IEvents {
   autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
@@ -29,16 +25,27 @@ export interface IEvents {
   nodeReconnect: (node: INode) => void;
   nodeDisconnect: (node: INode, code: number, reason: string) => void;
   nodeDestroy: (identifier: string) => void;
+  nodeAutoResumed: (node: INode, players: Player[]) => void;
   playerCreate: (player: Player) => void;
   playerUpdate: (player: Player, track: Track, payload: any) => void;
   playerDestroy: (player: Player) => void;
+  playerSwitchedNode: (player: Player, oldNode: Node, newNode: Node) => void;
   playerTriggeredPlay: (player: Player, track: Track) => void;
   playerTriggeredPause: (player: Player) => void;
   playerTriggeredResume: (player: Player) => void;
   playerTriggeredStop: (player: Player) => void;
-  playerTriggeredSkip: (player: Player, oldTrack: Record<string, any>, currentTrack: Track, postion: number) => void;
+  playerTriggeredSkip: (
+    player: Player,
+    oldTrack: Record<string, any>,
+    currentTrack: Track,
+    postion: number
+  ) => void;
   playerTriggeredSeek: (player: Player, position: number) => void;
-  playerTriggeredShuffle: (player: Player, oldQueue: Record<string, any>, currentQueue: Track[]) => void;
+  playerTriggeredShuffle: (
+    player: Player,
+    oldQueue: Record<string, any>,
+    currentQueue: Track[]
+  ) => void;
   playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
   playerChangedLoop: (player: Player, oldLoop: TPlayerLoop, loop: TPlayerLoop) => void;
   playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
@@ -51,21 +58,11 @@ export interface IEvents {
   playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
   playerDestroyed: (player: Player) => void;
   trackStart: (player: Player, track: Track) => void;
-  trackEnd: (
-    player: Player,
-    track: Track,
-    type: TTrackEndType,
-    payload?: any,
-  ) => void;
+  trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
   trackStuck: (player: Player, track: Track, threshold: number) => void;
   trackException: (player: Player, track: Track, exception: any) => void;
   queueEnd: (player: Player, track?: any) => void;
-  socketClosed: (
-    player: Player,
-    code: number,
-    reason: string,
-    byRemote: boolean,
-  ) => void;
+  socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
 }
 
 export interface INode {
@@ -118,6 +115,10 @@ export interface IOptionsManager {
   noReplace?: boolean;
   NodeLinkFeatures?: boolean;
   previousInArray?: boolean;
+  logFile?: { path: string; log: boolean };
+  movePlayersOnReconnect?: boolean;
+  autoResume?: boolean;
+  resume?: boolean;
 }
 
 export interface IPlayerConfig {
@@ -171,7 +172,7 @@ export interface IRESTGetLyrics {
       text: string;
     }[];
     rtl: boolean;
-  }
+  };
 }
 
 export interface ILoadResultData {
@@ -225,7 +226,7 @@ export interface ISearchResult {
   exception?: {
     message: string;
     severity: string;
-  }
+  };
 }
 export interface Equalizer {
   band: number;
@@ -282,6 +283,7 @@ export interface LowPass {
 }
 
 export interface Extendable {
+  Database: typeof Database;
   Node: typeof Node;
   Rest: typeof Rest;
   Player: typeof Player;
@@ -293,4 +295,14 @@ export interface Extendable {
   PlayerManager: typeof PlayerManager;
   NodeManager: typeof NodeManager;
   SearchResult: typeof SearchResult;
+}
+
+export interface IRESTGetPlayers {
+  guildId: string;
+  track: ITrack;
+  volume: number;
+  paused: boolean;
+  state: Object;
+  voice: IVoiceState;
+  filters: Object;
 }
