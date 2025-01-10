@@ -37,6 +37,7 @@ export declare class Node {
     protected error({ error }: {
         error: any;
     }): void;
-    get players(): Player[];
     destroy(): void;
+    getPlayers(): Player[];
+    getPlayersCount(): number;
 }
