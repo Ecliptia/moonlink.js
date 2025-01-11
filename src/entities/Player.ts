@@ -178,6 +178,15 @@ export class Player {
       this.current = this.queue.shift();
     }
 
+    if (
+      typeof options.requestedBy.userData == "string" ||
+      typeof this.current.requestedBy.userData == "string"
+    ) {
+      options.requestedBy.userData = {
+        id: options.requestedBy.userData ?? this.current.requestedBy.userData,
+      };
+    }
+
     this.manager.database.set(`players.${this.guildId}.current`, {
       encoded: this.current.encoded,
       position: options.position ?? 0,
