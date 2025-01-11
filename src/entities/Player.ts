@@ -183,7 +183,7 @@ export class Player {
       typeof this.current.requestedBy?.userData == "string"
     ) {
       options.requestedBy = {
-        id: options.requestedBy as string ?? this.current?.requestedBy.userData as string,
+        id: (options.requestedBy as string) ?? (this.current?.requestedBy.userData as string),
       };
     }
 
@@ -198,8 +198,7 @@ export class Player {
       data: {
         track: {
           encoded: this.current.encoded,
-          userData:
-            options.requestedBy ?? this.current?.requestedBy ?? undefined,
+          userData: options.requestedBy ?? this.current?.requestedBy ?? undefined,
         },
         position: options.position ?? 0,
         endTime: options.endTime ?? undefined,
@@ -223,7 +222,7 @@ export class Player {
   }
 
   public async restart(): Promise<boolean> {
-    if (!this.playing || this.queue.size) return false;
+    if (!this.current && this.queue.size) return false;
 
     await this.connect({ setMute: false, setDeaf: false });
 
