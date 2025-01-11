@@ -142,6 +142,7 @@ class Node {
                         this.uuid +
                         ".");
                     await this.getPlayers().forEach(player => {
+                        player.playing = true;
                         player.restart();
                     });
                     this.manager.emit("debug", "Moonlink.js > Node > Auto-resumed " +

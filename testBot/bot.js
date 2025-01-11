@@ -20,7 +20,7 @@ client.manager = new Manager({
       secure: false,
       port: 3010,
       password: "pwd",
-    }
+    },
   ],
   options: {
     clientName: "TRISTAR/1.1",
@@ -30,6 +30,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
+    autoResume: true,
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
@@ -75,5 +76,9 @@ client.once("ready", () => {
 client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
-console.log(decodeTrack("QAAAAAMAHyhGUkVFKSBSJkIgdHlwZSBCZWF0IC0gIlNoaXZlciIADUN5Y2xvcGUgQmVhdHoAAAAAAAKrmAALZDE5aWVhR2ttdUkAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kMTlpZWFHa211SQEAMGh0dHBzOi8vaS55dGltZy5jb20vdmkvZDE5aWVhR2ttdUkvbXFkZWZhdWx0LmpwZwAAB3lvdXR1YmUAAAAAAAAAAA=="))
+console.log(
+  decodeTrack(
+    "QAAAAAMAHyhGUkVFKSBSJkIgdHlwZSBCZWF0IC0gIlNoaXZlciIADUN5Y2xvcGUgQmVhdHoAAAAAAAKrmAALZDE5aWVhR2ttdUkAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kMTlpZWFHa211SQEAMGh0dHBzOi8vaS55dGltZy5jb20vdmkvZDE5aWVhR2ttdUkvbXFkZWZhdWx0LmpwZwAAB3lvdXR1YmUAAAAAAAAAAA=="
+  )
+);
 client.login(process.env.TOKEN).catch(console.error);
