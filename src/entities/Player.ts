@@ -163,7 +163,7 @@ export class Player {
   public async play(
     options: {
       encoded?: string;
-      requestedBy?: { userData: any };
+      requestedBy?: string | { id?: any; userData?: any };
       position?: number;
       endTime?: number;
     } = {}
@@ -179,11 +179,11 @@ export class Player {
     }
 
     if (
-      typeof options.requestedBy.userData == "string" ||
-      typeof this.current.requestedBy.userData == "string"
+      typeof options.requestedBy == "string" ||
+      typeof this.current.requestedBy?.userData == "string"
     ) {
-      options.requestedBy.userData = {
-        id: options.requestedBy.userData ?? this.current.requestedBy.userData,
+      options.requestedBy = {
+        id: options.requestedBy as string ?? this.current?.requestedBy.userData as string,
       };
     }
 
@@ -199,7 +199,7 @@ export class Player {
         track: {
           encoded: this.current.encoded,
           userData:
-            options.requestedBy?.userData ?? this.current?.requestedBy?.userData ?? undefined,
+            options.requestedBy ?? this.current?.requestedBy ?? undefined,
         },
         position: options.position ?? 0,
         endTime: options.endTime ?? undefined,

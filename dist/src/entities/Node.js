@@ -68,6 +68,11 @@ class Node {
             this.reconnectAttempts++;
             this.connect();
         }, this.retryDelay);
+        if (this.getPlayersCount > 0) {
+            this.getPlayers().forEach(player => {
+                player.playing = false;
+            });
+        }
         if (this.getPlayersCount > 0 && this.manager.options.movePlayersOnReconnect) {
             let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players");
             if (!node) {

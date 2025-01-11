@@ -120,10 +120,10 @@ class Player {
         else {
             this.current = this.queue.shift();
         }
-        if (typeof options.requestedBy.userData == "string" ||
-            typeof this.current.requestedBy.userData == "string") {
-            options.requestedBy.userData = {
-                id: options.requestedBy.userData ?? this.current.requestedBy.userData,
+        if (typeof options.requestedBy == "string" ||
+            typeof this.current.requestedBy?.userData == "string") {
+            options.requestedBy = {
+                id: options.requestedBy ?? this.current?.requestedBy.userData,
             };
         }
         this.manager.database.set(`players.${this.guildId}.current`, {
@@ -136,7 +136,7 @@ class Player {
             data: {
                 track: {
                     encoded: this.current.encoded,
-                    userData: options.requestedBy?.userData ?? this.current?.requestedBy?.userData ?? undefined,
+                    userData: options.requestedBy ?? this.current?.requestedBy ?? undefined,
                 },
                 position: options.position ?? 0,
                 endTime: options.endTime ?? undefined,

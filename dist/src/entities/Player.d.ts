@@ -37,8 +37,9 @@ export declare class Player {
     disconnect(): boolean;
     play(options?: {
         encoded?: string;
-        requestedBy?: {
-            userData: any;
+        requestedBy?: string | {
+            id?: any;
+            userData?: any;
         };
         position?: number;
         endTime?: number;
