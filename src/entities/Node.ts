@@ -80,6 +80,12 @@ export class Node {
       this.connect();
     }, this.retryDelay);
 
+    if (this.getPlayersCount > 0) {
+      this.getPlayers().forEach(player => {
+        player.playing = false;
+      });
+    }
+
     if (this.getPlayersCount > 0 && this.manager.options.movePlayersOnReconnect) {
       let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players");
       if (!node) {
@@ -136,6 +142,7 @@ export class Node {
         this.identifier ? this.identifier : this.address
       }) has disconnected with code ${code} and reason ${reason}.`
     );
+
     this.manager.emit("nodeDisconnect", this, code, reason);
   }
   protected async message({ data }): Promise<void> {
