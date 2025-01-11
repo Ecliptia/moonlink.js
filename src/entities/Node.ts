@@ -181,6 +181,7 @@ export class Node {
           );
 
           await this.getPlayers().forEach(player => {
+            player.playing = true;
             player.restart();
           });
 
