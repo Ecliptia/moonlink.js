@@ -30,9 +30,6 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    movePlayersOnReconnect: true,
-    autoResume: true,
-    resume: true,
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
