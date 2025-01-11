@@ -156,7 +156,7 @@ class Player {
         return true;
     }
     async restart() {
-        if (!this.playing || this.queue.size)
+        if (!this.current && this.queue.size)
             return false;
         await this.connect({ setMute: false, setDeaf: false });
         if (this.current)
