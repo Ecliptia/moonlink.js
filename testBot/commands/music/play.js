@@ -18,7 +18,7 @@ module.exports = {
       const searchResult = await client.manager.search({ query: args.join(" ") });
       if (!searchResult.tracks.length) return message.reply("No results found.");
   
-      player.queue.add(searchResult.tracks[0]);
+      player.queue.add(searchResult.tracks[0], message.author.id);
       if (!player.playing) player.play();
       await message.reply(`Playing track: ${searchResult.tracks[0].title}`);
     },
