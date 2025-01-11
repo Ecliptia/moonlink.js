@@ -50,8 +50,9 @@ class Node {
             Authorization: this.password,
             "User-Id": this.manager.options.clientId,
             "Client-Name": this.manager.options.clientName,
-            "Session-Id": sessionId || undefined,
         };
+        if (this.manager.options.resume)
+            headers["Session-Id"] = sessionId;
         this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, {
             headers,
         });
