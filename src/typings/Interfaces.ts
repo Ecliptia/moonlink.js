@@ -73,9 +73,10 @@ export interface INode {
   password?: string;
   retryDelay?: number;
   retryAmount?: number;
-  regions?: String[];
+  regions?: string[];
   secure?: boolean;
   sessionId?: string;
+  pathVersion?: string;
 }
 
 export interface INodeStats {
@@ -117,6 +118,7 @@ export interface IOptionsManager {
   previousInArray?: boolean;
   logFile?: { path: string; log: boolean };
   movePlayersOnReconnect?: boolean;
+  sortPlayersByRegion?: boolean;
   autoResume?: boolean;
   resume?: boolean;
 }
