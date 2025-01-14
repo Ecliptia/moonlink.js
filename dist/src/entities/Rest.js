@@ -8,7 +8,7 @@ class Rest {
     defaultHeaders;
     constructor(node) {
         this.node = node;
-        this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/v4`;
+        this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/${this.node.pathVersion}`;
         this.defaultHeaders = {
             Authorization: this.node.password,
             Accept: "application/json",

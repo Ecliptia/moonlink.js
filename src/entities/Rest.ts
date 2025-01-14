@@ -11,7 +11,7 @@ export class Rest {
   public defaultHeaders: Record<string, string>;
   constructor(node: Node) {
     this.node = node;
-    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/v4`;
+    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/${this.node.pathVersion}`;
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
