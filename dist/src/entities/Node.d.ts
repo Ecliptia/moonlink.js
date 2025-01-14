@@ -7,6 +7,7 @@ export declare class Node {
     port: number;
     identifier: string;
     password: string;
+    pathVersion: string;
     connected: boolean;
     destroyed: boolean;
     reconnectTimeout?: NodeJS.Timeout;
@@ -15,7 +16,7 @@ export declare class Node {
     retryDelay: number;
     resumed: boolean;
     resumeTimeout: number;
-    regions: String[];
+    regions: string[];
     secure: boolean;
     sessionId: string;
     socket: WebSocket;
