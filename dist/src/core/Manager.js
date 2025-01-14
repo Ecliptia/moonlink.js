@@ -21,6 +21,7 @@ class Manager extends node_events_1.EventEmitter {
             previousInArray: false,
             logFile: { path: undefined, log: false },
             movePlayersOnReconnect: false,
+            sortPlayersByRegion: false,
             resume: false,
             autoResume: false,
             ...config.options,
@@ -75,6 +76,22 @@ class Manager extends node_events_1.EventEmitter {
         if (packet.t === "VOICE_SERVER_UPDATE") {
             player.voiceState.token = packet.d.token;
             player.voiceState.endpoint = packet.d.endpoint;
+            if (packet.d.endpoint) {
+                const match = packet.d.endpoint.match(/^([a-z-]+)[0-9]*\.discord\.media/i);
+                if (match) {
+                    const region = match[1];
+                    player.region = region;
+                    this.emit("debug", `Moonlink.js > Updated region (${region}) for guild ${player.guildId}`);
+                    if (this.options.sortPlayersByRegion && !player.node.regions.includes(region)) {
+                        let hasNode = [...this.nodes.cache.values()].some(node => node.regions.includes(region));
+                        if (hasNode) {
+                            let newNode = [...this.nodes.cache.values()].find(node => node.regions.includes(region));
+                            this.emit("debug", `Moonlink.js > Moved player from ${player.node.uuid} to ${newNode.uuid}`);
+                            player.node = newNode;
+                        }
+                    }
+                }
+            }
             this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
             await this.attemptConnection(player.guildId);
         }
@@ -87,10 +104,12 @@ class Manager extends node_events_1.EventEmitter {
                 player.voiceChannelId = null;
                 player.voiceState = {};
                 this.emit("playerDisconnected", player);
+                this.emit("debug", "Moonlink.js > Is disconnected from guild " + player.guildId);
                 return;
             }
             if (packet.d.channel_id !== player.voiceChannelId) {
                 this.emit("playerMoved", player, player.voiceChannelId, packet.d.channel_id);
+                this.emit("debug", `Moonlink.js > Moved to channel ${packet.d.channel_id} in guild ${player.guildId}`);
                 player.voiceChannelId = packet.d.channel_id;
             }
             player.voiceState.sessionId = packet.d.session_id;
