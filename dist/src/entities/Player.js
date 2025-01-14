@@ -7,6 +7,7 @@ class Player {
     guildId;
     voiceChannelId;
     textChannelId;
+    region;
     voiceState = {};
     autoPlay;
     autoLeave;
