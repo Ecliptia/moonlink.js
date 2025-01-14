@@ -13,13 +13,13 @@ import {
   isVoiceStateAttempt,
   decodeTrack,
 } from "../../index";
-import { request } from "node:http";
 
 export class Player {
   readonly manager: Manager;
   public guildId: string;
   public voiceChannelId: string;
   public textChannelId: string;
+  public region: string;
   public voiceState: IVoiceState = {};
   public autoPlay: boolean;
   public autoLeave: boolean;
