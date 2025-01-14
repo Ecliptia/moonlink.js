@@ -10,16 +10,11 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: process.env["lavalink_host"],
+      host: "127.0.0.1",
       secure: false,
       port: 3000,
       password: "pwd",
-    },
-    {
-      host: process.env["lavalink_host"],
-      secure: false,
-      port: 3010,
-      password: "pwd",
+      pathVersion: "v4",
     },
   ],
   options: {
