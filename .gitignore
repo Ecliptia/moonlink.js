@@ -6,6 +6,5 @@ package-lock.json
 .gitignore
 .env
 desktop.ini
-docs/
 moonlink.log
 dist/src/datastore

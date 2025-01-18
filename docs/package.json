@@ -1,0 +1,27 @@
+{
+  "name": "docus-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate",
+    "preview": "nuxi preview",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@formkit/auto-animate": "^0.8.2",
+    "@nuxt-themes/docus": "latest",
+    "@nuxt/devtools": "^1.6.0",
+    "@nuxt/eslint-config": "^0.6.1",
+    "@nuxtjs/i18n": "^9.1.1",
+    "@nuxtjs/plausible": "^1.0.3",
+    "@types/node": "^22.9.0",
+    "eslint": "^9.14.0",
+    "nuxt": "^3.14.159"
+  },
+  "dependencies": {
+    "pinceau": "^0.18.10",
+    "vue": "^3.5.13"
+  }
+}

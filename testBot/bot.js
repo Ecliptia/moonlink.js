@@ -13,8 +13,8 @@ client.manager = new Manager({
       host: "127.0.0.1",
       secure: false,
       port: 3000,
-      password: "pwd",
-      pathVersion: "v4",
+      password: "youshallnotpass",
+      pathVersion: "v1",
     },
   ],
   options: {
