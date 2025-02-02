@@ -10,11 +10,11 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "127.0.0.1",
+      host: "localhost",
       secure: false,
-      port: 3000,
+      port: 2333,
       password: "youshallnotpass",
-      pathVersion: "v1",
+      pathVersion: "v4",
     },
   ],
   options: {
