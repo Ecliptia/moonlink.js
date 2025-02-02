@@ -2,11 +2,17 @@
 title: Home
 navigation: false
 ---
-![moonlink v4 banner](https://moonlink.js.org/moonlink_banner.png)
+<div align="center">
+<img src="https://moonlink.js.org/moonlink_banner.png">
+</div>
 
 ::alert{type="warning" icon="lucide:triangle-alert"}
   Documentation is being `rewritten` and updated, it may take a while...
 ::
+::alert{type="note" icon="lucide:pencil"}
+  Use only on `nodejs` versions above `v22.x.x`
+::
+
 ::hero
 ---
 announcement:
@@ -21,6 +27,7 @@ actions:
     variant: outline
     to: https://github.com/Ecliptia/moonlink.js/
     leftIcon: 'lucide:github'
+mobileRight: 'top'
 ---
 
 #title
@@ -58,9 +65,6 @@ announcement:
   title: 'Support'
   icon: 'lucide:pie-chart'
 actions:
-  - name: GitHub
-    to: https://github.com/Ecliptia/moonlink.js
-    leftIcon: 'lucide:github'
   - name: Discord
     to: https://discord.gg/q8HzGuHuDY
     leftIcon: ic:baseline-discord
@@ -70,7 +74,24 @@ actions:
 Having problems or questions?
 
 #description
-Get in touch by these means: creating an issue on github or joining the discord support server
+Get in touch by these means: joining the discord support server
+::
+
+## Found Bugs?
+
+<p>You found bugs and want to report the problem, create an issue on github, and we will look into it as soon as possible to fix the problem</p>
+<br>
+
+::button-link{left-icon="lucide:github" to="https://github.com/Ecliptia/moonlink.js/issues" target="_blank"}
+  Github Issue
+::
+
+
+<p>Do you want to contribute by fixing this problem? Or do you want to help by adding a feature? create a pull request, this way you will be registering your name in the package code lines (gitlens shows the names of the people who modified the code)</p>
+<br>
+
+::button-link{left-icon="lucide:github" to="https://github.com/Ecliptia/moonlink.js/pulls" target="_blank"}
+  Github Pull Request
 ::
 
 ## Contributors
