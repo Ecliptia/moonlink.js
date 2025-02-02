@@ -2,7 +2,7 @@
 title: Home
 navigation: false
 ---
-![moonlink v4 banner](https://github.com/Ecliptia/moonlink.js/raw/v4/assets/moonlink_banner.png)
+![moonlink v4 banner](./moonlink_banner.png)
 
 ::alert{type="warning" icon="lucide:triangle-alert"}
   Documentation is being `rewritten` and updated, it may take a while...
