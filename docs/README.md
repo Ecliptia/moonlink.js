@@ -1,57 +1,49 @@
-# Docus Starter
+# shadcn-docs-nuxt Minimal Starter
 
-Starter template for [Docus](https://docus.dev).
-
-## Clone
-
-Clone the repository (using `nuxi`):
-
-```bash
-npx nuxi init -t themes/docus
-```
+Starter template for [shadcn-docs-nuxt](https://github.com/ZTL-UwU/shadcn-docs-nuxt).
 
 ## Setup
 
-Install dependencies:
+Make sure to install the dependencies:
 
 ```bash
+# yarn
 yarn install
+
+# npm
+npm install
+
+# pnpm
+pnpm install
+
+# bun
+bun install
 ```
 
-## Development
+## Development Server
+
+Start the development server on http://localhost:3000
 
 ```bash
-yarn dev
+npm run dev
 ```
 
-## Edge Side Rendering
+## Production
 
-Can be deployed to Vercel Functions, Netlify Functions, AWS, and most Node-compatible environments.
+[![Deploy to NuxtHub](https://hub.nuxt.com/button.svg)](https://hub.nuxt.com/new?repo=ZTL-UwU/shadcn-docs-nuxt-starter)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FZTL-UwU%2Fshadcn-docs-nuxt-starter)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https%3A%2F%2Fgithub.com%2FZTL-UwU%2Fshadcn-docs-nuxt-starter)
 
-Look at all the available presets [here](https://v3.nuxtjs.org/guide/deploy/presets).
+Build the application for production:
 
 ```bash
-yarn build
+npm run build
 ```
 
-## Static Generation
-
-Use the `generate` command to build your application.
-
-The HTML files will be generated in the .output/public directory and ready to be deployed to any static compatible hosting.
+Locally preview production build:
 
 ```bash
-yarn generate
+npm run preview
 ```
 
-## Preview build
-
-You might want to preview the result of your build locally, to do so, run the following command:
-
-```bash
-yarn preview
-```
-
----
-
-For a detailed explanation of how things work, check out [Docus](https://docus.dev).
+Checkout the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

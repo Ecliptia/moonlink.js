@@ -1,34 +1,62 @@
-// https://github.com/nuxt-themes/docus/blob/main/nuxt.schema.ts
 export default defineAppConfig({
-  docus: {
-    title: "Moonlink.js",
-    description: "Moonlink.js (Reimagined Version) - Envision a sonic adventure where imagination knows no bounds, wrapped in the magical spirit of the festivities.",
-    image:
-      "https://user-images.githubusercontent.com/904724/185365452-87b7ca7b-6030-4813-a2db-5e65c785bf88.png",
-    socials: {
-      github: "Ecliptia/moonlink.js",
+  shadcnDocs: {
+    site: {
+      name: 'Moonlink.js',
+      description: '',
     },
-    github: {
-      dir: ".starters/default/content",
-      branch: "v4",
-      repo: "moonlink.js",
-      owner: "1Lucas1apk",
-      edit: true,
-    },
-    aside: {
-      level: 0,
-      collapsed: false,
-      exclude: [],
-    },
-    main: {
-      padded: true,
-      fluid: true,
+    theme: {
+      customizable: true,
+      color: 'blue',
+      radius: 0.75,
     },
     header: {
-      logo: true,
-      showLinkIcon: true,
-      exclude: [],
-      fluid: true,
+      title: 'Moonlink.js',
+      darkModeToggle: true,
+      logo: {
+        light: '/logo.svg',
+        dark: '/logo.svg',
+      },
+      nav: [],
+      links: [{
+        icon: 'lucide:github',
+        to: 'https://github.com/Ecliptia/moonlink.js',
+        target: '_blank',
+      }],
     },
-  },
+    aside: {
+      useLevel: true,
+      collapse: false,
+    },
+    main: {
+      breadCrumb: true,
+      showTitle: true,
+    },
+    footer: {
+      credits: 'Copyright © 2025',
+      links: [{
+        icon: 'lucide:github',
+        to: 'https://github.com/Ecliptia/moonlink.js',
+        target: '_blank',
+      }],
+    },
+    toc: {
+      enable: true,
+      title: 'On This Page',
+      links: [{
+        title: 'Star on GitHub',
+        icon: 'lucide:star',
+        to: 'https://github.com/ZTL-UwU/shadcn-docs-nuxt',
+        target: '_blank',
+      }, {
+        title: 'Create Issues',
+        icon: 'lucide:circle-dot',
+        to: 'https://github.com/ZTL-UwU/shadcn-docs-nuxt/issues',
+        target: '_blank',
+      }],
+    },
+    search: {
+      enable: true,
+      inAside: false,
+    }
+  }
 });
