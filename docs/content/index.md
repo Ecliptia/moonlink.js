@@ -23,6 +23,7 @@ announcement:
 actions:
   - name: Get Started
     to: /getting-started/introduction
+    leftIcon: lucide:arrow-up-right
   - name: GitHub
     variant: outline
     to: https://github.com/Ecliptia/moonlink.js/
@@ -41,7 +42,7 @@ Moonlink.js (Reimagined Version) - Envision a sonic adventure where imagination 
 > - `Queue Management`: Queue is integrated with a local database, to retrieve data if necessary
 > - `Audio Filters`: Apply various audio filters.
 > - `Auto Resume`: Automatically resumes playing after a disconnect.
->- `Logging`: Logging options with log file support.
+> - `Logging`: Logging options with log file support.
 > - `Node Management`: Management of different Lavalink nodes.
 > - `Filters Management`: Various audio filters like Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, Channel Mix, and LowPass.
 > - `Player Management`: Manage player configurations and states.
@@ -134,6 +135,14 @@ Get in touch by these means: joining the discord support server
   ::team-card
   ---
   center: false
+  avatar: https://images-ext-1.discordapp.net/external/puCrhkjoIy3gVL9odRkQ_ze_oE3pWBoVCKZk7ssIsr4/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/389709853511122944/863cda322c55e7b08127fe9e90136c2e.png?format=webp&quality=lossless&width=585&height=585
+  name: iamforster
+  title: Tester and Bug Hunter
+  ---
+  ::
+  ::team-card
+  ---
+  center: false
   avatar: https://avatars.githubusercontent.com/u/50148901?s=60&v=4
   name: Comicallybad
   title: Fixed bugs
@@ -147,10 +156,18 @@ Get in touch by these means: joining the discord support server
   center: false
   avatar: https://avatars.githubusercontent.com/u/88549470?s=60&v=4
   name: PiscesXD
-  title: Gave feature ideas, added, and sponsored
+  title: Gave feature ideas, added, fixed bugs, and sponsored
   links:
     - icon: lucide:github
       to: https://github.com/PiscesXD
   ---
   ::
 ::
+
+::alert{type="note" icon="lucide:pencil"}
+  Will contribute to the v4 version of moonlink.js
+::
+::alert{type="success" icon="lucide:lightbulb"}
+  And we thank everyone who joins the server and reports bugs, thus also contributing to making the project increasingly stable, and pleasing other developers
+::
+
