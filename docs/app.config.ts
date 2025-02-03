@@ -45,18 +45,26 @@ export default defineAppConfig({
       links: [{
         title: 'Star on GitHub',
         icon: 'lucide:star',
-        to: 'https://github.com/ZTL-UwU/shadcn-docs-nuxt',
+        to: 'https://github.com/Ecliptia/moonlink.js',
         target: '_blank',
       }, {
         title: 'Create Issues',
         icon: 'lucide:circle-dot',
-        to: 'https://github.com/ZTL-UwU/shadcn-docs-nuxt/issues',
+        to: 'https://github.com/Ecliptia/moonlink.js/issues',
         target: '_blank',
       }],
     },
     search: {
       enable: true,
       inAside: false,
-    }
+    },
+    banner: {
+      enable: true,
+      showClose: true,
+      content: 'Star ✨ on GitHub',
+      to: 'https://github.com/Ecliptia/moonlink.js',
+      target: '_blank',
+      border: true,
+    },
   }
 });
