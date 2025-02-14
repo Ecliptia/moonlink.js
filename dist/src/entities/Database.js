@@ -68,7 +68,14 @@ class Database {
         const filePath = this.getFilePath();
         if (fs_1.default.existsSync(filePath)) {
             index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`);
-            this.data = JSON.parse(fs_1.default.readFileSync(filePath, "utf-8"));
+            try {
+                const fileContent = fs_1.default.readFileSync(filePath, "utf-8");
+                this.data = JSON.parse(fileContent);
+            }
+            catch (err) {
+                index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Error loading/parsing data: ${err}`);
+                this.data = {};
+            }
         }
         else {
             index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
@@ -81,7 +88,7 @@ class Database {
             fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
         }
         catch (err) {
-            throw new Error("Failed to save data");
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Failed to save data: ${err}`);
         }
     }
     getFilePath() {
