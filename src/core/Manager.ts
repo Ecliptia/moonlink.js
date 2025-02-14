@@ -92,7 +92,6 @@ export class Manager extends EventEmitter {
       );
       let query = options.query;
       let source = options.source || this.options.defaultPlatformSearch;
-      let requester = options.requester || null;
 
       if (![...this.nodes.cache.values()].filter(node => node.connected))
         throw new Error("No available nodes to search from.");

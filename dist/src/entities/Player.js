@@ -122,11 +122,12 @@ class Player {
             this.current = this.queue.shift();
         }
         if (typeof options.requestedBy == "string" ||
-            typeof this.current.requestedBy?.userData == "string") {
-            options.requestedBy = {
-                id: options.requestedBy ?? this.current?.requestedBy.userData,
-            };
+            typeof this.current?.requestedBy == "string") {
+            this.current.setRequester({
+                id: options.requestedBy ?? this.current?.requestedBy,
+            });
         }
+    
         this.manager.database.set(`players.${this.guildId}.current`, {
             encoded: this.current.encoded,
             position: options.position ?? 0,

@@ -53,7 +53,6 @@ class Manager extends node_events_1.EventEmitter {
             (0, index_1.validateProperty)(options.query, value => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
             let query = options.query;
             let source = options.source || this.options.defaultPlatformSearch;
-            let requester = options.requester || null;
             if (![...this.nodes.cache.values()].filter(node => node.connected))
                 throw new Error("No available nodes to search from.");
             let node = this.nodes.cache.has(options?.node)
