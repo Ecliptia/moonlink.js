@@ -10,17 +10,18 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: process.env["lavalink_host"],
+      host: "localhost",
       secure: false,
       port: 3000,
-      password: "pwd",
+      password: "youshallnotpass",
+      pathVersion: "v1",
     },
     {
-      host: process.env["lavalink_host"],
+      host: "localhost",
       secure: false,
-      port: 3010,
-      password: "pwd",
-    },
+      port: 2333,
+      password: "youshallnotpass",
+    }
   ],
   options: {
     clientName: "TRISTAR/1.1",
@@ -29,8 +30,7 @@ client.manager = new Manager({
     logFile: {
       log: true,
       path: "moonlink.log",
-    },
-    autoResume: true,
+    }
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
@@ -76,9 +76,13 @@ client.once("ready", () => {
 client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
-console.log(
-  decodeTrack(
-    "QAAAAAMAHyhGUkVFKSBSJkIgdHlwZSBCZWF0IC0gIlNoaXZlciIADUN5Y2xvcGUgQmVhdHoAAAAAAAKrmAALZDE5aWVhR2ttdUkAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kMTlpZWFHa211SQEAMGh0dHBzOi8vaS55dGltZy5jb20vdmkvZDE5aWVhR2ttdUkvbXFkZWZhdWx0LmpwZwAAB3lvdXR1YmUAAAAAAAAAAA=="
-  )
-);
+
+client.manager.on("trackStart", (player, track) => {
+  console.log(player.current);
+});
+
+client.manager.on("trackEnd", (player, track) => {
+  console.log(player.current);
+});
+
 client.login(process.env.TOKEN).catch(console.error);

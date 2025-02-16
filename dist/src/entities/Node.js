@@ -9,6 +9,7 @@ class Node {
     port;
     identifier;
     password;
+    pathVersion;
     connected = false;
     destroyed = false;
     reconnectTimeout;
@@ -34,11 +35,12 @@ class Node {
         this.identifier = config.identifier;
         this.password = config.password || "youshallnotpass";
         this.regions = config.regions;
+        this.pathVersion = config.pathVersion || "v4";
         this.retryDelay = config.retryDelay || 30000;
         this.retryAmount = config.retryAmount || 5;
         this.secure = config.secure;
         this.sessionId = config.sessionId;
-        this.url = `${this.secure ? "https" : "http"}://${this.address}/v4/`;
+        this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
         this.rest = new index_1.Rest(this);
     }
     get address() {
@@ -53,7 +55,7 @@ class Node {
         };
         if (this.manager.options.resume)
             headers["Session-Id"] = sessionId;
-        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, {
+        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
         });
         this.socket.addEventListener("open", this.open.bind(this), { once: true });

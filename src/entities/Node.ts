@@ -15,6 +15,7 @@ export class Node {
   public port: number;
   public identifier: string;
   public password: string;
+  public pathVersion: string;
   public connected: boolean = false;
   public destroyed: boolean = false;
   public reconnectTimeout?: NodeJS.Timeout;
@@ -23,7 +24,7 @@ export class Node {
   public retryDelay: number = 60000;
   public resumed: boolean = false;
   public resumeTimeout: number = 60000;
-  public regions: String[];
+  public regions: string[];
   public secure: boolean;
   public sessionId: string;
   public socket: WebSocket;
@@ -40,11 +41,12 @@ export class Node {
     this.identifier = config.identifier;
     this.password = config.password || "youshallnotpass";
     this.regions = config.regions;
+    this.pathVersion = config.pathVersion || "v4";
     this.retryDelay = config.retryDelay || 30000;
     this.retryAmount = config.retryAmount || 5;
     this.secure = config.secure;
     this.sessionId = config.sessionId;
-    this.url = `${this.secure ? "https" : "http"}://${this.address}/v4/`;
+    this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
     this.rest = new Rest(this);
   }
   public get address(): string {
@@ -58,9 +60,12 @@ export class Node {
       "Client-Name": this.manager.options.clientName,
     };
     if (this.manager.options.resume) headers["Session-Id"] = sessionId;
-    this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/v4/websocket`, {
-      headers,
-    });
+    this.socket = new WebSocket(
+      `ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`,
+      {
+        headers,
+      }
+    );
     this.socket.addEventListener("open", this.open.bind(this), { once: true });
     this.socket.addEventListener("close", this.close.bind(this), { once: true });
     this.socket.addEventListener("message", this.message.bind(this));

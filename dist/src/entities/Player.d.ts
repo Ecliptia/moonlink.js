@@ -6,6 +6,7 @@ export declare class Player {
     guildId: string;
     voiceChannelId: string;
     textChannelId: string;
+    region: string;
     voiceState: IVoiceState;
     autoPlay: boolean;
     autoLeave: boolean;

@@ -13,13 +13,13 @@ import {
   isVoiceStateAttempt,
   decodeTrack,
 } from "../../index";
-import { request } from "node:http";
 
 export class Player {
   readonly manager: Manager;
   public guildId: string;
   public voiceChannelId: string;
   public textChannelId: string;
+  public region: string;
   public voiceState: IVoiceState = {};
   public autoPlay: boolean;
   public autoLeave: boolean;
@@ -180,13 +180,14 @@ export class Player {
 
     if (
       typeof options.requestedBy == "string" ||
-      typeof this.current.requestedBy?.userData == "string"
+      typeof this.current?.requestedBy == "string"
     ) {
-      options.requestedBy = {
-        id: (options.requestedBy as string) ?? (this.current?.requestedBy.userData as string),
-      };
+      this.current.setRequester({
+        id: options.requestedBy ?? this.current?.requestedBy,
+      });
     }
-
+    console.log(this.current.requestedBy, options.requestedBy, typeof options.requestedBy == "string" ||
+      typeof this.current?.requestedBy == "string");
     this.manager.database.set(`players.${this.guildId}.current`, {
       encoded: this.current.encoded,
       position: options.position ?? 0,
