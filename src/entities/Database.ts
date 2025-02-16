@@ -6,6 +6,7 @@ type Data = Record<string, any>;
 export class Database {
   private data: Data = {};
   private id: string;
+  
   constructor(manager: Manager) {
     this.id = manager.options.clientId;
     Structure.getManager().emit(
@@ -74,7 +75,16 @@ export class Database {
         "debug",
         `Moonlink.js > Database > Loading data from ${filePath}`
       );
-      this.data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        this.data = JSON.parse(fileContent);
+      } catch (err) {
+        Structure.getManager().emit(
+          "debug",
+          `Moonlink.js > Database > Error loading/parsing data: ${err}`
+        );
+        this.data = {};
+      }
     } else {
       Structure.getManager().emit(
         "debug",
@@ -89,7 +99,10 @@ export class Database {
       fs.mkdirSync(path.dirname(filePath), { recursive: true });
       fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
     } catch (err) {
-      throw new Error("Failed to save data");
+      Structure.getManager().emit(
+        "debug",
+        `Moonlink.js > Database > Failed to save data: ${err}`
+      );
     }
   }
 

@@ -11,11 +11,11 @@ export class Rest {
   public defaultHeaders: Record<string, string>;
   constructor(node: Node) {
     this.node = node;
-    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/v4`;
+    this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/${this.node.pathVersion}`;
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
-      "User-Agent": `Moonlink.js/${node.manager.version} (PETRICHOR/11.01.24)`,
+      "User-Agent": `Moonlink.js/${node.manager.version} (PETRICHOR/14.02.24)`,
       "Content-Type": "application/json",
       "accept-encoding": "br, gzip, deflate",
     };

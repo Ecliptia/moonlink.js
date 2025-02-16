@@ -18,10 +18,10 @@ module.exports = {
 
     if (!player.connected) player.connect({ setDeaf: true });
 
-    const searchResult = await client.manager.search({ query: args.join(" ") });
+    const searchResult = await client.manager.search({ query: args.join(" "), requester: message.author.id });
     if (!searchResult.tracks.length) return message.reply("No results found.");
 
-    player.queue.add(searchResult.tracks[0], message.author.id);
+    player.queue.add(searchResult.tracks[0]);
     if (!player.playing) player.play();
     await message.reply(`Playing track: ${searchResult.tracks[0].title}`);
   },
