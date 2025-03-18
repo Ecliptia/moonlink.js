@@ -8,3 +8,7 @@ package-lock.json
 desktop.ini
 moonlink.log
 dist/src/datastore
+docs/node_modules
+docs/.nuxt
+docs/.output
+docs/.vscode

@@ -4,3 +4,4 @@ export type TLoadResultNodeLinkType = "short" | "album" | "artist" | "playlist" 
 export type TSortTypeNode = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "random";
 export type TPlayerLoop = "off" | "track" | "queue";
 export type TTrackEndType = "queueEnd" | "loadFailed" | "stopped" | "replaced" | "cleanup" | "finished";
+export type TPartialTrackProperties = "url" | "duration" | "position" | "identifier" | "isSeekable" | "isStream" | "artworkUrl" | "isrc" | "sourceName";

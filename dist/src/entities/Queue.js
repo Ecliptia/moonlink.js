@@ -13,7 +13,9 @@ class Queue {
         if (Array.isArray(track)) {
             if (track.length === 0)
                 return true;
-            this.tracks.push(...track);
+            for (let t of track) {
+                this.tracks.push(t);
+            }
         }
         else {
             this.tracks.push(track);
@@ -59,6 +61,21 @@ class Queue {
     }
     get size() {
         return this.tracks.length;
+    }
+    get duration() {
+        return this.tracks.reduce((acc, cur) => acc + cur.duration, 0);
+    }
+    get isEmpty() {
+        return this.tracks.length === 0;
+    }
+    get first() {
+        return this.tracks[0];
+    }
+    get last() {
+        return this.tracks[this.tracks.length - 1];
+    }
+    get all() {
+        return this.tracks;
     }
 }
 exports.Queue = Queue;

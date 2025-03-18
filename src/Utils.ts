@@ -1,24 +1,40 @@
 import fs from "fs";
 import path from "path";
 import { createHash } from "crypto";
-import {
-  Manager,
-  Database,
-  Player,
-  Queue,
-  Node,
-  Rest,
-  Filters,
-  Track,
-  Lyrics,
-  Listen,
-  NodeManager,
-  PlayerManager,
-  SearchResult,
-  Extendable,
-  ITrack,
-  ITrackInfo,
-} from "../index";
+import type { ITrack, ITrackInfo } from "./typings/Interfaces";
+
+export const structures: Record<string, any> = {};
+
+export const sources = {
+  youtube: "ytsearch",
+  youtubemusic: "ytmsearch",
+  soundcloud: "scsearch",
+  local: "local",
+};
+
+export abstract class Structure {
+  public static manager: any;
+  
+  public static setManager(manager: any): void {
+    this.manager = manager;
+  }
+  
+  public static getManager(): any {
+    return this.manager;
+  }
+  
+  public static get(name: string): any {
+    const structure = structures[name];
+    if (!structure) {
+      throw new TypeError(`"${name}" structure must be provided.`);
+    }
+    return structure;
+  }
+  
+  public static extend(name: string, extender: any): void {
+    structures[name] = extender;
+  }
+}
 
 export function validateProperty<T>(
   prop: T | undefined,
@@ -33,8 +49,6 @@ export function validateProperty<T>(
 export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// nodelink Decode was used as a base
 
 export function decodeTrack(encoded: string): ITrack {
   const buffer = Buffer.from(encoded, "base64");
@@ -210,54 +224,12 @@ export function stringifyWithReplacer(obj: any): string {
   });
 }
 
-export const sources = {
-  youtube: "ytsearch",
-  youtubemusic: "ytmsearch",
-  soundcloud: "scsearch",
-  local: "local",
-};
-
-export const structures: Extendable = {
-  Database: Database,
-  NodeManager: NodeManager,
-  PlayerManager: PlayerManager,
-  SearchResult: SearchResult,
-  Player: Player,
-  Queue: Queue,
-  Node: Node,
-  Rest: Rest,
-  Filters: Filters,
-  Track: Track,
-  Lyrics: Lyrics,
-  Listen: Listen,
-};
-
-export abstract class Structure {
-  public static manager: Manager;
-  public static setManager(manager: Manager): void {
-    this.manager = manager;
-  }
-  public static getManager(): Manager {
-    return this.manager;
-  }
-  public static get<K extends keyof Extendable>(name: K): Extendable[K] {
-    const structure = structures[name];
-    if (!structure) {
-      throw new TypeError(`"${name}" structure must be provided.`);
-    }
-    return structure;
-  }
-  public static extend<K extends keyof Extendable>(name: K, extender: Extendable[K]) {
-    structures[name] = extender;
-  }
-}
-
 export class Plugin {
   public name: string;
   public version: string;
   public description?: string;
   public author?: string | Record<string, any>
   public minVersion?: string;
-  public load(manager: Manager): void {}
-  public unload(manager: Manager): void {}
+  public load(manager: any): void {}
+  public unload(manager: any): void {}
 }
