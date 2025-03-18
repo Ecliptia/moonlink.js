@@ -127,7 +127,8 @@ class Player {
                 id: options.requestedBy ?? this.current?.requestedBy,
             });
         }
-    
+        console.log(this.current.requestedBy, options.requestedBy, typeof options.requestedBy == "string" ||
+            typeof this.current?.requestedBy == "string");
         this.manager.database.set(`players.${this.guildId}.current`, {
             encoded: this.current.encoded,
             position: options.position ?? 0,
