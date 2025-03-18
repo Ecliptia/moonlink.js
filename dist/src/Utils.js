@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = exports.Structure = exports.structures = exports.sources = void 0;
+exports.Plugin = exports.Structure = exports.sources = exports.structures = void 0;
 exports.validateProperty = validateProperty;
 exports.delay = delay;
 exports.decodeTrack = decodeTrack;
@@ -11,12 +11,38 @@ exports.encodeTrack = encodeTrack;
 exports.generateShortUUID = generateShortUUID;
 exports.Log = Log;
 exports.makeRequest = makeRequest;
-exports.safeStringify = safeStringify;
+exports.compareVersions = compareVersions;
 exports.stringifyWithReplacer = stringifyWithReplacer;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
-const index_1 = require("../index");
+exports.structures = {};
+exports.sources = {
+    youtube: "ytsearch",
+    youtubemusic: "ytmsearch",
+    soundcloud: "scsearch",
+    local: "local",
+};
+class Structure {
+    static manager;
+    static setManager(manager) {
+        this.manager = manager;
+    }
+    static getManager() {
+        return this.manager;
+    }
+    static get(name) {
+        const structure = exports.structures[name];
+        if (!structure) {
+            throw new TypeError(`"${name}" structure must be provided.`);
+        }
+        return structure;
+    }
+    static extend(name, extender) {
+        exports.structures[name] = extender;
+    }
+}
+exports.Structure = Structure;
 function validateProperty(prop, validator, errorMessage) {
     if (!validator(prop)) {
         throw new Error(errorMessage);
@@ -159,17 +185,17 @@ function makeRequest(url, options) {
         return;
     return request;
 }
-function safeStringify(obj) {
-    const cache = new Set();
-    return JSON.stringify(obj, (key, value) => {
-        if (typeof value === 'object' && value !== null) {
-            if (cache.has(value)) {
-                return undefined;
-            }
-            cache.add(value);
-        }
-        return value;
-    });
+function compareVersions(current, required) {
+    const curr = current.split(".").map(Number);
+    const req = required.split(".").map(Number);
+    const len = Math.max(curr.length, req.length);
+    for (let i = 0; i < len; i++) {
+        const a = curr[i] || 0;
+        const b = req[i] || 0;
+        if (a !== b)
+            return a - b;
+    }
+    return 0;
 }
 function stringifyWithReplacer(obj) {
     const cache = new Set();
@@ -183,48 +209,12 @@ function stringifyWithReplacer(obj) {
         return value;
     });
 }
-exports.sources = {
-    youtube: "ytsearch",
-    youtubemusic: "ytmsearch",
-    soundcloud: "scsearch",
-    local: "local",
-};
-exports.structures = {
-    Database: index_1.Database,
-    NodeManager: index_1.NodeManager,
-    PlayerManager: index_1.PlayerManager,
-    SearchResult: index_1.SearchResult,
-    Player: index_1.Player,
-    Queue: index_1.Queue,
-    Node: index_1.Node,
-    Rest: index_1.Rest,
-    Filters: index_1.Filters,
-    Track: index_1.Track,
-    Lyrics: index_1.Lyrics,
-    Listen: index_1.Listen,
-};
-class Structure {
-    static manager;
-    static setManager(manager) {
-        this.manager = manager;
-    }
-    static getManager() {
-        return this.manager;
-    }
-    static get(name) {
-        const structure = exports.structures[name];
-        if (!structure) {
-            throw new TypeError(`"${name}" structure must be provided.`);
-        }
-        return structure;
-    }
-    static extend(name, extender) {
-        exports.structures[name] = extender;
-    }
-}
-exports.Structure = Structure;
 class Plugin {
     name;
+    version;
+    description;
+    author;
+    minVersion;
     load(manager) { }
     unload(manager) { }
 }

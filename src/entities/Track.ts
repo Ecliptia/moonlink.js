@@ -1,4 +1,6 @@
-import { ITrack } from "../typings/Interfaces";
+import { ITrack, ITrackInfo } from "../typings/Interfaces";
+import { Structure, decodeTrack } from "../Utils";
+import { TPartialTrackProperties } from "../typings/types";
 
 export class Track {
   public encoded: string;
@@ -15,25 +17,102 @@ export class Track {
   public time?: number = 0;
   public sourceName?: string;
   public requestedBy?: Object | string;
+  public pluginInfo: Record<string, any> = {};
+  private isPartial: boolean = false;
 
   constructor(trackData: ITrack, requester?: Object) {
+    const manager = Structure.getManager();
+    const partialTrackOptions = manager?.options?.partialTrack;
+    
     this.encoded = trackData.encoded;
-    this.url = trackData.info.uri;
-    this.author = trackData.info.author;
-    this.duration = trackData.info.length;
     this.title = trackData.info.title;
-    this.position = trackData.info.position;
-    this.identifier = trackData.info.identifier;
-    this.isSeekable = trackData.info.isSeekable;
-    this.isStream = trackData.info.isStream;
-    this.artworkUrl = trackData.info.artworkUrl;
-    this.isrc = trackData.info.isrc;
-    this.sourceName = trackData.info.sourceName;
+    this.author = trackData.info.author;
+    
+    if (trackData.pluginInfo) {
+      this.pluginInfo = trackData.pluginInfo;
+    }
+    
+    const trackProps = this.createPropertySetters(trackData.info);
+    
+    if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
+      this.isPartial = true;
+      partialTrackOptions.forEach(prop => {
+        if (prop in trackProps) trackProps[prop]();
+      });
+    } else {
+      Object.values(trackProps).forEach(setter => setter());
+    }
 
     if (requester) this.requestedBy = requester;
+
+    Object.keys(this).forEach(key => {
+      if (this[key] === undefined) {
+        delete this[key];
+      }
+    });
+  }
+
+  private createPropertySetters(info: ITrackInfo): Record<TPartialTrackProperties, () => void> {
+    return {
+      url: () => info.uri && (this.url = info.uri),
+      duration: () => info.length && (this.duration = info.length),
+      position: () => info.position && (this.position = info.position),
+      identifier: () => info.identifier && (this.identifier = info.identifier),
+      isSeekable: () => (this.isSeekable = info.isSeekable),
+      isStream: () => (this.isStream = info.isStream),
+      artworkUrl: () => info.artworkUrl && (this.artworkUrl = info.artworkUrl),
+      isrc: () => info.isrc && (this.isrc = info.isrc),
+      sourceName: () => info.sourceName && (this.sourceName = info.sourceName)
+    };
   }
 
   public setRequester(requester: Object | string): void {
     this.requestedBy = requester;
+  }
+
+  public resolveData(): Track {
+    this.isPartial = false;
+    const info = decodeTrack(this.encoded).info;
+    Object.values(this.createPropertySetters(info)).forEach(setter => setter());
+    return this;
+  }
+
+  public isPartialTrack(): boolean {
+    return this.isPartial;
+  }
+
+  public raw(): ITrack {
+    const track = decodeTrack(this.encoded);
+
+    return track;
+  }
+
+  public static async unresolvedTrack(options: {
+    title: string,
+    author: string,
+    duration?: number,
+    source?: string
+  }): Promise<Track> {
+    const manager = Structure.getManager();
+    if (!manager) throw new Error("Manager is not initialized");
+    
+    const search = await manager.search({
+      query: `${options.title} ${options.author}`,
+      source: options.source || manager.options.defaultPlatformSearch
+    });
+    
+    if (search.tracks.length) {
+      if (search.tracks.length === 1) return search.tracks[0];
+      
+      if (options.duration) {
+        return search.tracks.reduce((prev, curr) => 
+          Math.abs(curr.duration - options.duration) < Math.abs(prev.duration - options.duration) ? curr : prev
+        );
+      }
+      
+      return search.tracks[0];
+    }
+    
+    return null;
   }
 }

@@ -14,4 +14,9 @@ export declare class Queue {
     clear(): boolean;
     shuffle(): boolean;
     get size(): number;
+    get duration(): number;
+    get isEmpty(): boolean;
+    get first(): Track;
+    get last(): Track;
+    get all(): Track[];
 }
