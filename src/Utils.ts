@@ -185,22 +185,16 @@ export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
   return request;
 }
 
-/**
- * Safely stringify objects avoiding circular references
- * @param obj Object to stringify
- * @returns JSON string without circular references
- */
-export function safeStringify(obj: any): string {
-  const cache = new Set();
-  return JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        return undefined; // Remove circular reference
-      }
-      cache.add(value);
-    }
-    return value;
-  });
+export function compareVersions(current: string, required: string): number {
+  const curr = current.split(".").map(Number);
+  const req = required.split(".").map(Number);
+  const len = Math.max(curr.length, req.length);
+  for (let i = 0; i < len; i++) {
+    const a = curr[i] || 0;
+    const b = req[i] || 0;
+    if (a !== b) return a - b;
+  }
+  return 0;
 }
 
 export function stringifyWithReplacer(obj: any): string {
@@ -260,6 +254,10 @@ export abstract class Structure {
 
 export class Plugin {
   public name: string;
+  public version: string;
+  public description?: string;
+  public author?: string | Record<string, any>
+  public minVersion?: string;
   public load(manager: Manager): void {}
   public unload(manager: Manager): void {}
 }
