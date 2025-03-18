@@ -10,7 +10,14 @@ class Queue {
     }
     tracks = [];
     add(track) {
-        this.tracks.push(track);
+        if (Array.isArray(track)) {
+            if (track.length === 0)
+                return true;
+            this.tracks.push(...track);
+        }
+        else {
+            this.tracks.push(track);
+        }
         this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }

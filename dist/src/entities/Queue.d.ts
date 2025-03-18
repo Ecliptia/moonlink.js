@@ -4,7 +4,7 @@ export declare class Queue {
     guildId: string;
     constructor(player: Player);
     tracks: Track[];
-    add(track: Track): boolean;
+    add(track: Track | Track[]): boolean;
     get(position: number): Track;
     has(track: Track): boolean;
     remove(position: number): boolean;

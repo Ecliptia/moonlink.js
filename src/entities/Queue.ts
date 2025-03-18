@@ -8,8 +8,20 @@ export class Queue {
   }
   public tracks: Track[] = [];
 
-  public add(track: Track): boolean {
-    this.tracks.push(track);
+  /**
+   * Add track(s) to the queue
+   * @param track A single track or array of tracks to add
+   * @returns True if the track(s) were added successfully
+   */
+  public add(track: Track | Track[]): boolean {
+    if (Array.isArray(track)) {
+      if (track.length === 0) return true;
+      
+      this.tracks.push(...track);
+    } else {
+      this.tracks.push(track);
+    }
+    
     this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
