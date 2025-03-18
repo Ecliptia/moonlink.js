@@ -6,6 +6,8 @@ export declare function encodeTrack(track: ITrackInfo): string;
 export declare function generateShortUUID(host: string, port: number): string;
 export declare function Log(message: string, LogPath: string): void;
 export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
+export declare function safeStringify(obj: any): string;
+export declare function stringifyWithReplacer(obj: any): string;
 export declare const sources: {
     youtube: string;
     youtubemusic: string;

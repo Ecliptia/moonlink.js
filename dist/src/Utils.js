@@ -11,6 +11,8 @@ exports.encodeTrack = encodeTrack;
 exports.generateShortUUID = generateShortUUID;
 exports.Log = Log;
 exports.makeRequest = makeRequest;
+exports.safeStringify = safeStringify;
+exports.stringifyWithReplacer = stringifyWithReplacer;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
@@ -156,6 +158,30 @@ function makeRequest(url, options) {
     if (!request)
         return;
     return request;
+}
+function safeStringify(obj) {
+    const cache = new Set();
+    return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (cache.has(value)) {
+                return undefined;
+            }
+            cache.add(value);
+        }
+        return value;
+    });
+}
+function stringifyWithReplacer(obj) {
+    const cache = new Set();
+    return JSON.stringify(obj, (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (cache.has(value)) {
+                return "[Circular Refs]";
+            }
+            cache.add(value);
+        }
+        return value;
+    });
 }
 exports.sources = {
     youtube: "ytsearch",
