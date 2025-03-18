@@ -185,6 +185,37 @@ export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
   return request;
 }
 
+/**
+ * Safely stringify objects avoiding circular references
+ * @param obj Object to stringify
+ * @returns JSON string without circular references
+ */
+export function safeStringify(obj: any): string {
+  const cache = new Set();
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return undefined; // Remove circular reference
+      }
+      cache.add(value);
+    }
+    return value;
+  });
+}
+
+export function stringifyWithReplacer(obj: any): string {
+  const cache = new Set();
+  return JSON.stringify(obj, (_key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return "[Circular Refs]";
+      }
+      cache.add(value);
+    }
+    return value;
+  });
+}
+
 export const sources = {
   youtube: "ytsearch",
   youtubemusic: "ytmsearch",
