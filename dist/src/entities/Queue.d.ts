@@ -4,7 +4,7 @@ export declare class Queue {
     guildId: string;
     constructor(player: Player);
     tracks: Track[];
-    add(track: Track): boolean;
+    add(track: Track | Track[]): boolean;
     get(position: number): Track;
     has(track: Track): boolean;
     remove(position: number): boolean;
@@ -14,4 +14,9 @@ export declare class Queue {
     clear(): boolean;
     shuffle(): boolean;
     get size(): number;
+    get duration(): number;
+    get isEmpty(): boolean;
+    get first(): Track;
+    get last(): Track;
+    get all(): Track[];
 }

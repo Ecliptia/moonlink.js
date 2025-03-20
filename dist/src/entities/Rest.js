@@ -37,7 +37,7 @@ class Rest {
     async update(data) {
         let request = await (0, index_1.makeRequest)(`${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`, {
             method: "PATCH",
-            body: JSON.stringify(data.data),
+            body: (0, index_1.stringifyWithReplacer)(data.data),
             headers: this.defaultHeaders,
         });
         return request;
@@ -76,7 +76,7 @@ class Rest {
     async updateSession(sessionId, data) {
         return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}`, {
             method: "PATCH",
-            body: JSON.stringify(data),
+            body: (0, index_1.stringifyWithReplacer)(data),
             headers: this.defaultHeaders,
         });
     }
@@ -89,7 +89,7 @@ class Rest {
     async decodeTracks(encodedTracks) {
         return (0, index_1.makeRequest)(`${this.url}/decodetracks`, {
             method: "POST",
-            body: JSON.stringify(encodedTracks),
+            body: (0, index_1.stringifyWithReplacer)(encodedTracks),
             headers: this.defaultHeaders,
         });
     }
@@ -114,7 +114,7 @@ class Rest {
     async unmarkFailedAddress(address) {
         return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/address`, {
             method: "POST",
-            body: JSON.stringify({ address }),
+            body: (0, index_1.stringifyWithReplacer)({ address }),
             headers: this.defaultHeaders,
         });
     }
@@ -127,7 +127,7 @@ class Rest {
     async patch(path, data) {
         return (0, index_1.makeRequest)(`${this.url}/${path}`, {
             method: "PATCH",
-            body: JSON.stringify(data.data),
+            body: (0, index_1.stringifyWithReplacer)(data.data),
             headers: this.defaultHeaders,
         });
     }

@@ -1,4 +1,4 @@
-import { Node, makeRequest, sources } from "../../index";
+import { Node, makeRequest, sources, stringifyWithReplacer } from "../../index";
 import {
   IRESTOptions,
   IRESTLoadTracks,
@@ -41,7 +41,7 @@ export class Rest {
       `${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`,
       {
         method: "PATCH",
-        body: JSON.stringify(data.data) as any,
+        body: stringifyWithReplacer(data.data) as any,
         headers: this.defaultHeaders,
       }
     );
@@ -86,7 +86,7 @@ export class Rest {
   public async updateSession(sessionId: string, data: any): Promise<any> {
     return makeRequest(`${this.url}/sessions/${sessionId}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: stringifyWithReplacer(data),
       headers: this.defaultHeaders,
     });
   }
@@ -99,7 +99,7 @@ export class Rest {
   public async decodeTracks(encodedTracks: string[]): Promise<any> {
     return makeRequest(`${this.url}/decodetracks`, {
       method: "POST",
-      body: JSON.stringify(encodedTracks),
+      body: stringifyWithReplacer(encodedTracks),
       headers: this.defaultHeaders,
     });
   }
@@ -124,7 +124,7 @@ export class Rest {
   public async unmarkFailedAddress(address: string): Promise<any> {
     return makeRequest(`${this.url}/routeplanner/free/address`, {
       method: "POST",
-      body: JSON.stringify({ address }),
+      body: stringifyWithReplacer({ address }),
       headers: this.defaultHeaders,
     });
   }
@@ -137,7 +137,7 @@ export class Rest {
   public async patch(path: string, data: any): Promise<unknown> {
     return makeRequest(`${this.url}/${path}`, {
       method: "PATCH",
-      body: JSON.stringify(data.data),
+      body: stringifyWithReplacer(data.data),
       headers: this.defaultHeaders,
     });
   }

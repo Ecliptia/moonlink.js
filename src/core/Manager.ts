@@ -16,6 +16,7 @@ import {
   Player,
   validateProperty,
   SearchResult,
+  compareVersions
 } from "../../index";
 
 export declare interface Manager {
@@ -51,9 +52,16 @@ export class Manager extends EventEmitter {
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
 
     if (this.options.plugins) {
-      this.options.plugins.forEach(plugin => {
-        plugin.load(this);
-      });
+      if (this.options.plugins) {
+        this.options.plugins.forEach(plugin => {
+          if (plugin.minVersion && compareVersions(this.version, plugin.minVersion) < 0) {
+            throw new Error(
+              `Moonlink.js > Plugin ${plugin.name || "unknown"} requires at least version ${plugin.minVersion}. Current version: ${this.version}`
+            );
+          }
+          plugin.load(this);
+        });
+      }
     }
   }
   public init(clientId: string): void {
@@ -71,7 +79,8 @@ export class Manager extends EventEmitter {
     this.database = new (Structure.get("Database"))(this);
     this.nodes.init();
     this.initialize = true;
-    this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
+    this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
+    this.emit("debug", "Moonlink.js > Version: " + this.version);
   }
   public async search(options: {
     query: string;

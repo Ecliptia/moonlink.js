@@ -30,7 +30,8 @@ client.manager = new Manager({
     logFile: {
       log: true,
       path: "moonlink.log",
-    }
+    },
+    partialTrack: ["url", "duration"]
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);

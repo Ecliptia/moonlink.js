@@ -1,4 +1,18 @@
-import { Manager, Extendable, ITrack, ITrackInfo } from "../index";
+import type { ITrack, ITrackInfo } from "./typings/Interfaces";
+export declare const structures: Record<string, any>;
+export declare const sources: {
+    youtube: string;
+    youtubemusic: string;
+    soundcloud: string;
+    local: string;
+};
+export declare abstract class Structure {
+    static manager: any;
+    static setManager(manager: any): void;
+    static getManager(): any;
+    static get(name: string): any;
+    static extend(name: string, extender: any): void;
+}
 export declare function validateProperty<T>(prop: T | undefined, validator: (value: T) => boolean, errorMessage: string): void;
 export declare function delay(ms: number): Promise<void>;
 export declare function decodeTrack(encoded: string): ITrack;
@@ -6,22 +20,14 @@ export declare function encodeTrack(track: ITrackInfo): string;
 export declare function generateShortUUID(host: string, port: number): string;
 export declare function Log(message: string, LogPath: string): void;
 export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
-export declare const sources: {
-    youtube: string;
-    youtubemusic: string;
-    soundcloud: string;
-    local: string;
-};
-export declare const structures: Extendable;
-export declare abstract class Structure {
-    static manager: Manager;
-    static setManager(manager: Manager): void;
-    static getManager(): Manager;
-    static get<K extends keyof Extendable>(name: K): Extendable[K];
-    static extend<K extends keyof Extendable>(name: K, extender: Extendable[K]): void;
-}
+export declare function compareVersions(current: string, required: string): number;
+export declare function stringifyWithReplacer(obj: any): string;
 export declare class Plugin {
     name: string;
-    load(manager: Manager): void;
-    unload(manager: Manager): void;
+    version: string;
+    description?: string;
+    author?: string | Record<string, any>;
+    minVersion?: string;
+    load(manager: any): void;
+    unload(manager: any): void;
 }
