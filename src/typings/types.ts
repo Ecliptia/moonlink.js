@@ -30,3 +30,14 @@ export type TTrackEndType =
   | "replaced"
   | "cleanup"
   | "finished";
+
+export type TPartialTrackProperties = 
+  | "url"
+  | "duration"
+  | "position"
+  | "identifier"
+  | "isSeekable"
+  | "isStream"
+  | "artworkUrl"
+  | "isrc"
+  | "sourceName";

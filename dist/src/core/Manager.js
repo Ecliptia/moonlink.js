@@ -28,9 +28,14 @@ class Manager extends node_events_1.EventEmitter {
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
         if (this.options.plugins) {
-            this.options.plugins.forEach(plugin => {
-                plugin.load(this);
-            });
+            if (this.options.plugins) {
+                this.options.plugins.forEach(plugin => {
+                    if (plugin.minVersion && (0, index_1.compareVersions)(this.version, plugin.minVersion) < 0) {
+                        throw new Error(`Moonlink.js > Plugin ${plugin.name || "unknown"} requires at least version ${plugin.minVersion}. Current version: ${this.version}`);
+                    }
+                    plugin.load(this);
+                });
+            }
         }
     }
     init(clientId) {
@@ -45,7 +50,8 @@ class Manager extends node_events_1.EventEmitter {
         this.database = new (index_1.Structure.get("Database"))(this);
         this.nodes.init();
         this.initialize = true;
-        this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + ")");
+        this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
+        this.emit("debug", "Moonlink.js > Version: " + this.version);
     }
     async search(options) {
         return new Promise(async (resolve) => {

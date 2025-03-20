@@ -22,6 +22,7 @@ module.exports = {
     if (!searchResult.tracks.length) return message.reply("No results found.");
 
     player.queue.add(searchResult.tracks[0]);
+    console.log(searchResult.tracks[0])
     if (!player.playing) player.play();
     await message.reply(`Playing track: ${searchResult.tracks[0].title}`);
   },

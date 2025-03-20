@@ -13,7 +13,7 @@ import {
   SearchResult,
   Database,
 } from "../../index";
-import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType } from "./types";
+import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTrackProperties } from "./types";
 export interface IEvents {
   autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
@@ -121,6 +121,7 @@ export interface IOptionsManager {
   sortPlayersByRegion?: boolean;
   autoResume?: boolean;
   resume?: boolean;
+  partialTrack?: TPartialTrackProperties[];
 }
 
 export interface IPlayerConfig {

@@ -8,8 +8,22 @@ export class Queue {
   }
   public tracks: Track[] = [];
 
-  public add(track: Track): boolean {
-    this.tracks.push(track);
+  /**
+   * Add track(s) to the queue
+   * @param track A single track or array of tracks to add
+   * @returns True if the track(s) were added successfully
+   */
+  public add(track: Track | Track[]): boolean {
+    if (Array.isArray(track)) {
+      if (track.length === 0) return true;
+      
+      for (let t of track) {
+      this.tracks.push(t);
+      }
+    } else {
+      this.tracks.push(track);
+    }
+    
     this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
@@ -51,5 +65,20 @@ export class Queue {
   }
   public get size(): number {
     return this.tracks.length;
+  }
+  public get duration(): number {
+    return this.tracks.reduce((acc, cur) => acc + cur.duration, 0);
+  }
+  public get isEmpty(): boolean {
+    return this.tracks.length === 0;
+  }
+  public get first(): Track {
+    return this.tracks[0];
+  }
+  public get last(): Track {
+    return this.tracks[this.tracks.length - 1];
+  }
+  public get all(): Track[] {
+    return this.tracks;
   }
 }
