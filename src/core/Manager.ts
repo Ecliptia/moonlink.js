@@ -221,6 +221,8 @@ export class Manager extends EventEmitter {
     if (attempts) player.voiceState.attempt = true;
     return true;
   }
+
+  //TODO: Remove this method
   public createPlayer(config: IPlayerConfig): Player {
     return this.players.create(config);
   }

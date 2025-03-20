@@ -16,9 +16,9 @@ navigation: false
 ::hero
 ---
 announcement:
-  title: 'Release v4.4.7'
+  title: 'Release v4.4.28'
   icon: '🎉'
-  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.4.7
+  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.4.28
   target: _blank
 actions:
   - name: Get Started
@@ -66,9 +66,10 @@ announcement:
   title: 'Support'
   icon: 'lucide:pie-chart'
 actions:
-  - name: Discord
+  - name: 
     to: https://discord.gg/q8HzGuHuDY
-    leftIcon: ic:baseline-discord
+    leftIcon: logos:discord
+    variant: outline
 ---
 
 #title
@@ -93,6 +94,65 @@ Get in touch by these means: joining the discord support server
 
 ::button-link{left-icon="lucide:github" to="https://github.com/Ecliptia/moonlink.js/pulls" target="_blank"}
   Github Pull Request
+::
+## Used By
+::card
+---
+icon: 'lucide:bot-message-square'
+icon-size: 26
+horizontal: true
+---
+#title
+list of discord bot applications that use moonlink.js
+
+#description
+for dissemination purposes
+
+#content
+::team-card-group
+  ::team-card
+  ---
+  avatar: 
+  center: false
+  name: YADB (Yet Another Discord Bot)
+  title: by Xotak
+  links:
+    - icon: line-md:github-loop
+      to: https://framagit.org/xotak/yadb
+    - icon: line-md:discord
+      to: https://discord.com/oauth2/authorize?client_id=1174614219560341586&permissions=2033703774278&scope=bot+applications.commands
+    - icon: material-symbols:docs-outline
+      to: https://xotak.frama.io/yadb-docs/
+  ---
+  ::
+  ::team-card
+  ---
+  avatar: https://camo.githubusercontent.com/1108dccb9fc7b98242def6ba2a98f76832dec5050f1384bcf2a6e94aa37e1bae/68747470733a2f2f692e696d6775722e636f6d2f39396d6e776a672e706e67
+  center: false
+  name: ComicallyBot
+  title: by Comicallybad
+  links:
+    - icon: line-md:github-loop
+      to: https://github.com/comicallybad/ComicallyBot
+  ---
+  ::
+  ::team-card
+  ---
+  avatar: https://github.com/khouwdevin/stalker-discord/raw/master/images/spy.png
+  center: false
+  name: stalker-discord
+  title: by khouwdevin
+  links:
+    - icon: line-md:github-loop
+      to: https://github.com/khouwdevin/stalker-discord
+  ---
+  ::
+::
+
+#footer
+  ::alert{type="note" icon="lucide:pencil"}
+  If you want to add your application, join the discord server, or open a pull request at `docs/content/index.md`
+  ::
 ::
 
 ## Contributors
@@ -135,7 +195,7 @@ Get in touch by these means: joining the discord support server
   ::team-card
   ---
   center: false
-  avatar: https://images-ext-1.discordapp.net/external/puCrhkjoIy3gVL9odRkQ_ze_oE3pWBoVCKZk7ssIsr4/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/389709853511122944/863cda322c55e7b08127fe9e90136c2e.png?format=webp&quality=lossless&width=585&height=585
+  avatar: https://images-ext-1.discordapp.net/external/EzD_6L_K28EMUN8RwQhssNUaZEyVN1H3dG6VIHczPvc/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/389709853511122944/cd8fa0420ae13e16f5bfd87340da35d8.png?format=webp&quality=lossless&width=810&height=810
   name: iamforster
   title: Tester and Bug Hunter
   ---
@@ -170,4 +230,5 @@ Get in touch by these means: joining the discord support server
 ::alert{type="success" icon="lucide:lightbulb"}
   And we thank everyone who joins the server and reports bugs, thus also contributing to making the project increasingly stable, and pleasing other developers
 ::
+
 
