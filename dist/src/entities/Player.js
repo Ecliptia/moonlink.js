@@ -45,13 +45,22 @@ class Player {
             this.listen = new (index_1.Structure.get("Listen"))(this);
             this.lyrics = new (index_1.Structure.get("Lyrics"))(this);
         }
-        this.manager.database.set(`players.${this.guildId}`, config);
+        this.updateData(undefined, config);
     }
     set(key, data) {
         this.data[key] = data;
     }
     get(key) {
         return this.data[key];
+    }
+    has(key) {
+        return this.data[key] !== undefined;
+    }
+    delete(key) {
+        if (!this.data[key])
+            return false;
+        delete this.data[key];
+        return true;
     }
     setVoiceChannelId(voiceChannelId) {
         (0, index_1.validateProperty)(voiceChannelId, value => value !== undefined || typeof value !== "string", "Moonlink.js > Player#setVoiceChannelId - voiceChannelId not a string");
@@ -71,14 +80,14 @@ class Player {
         (0, index_1.validateProperty)(autoPlay, value => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay not a boolean");
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
-        this.manager.database.set(`players.${this.guildId}.autoPlay`, autoPlay);
+        this.updateData("autoPlay", autoPlay);
         return true;
     }
     setAutoLeave(autoLeave) {
         (0, index_1.validateProperty)(autoLeave, value => value !== undefined || typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave not a boolean");
         this.autoLeave = autoLeave;
         this.manager.emit("playerAutoLeaveSet", this, autoLeave);
-        this.manager.database.set(`players.${this.guildId}.autoLeave`, autoLeave);
+        this.updateData("autoLeave", autoLeave);
         return true;
     }
     connect(options) {
@@ -127,11 +136,9 @@ class Player {
                 id: options.requestedBy ?? this.current?.requestedBy,
             });
         }
-        console.log(this.current.requestedBy, options.requestedBy, typeof options.requestedBy == "string" ||
-            typeof this.current?.requestedBy == "string");
-        this.manager.database.set(`players.${this.guildId}.current`, {
+        this.updateData("current", {
             encoded: this.current.encoded,
-            position: options.position ?? 0,
+            position: 0,
             requestedBy: this.current.requestedBy,
         });
         this.node.rest.update({
@@ -214,7 +221,7 @@ class Player {
         });
         this.paused = false;
         this.manager.emit("playerTriggeredResume", this);
-        this.manager.database.set(`players.${this.guildId}.paused`, false);
+        this.updateData("paused", false);
         return true;
     }
     stop(options) {
@@ -251,7 +258,7 @@ class Player {
         if (position) {
             this.current = this.queue.get(position);
             this.queue.remove(position);
-            this.manager.database.set(`players.${this.guildId}.current`, {
+            this.updateData("current", {
                 encoded: this.current.encoded,
                 position: 0,
                 requestedBy: this.current.requestedBy,
@@ -279,7 +286,7 @@ class Player {
             },
         });
         this.manager.emit("playerTriggeredSeek", this, position);
-        this.manager.database.set(`players.${this.guildId}.current.position`, position);
+        this.updateData("current.position", position);
         return true;
     }
     shuffle() {
@@ -301,7 +308,7 @@ class Player {
             },
         });
         this.manager.emit("playerChangedVolume", this, oldVolume, volume);
-        this.manager.database.set(`players.${this.guildId}.volume`, volume);
+        this.updateData("volume", volume);
         return true;
     }
     setLoop(loop) {
@@ -309,7 +316,7 @@ class Player {
         let oldLoop = this.loop;
         this.loop = loop;
         this.manager.emit("playerChangedLoop", this, oldLoop, loop);
-        this.manager.database.set(`players.${this.guildId}.loop`, loop);
+        this.updateData("loop", loop);
         return true;
     }
     destroy() {
@@ -319,6 +326,9 @@ class Player {
         this.manager.players.delete(this.guildId);
         this.manager.emit("playerDestroyed", this);
         return true;
+    }
+    updateData(path, data) {
+        path ? this.manager.database.set(`players.${this.guildId}.${path}`, data) : this.manager.database.set(`players.${this.guildId}`, data);
     }
 }
 exports.Player = Player;
