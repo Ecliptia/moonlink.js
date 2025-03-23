@@ -19,4 +19,11 @@ export declare class Queue {
     get first(): Track;
     get last(): Track;
     get all(): Track[];
+    find(query: string): Track | undefined;
+    move(from: number, to: number): boolean;
+    slice(start: number, end?: number): Track[];
+    filter(predicate: (track: Track) => boolean): Track[];
+    reverse(): boolean;
+    get position(): number;
+    get previous(): Track[];
 }
