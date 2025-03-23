@@ -5,7 +5,7 @@ import {
   Node,
   TSortTypeNode,
   validateProperty,
-  generateShortUUID,
+  generateUUID,
 } from "../../index";
 export class NodeManager {
   public readonly manager: Manager;
@@ -71,7 +71,7 @@ export class NodeManager {
   }
   public add(node: INode): void {
     this.check(node);
-    let uuid = generateShortUUID(node.host, node.port);
+    let uuid = generateUUID(node.host, node.port);
     this.cache.set(node.identifier ?? uuid, new (Structure.get("Node"))(this.manager, node));
 
     this.manager.emit("nodeCreate", this.cache.get(node.identifier ?? uuid));
