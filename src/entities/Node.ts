@@ -6,7 +6,7 @@ import {
   Structure,
   Track,
   decodeTrack,
-  generateShortUUID,
+  generateUUID,
 } from "../../index";
 export class Node {
   public readonly manager: Manager;
@@ -35,7 +35,7 @@ export class Node {
   public rest: Rest;
   constructor(manager: Manager, config: INode) {
     this.manager = manager;
-    this.uuid = generateShortUUID(config.host, config.port);
+    this.uuid = generateUUID(config.host, config.port);
     this.host = config.host;
     this.port = config.port;
     this.identifier = config.identifier;
@@ -48,18 +48,34 @@ export class Node {
     this.sessionId = config.sessionId;
     this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
     this.rest = new Rest(this);
+
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Node > Constructor > New node initialized: ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`
+    );
   }
   public get address(): string {
     return `${this.host}:${this.port}`;
   }
   public connect(): void {
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`
+    );
+
     let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
     let headers = {
       Authorization: this.password,
       "User-Id": this.manager.options.clientId,
       "Client-Name": this.manager.options.clientName,
     };
-    if (this.manager.options.resume) headers["Session-Id"] = sessionId;
+    if (this.manager.options.resume && sessionId) {
+      headers["Session-Id"] = sessionId;
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Node > Connect > Using resume session ID: ${sessionId} for ${this.identifier}`
+      );
+    }
     this.socket = new WebSocket(
       `ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`,
       {
@@ -78,6 +94,11 @@ export class Node {
       }) is ready for attempting to connect.`
     );
     this.manager.emit("nodeCreate", this);
+
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`
+    );
   }
   public reconnect(): void {
     this.reconnectTimeout = setTimeout(() => {
@@ -488,10 +509,121 @@ export class Node {
     this.socket.close();
     this.destroyed = true;
   }
+  
+  public getSystemStats(): { cpuLoad: number; memoryUsage: number } {
+    if (!this.stats) return { cpuLoad: 0, memoryUsage: 0 };
+    return {
+      cpuLoad: this.stats.cpu ? this.stats.cpu.systemLoad : 0,
+      memoryUsage: this.stats.memory ? this.stats.memory.used : 0
+    };
+  }
+  
+  public isOverloaded(cpuThreshold: number = 80, memoryThreshold: number = 80): boolean {
+    const stats = this.getSystemStats();
+    return stats.cpuLoad > cpuThreshold || stats.memoryUsage > memoryThreshold;
+  }
+  
+  public getNodeInfo(): object {
+    return {
+      identifier: this.identifier,
+      connected: this.connected,
+      stats: this.stats,
+      players: this.getPlayersCount,
+      version: this.version,
+      uptime: this.stats?.uptime || 0,
+      status: this.isOverloaded() ? 'overloaded' : 'stable'
+    };
+  }
+  
+  public async migrateAllPlayers(targetNode?: Node): Promise<void> {
+    if (!this.getPlayersCount) return;
+    
+    const destination = targetNode || this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players")[0];
+    if (!destination) {
+      this.manager.emit('debug', 'Moonlink.js > Node > No nodes available for migration');
+      return;
+    }
+    
+    for (const player of this.getPlayers()) {
+      try {
+        await player.transferNode(destination);
+        this.manager.emit(
+          'debug',
+          `Moonlink.js > Node > Player ${player.guildId} successfully migrated to ${destination.identifier}`
+        );
+      } catch (error) {
+        this.manager.emit(
+          'debug',
+          `Moonlink.js > Node > Error migrating player ${player.guildId}: ${error}`
+        );
+      }
+    }
+  }
   public getPlayers() {
     return this.manager.players.all.filter(player => player.node.uuid === this.uuid);
   }
   public get getPlayersCount() {
     return this.getPlayers().length;
+  }
+  
+  public needsRestart(): boolean {
+    const stats = this.getSystemStats();
+    return (
+      stats.cpuLoad > 80 || 
+      stats.memoryUsage > 80 || 
+      this.reconnectAttempts > 3
+    );
+  }
+
+  public getNodeStatus(): object {
+    const players = this.getPlayers();
+    const { cpuLoad, memoryUsage } = this.stats?.cpu ? {
+      cpuLoad: this.stats.cpu.systemLoad,
+      memoryUsage: this.stats.memory.used
+    } : { cpuLoad: 0, memoryUsage: 0 };
+    
+    const isNodeOverloaded = cpuLoad > 80 || memoryUsage > 80;
+    
+    return {
+      identifier: this.identifier,
+      connected: this.connected,
+      version: this.version,
+      stats: {
+        cpu: cpuLoad,
+        memory: memoryUsage,
+        uptime: this.stats?.uptime || 0,
+      },
+      players: {
+        total: this.getPlayersCount,
+        active: players.filter(p => p.playing).length,
+        paused: players.filter(p => p.paused).length,
+        idle: players.filter(p => !p.playing && !p.paused).length
+      },
+      health: {
+        status: isNodeOverloaded ? 'overloaded' : 'stable',
+        needsRestart: isNodeOverloaded || this.reconnectAttempts > 3
+      }
+    };
+  }
+
+  public async checkHealth(timeout: number = 2000): Promise<{
+    responding: boolean;
+    performance: 'excellent' | 'good' | 'poor';
+  }> {
+    try {
+      const start = Date.now();
+      await Promise.race([
+        this.rest.getVersion(),
+        new Promise((_, reject) => setTimeout(() => reject(), timeout))
+      ]);
+      
+      const responseTime = Date.now() - start;
+      return {
+        responding: true,
+        performance: responseTime < 100 ? 'excellent' : responseTime < 200 ? 'good' : 'poor'
+      };
+    } catch {
+      return { responding: false, performance: 'poor' };
+    }
   }
 }

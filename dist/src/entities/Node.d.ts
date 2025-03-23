@@ -41,6 +41,19 @@ export declare class Node {
         error: any;
     }): void;
     destroy(): void;
+    getSystemStats(): {
+        cpuLoad: number;
+        memoryUsage: number;
+    };
+    isOverloaded(cpuThreshold?: number, memoryThreshold?: number): boolean;
+    getNodeInfo(): object;
+    migrateAllPlayers(targetNode?: Node): Promise<void>;
     getPlayers(): Player[];
     get getPlayersCount(): number;
+    needsRestart(): boolean;
+    getNodeStatus(): object;
+    checkHealth(timeout?: number): Promise<{
+        responding: boolean;
+        performance: 'excellent' | 'good' | 'poor';
+    }>;
 }
