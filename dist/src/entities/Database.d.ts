@@ -1,5 +1,6 @@
 import { Manager } from "../../index";
 export declare class Database {
+    private disabled;
     private data;
     private id;
     constructor(manager: Manager);
