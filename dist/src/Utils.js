@@ -8,7 +8,7 @@ exports.validateProperty = validateProperty;
 exports.delay = delay;
 exports.decodeTrack = decodeTrack;
 exports.encodeTrack = encodeTrack;
-exports.generateShortUUID = generateShortUUID;
+exports.generateUUID = generateUUID;
 exports.Log = Log;
 exports.makeRequest = makeRequest;
 exports.compareVersions = compareVersions;
@@ -155,10 +155,10 @@ function encodeTrack(track) {
     write("long", track.position);
     return Buffer.concat(bufferArray).toString("base64");
 }
-function generateShortUUID(host, port) {
+function generateUUID(host, port) {
     const data = `${host}:${port}`;
     const hash = (0, crypto_1.createHash)("sha256").update(data).digest("hex");
-    return parseInt(hash.slice(0, 8), 16).toString(36).padEnd(8, "0");
+    return hash;
 }
 function Log(message, LogPath) {
     const timestamp = new Date().toISOString();
