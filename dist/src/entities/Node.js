@@ -29,7 +29,7 @@ class Node {
     rest;
     constructor(manager, config) {
         this.manager = manager;
-        this.uuid = (0, index_1.generateShortUUID)(config.host, config.port);
+        this.uuid = (0, index_1.generateUUID)(config.host, config.port);
         this.host = config.host;
         this.port = config.port;
         this.identifier = config.identifier;
@@ -42,19 +42,23 @@ class Node {
         this.sessionId = config.sessionId;
         this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
         this.rest = new index_1.Rest(this);
+        this.manager.emit("debug", `Moonlink.js > Node > Constructor > New node initialized: ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`);
     }
     get address() {
         return `${this.host}:${this.port}`;
     }
     connect() {
+        this.manager.emit("debug", `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`);
         let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.options.clientId,
             "Client-Name": this.manager.options.clientName,
         };
-        if (this.manager.options.resume)
+        if (this.manager.options.resume && sessionId) {
             headers["Session-Id"] = sessionId;
+            this.manager.emit("debug", `Moonlink.js > Node > Connect > Using resume session ID: ${sessionId} for ${this.identifier}`);
+        }
         this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
         });
@@ -64,6 +68,7 @@ class Node {
         this.socket.addEventListener("error", this.error.bind(this));
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
         this.manager.emit("nodeCreate", this);
+        this.manager.emit("debug", `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`);
     }
     reconnect() {
         this.reconnectTimeout = setTimeout(() => {
@@ -370,11 +375,103 @@ class Node {
         this.socket.close();
         this.destroyed = true;
     }
+    getSystemStats() {
+        if (!this.stats)
+            return { cpuLoad: 0, memoryUsage: 0 };
+        return {
+            cpuLoad: this.stats.cpu ? this.stats.cpu.systemLoad : 0,
+            memoryUsage: this.stats.memory ? this.stats.memory.used : 0
+        };
+    }
+    isOverloaded(cpuThreshold = 80, memoryThreshold = 80) {
+        const stats = this.getSystemStats();
+        return stats.cpuLoad > cpuThreshold || stats.memoryUsage > memoryThreshold;
+    }
+    getNodeInfo() {
+        return {
+            identifier: this.identifier,
+            connected: this.connected,
+            stats: this.stats,
+            players: this.getPlayersCount,
+            version: this.version,
+            uptime: this.stats?.uptime || 0,
+            status: this.isOverloaded() ? 'overloaded' : 'stable'
+        };
+    }
+    async migrateAllPlayers(targetNode) {
+        if (!this.getPlayersCount)
+            return;
+        const destination = targetNode || this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players")[0];
+        if (!destination) {
+            this.manager.emit('debug', 'Moonlink.js > Node > No nodes available for migration');
+            return;
+        }
+        for (const player of this.getPlayers()) {
+            try {
+                await player.transferNode(destination);
+                this.manager.emit('debug', `Moonlink.js > Node > Player ${player.guildId} successfully migrated to ${destination.identifier}`);
+            }
+            catch (error) {
+                this.manager.emit('debug', `Moonlink.js > Node > Error migrating player ${player.guildId}: ${error}`);
+            }
+        }
+    }
     getPlayers() {
         return this.manager.players.all.filter(player => player.node.uuid === this.uuid);
     }
     get getPlayersCount() {
         return this.getPlayers().length;
+    }
+    needsRestart() {
+        const stats = this.getSystemStats();
+        return (stats.cpuLoad > 80 ||
+            stats.memoryUsage > 80 ||
+            this.reconnectAttempts > 3);
+    }
+    getNodeStatus() {
+        const players = this.getPlayers();
+        const { cpuLoad, memoryUsage } = this.stats?.cpu ? {
+            cpuLoad: this.stats.cpu.systemLoad,
+            memoryUsage: this.stats.memory.used
+        } : { cpuLoad: 0, memoryUsage: 0 };
+        const isNodeOverloaded = cpuLoad > 80 || memoryUsage > 80;
+        return {
+            identifier: this.identifier,
+            connected: this.connected,
+            version: this.version,
+            stats: {
+                cpu: cpuLoad,
+                memory: memoryUsage,
+                uptime: this.stats?.uptime || 0,
+            },
+            players: {
+                total: this.getPlayersCount,
+                active: players.filter(p => p.playing).length,
+                paused: players.filter(p => p.paused).length,
+                idle: players.filter(p => !p.playing && !p.paused).length
+            },
+            health: {
+                status: isNodeOverloaded ? 'overloaded' : 'stable',
+                needsRestart: isNodeOverloaded || this.reconnectAttempts > 3
+            }
+        };
+    }
+    async checkHealth(timeout = 2000) {
+        try {
+            const start = Date.now();
+            await Promise.race([
+                this.rest.getVersion(),
+                new Promise((_, reject) => setTimeout(() => reject(), timeout))
+            ]);
+            const responseTime = Date.now() - start;
+            return {
+                responding: true,
+                performance: responseTime < 100 ? 'excellent' : responseTime < 200 ? 'good' : 'poor'
+            };
+        }
+        catch {
+            return { responding: false, performance: 'poor' };
+        }
     }
 }
 exports.Node = Node;
