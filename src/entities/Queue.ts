@@ -8,11 +8,6 @@ export class Queue {
   }
   public tracks: Track[] = [];
 
-  /**
-   * Add track(s) to the queue
-   * @param track A single track or array of tracks to add
-   * @returns True if the track(s) were added successfully
-   */
   public add(track: Track | Track[]): boolean {
     if (Array.isArray(track)) {
       if (track.length === 0) return true;
@@ -80,5 +75,37 @@ export class Queue {
   }
   public get all(): Track[] {
     return this.tracks;
+  }
+  public find(query: string): Track | undefined {
+    const searchTerm = query.toLowerCase();
+    return this.tracks.find(t => 
+      t.identifier === query || 
+      t.title.toLowerCase().includes(searchTerm)
+    );
+  }
+  public move(from: number, to: number): boolean {
+    if (from < 0 || to < 0 || from >= this.tracks.length || to >= this.tracks.length) return false;
+    
+    const track = this.tracks.splice(from, 1)[0];
+    this.tracks.splice(to, 0, track);
+    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    return true;
+  }
+  public slice(start: number, end?: number): Track[] {
+    return this.tracks.slice(start, end);
+  }
+  public filter(predicate: (track: Track) => boolean): Track[] {
+    return this.tracks.filter(predicate);
+  }
+  public reverse(): boolean {
+    this.tracks.reverse();
+    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    return true;
+  }
+  public get position(): number {
+    return this.tracks.findIndex(track => track === this.first);
+  }
+  public get previous(): Track[] {
+    return this.tracks.slice(0, this.position);
   }
 }

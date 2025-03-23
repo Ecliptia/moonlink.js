@@ -77,6 +77,36 @@ class Queue {
     get all() {
         return this.tracks;
     }
+    find(query) {
+        const searchTerm = query.toLowerCase();
+        return this.tracks.find(t => t.identifier === query ||
+            t.title.toLowerCase().includes(searchTerm));
+    }
+    move(from, to) {
+        if (from < 0 || to < 0 || from >= this.tracks.length || to >= this.tracks.length)
+            return false;
+        const track = this.tracks.splice(from, 1)[0];
+        this.tracks.splice(to, 0, track);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    slice(start, end) {
+        return this.tracks.slice(start, end);
+    }
+    filter(predicate) {
+        return this.tracks.filter(predicate);
+    }
+    reverse() {
+        this.tracks.reverse();
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    get position() {
+        return this.tracks.findIndex(track => track === this.first);
+    }
+    get previous() {
+        return this.tracks.slice(0, this.position);
+    }
 }
 exports.Queue = Queue;
 //# sourceMappingURL=Queue.js.map

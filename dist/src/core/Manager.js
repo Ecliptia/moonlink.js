@@ -24,6 +24,7 @@ class Manager extends node_events_1.EventEmitter {
             sortPlayersByRegion: false,
             resume: false,
             autoResume: false,
+            disableDatabase: false,
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);

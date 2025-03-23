@@ -10,21 +10,15 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "localhost",
-      secure: false,
-      port: 3000,
+      host: "144.76.57.59",
+      port: 33469,
       password: "youshallnotpass",
-      pathVersion: "v1",
-    },
-    {
-      host: "localhost",
+      region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
+      identifier: "MAIN",
       secure: false,
-      port: 2333,
-      password: "youshallnotpass",
     }
   ],
   options: {
-    clientName: "TRISTAR/1.1",
     NodeLinkFeatures: true,
     previousInArray: true,
     logFile: {
@@ -38,7 +32,6 @@ client.manager = new Manager({
     if (guild) guild.shard.send(JSON.parse(payload));
   },
 });
-
 client.commands = new Discord.Collection();
 const commandFolders = fs.readdirSync("./testBot/commands");
 

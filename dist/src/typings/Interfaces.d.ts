@@ -98,6 +98,8 @@ export interface IOptionsManager {
     autoResume?: boolean;
     resume?: boolean;
     partialTrack?: TPartialTrackProperties[];
+    disableDatabase?: boolean;
+    blacklisteSources?: string[];
 }
 export interface IPlayerConfig {
     guildId: string;

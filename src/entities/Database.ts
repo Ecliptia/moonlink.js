@@ -4,30 +4,46 @@ import { Manager, Structure } from "../../index";
 type Data = Record<string, any>;
 
 export class Database {
+  private disabled = false;
   private data: Data = {};
   private id: string;
   
   constructor(manager: Manager) {
     this.id = manager.options.clientId;
-    Structure.getManager().emit(
-      "debug",
-      `Moonlink.js > Database initialized with clientId(${this.id})`
-    );
+    this.disabled = manager.options.disableDatabase && !manager.options.resume;
+
+    if (this.disabled) {
+      this.data = {};
+      Structure.getManager().emit(
+        "debug",
+        `Moonlink.js > Database > Database is disabled, no data will be loaded/saved`
+      );
+      return;
+    } else {
+      Structure.getManager().emit(
+        "debug",
+        `Moonlink.js > Database > Database is enabled, loading data...`
+      );
+    }
+
     this.loadData();
   }
 
   set<T>(key: string, value: T): void {
+    if (this.disabled) return;
     if (!key) throw new Error("Key cannot be empty");
     this.modifyData(key, value);
     this.saveData();
   }
 
   get<T>(key: string): T | undefined {
+    if (this.disabled) return undefined;
     if (!key) throw new Error("Key cannot be empty");
     return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
   }
 
   push<T>(key: string, value: T): void {
+    if (this.disabled) return;
     const arr = this.get<T[]>(key) || [];
     if (!Array.isArray(arr)) throw new Error("Key does not point to an array");
     arr.push(value);
@@ -35,6 +51,7 @@ export class Database {
   }
 
   delete(key: string): boolean {
+    if (this.disabled) return false;
     if (!key) throw new Error("Key cannot be empty");
     const keys = key.split(".");
     const lastKey = keys.pop();
@@ -55,6 +72,7 @@ export class Database {
   }
 
   private modifyData(key: string, value: any): void {
+    if (this.disabled) return;
     const keys = key.split(".");
     let current = this.data;
 
@@ -69,6 +87,7 @@ export class Database {
   }
 
   private loadData(): void {
+    if (this.disabled) return;
     const filePath = this.getFilePath();
     if (fs.existsSync(filePath)) {
       Structure.getManager().emit(
@@ -94,6 +113,7 @@ export class Database {
   }
 
   private saveData(): void {
+    if (this.disabled) return;
     try {
       const filePath = this.getFilePath();
       fs.mkdirSync(path.dirname(filePath), { recursive: true });

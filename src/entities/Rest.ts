@@ -15,9 +15,9 @@ export class Rest {
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
-      "User-Agent": `Moonlink.js/${node.manager.version} (PETRICHOR/14.02.24)`,
+      "User-Agent": `Moonlink.js/${node.manager.version} (AFTERGLOW/23.03.25)`,
       "Content-Type": "application/json",
-      "accept-encoding": "br, gzip, deflate",
+      "accept-encoding": "br, gzip, deflate"
     };
   }
   public async loadTracks(source: string, query: string): Promise<any> {

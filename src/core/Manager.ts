@@ -47,10 +47,11 @@ export class Manager extends EventEmitter {
       sortPlayersByRegion: false,
       resume: false,
       autoResume: false,
+      disableDatabase: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
-
+    
     if (this.options.plugins) {
       if (this.options.plugins) {
         this.options.plugins.forEach(plugin => {
@@ -222,20 +223,32 @@ export class Manager extends EventEmitter {
     return true;
   }
 
-  //TODO: Remove this method
+  /**
+   * @deprecated Use players.create() instead
+   */
   public createPlayer(config: IPlayerConfig): Player {
     return this.players.create(config);
   }
+  /**
+   * @deprecated Use players.get() instead
+   */ 
   public getPlayer(guildId: string): Player {
     return this.players.get(guildId);
   }
+  /**
+   * @deprecated Use players.has() instead
+   */
   public hasPlayer(guildId: string): boolean {
     return this.players.has(guildId);
   }
+  /**
+   * @deprecated Use players.delete() instead
+   */
   public deletePlayer(guildId: string): boolean {
     this.players.delete(guildId);
     return true;
   }
+
   public getAllPlayers(): Map<string, Player> {
     return this.players.cache;
   }

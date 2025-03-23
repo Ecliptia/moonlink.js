@@ -27,6 +27,8 @@ export declare class Player {
     constructor(manager: Manager, config: IPlayerConfig);
     set(key: string, data: unknown): void;
     get<T>(key: string): T;
+    has(key: string): boolean;
+    delete(key: string): boolean;
     setVoiceChannelId(voiceChannelId: string): boolean;
     setTextChannelId(textChannelId: string): boolean;
     setAutoPlay(autoPlay: boolean): boolean;
@@ -59,4 +61,5 @@ export declare class Player {
     setVolume(volume: number): boolean;
     setLoop(loop: TPlayerLoop): boolean;
     destroy(): boolean;
+    private updateData;
 }
