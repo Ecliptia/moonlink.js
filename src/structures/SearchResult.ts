@@ -1,14 +1,22 @@
 import { IPlaylistInfo, Track } from "../../index";
 
+export type LoadType = 'track' | 'search' | 'playlist' | 'error' | 'empty' | 'short';
+
+export interface SearchResultOptions {
+  query: string;
+  source?: string;
+  requester?: unknown;
+}
+
 export class SearchResult {
   public query: string;
   public source: string;
   public tracks: Track[];
-  public loadType: string;
+  public loadType: LoadType;
   public playlistInfo: IPlaylistInfo;
   public error?: string;
 
-  constructor(req: any, options: { query: string; source?: string; requester?: unknown }) {
+  constructor(req: any, options: SearchResultOptions) {
     this.query = options.query;
     this.source = options.source || "unknown";
     this.loadType = req.loadType;
@@ -44,5 +52,13 @@ export class SearchResult {
     }
 
     return rawTracks.map((data) => new Track(data, requester));
+  }
+  
+  public getFirst(): Track | undefined {
+    return this.tracks[0];
+  }
+
+  public getTotalDuration(): number {
+    return this.tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
   }
 }

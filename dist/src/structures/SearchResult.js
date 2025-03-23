@@ -40,6 +40,12 @@ class SearchResult {
         }
         return rawTracks.map((data) => new index_1.Track(data, requester));
     }
+    getFirst() {
+        return this.tracks[0];
+    }
+    getTotalDuration() {
+        return this.tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
+    }
 }
 exports.SearchResult = SearchResult;
 //# sourceMappingURL=SearchResult.js.map
