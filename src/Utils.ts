@@ -165,10 +165,10 @@ export function encodeTrack(track: ITrackInfo): string {
   return Buffer.concat(bufferArray).toString("base64");
 }
 
-export function generateShortUUID(host: string, port: number): string {
+export function generateUUID(host: string, port: number): string {
   const data = `${host}:${port}`;
   const hash = createHash("sha256").update(data).digest("hex");
-  return parseInt(hash.slice(0, 8), 16).toString(36).padEnd(8, "0");
+  return hash;
 }
 
 export function Log(message: string, LogPath: string): void {

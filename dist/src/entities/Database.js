@@ -8,25 +8,40 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const index_1 = require("../../index");
 class Database {
+    disabled = false;
     data = {};
     id;
     constructor(manager) {
         this.id = manager.options.clientId;
-        index_1.Structure.getManager().emit("debug", `Moonlink.js > Database initialized with clientId(${this.id})`);
+        this.disabled = manager.options.disableDatabase && !manager.options.resume;
+        if (this.disabled) {
+            this.data = {};
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Database is disabled, no data will be loaded/saved`);
+            return;
+        }
+        else {
+            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Database is enabled, loading data...`);
+        }
         this.loadData();
     }
     set(key, value) {
+        if (this.disabled)
+            return;
         if (!key)
             throw new Error("Key cannot be empty");
         this.modifyData(key, value);
         this.saveData();
     }
     get(key) {
+        if (this.disabled)
+            return undefined;
         if (!key)
             throw new Error("Key cannot be empty");
         return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
     }
     push(key, value) {
+        if (this.disabled)
+            return;
         const arr = this.get(key) || [];
         if (!Array.isArray(arr))
             throw new Error("Key does not point to an array");
@@ -34,6 +49,8 @@ class Database {
         this.set(key, arr);
     }
     delete(key) {
+        if (this.disabled)
+            return false;
         if (!key)
             throw new Error("Key cannot be empty");
         const keys = key.split(".");
@@ -52,6 +69,8 @@ class Database {
         return false;
     }
     modifyData(key, value) {
+        if (this.disabled)
+            return;
         const keys = key.split(".");
         let current = this.data;
         keys.forEach((k, i) => {
@@ -65,6 +84,8 @@ class Database {
         });
     }
     loadData() {
+        if (this.disabled)
+            return;
         const filePath = this.getFilePath();
         if (fs_1.default.existsSync(filePath)) {
             index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`);
@@ -82,6 +103,8 @@ class Database {
         }
     }
     saveData() {
+        if (this.disabled)
+            return;
         try {
             const filePath = this.getFilePath();
             fs_1.default.mkdirSync(path_1.default.dirname(filePath), { recursive: true });
