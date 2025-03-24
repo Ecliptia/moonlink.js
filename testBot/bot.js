@@ -10,8 +10,8 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "144.76.57.59",
-      port: 33469,
+      host: "localhost",
+      port: 2333,
       password: "youshallnotpass",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
@@ -25,7 +25,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    partialTrack: ["url", "duration"]
+    partialTrack: ["url", "duration"],
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
