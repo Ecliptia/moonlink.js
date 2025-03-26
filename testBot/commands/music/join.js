@@ -1,4 +1,5 @@
-const { data } = require("./search");
+const { EmbedBuilder } = require("discord.js");
+const config = require("../../config");
 
 module.exports = {
     data: {
@@ -8,7 +9,7 @@ module.exports = {
     async execute(client, message, args) {
         const voiceChannel = message.member.voice.channel;
         if (!voiceChannel) {
-            return message.reply("You need to be in a voice channel to use this command.");
+            return message.reply(`${config.emojis.error} You need to be in a voice channel to use this command!`);
         }
 
         const player = client.manager.createPlayer({
@@ -18,6 +19,11 @@ module.exports = {
         });
 
         player.connect();
-        message.reply("Joined your voice channel!");
+        
+        const embed = new EmbedBuilder()
+            .setDescription(`${config.emojis.success} Joined your voice channel!`)
+            .setColor(config.colors.success);
+            
+        message.channel.send({ embeds: [embed] });
     },
 }

@@ -16,6 +16,7 @@ client.manager = new Manager({
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
+      pathVersion: "v4"
     }
   ],
   options: {
@@ -25,7 +26,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    partialTrack: ["url", "duration"],
+    partialTrack: ["url", "duration", "artworkUrl"],
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
