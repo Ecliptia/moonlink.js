@@ -71,10 +71,12 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`);
     }
     reconnect() {
+        const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
+        this.manager.emit("debug", `Moonlink.js > Node (${this.identifier}) attempting to reconnect in ${delay / 1000}s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount})`);
         this.reconnectTimeout = setTimeout(() => {
             this.reconnectAttempts++;
             this.connect();
-        }, this.retryDelay);
+        }, delay);
         if (this.getPlayersCount > 0) {
             this.getPlayers().forEach(player => {
                 player.playing = false;
