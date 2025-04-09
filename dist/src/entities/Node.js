@@ -233,6 +233,14 @@ class Node {
                             player.guildId +
                             " has started the track: " +
                             player.current.title);
+                        if (player.get("attemptingToReconnect")) {
+                            player.set("attemptingToReconnect", 0);
+                            this.manager.emit("debug", "Moonlink.js > Player " +
+                                player.guildId +
+                                " has successfully reconnected to the node " +
+                                this.uuid +
+                                ".");
+                        }
                         break;
                     case "TrackEndEvent":
                         if (!player.current)
@@ -363,7 +371,20 @@ class Node {
                             payload.code +
                             " and reason " +
                             payload.reason);
-                        break;
+                        if (player.playing && player.queue.size > 0) {
+                            if (player.get("attemptingToReconnect") ?? 0 < 6) {
+                                await player.connect({});
+                                await player.restart();
+                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is web socket closed and attempting to reconnect.");
+                                this.manager.emit("playerReconnect", player, "webSocketClosed");
+                                player.set("attemptingToReconnect", (player.get("attemptingToReconnect") ?? 0) + 1);
+                            }
+                            else {
+                                player.destroy("webSocketClosed");
+                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has been destroyed because of too many failed attempts to reconnect.");
+                            }
+                            break;
+                        }
                     }
                 }
                 break;
@@ -388,17 +409,6 @@ class Node {
     isOverloaded(cpuThreshold = 80, memoryThreshold = 80) {
         const stats = this.getSystemStats();
         return stats.cpuLoad > cpuThreshold || stats.memoryUsage > memoryThreshold;
-    }
-    getNodeInfo() {
-        return {
-            identifier: this.identifier,
-            connected: this.connected,
-            stats: this.stats,
-            players: this.getPlayersCount,
-            version: this.version,
-            uptime: this.stats?.uptime || 0,
-            status: this.isOverloaded() ? 'overloaded' : 'stable'
-        };
     }
     async migrateAllPlayers(targetNode) {
         if (!this.getPlayersCount)
