@@ -46,7 +46,6 @@ export declare class Node {
         memoryUsage: number;
     };
     isOverloaded(cpuThreshold?: number, memoryThreshold?: number): boolean;
-    getNodeInfo(): object;
     migrateAllPlayers(targetNode?: Node): Promise<void>;
     getPlayers(): Player[];
     get getPlayersCount(): number;

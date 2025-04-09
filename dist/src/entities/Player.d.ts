@@ -60,6 +60,6 @@ export declare class Player {
     shuffle(): boolean;
     setVolume(volume: number): boolean;
     setLoop(loop: TPlayerLoop): boolean;
-    destroy(): boolean;
+    destroy(reason?: string): boolean;
     private updateData;
 }
