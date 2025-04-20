@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
 const index_1 = require("../../index");
+const ws_1 = __importDefault(require("ws"));
 class Node {
     manager;
     uuid;
@@ -59,7 +63,7 @@ class Node {
             headers["Session-Id"] = sessionId;
             this.manager.emit("debug", `Moonlink.js > Node > Connect > Using resume session ID: ${sessionId} for ${this.identifier}`);
         }
-        this.socket = new WebSocket(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
+        this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
         });
         this.socket.addEventListener("open", this.open.bind(this), { once: true });

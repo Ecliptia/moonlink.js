@@ -1,0 +1,20 @@
+{
+  "name": "denobot",
+  "version": "1.0.0",
+  "description": "Este é um bot Discord simples que utiliza moonlink.js para reprodução de música.",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "start:deno": "deno run --allow-net --allow-read --allow-env bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "commonjs",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "ws": "^8.18.1"
+  }
+}

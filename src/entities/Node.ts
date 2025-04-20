@@ -1,13 +1,13 @@
 import { INodeStats, INode } from "../typings/Interfaces";
 import {
   Manager,
-  Player,
   Rest,
   Structure,
   Track,
   decodeTrack,
   generateUUID,
 } from "../../index";
+import WebSocket from "ws"
 export class Node {
   public readonly manager: Manager;
   public readonly uuid: string;
