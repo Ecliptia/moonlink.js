@@ -3,14 +3,51 @@ title: Changelog
 description: "Changelog for Moonlink.js"
 icon: 'lucide:code-2'
 authors:
-  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmF0YXIuY29tL2F2YXRhci9hNmE5NDVhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
+  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmFhdGEuY29tL2F2YXRhci9hNmE5NDVhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
     name: Lucas Morais Rodrigues
     username: 1Lucas1apk
     to: https://github.com/1Lucas1apk
     target: _blank
 ---
 
-## Version 4.4.28 ->  4.4.36
+## Version 4.4.36 → DEV
+
+::card{icon="lucide:package"}
+#title
+Package Updates
+
+#description
+- Updated `description` field in `package.json` to better describe Moonlink.js features and stability
+- Added missing comma after `get-image-colors` in `devDependencies` for consistency
+- Reformatted `packageManager` entry with corrected trailing comma
+::
+
+::card{icon="lucide:zap"}
+#title
+Compatibility Updates
+
+#description
+- Added Bun and Deno environment detection in Manager initialization (globalThis.Deno and globalThis.bun) for accurate environment logging
+- Ensured WebSocket (`ws`) module compatibility with Bun and Deno runtimes
+::
+
+::card{icon="lucide:book"}
+#title
+Documentation Updates
+
+#description
+- Revised `sendPayload` examples in `docs/content/1.getting-started/4.basic-setup.md` and `5.creating-a-music-bot.md` to use `JSON.parse(payload)`
+- Updated `search` usage in basic setup guide: switched from `search(query)` to `search({ query })` signature
+- Refreshed team-card entries in `docs/content/index.md`: updated avatar URLs and team link items
+::
+
+::button-link{right-icon="lucide:arrow-up-right" to="https://github.com/Ecliptia/moonlink.js" target="_blank"}
+  For more details, check our GitHub repository
+::
+
+<br>
+
+## Version 4.4.28 → 4.4.36
 
 ::card{icon="lucide:database"}
 #title
@@ -116,8 +153,4 @@ Internal Improvements
 - Updated player data management approach
 - Changed event payload structures
 ::
-<br>
 
-::button-link{right-icon="lucide:arrow-up-right" to="https://github.com/Ecliptia/moonlink.js" target="_blank"}
-  For more details, check our GitHub repository
-::
