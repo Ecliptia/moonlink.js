@@ -27,6 +27,7 @@ module.exports = {
           voiceChannelId: channel.id,
           textChannelId: message.channel.id,
           autoPlay: true,
+          autoLeave: true
         });
 
       if (!player.connected) player.connect({ setDeaf: true });
@@ -74,15 +75,7 @@ module.exports = {
         },
         {
           name: `<:emoji_23:967837516558393365>╺╸*\`Duration:\`*`,
-          value: `${
-            convertMsToTime(searchResult.playlistInfo.duration).days
-          } Days, ${
-            convertMsToTime(searchResult.playlistInfo.duration).hours
-          } Hours, ${
-            convertMsToTime(searchResult.playlistInfo.duration).minutes
-          } Minutes, ${
-            convertMsToTime(searchResult.playlistInfo.duration).seconds
-          } Seconds`,
+          value: `${formatDuration(searchResult.playlistInfo.duration)}`,
           inline: true,
         },
       );

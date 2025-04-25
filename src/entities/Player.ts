@@ -420,12 +420,12 @@ export class Player {
     return true;
   }
 
-  public destroy(): boolean {
+  public destroy(reason?: string): boolean {
     if (this.connected) this.disconnect();
 
     this.queue.clear();
     this.manager.players.delete(this.guildId);
-    this.manager.emit("playerDestroyed", this);
+    this.manager.emit("playerDestroyed", this, reason);
 
     return true;
   }
