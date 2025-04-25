@@ -27,6 +27,7 @@ module.exports = {
           voiceChannelId: channel.id,
           textChannelId: message.channel.id,
           autoPlay: true,
+          autoLeave: true
         });
 
       if (!player.connected) player.connect({ setDeaf: true });
