@@ -112,6 +112,23 @@ for dissemination purposes
 ::team-card-group
   ::team-card
   ---
+  avatar: https://sdmntpreastus2.oaiusercontent.com/files/00000000-c5cc-61f6-b84d-89e6f75a0ed8/raw?se=2025-04-25T16%3A22%3A13Z&sp=r&sv=2024-08-04&sr=b&scid=863613e0-24c8-5e1d-b809-0b701ffb284c&skoid=a47cd303-16a2-427e-8efb-2ce406116005&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-04-25T00%3A04%3A07Z&ske=2025-04-26T00%3A04%3A07Z&sks=b&skv=2024-08-04&sig=9/KYoKWtckXl1qlgyT0ag7qJouA09hIj6xcoo/eqruo%3D
+  center: false
+  name: GalaxyBot
+  title: "Used by 48k+ guilds; Team: https://galaxybot.app/en/team"
+  links:
+    - icon: lucide:bot
+      to: https://galaxybot.app/go/invite
+    - icon: line-md:discord
+      to: https://galaxybot.app/go/support
+    - icon: lucide:unlink-2
+      to: https://galaxybot.app
+    - icon: lucide:users-round
+      to: https://galaxybot.app/en/team
+  ---
+  ::
+  ::team-card
+  ---
   avatar: 
   center: false
   name: YADB (Yet Another Discord Bot)
@@ -184,7 +201,7 @@ for dissemination purposes
   ::team-card
   ---
   center: false
-  avatar: https://images-ext-1.discordapp.net/external/wDQ-8JzBGg4DnV95B5xbWX8djZUbFps-iUk8DHjcd5o/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/336885637934481409/04a3cae04e545bf3d5827958ae595c8c.png?format=webp&quality=lossless&width=585&height=585
+  avatar: https://cdn.discordapp.com/avatars/336885637934481409/371faca58eb88781b922d4967b91fab4.png?size=2048
   name: xotakfr
   title: Tester and Bug Hunter
   links:

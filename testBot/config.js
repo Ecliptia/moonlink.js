@@ -53,7 +53,7 @@ module.exports = {
   },
   
   // IDs de usuários com permissões de desenvolvedor
-  devs: ["SEU_ID_AQUI"],
+  devs: ["978981769661513758"],
   
   // Prefixo padrão do bot
   prefix: "?",

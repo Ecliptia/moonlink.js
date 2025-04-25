@@ -53,6 +53,7 @@ class Manager extends node_events_1.EventEmitter {
         this.initialize = true;
         this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
         this.emit("debug", "Moonlink.js > Version: " + this.version);
+        this.emit("debug", "Moonlink.js > environment: " + (typeof globalThis.Deno !== "undefined" ? "Deno" : typeof globalThis.bun !== "undefined" ? "Bun" : "Node.js") + "; version: " + (typeof globalThis.Deno !== "undefined" ? Deno.version.deno : typeof globalThis.bun !== "undefined" ? (Bun.version) : process.version));
     }
     async search(options) {
         return new Promise(async (resolve) => {

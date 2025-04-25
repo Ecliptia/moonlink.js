@@ -1,13 +1,13 @@
 import { INodeStats, INode } from "../typings/Interfaces";
 import {
   Manager,
-  Player,
   Rest,
   Structure,
   Track,
   decodeTrack,
   generateUUID,
 } from "../../index";
+import WebSocket from "ws"
 export class Node {
   public readonly manager: Manager;
   public readonly uuid: string;
@@ -317,6 +317,18 @@ export class Node {
                 " has started the track: " +
                 player.current.title
             );
+
+            if (player.get("attemptingToReconnect")) {
+              player.set("attemptingToReconnect", 0);
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " has successfully reconnected to the node " +
+                  this.uuid +
+                  "."
+              );
+            }
             break;
           case "TrackEndEvent":
             if (!player.current)
@@ -501,9 +513,24 @@ export class Node {
                 " and reason " +
                 payload.reason
             );
+
+            if (player.playing && player.queue.size > 0) {
+              if (player.get("attemptingToReconnect") ?? 0 as number < 6) {
+                await player.connect({});
+                await player.restart();
+                
+                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is web socket closed and attempting to reconnect.");
+                this.manager.emit("playerReconnect", player, "webSocketClosed");
+
+                player.set("attemptingToReconnect", (player.get("attemptingToReconnect") ?? 0 as any) + 1);
+              } else {
+                player.destroy("webSocketClosed");
+                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has been destroyed because of too many failed attempts to reconnect.");
+              }
             break;
           }
         }
+      }
 
         break;
       }
@@ -528,18 +555,6 @@ export class Node {
   public isOverloaded(cpuThreshold: number = 80, memoryThreshold: number = 80): boolean {
     const stats = this.getSystemStats();
     return stats.cpuLoad > cpuThreshold || stats.memoryUsage > memoryThreshold;
-  }
-  
-  public getNodeInfo(): object {
-    return {
-      identifier: this.identifier,
-      connected: this.connected,
-      stats: this.stats,
-      players: this.getPlayersCount,
-      version: this.version,
-      uptime: this.stats?.uptime || 0,
-      status: this.isOverloaded() ? 'overloaded' : 'stable'
-    };
   }
   
   public async migrateAllPlayers(targetNode?: Node): Promise<void> {

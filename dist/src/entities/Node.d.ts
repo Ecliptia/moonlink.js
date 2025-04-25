@@ -1,5 +1,6 @@
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Player, Rest } from "../../index";
+import { Manager, Rest } from "../../index";
+import WebSocket from "ws";
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -46,9 +47,8 @@ export declare class Node {
         memoryUsage: number;
     };
     isOverloaded(cpuThreshold?: number, memoryThreshold?: number): boolean;
-    getNodeInfo(): object;
     migrateAllPlayers(targetNode?: Node): Promise<void>;
-    getPlayers(): Player[];
+    getPlayers(): import("./Player").Player[];
     get getPlayersCount(): number;
     needsRestart(): boolean;
     getNodeStatus(): object;

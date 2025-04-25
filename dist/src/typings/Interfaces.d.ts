@@ -32,8 +32,9 @@ export interface IEvents {
     playerNodeSet: (player: Player, oldNode: string, newNode: string) => void;
     playerConnected: (player: Player) => void;
     playerDisconnected: (player: Player) => void;
+    playerReconnect: (player: Player, reason?: string) => void;
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
-    playerDestroyed: (player: Player) => void;
+    playerDestroyed: (player: Player, reason?: string) => void;
     trackStart: (player: Player, track: Track) => void;
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;

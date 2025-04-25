@@ -319,12 +319,12 @@ class Player {
         this.updateData("loop", loop);
         return true;
     }
-    destroy() {
+    destroy(reason) {
         if (this.connected)
             this.disconnect();
         this.queue.clear();
         this.manager.players.delete(this.guildId);
-        this.manager.emit("playerDestroyed", this);
+        this.manager.emit("playerDestroyed", this, reason);
         return true;
     }
     updateData(path, data) {
