@@ -60,16 +60,32 @@ class Manager extends node_events_1.EventEmitter {
     async search(options) {
         return new Promise(async (resolve) => {
             (0, index_1.validateProperty)(options, value => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
-            (0, index_1.validateProperty)(options.query, value => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
-            let query = options.query;
-            let source = options.source || this.options.defaultPlatformSearch;
-            if (![...this.nodes.cache.values()].filter(node => node.connected))
+            (0, index_1.validateProperty)(options.query, value => typeof value === "string", "(Moonlink.js) - Manager > Search > Query is required");
+            const query = options.query;
+            const sourceName = options.source ?? this.options.defaultPlatformSearch;
+            const [matched, sourceMatched] = this.sources.isLinkMatch(query, sourceName);
+            if (!this.options.disableNativeSources && matched) {
+                const nativeSource = this.sources.get(sourceMatched);
+                if (nativeSource) {
+                    const data = await nativeSource.load(query, options);
+                    return resolve(new (index_1.Structure.get("SearchResult"))(data, options));
+                }
+            }
+            if (!this.options.disableNativeSources &&
+                this.sources.has(sourceName)) {
+                const nativeSource = this.sources.get(sourceName);
+                const data = await nativeSource.search(query, options);
+                return resolve(new (index_1.Structure.get("SearchResult"))(data, options));
+            }
+            const available = [...this.nodes.cache.values()].filter(n => n.connected);
+            if (available.length === 0) {
                 throw new Error("No available nodes to search from.");
-            let node = this.nodes.cache.has(options?.node)
-                ? this.nodes.get(options?.node)
+            }
+            const node = options.node && this.nodes.cache.has(options.node)
+                ? this.nodes.get(options.node)
                 : this.nodes.best;
-            let req = await node.rest.loadTracks(source, query);
-            return resolve(new (index_1.Structure.get("SearchResult"))(req, options));
+            const data = await node.rest.loadTracks(sourceName, query);
+            return resolve(new (index_1.Structure.get("SearchResult"))(data, options));
         });
     }
     async packetUpdate(packet) {
