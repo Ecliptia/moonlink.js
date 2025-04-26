@@ -25,6 +25,7 @@ export class Player {
   public autoLeave: boolean;
   public connected: boolean;
   public playing: boolean;
+  public destroyed: boolean = false;
   public paused: boolean;
   public volume: number = 80;
   public loop: TPlayerLoop = "off";
@@ -422,6 +423,8 @@ export class Player {
 
   public destroy(reason?: string): boolean {
     if (this.connected) this.disconnect();
+    if (this.destroyed) return true;
+    else this.destroyed = true;
 
     this.queue.clear();
     this.manager.players.delete(this.guildId);

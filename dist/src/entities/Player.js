@@ -13,6 +13,7 @@ class Player {
     autoLeave;
     connected;
     playing;
+    destroyed = false;
     paused;
     volume = 80;
     loop = "off";
@@ -322,6 +323,10 @@ class Player {
     destroy(reason) {
         if (this.connected)
             this.disconnect();
+        if (this.destroyed)
+            return true;
+        else
+            this.destroyed = true;
         this.queue.clear();
         this.manager.players.delete(this.guildId);
         this.manager.emit("playerDestroyed", this, reason);
