@@ -47,16 +47,16 @@ export class SourceManager {
                 if (file.endsWith(".js")) {
                     const source = require(path.join(folderPath, file)).default;
                     if (!source) return;
-                    this.add(source);
+                    this.add(new source(this.manager));
                 }
             });
         });
     }
-    public isLinkMatch(url: string, source: string): boolean {
-        let isMatch = false;
-        Object.values(this.sources).forEach((source) => {
-            if(source.isLinkMatch(url)) isMatch = true;
-        })
-        if (isMatch) return true;
-    }
+    public isLinkMatch(url: string, _unusedSourceParam?: string): [boolean, string | null] {
+        for (const src of Object.values(this.sources)) {
+          if (src.match!(url)) {
+            return [true, src.name];
+          }}
+        return [false, null];
+      }
 }
