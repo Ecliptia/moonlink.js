@@ -26,8 +26,7 @@ module.exports = {
           guildId: message.guild.id,
           voiceChannelId: channel.id,
           textChannelId: message.channel.id,
-          autoPlay: true,
-          autoLeave: true
+          autoPlay: true
         });
 
       if (!player.connected) player.connect({ setDeaf: true });
