@@ -13,6 +13,7 @@ import {
   Database,
   NodeManager,
   PlayerManager,
+  SourceManager,
   Player,
   validateProperty,
   SearchResult,
@@ -34,6 +35,7 @@ export class Manager extends EventEmitter {
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
   public database: Database;
+  public sources: SourceManager;
   constructor(config: IConfigManager) {
     super();
     this.sendPayload = config?.sendPayload;
@@ -78,6 +80,7 @@ export class Manager extends EventEmitter {
     Structure.manager = this;
     this.options.clientId = clientId;
     this.database = new (Structure.get("Database"))(this);
+    this.sources = new (Structure.get("SourceManager"))(this);
     this.nodes.init();
     this.initialize = true;
     this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
@@ -99,24 +102,44 @@ export class Manager extends EventEmitter {
       );
       validateProperty(
         options.query,
-        value => value !== undefined || value !== "string",
+        value => typeof value === "string",
         "(Moonlink.js) - Manager > Search > Query is required"
       );
-      let query = options.query;
-      let source = options.source || this.options.defaultPlatformSearch;
-
-      if (![...this.nodes.cache.values()].filter(node => node.connected))
+  
+      const query = options.query;
+      const sourceName = options.source ?? this.options.defaultPlatformSearch;
+      const [ matched, sourceMatched ] = this.sources.isLinkMatch(query, sourceName)
+      if (!this.options.disableNativeSources && matched) {
+        const nativeSource = this.sources.get(sourceMatched)!;
+        if (nativeSource) {
+          const data = await nativeSource.load(query, options);
+          return resolve(new (Structure.get("SearchResult"))(data, options));
+        }
+      }
+  
+      if (
+        !this.options.disableNativeSources &&
+        this.sources.has(sourceName)
+      ) {
+        const nativeSource = this.sources.get(sourceName)!;
+        const data = await nativeSource.search(query, options);
+        return resolve(new (Structure.get("SearchResult"))(data, options));
+      }
+  
+      const available = [...this.nodes.cache.values()].filter(n => n.connected);
+      if (available.length === 0) {
         throw new Error("No available nodes to search from.");
-
-      let node = this.nodes.cache.has(options?.node)
-        ? this.nodes.get(options?.node)
+      }
+  
+      const node = options.node && this.nodes.cache.has(options.node)
+        ? this.nodes.get(options.node)!
         : this.nodes.best;
-
-      let req = await node.rest.loadTracks(source, query);
-
-      return resolve(new (Structure.get("SearchResult"))(req, options));
+  
+      const data = await node.rest.loadTracks(sourceName, query);
+      return resolve(new (Structure.get("SearchResult"))(data, options));
     });
   }
+  
   public async packetUpdate(packet: any): Promise<void> {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
 
