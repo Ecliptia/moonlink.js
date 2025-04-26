@@ -353,7 +353,17 @@ export class Node {
               : (player.previous = track);
 
             this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
-
+            
+            if (player.destroyed) {
+              this.manager.emit(
+                "debug",
+                "Moonlink.js > Player " +
+                  player.guildId +
+                  " has been destroyed. No need to process the end of the track."
+              );
+              return;
+            }
+            
             if (["loadFailed", "cleanup"].includes(payload.reason)) {
               if (player.queue.size) {
                 player.play();
