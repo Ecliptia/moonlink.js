@@ -50,7 +50,8 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
           voiceChannelId: voiceChannelId,
           textChannelId: null,
           autoPlay: false,
-          autoLeave: false
+          autoLeave: false,
+          loop: "track"
         });
 
       if (!player.connected) await player.connect({ setDeaf: true });
@@ -59,7 +60,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         player.queue.clear();
         player.queue.add(track.tracks[0]);
         player.play();
-        player.setLoop(true);
+        player.setLoop("track");
         console.log("Playback started and looping.");
       } else {
         console.error("Track not found: Zorro - Heaven Was Mine after All");
@@ -80,5 +81,5 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 });
 
 client.on("raw", (d) => client.manager.packetUpdate(d));
-
+client.manager.on("debug", (info) => console.log(info));
 client.login(process.env.TOKEN).catch(console.error);
