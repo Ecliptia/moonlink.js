@@ -12,6 +12,7 @@ export declare class Player {
     autoLeave: boolean;
     connected: boolean;
     playing: boolean;
+    destroyed: boolean;
     paused: boolean;
     volume: number;
     loop: TPlayerLoop;
