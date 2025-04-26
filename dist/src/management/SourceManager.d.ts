@@ -10,4 +10,5 @@ export declare class SourceManager {
     clear(): void;
     getAll(): ISource[];
     loadFolder(): void;
+    isLinkMatch(url: string, source: string): boolean;
 }

@@ -14,7 +14,7 @@ class SourceManager {
         (0, index_1.validateProperty)(source.name, value => !!value, "(Moonlink.js) - Source > Name is required");
         this.sources[source.name] = source;
         this.manager.emit("sourceAdd", source);
-        this.manager.emit("debug", `Moonlink.js > Source ${source.name} added`);
+        this.manager.emit("debug", `Moonlink.js > Source > ${source.name} added`);
     }
     get(name) {
         return this.sources[name];
@@ -27,12 +27,12 @@ class SourceManager {
             return;
         delete this.sources[name];
         this.manager.emit("sourceRemove", name);
-        this.manager.emit("debug", `Moonlink.js > Source ${name} removed`);
+        this.manager.emit("debug", `Moonlink.js > Source > ${name} removed`);
     }
     clear() {
         this.sources = {};
         this.manager.emit("sourceClear");
-        this.manager.emit("debug", "Moonlink.js > All sources removed");
+        this.manager.emit("debug", "Moonlink.js > All sources native removed");
     }
     getAll() {
         return Object.values(this.sources);
@@ -53,6 +53,15 @@ class SourceManager {
                 }
             });
         });
+    }
+    isLinkMatch(url, source) {
+        let isMatch = false;
+        Object.values(this.sources).forEach((source) => {
+            if (source.isLinkMatch(url))
+                isMatch = true;
+        });
+        if (isMatch)
+            return true;
     }
 }
 exports.SourceManager = SourceManager;
