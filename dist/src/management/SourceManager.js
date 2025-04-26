@@ -49,19 +49,18 @@ class SourceManager {
                     const source = require(path.join(folderPath, file)).default;
                     if (!source)
                         return;
-                    this.add(source);
+                    this.add(new source(this.manager));
                 }
             });
         });
     }
-    isLinkMatch(url, source) {
-        let isMatch = false;
-        Object.values(this.sources).forEach((source) => {
-            if (source.isLinkMatch(url))
-                isMatch = true;
-        });
-        if (isMatch)
-            return true;
+    isLinkMatch(url, _unusedSourceParam) {
+        for (const src of Object.values(this.sources)) {
+            if (src.match(url)) {
+                return [true, src.name];
+            }
+        }
+        return [false, null];
     }
 }
 exports.SourceManager = SourceManager;
