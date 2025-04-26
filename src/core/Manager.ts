@@ -13,6 +13,7 @@ import {
   Database,
   NodeManager,
   PlayerManager,
+  SourceManager,
   Player,
   validateProperty,
   SearchResult,
@@ -34,6 +35,7 @@ export class Manager extends EventEmitter {
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
   public database: Database;
+  public sources: SourceManager;
   constructor(config: IConfigManager) {
     super();
     this.sendPayload = config?.sendPayload;
@@ -78,6 +80,7 @@ export class Manager extends EventEmitter {
     Structure.manager = this;
     this.options.clientId = clientId;
     this.database = new (Structure.get("Database"))(this);
+    this.sources = new (Structure.get("SourceManager"))(this);
     this.nodes.init();
     this.initialize = true;
     this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
@@ -104,10 +107,22 @@ export class Manager extends EventEmitter {
       );
       let query = options.query;
       let source = options.source || this.options.defaultPlatformSearch;
+      
+      if (!this.options.disableNativeSources && this.sources.isLinkMatch(query, source)) {
+        let source = this.sources.get(query);
+        if (!source) throw new Error("Moonlink.js > Source not found for " + query);
+        let req = await source.load(query, options);
+        return resolve(new (Structure.get("SearchResult"))(req, options));
+      } else if (!this.options.disableNativeSources && this.sources.has(query)) {
+        let source = this.sources.get(query);
+        if (!source) throw new Error("Moonlink.js > Source not found for " + query);
+        let req = await source.search(query, options);
+        return resolve(new (Structure.get("SearchResult"))(req, options));
+      }
 
       if (![...this.nodes.cache.values()].filter(node => node.connected))
         throw new Error("No available nodes to search from.");
-
+      
       let node = this.nodes.cache.has(options?.node)
         ? this.nodes.get(options?.node)
         : this.nodes.best;

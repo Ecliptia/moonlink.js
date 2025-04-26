@@ -11,6 +11,7 @@ class Manager extends node_events_1.EventEmitter {
     players = new (index_1.Structure.get("PlayerManager"))(this);
     version = require("../../index").version;
     database;
+    sources;
     constructor(config) {
         super();
         this.sendPayload = config?.sendPayload;
@@ -49,6 +50,7 @@ class Manager extends node_events_1.EventEmitter {
         index_1.Structure.manager = this;
         this.options.clientId = clientId;
         this.database = new (index_1.Structure.get("Database"))(this);
+        this.sources = new (index_1.Structure.get("SourceManager"))(this);
         this.nodes.init();
         this.initialize = true;
         this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
