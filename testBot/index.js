@@ -8,8 +8,8 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 3000,
-      password: "pwd",
+      port: 2333,
+      password: "youshallnotpass",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -29,10 +29,14 @@ let track;
 client.once("ready", async() => {
   client.manager.init(client.user.id);
   console.log(`${client.user.tag} is ready.`);
-  setTimeout(async() => track = searchResult = await client.manager.search({
-    query: "https://s3.galaxybot.app/media/audio/support/open-stefan.mp3",
+  setTimeout(async() => {
+    track = searchResult = await client.manager.search({
+    query: "sprec:seed_tracks=3vkCueOmm7xQDoJ17W1Pm3",
     requester: client.user.id
-  }) , 2000)
+  }) 
+  console.log("Track found:", track.tracks[0])
+}, 2000)
+  
 });
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
