@@ -19,6 +19,7 @@ export declare class Track {
     constructor(trackData: ITrack, requester?: Object);
     private createPropertySetters;
     setRequester(requester: Object | string): void;
+    resolve(): Promise<boolean>;
     resolveData(): Track;
     isPartialTrack(): boolean;
     raw(): ITrack;
