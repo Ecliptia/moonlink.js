@@ -112,7 +112,7 @@ for dissemination purposes
 ::team-card-group
   ::team-card
   ---
-  avatar: https://sdmntpreastus2.oaiusercontent.com/files/00000000-c5cc-61f6-b84d-89e6f75a0ed8/raw?se=2025-04-25T16%3A22%3A13Z&sp=r&sv=2024-08-04&sr=b&scid=863613e0-24c8-5e1d-b809-0b701ffb284c&skoid=a47cd303-16a2-427e-8efb-2ce406116005&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-04-25T00%3A04%3A07Z&ske=2025-04-26T00%3A04%3A07Z&sks=b&skv=2024-08-04&sig=9/KYoKWtckXl1qlgyT0ag7qJouA09hIj6xcoo/eqruo%3D
+  avatar: https://s3.galaxybot.app/media/brand/GalaxyBot.png
   center: false
   name: GalaxyBot
   title: "Used by 48k+ guilds; Team: https://galaxybot.app/en/team"

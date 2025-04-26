@@ -13,6 +13,7 @@ class Player {
     autoLeave;
     connected;
     playing;
+    destroyed = false;
     paused;
     volume = 80;
     loop = "off";
@@ -136,6 +137,10 @@ class Player {
                 id: options.requestedBy ?? this.current?.requestedBy,
             });
         }
+        if (this.current.pluginInfo.MoonlinkInternal) {
+            if (!await this.current.resolve())
+                return false;
+        }
         this.updateData("current", {
             encoded: this.current.encoded,
             position: 0,
@@ -148,7 +153,7 @@ class Player {
                     encoded: this.current.encoded,
                     userData: options.requestedBy ?? this.current?.requestedBy ?? undefined,
                 },
-                position: options.position ?? 0,
+                position: options.position ?? (this.loop !== "off" ? 0 : undefined),
                 endTime: options.endTime ?? undefined,
                 volume: this.volume,
             },
@@ -322,6 +327,10 @@ class Player {
     destroy(reason) {
         if (this.connected)
             this.disconnect();
+        if (this.destroyed)
+            return true;
+        else
+            this.destroyed = true;
         this.queue.clear();
         this.manager.players.delete(this.guildId);
         this.manager.emit("playerDestroyed", this, reason);

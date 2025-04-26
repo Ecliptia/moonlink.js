@@ -64,6 +64,9 @@ export interface IEvents {
   trackException: (player: Player, track: Track, exception: any) => void;
   queueEnd: (player: Player, track?: any) => void;
   socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
+  sourceAdd: (source: ISource) => void;
+  sourceRemove: (source: string) => void;
+  sourceClear: () => void;
 }
 
 export interface INode {
@@ -80,6 +83,13 @@ export interface INode {
   pathVersion?: string;
 }
 
+export interface ISource {
+  name: string;
+  load: (url: string, options: any) => Promise<any>;
+  search: (query: string, options: any) => Promise<any>;
+  resolve: (url: string, options: any) => Promise<any>;
+  match: (url: string) => boolean;
+}
 export interface INodeStats {
   players: number;
   playingPlayers: number;
@@ -124,7 +134,15 @@ export interface IOptionsManager {
   resume?: boolean;
   partialTrack?: TPartialTrackProperties[];
   disableDatabase?: boolean;
+  disableNativeSources?: boolean;
   blacklisteSources?: string[];
+  spotify?: {
+    limitLoadPlaylist?: number;
+    limitLoadAlbum?: number;
+    limitLoadArtist?: number;
+    limitLoadSearch?: number;
+    limitLoadRecommendations?: number;
+  };
 }
 
 export interface IPlayerConfig {

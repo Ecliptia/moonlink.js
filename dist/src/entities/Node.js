@@ -262,6 +262,12 @@ class Node {
                             ? player.previous.push(track)
                             : (player.previous = track);
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
+                        if (player.destroyed) {
+                            this.manager.emit("debug", "Moonlink.js > Player " +
+                                player.guildId +
+                                " has been destroyed. No need to process the end of the track.");
+                            return;
+                        }
                         if (["loadFailed", "cleanup"].includes(payload.reason)) {
                             if (player.queue.size) {
                                 player.play();
@@ -314,7 +320,7 @@ class Node {
                             else if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
                                 this.manager.emit("debug", "Moonlink.js > Player " +
                                     player.guildId +
-                                    " is autoplay payload is error loadType ");
+                                    " is autoplay payload is error loadType");
                             }
                             else {
                                 let randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
@@ -329,6 +335,37 @@ class Node {
                                 }
                                 else {
                                     this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay failed ");
+                                }
+                            }
+                        }
+                        if (player.autoPlay && player.current.sourceName?.toLowerCase() == "spotify") {
+                            if (player.current.pluginInfo?.MoonlinkInternal) {
+                                let uri = `sprec:seed_tracks=${player.current.identifier}`;
+                                let res = await this.manager.search({
+                                    query: uri,
+                                });
+                                if (payload.reason === "stopped") {
+                                    this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay payload reason stopped ");
+                                }
+                                else if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
+                                    this.manager.emit("debug", "Moonlink.js > Player " +
+                                        player.guildId +
+                                        " is autoplay payload is error loadType");
+                                }
+                                else {
+                                    let randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
+                                    if (randomTrack) {
+                                        player.queue.add(randomTrack);
+                                        player.play();
+                                        this.manager.emit("debug", "Moonlink.js > Player " +
+                                            player.guildId +
+                                            " is autoplaying track " +
+                                            randomTrack.title);
+                                        return;
+                                    }
+                                    else {
+                                        this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay failed ");
+                                    }
                                 }
                             }
                         }

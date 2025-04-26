@@ -63,6 +63,20 @@ class Track {
     setRequester(requester) {
         this.requestedBy = requester;
     }
+    async resolve() {
+        if (this.pluginInfo.MoonlinkInternal) {
+            let track = await Utils_1.Structure.getManager().search({
+                query: `${this.title} ${this.author}`,
+                source: Utils_1.Structure.getManager().options.defaultPlatformSearch
+            });
+            if (track.loadType === "empty" || track.loadType === "error")
+                return false;
+            this.encoded = track.tracks[0].encoded;
+            return track.tracks.length > 0;
+        }
+        else
+            return false;
+    }
     resolveData() {
         this.isPartial = false;
         const info = (0, Utils_1.decodeTrack)(this.encoded).info;
