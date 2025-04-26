@@ -69,6 +69,18 @@ export class Track {
   public setRequester(requester: Object | string): void {
     this.requestedBy = requester;
   }
+  
+  public async resolve(): Promise<boolean> {
+    if (this.pluginInfo.MoonlinkInternal) {
+      let track = await Structure.getManager().search({
+        query: `${this.title} ${this.author}`,
+        source: Structure.getManager().options.defaultPlatformSearch
+      });
+      if (track.loadType === "empty" || track.loadType === "error") return false;
+      this.encoded = track.tracks[0].encoded;
+      return track.tracks.length > 0;
+    } else return false;
+  }
 
   public resolveData(): Track {
     this.isPartial = false;
