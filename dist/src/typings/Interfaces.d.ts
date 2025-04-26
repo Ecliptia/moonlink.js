@@ -41,6 +41,9 @@ export interface IEvents {
     trackException: (player: Player, track: Track, exception: any) => void;
     queueEnd: (player: Player, track?: any) => void;
     socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
+    sourceAdd: (source: ISource) => void;
+    sourceRemove: (source: string) => void;
+    sourceClear: () => void;
 }
 export interface INode {
     host: string;
@@ -54,6 +57,12 @@ export interface INode {
     secure?: boolean;
     sessionId?: string;
     pathVersion?: string;
+}
+export interface ISource {
+    name: string;
+    load: (url: string, options: any) => Promise<any>;
+    search: (query: string, options: any) => Promise<any>;
+    resolve: (url: string, options: any) => Promise<any>;
 }
 export interface INodeStats {
     players: number;
@@ -100,6 +109,7 @@ export interface IOptionsManager {
     resume?: boolean;
     partialTrack?: TPartialTrackProperties[];
     disableDatabase?: boolean;
+    disableNativeSources?: boolean;
     blacklisteSources?: string[];
 }
 export interface IPlayerConfig {

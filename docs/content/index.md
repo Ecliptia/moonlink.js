@@ -112,7 +112,7 @@ for dissemination purposes
 ::team-card-group
   ::team-card
   ---
-  avatar: https://media.discordapp.net/attachments/1089196075304370186/1365370512372400129/raw.png?ex=680d0fe1&is=680bbe61&hm=9442fe66e72a1e49a1860bd1948530ec11e64958c692f524f5d03a4fce7a232d&=&format=webp&quality=lossless&width=930&height=930
+  avatar: https://s3.galaxybot.app/media/brand/GalaxyBot.png
   center: false
   name: GalaxyBot
   title: "Used by 48k+ guilds; Team: https://galaxybot.app/en/team"

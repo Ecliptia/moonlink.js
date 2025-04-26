@@ -22,6 +22,7 @@ __exportStar(require("./src/Utils"), exports);
 __exportStar(require("./src/core/Manager"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/management/PlayerManager"), exports);
+__exportStar(require("./src/management/SourceManager"), exports);
 __exportStar(require("./src/structures/SearchResult"), exports);
 __exportStar(require("./src/entities/Database"), exports);
 __exportStar(require("./src/entities/Filters"), exports);
@@ -37,5 +38,5 @@ const Utils_1 = require("./src/Utils");
     ["PlayerManager", "./src/management/PlayerManager"], ["SearchResult", "./src/structures/SearchResult"],
     ["Player", "./src/entities/Player"], ["Queue", "./src/entities/Queue"], ["Node", "./src/entities/Node"],
     ["Rest", "./src/entities/Rest"], ["Filters", "./src/entities/Filters"], ["Track", "./src/entities/Track"],
-    ["Lyrics", "./src/entities/Lyrics"], ["Listen", "./src/entities/Listen"]].map(([n, p]) => Utils_1.structures[n] = require(p)[n]);
+    ["Lyrics", "./src/entities/Lyrics"], ["Listen", "./src/entities/Listen"], ["SourceManager", "./src/management/SourceManager"]].map(([n, p]) => Utils_1.structures[n] = require(p)[n]);
 //# sourceMappingURL=index.js.map
