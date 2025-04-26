@@ -215,7 +215,7 @@ export class Player {
           encoded: this.current.encoded,
           userData: options.requestedBy ?? this.current?.requestedBy ?? undefined,
         },
-        position: options.position ?? (this.loop !== "off" ? 0 : undefined),
+        position: options.position ?? 0,
         endTime: options.endTime ?? undefined,
         volume: this.volume,
       },
