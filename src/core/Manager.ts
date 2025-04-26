@@ -108,7 +108,7 @@ export class Manager extends EventEmitter {
       let query = options.query;
       let source = options.source || this.options.defaultPlatformSearch;
       
-      if (!this.options.disableNativeSources && this.sources.isLinkMatch(query, source)) {
+      /*if (!this.options.disableNativeSources && this.sources.isLinkMatch(query, source)) {
         let source = this.sources.get(query);
         if (!source) throw new Error("Moonlink.js > Source not found for " + query);
         let req = await source.load(query, options);
@@ -118,7 +118,7 @@ export class Manager extends EventEmitter {
         if (!source) throw new Error("Moonlink.js > Source not found for " + query);
         let req = await source.search(query, options);
         return resolve(new (Structure.get("SearchResult"))(req, options));
-      }
+      }*/
 
       if (![...this.nodes.cache.values()].filter(node => node.connected))
         throw new Error("No available nodes to search from.");

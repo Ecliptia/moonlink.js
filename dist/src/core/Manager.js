@@ -63,20 +63,6 @@ class Manager extends node_events_1.EventEmitter {
             (0, index_1.validateProperty)(options.query, value => value !== undefined || value !== "string", "(Moonlink.js) - Manager > Search > Query is required");
             let query = options.query;
             let source = options.source || this.options.defaultPlatformSearch;
-            if (!this.options.disableNativeSources && this.sources.isLinkMatch(query, source)) {
-                let source = this.sources.get(query);
-                if (!source)
-                    throw new Error("Moonlink.js > Source not found for " + query);
-                let req = await source.load(query, options);
-                return resolve(new (index_1.Structure.get("SearchResult"))(req, options));
-            }
-            else if (!this.options.disableNativeSources && this.sources.has(query)) {
-                let source = this.sources.get(query);
-                if (!source)
-                    throw new Error("Moonlink.js > Source not found for " + query);
-                let req = await source.search(query, options);
-                return resolve(new (index_1.Structure.get("SearchResult"))(req, options));
-            }
             if (![...this.nodes.cache.values()].filter(node => node.connected))
                 throw new Error("No available nodes to search from.");
             let node = this.nodes.cache.has(options?.node)
