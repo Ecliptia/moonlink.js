@@ -63,6 +63,7 @@ export interface ISource {
     load: (url: string, options: any) => Promise<any>;
     search: (query: string, options: any) => Promise<any>;
     resolve: (url: string, options: any) => Promise<any>;
+    isLinkMatch: (url: string) => boolean;
 }
 export interface INodeStats {
     players: number;
