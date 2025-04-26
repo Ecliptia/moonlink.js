@@ -63,7 +63,7 @@ export interface ISource {
     load: (url: string, options: any) => Promise<any>;
     search: (query: string, options: any) => Promise<any>;
     resolve: (url: string, options: any) => Promise<any>;
-    isLinkMatch: (url: string) => boolean;
+    match: (url: string) => boolean;
 }
 export interface INodeStats {
     players: number;
@@ -112,6 +112,13 @@ export interface IOptionsManager {
     disableDatabase?: boolean;
     disableNativeSources?: boolean;
     blacklisteSources?: string[];
+    spotify?: {
+        limitLoadPlaylist?: number;
+        limitLoadAlbum?: number;
+        limitLoadArtist?: number;
+        limitLoadSearch?: number;
+        limitLoadRecommendations?: number;
+    };
 }
 export interface IPlayerConfig {
     guildId: string;
