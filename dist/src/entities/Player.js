@@ -137,9 +137,10 @@ class Player {
                 id: options.requestedBy ?? this.current?.requestedBy,
             });
         }
-        if (this.current.pluginInfo.MoonlinkInternal) {
-            if (!await this.current.resolve())
+        if (this.current?.pluginInfo?.MoonlinkInternal) {
+            if (!await this.current.resolve()) {
                 return false;
+            }
         }
         this.updateData("current", {
             encoded: this.current.encoded,
@@ -153,7 +154,7 @@ class Player {
                     encoded: this.current.encoded,
                     userData: options.requestedBy ?? this.current?.requestedBy ?? undefined,
                 },
-                position: options.position ?? (this.loop !== "off" ? 0 : undefined),
+                position: options.position ?? 0,
                 endTime: options.endTime ?? undefined,
                 volume: this.volume,
             },
