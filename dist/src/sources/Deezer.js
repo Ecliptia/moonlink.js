@@ -26,7 +26,7 @@ class Deezer {
         const url = `https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=${token}`;
         const resp = await fetch(url, { redirect: 'follow' });
         if (!resp.ok)
-            throw new Error(`Deezer init failed: ${resp.status}`);
+            this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
         const data = await resp.json();
         this.licenseToken = data.results.USER.OPTIONS.license_token;
         this.checkForm = data.results.checkForm;
@@ -38,7 +38,7 @@ class Deezer {
         const headers = this.cookie ? { Cookie: this.cookie } : {};
         const resp = await fetch(url, { headers, redirect: 'follow' });
         if (!resp.ok)
-            throw new Error(`Deezer API request failed: ${resp.status}`);
+            this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
         return resp.json();
     }
     async search(query) {

@@ -26,7 +26,7 @@ export default class Deezer implements ISource {
     const token = randomBytes(12).toString('base64').replace(/[+/=]/g, '').slice(0, 16);
     const url = `https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=${token}`;
     const resp = await fetch(url, { redirect: 'follow' });
-    if (!resp.ok) throw new Error(`Deezer init failed: ${resp.status}`);
+    if (!resp.ok) this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
     const data: any = await resp.json();
     this.licenseToken = data.results.USER.OPTIONS.license_token;
     this.checkForm = data.results.checkForm;
@@ -38,7 +38,7 @@ export default class Deezer implements ISource {
     const url = path.startsWith('http') ? path : `https://api.deezer.com${path}`;
     const headers: Record<string, string> = this.cookie ? { Cookie: this.cookie } : {};
     const resp = await fetch(url, { headers, redirect: 'follow' });
-    if (!resp.ok) throw new Error(`Deezer API request failed: ${resp.status}`);
+    if (!resp.ok) this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
     return resp.json();
   }
 
