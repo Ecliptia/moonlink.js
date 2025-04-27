@@ -143,6 +143,12 @@ export interface IOptionsManager {
     limitLoadSearch?: number;
     limitLoadRecommendations?: number;
   };
+  deezer?: {
+    maxSearchResults?: number;
+    maxAlbumTracks?: number;
+    maxPlaylistTracks?: number;
+    maxArtistTracks?: number;
+  };
 }
 
 export interface IPlayerConfig {
