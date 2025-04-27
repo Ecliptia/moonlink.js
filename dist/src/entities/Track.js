@@ -25,9 +25,7 @@ class Track {
         this.encoded = trackData.encoded;
         this.title = trackData.info.title;
         this.author = trackData.info.author;
-        if (trackData.pluginInfo) {
-            this.pluginInfo = trackData.pluginInfo;
-        }
+        this.pluginInfo = trackData.pluginInfo ?? {};
         const trackProps = this.createPropertySetters(trackData.info);
         if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
             this.isPartial = true;
