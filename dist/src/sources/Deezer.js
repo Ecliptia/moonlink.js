@@ -15,9 +15,10 @@ class Deezer {
         this.init();
     }
     match(query) {
-        return (query.startsWith('dzsearch:')) ||
-            /(?:https?:\/\/)?(?:www\.)?deezer\.com\/(?:[a-z]{2}\/){0,1}(track|album|playlist|artist)\/(\d+)(?:[\/?].*)?$/.test(query) ||
-            /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+/.test(query);
+        const shortLink = /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+$/;
+        return (query.startsWith('dzsearch:') ||
+            /(?:https?:\/\/)?(?:www\.)?deezer\.com\/(?:[a-z]{2}\/)?(track|album|playlist|artist)\/\d+/.test(query) ||
+            shortLink.test(query));
     }
     async init() {
         if (this.licenseToken && this.checkForm)
@@ -51,11 +52,13 @@ class Deezer {
         return { loadType: 'search', data: tracks };
     }
     async load(query) {
-        if (/^dzr\.page\.link/.test(query)) {
-            const resp = await fetch(query, { redirect: 'follow' });
+        const shortLink = /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+$/;
+        if (shortLink.test(query)) {
+            const urlToFetch = query.startsWith('http') ? query : `https://${query}`;
+            const resp = await fetch(urlToFetch, { redirect: 'follow' });
             query = resp.url;
         }
-        const m = /(?:https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]{2}\/){0,1}(track|album|playlist|artist)\/(\d+))/.exec(query);
+        const m = /(?:https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]{2}\/)?(track|album|playlist|artist)\/(\d+))/.exec(query);
         if (!m)
             return { loadType: 'error', data: { message: 'Invalid Deezer URL' } };
         const [, type, id] = m;
