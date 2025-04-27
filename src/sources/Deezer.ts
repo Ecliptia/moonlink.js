@@ -16,9 +16,12 @@ export default class Deezer implements ISource {
   }
 
   public match(query: string): boolean {
-    return (query.startsWith('dzsearch:')) ||
-      /(?:https?:\/\/)?(?:www\.)?deezer\.com\/(?:[a-z]{2}\/){0,1}(track|album|playlist|artist)\/(\d+)(?:[\/?].*)?$/.test(query) ||
-      /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+/.test(query);
+    const shortLink = /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+$/;
+    return (
+      query.startsWith('dzsearch:') ||
+      /(?:https?:\/\/)?(?:www\.)?deezer\.com\/(?:[a-z]{2}\/)?(track|album|playlist|artist)\/\d+/.test(query) ||
+      shortLink.test(query)
+    );
   }
 
   private async init(): Promise<void> {
@@ -52,12 +55,14 @@ export default class Deezer implements ISource {
   }
 
   public async load(query: string): Promise<any> {
-    if (/^dzr\.page\.link/.test(query)) {
-      const resp = await fetch(query, { redirect: 'follow' });
+    const shortLink = /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+$/;
+    if (shortLink.test(query)) {
+      const urlToFetch = query.startsWith('http') ? query : `https://${query}`;
+      const resp = await fetch(urlToFetch, { redirect: 'follow' });
       query = resp.url;
     }
 
-    const m = /(?:https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]{2}\/){0,1}(track|album|playlist|artist)\/(\d+))/.exec(query);
+    const m = /(?:https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]{2}\/)?(track|album|playlist|artist)\/(\d+))/.exec(query);
     if (!m) return { loadType: 'error', data: { message: 'Invalid Deezer URL' } };
     const [, type, id] = m;
 
