@@ -15,7 +15,7 @@ export class Rest {
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
-      "User-Agent": `Moonlink.js/${node.manager.version} (Entropy/26.04.25)`,
+      "User-Agent": `Moonlink.js/${node.manager.version} (Entropy/27.04.25)`,
       "Content-Type": "application/json",
       "accept-encoding": "br, gzip, deflate"
     };
