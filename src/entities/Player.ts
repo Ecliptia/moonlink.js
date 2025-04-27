@@ -198,8 +198,10 @@ export class Player {
       });
     }
     
-    if (this.current.pluginInfo.MoonlinkInternal) {
-      if(!await this.current.resolve()) return false;
+    if (this.current?.pluginInfo?.MoonlinkInternal) {
+      if (!await this.current.resolve()) {
+        return false;
+      }
     }
 
     this.updateData("current", {
