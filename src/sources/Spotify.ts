@@ -21,12 +21,18 @@ export default class Spotify implements ISource {
   }
 
   public match(url: string): boolean {
-    return (
-      url.includes('spotify.com') ||
-      url.startsWith('spotify:') ||
-      url.startsWith('spsearch:') ||
-      url.startsWith('sprec:')
-    );
+    try {
+      const parsedUrl = new URL(url);
+      const allowedHosts = ['open.spotify.com', 'api.spotify.com'];
+      return (
+        allowedHosts.includes(parsedUrl.host) ||
+        url.startsWith('spotify:') ||
+        url.startsWith('spsearch:') ||
+        url.startsWith('sprec:')
+      );
+    } catch {
+      return false; // Return false if the URL is invalid
+    }
   }
 
   private generateTotp(): [string, number] {
