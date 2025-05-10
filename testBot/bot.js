@@ -10,8 +10,8 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "localhost",
-      port: 2333,
+      host: "lavalink.jirayu.net",
+      port: 13592,
       password: "youshallnotpass",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
@@ -79,5 +79,9 @@ client.manager.on("trackStart", (player, track) => {
 client.manager.on("trackEnd", (player, track) => {
   console.log(player.current);
 });
+
+client.manager.on("playerUpdate", (player, state) => {
+  console.log("Player updated:", state);
+})
 
 client.login(process.env.TOKEN).catch(console.error);
