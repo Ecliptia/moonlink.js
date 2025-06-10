@@ -11,8 +11,8 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 2333,
-      password: "youshallnotpass",
+      port: 3000,
+      password: "123",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -26,6 +26,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
+    disableNativeSources: true,
     partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier"],
   },
   sendPayload: (guildId, payload) => {
@@ -69,6 +70,7 @@ client.once("ready", () => {
 });
 
 client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
+client.manager.on("nodeRaw", console.log)
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
 
@@ -79,5 +81,9 @@ client.manager.on("trackStart", (player, track) => {
 client.manager.on("trackEnd", (player, track) => {
   console.log(player.current);
 });
+
+client.manager.on("playerUpdate", (player, state) => {
+  console.log("Player updated:", state);
+})
 
 client.login(process.env.TOKEN).catch(console.error);

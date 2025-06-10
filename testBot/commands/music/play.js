@@ -31,9 +31,10 @@ module.exports = {
 
       if (!player.connected) player.connect({ setDeaf: true });
 
-      const searchResult = await client.manager.search({ 
-        query: args.join(" "), 
-        requester: message.author.id 
+      const searchResult = await client.manager.search({
+        source: args[0].includes("local:") ? "local" : "youtube",
+        query: args.join(" ").replace("local:", ""),
+        requester: message.author.id
       });
       
       if (!searchResult.tracks.length) {
@@ -50,10 +51,16 @@ module.exports = {
       }
 
       console.log(searchResult.tracks[0]);
+      let  colors;
+      try {
 
-      const colors = await getColors(
-        searchResult.tracks[0].artworkUrl.replace("webp", "png"),
-      );
+         colors = await getColors(
+          searchResult.tracks[0].artworkUrl.replace("webp", "png"),
+        )
+
+      } catch (error) {
+        colors = [{ hex: () => config.colors.player }];
+      }
       const embedColor = colors[0].hex();
       
       const embed = new EmbedBuilder()
