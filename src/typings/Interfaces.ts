@@ -17,7 +17,7 @@ import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTra
 export interface IEvents {
   autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
-  nodeRaw: (node: INode, player: Player, payload: any) => void;
+  nodeRaw: (node: INode, payload: any) => void;
   nodeCreate: (node: INode) => void;
   nodeReady: (node: INode, stats: INodeStats) => void;
   nodeConnected: (node: INode) => void;

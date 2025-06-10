@@ -40,7 +40,7 @@ module.exports = {
         { name: 'Author', value: track.author, inline: true },
         { name: 'Volume', value: `${player.volume}%`, inline: true },
         { name: 'Requested By', value: `<@${track.requestedBy?.id}>`, inline: true },
-        { name: 'Duration', value: `\`${formatDuration(player.position ?? 0)} / ${formatDuration(track.duration)}\`\n${createProgressBar(player.position, track.duration)}`, inline: false }
+        { name: 'Duration', value: `\`${formatDuration(player.current.position ?? 0)} / ${formatDuration(track.duration)}\`\n${createProgressBar(player.position, track.duration)}`, inline: false }
       )
       .setColor(config.colors.player);
     

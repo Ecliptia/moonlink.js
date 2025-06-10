@@ -130,6 +130,7 @@ class Node {
     }
     async message({ data }) {
         let payload = JSON.parse(data);
+        this.manager.emit("nodeRaw", this, payload);
         switch (payload.op) {
             case "ready":
                 this.sessionId = payload.sessionId;
@@ -227,7 +228,6 @@ class Node {
                 let player = this.manager.getPlayer(payload.guildId);
                 if (!player)
                     return;
-                this.manager.emit("nodeRaw", this, player, payload);
                 switch (payload.type) {
                     case "TrackStartEvent":
                         player.playing = true;

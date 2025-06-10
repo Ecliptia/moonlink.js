@@ -42,7 +42,7 @@ module.exports = {
         .setTitle(`${config.emojis.search} Search Results for "${searchTerm}"`)
         .setDescription(
           tracks.map((track, index) => 
-            `**${index + 1}.** [${track.title}](${track.uri}) - \`${formatDuration(track.duration)}\``
+            `**${index + 1}.** [${track.title}](${track.url}) - \`${formatDuration(track.duration)}\``
           ).join("\n")
         )
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
