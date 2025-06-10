@@ -10,9 +10,9 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "lavalink.jirayu.net",
-      port: 13592,
-      password: "youshallnotpass",
+      host: "localhost",
+      port: 3000,
+      password: "123",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -26,6 +26,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
+    disableNativeSources: true,
     partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier"],
   },
   sendPayload: (guildId, payload) => {
@@ -69,6 +70,7 @@ client.once("ready", () => {
 });
 
 client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
+client.manager.on("nodeRaw", console.log)
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
 

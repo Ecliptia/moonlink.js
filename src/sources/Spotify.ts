@@ -56,7 +56,7 @@ export default class Spotify implements ISource {
     });
 
     const resp1 = await fetch(`https://open.spotify.com/api/token?${params}`, { headers: { accept: 'application/json' } });
-    if (!resp1.ok) throw new Error('Failed to fetch Spotify access token');
+    if (!resp1.ok) console.warn('Spotify token error: ', resp1.status, resp1.statusText, ' - ', await resp1.text());
     const tokenJson = (await resp1.json()) as { accessToken: string; clientId: string };
 
     const resp2 = await fetch('https://clienttoken.spotify.com/v1/clienttoken', {
