@@ -5,6 +5,13 @@ export class SourceManager {
   constructor(manager: Manager) {
     this.manager = manager;
     this.sources = {};
+    if (!this.manager.options.disableNativeSources) {
+      this.manager.emit("debug", "Moonlink.js > Sources are enabled");
+    } else {
+      this.manager.emit("debug", "Moonlink.js > Sources are disabled");
+      return;
+    }
+
     this.loadFolder();
   }
     public add(source: ISource): void {
