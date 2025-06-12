@@ -54,6 +54,7 @@ export class Node {
       `Moonlink.js > Node > Constructor > New node initialized: ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`
     );
   }
+
   public get address(): string {
     return `${this.host}:${this.port}`;
   }
@@ -238,10 +239,10 @@ export class Node {
             let queue: any = this.manager.database.get(`queues.${guildId}`);
             let current = storage.current;
             if (!storage) return;
-
+            console.log(this.uuid)
             let reconstructedPlayer = this.manager.createPlayer({
               ...storage,
-              node: this.uuid,
+              node: this.identifier ?? this.uuid,
             });
 
             await reconstructedPlayer.connect({

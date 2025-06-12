@@ -175,9 +175,10 @@ class Node {
                         let current = storage.current;
                         if (!storage)
                             return;
+                        console.log(this.uuid);
                         let reconstructedPlayer = this.manager.createPlayer({
                             ...storage,
-                            node: this.uuid,
+                            node: this.identifier ?? this.uuid,
                         });
                         await reconstructedPlayer.connect({
                             setDeaf: false,

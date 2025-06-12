@@ -16,6 +16,9 @@ exports.stringifyWithReplacer = stringifyWithReplacer;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
+const http_1 = __importDefault(require("http"));
+const https_1 = __importDefault(require("https"));
+const zlib_1 = __importDefault(require("zlib"));
 exports.structures = {};
 exports.sources = {
     youtube: "ytsearch",
@@ -166,24 +169,83 @@ function Log(message, LogPath) {
     const logpath = path_1.default.resolve(LogPath);
     fs_1.default.exists(logpath, (exists) => {
         if (!exists) {
-            fs_1.default.mkdirSync(path_1.default.dirname(logpath), { recursive: true });
-            fs_1.default.writeFileSync(logpath, "");
+            try {
+                fs_1.default.mkdirSync(path_1.default.dirname(logpath), { recursive: true });
+                fs_1.default.writeFileSync(logpath, "");
+            }
+            catch (error) {
+                console.error("Failed to create log file:", error);
+                return;
+            }
         }
         try {
             fs_1.default.appendFileSync(logpath, logmessage);
         }
         catch (error) {
-            return false;
+            console.error("Failed to append to log file:", error);
         }
     });
 }
-function makeRequest(url, options) {
-    let request = fetch(url, options)
-        .then(res => res.json().catch(() => res.text()))
-        .then(json => json);
-    if (!request)
-        return;
-    return request;
+function makeRequest(url, options, timeout = 10000) {
+    return new Promise((resolve) => {
+        const urlObject = new URL(url);
+        console.log(urlObject, options);
+        const transport = urlObject.protocol === "https:" ? https_1.default : http_1.default;
+        options.headers = options.headers || {};
+        options.headers["Accept-Encoding"] = "gzip, deflate, br";
+        const req = transport.request(url, options, (res) => {
+            let stream = res;
+            const encoding = res.headers["content-encoding"];
+            if (encoding === "gzip") {
+                stream = res.pipe(zlib_1.default.createGunzip());
+            }
+            else if (encoding === "deflate") {
+                stream = res.pipe(zlib_1.default.createInflate());
+            }
+            else if (encoding === "br") {
+                stream = res.pipe(zlib_1.default.createBrotliDecompress());
+            }
+            const chunks = [];
+            stream.on("data", (chunk) => chunks.push(chunk));
+            stream.on("error", () => resolve(undefined));
+            stream.on("end", () => {
+                const body = Buffer.concat(chunks);
+                const contentType = res.headers["content-type"] || "";
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    if (body.length === 0) {
+                        if (contentType.includes("application/json")) {
+                            return resolve({});
+                        }
+                        return resolve("");
+                    }
+                    try {
+                        if (contentType.includes("application/json")) {
+                            return resolve(JSON.parse(body.toString()));
+                        }
+                        return resolve(body.toString());
+                    }
+                    catch {
+                        return resolve(undefined);
+                    }
+                }
+                resolve(undefined);
+            });
+        });
+        req.on("error", () => resolve(undefined));
+        req.on("timeout", () => {
+            req.destroy();
+            resolve(undefined);
+        });
+        req.setTimeout(timeout);
+        if (options.body) {
+            const bodyData = typeof options.body === "object" && options.body !== null
+                ? JSON.stringify(options.body)
+                : options.body.toString();
+            req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+            req.write(bodyData);
+        }
+        req.end();
+    });
 }
 function compareVersions(current, required) {
     const curr = current.split(".").map(Number);
