@@ -31,6 +31,7 @@ class NodeManager {
     add(node) {
         this.check(node);
         let uuid = (0, index_1.generateUUID)(node.host, node.port);
+        console.log(node.identifier, uuid);
         this.cache.set(node.identifier ?? uuid, new (index_1.Structure.get("Node"))(this.manager, node));
         this.manager.emit("nodeCreate", this.cache.get(node.identifier ?? uuid));
     }
