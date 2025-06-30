@@ -7,7 +7,7 @@ export class Listen {
     this.player = player;
   }
   public start(): EventEmitter {
-    if (this.player.node.info.isNodeLink)
+    if (!this.player.node.info.isNodeLink)
       throw new Error("Moonlink.js > Listen#start - Node not is a NodeLink, switch to a NodeLink");
     this.voiceReceiverWs = new WebSocket(
       `ws${this.player.node.secure ? "s" : ""}://${this.player.node.address}/connection/data`,
