@@ -18,7 +18,7 @@ export declare class Manager extends EventEmitter {
     database: Database;
     sources: SourceManager;
     constructor(config: IConfigManager);
-    init(clientId: string): void;
+    init(clientId: string): Promise<void>;
     search(options: {
         query: string;
         source?: TSearchSources;
