@@ -99,7 +99,6 @@ export interface IOptionsManager {
     plugins?: Plugin[];
     noReplace?: boolean;
     NodeLinkFeatures?: boolean;
-    previousInArray?: boolean;
     logFile?: {
         path: string;
         log: boolean;
