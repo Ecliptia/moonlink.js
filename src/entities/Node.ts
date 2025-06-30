@@ -249,7 +249,7 @@ export class Node {
               setDeaf: false,
               setMute: false,
             });
-
+            console.log(current, storage)
             reconstructedPlayer.current = new Track(decodeTrack(current.encoded));
 
             if (queue?.tracks) {
@@ -349,9 +349,7 @@ export class Node {
             player.playing = false;
             player.paused = false;
             player.set("sendPlayerUpdateDebug", false);
-            this.manager.options.previousInArray
-              ? (player.previous as Track[]).push(track)
-              : (player.previous = track);
+            player.previous.push(track)
 
             this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
             
