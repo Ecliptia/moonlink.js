@@ -184,6 +184,7 @@ class Node {
                             setDeaf: false,
                             setMute: false,
                         });
+                        console.log(current, storage);
                         reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
                         if (queue?.tracks) {
                             let tracks = queue.tracks.map(track => new index_1.Track((0, index_1.decodeTrack)(track)));
@@ -259,9 +260,7 @@ class Node {
                         player.playing = false;
                         player.paused = false;
                         player.set("sendPlayerUpdateDebug", false);
-                        this.manager.options.previousInArray
-                            ? player.previous.push(track)
-                            : (player.previous = track);
+                        player.previous.push(track);
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (player.destroyed) {
                             this.manager.emit("debug", "Moonlink.js > Player " +
