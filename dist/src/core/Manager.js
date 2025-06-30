@@ -19,7 +19,6 @@ class Manager extends node_events_1.EventEmitter {
             clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
             defaultPlatformSearch: "youtube",
             NodeLinkFeatures: false,
-            previousInArray: false,
             logFile: { path: undefined, log: false },
             movePlayersOnReconnect: false,
             sortPlayersByRegion: false,
@@ -40,7 +39,7 @@ class Manager extends node_events_1.EventEmitter {
             }
         }
     }
-    init(clientId) {
+    async init(clientId) {
         if (this.initialize)
             return;
         if (this.options.logFile?.log) {
@@ -49,7 +48,7 @@ class Manager extends node_events_1.EventEmitter {
         }
         index_1.Structure.manager = this;
         this.options.clientId = clientId;
-        this.database = new (index_1.Structure.get("Database"))(this);
+        this.database = await (index_1.Structure.get("Database")).create(this);
         this.sources = new (index_1.Structure.get("SourceManager"))(this);
         this.nodes.init();
         this.initialize = true;
