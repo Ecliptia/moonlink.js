@@ -1,121 +1,302 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = void 0;
-const fs_1 = __importDefault(require("fs"));
+const fs_1 = __importStar(require("fs"));
 const path_1 = __importDefault(require("path"));
-const index_1 = require("../../index");
 class Database {
-    disabled = false;
-    data = {};
-    id;
+    store = {};
+    disabled;
+    dir;
+    snapshotPath;
+    logPath;
+    walStream;
+    compactionIntervalMs;
+    compactionTimer;
+    manager;
+    walBuffer = [];
+    walBufferMaxSize = 50;
+    walFlushInterval;
+    walFlushIntervalMs = 500;
     constructor(manager) {
-        this.id = manager.options.clientId;
-        this.disabled = manager.options.disableDatabase && !manager.options.resume;
-        if (this.disabled) {
-            this.data = {};
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Database is disabled, no data will be loaded/saved`);
-            return;
+        this.manager = manager;
+        this.disabled = Boolean(manager.options.disableDatabase && !manager.options.resume);
+        this.compactionIntervalMs = 60000;
+        this.dir = path_1.default.resolve(__dirname, "../datastore");
+        this.snapshotPath = path_1.default.join(this.dir, `data.${manager.options.clientId}.json`);
+        this.logPath = path_1.default.join(this.dir, `data.${manager.options.clientId}.wal`);
+        this.manager.emit("debug", `Moonlink.js > Database > Mode set to ${this.disabled ? "MEMORY" : "WAL"}`);
+    }
+    static async create(manager) {
+        const db = new Database(manager);
+        if (!db.disabled) {
+            await db.init();
         }
-        else {
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Database is enabled, loading data...`);
+        return db;
+    }
+    async init() {
+        await fs_1.default.promises.mkdir(this.dir, { recursive: true });
+        await this.loadSnapshot();
+        await this.replayWAL();
+        this.openWALStream();
+        this.compactionTimer = setInterval(() => this.compact(), this.compactionIntervalMs);
+        this.walFlushInterval = setInterval(() => this._flushWALBuffer(), this.walFlushIntervalMs);
+    }
+    _serializeEntry(entry) {
+        const opCode = entry.op === 'set' ? 's' : 'd';
+        if (entry.op === 'set') {
+            const valueStr = JSON.stringify(entry.value);
+            return `${opCode}|${entry.key}|${valueStr}\n`;
         }
-        this.loadData();
+        return `${opCode}|${entry.key}\n`;
     }
-    set(key, value) {
-        if (this.disabled)
-            return;
-        if (!key)
-            throw new Error("Key cannot be empty");
-        this.modifyData(key, value);
-        this.saveData();
-    }
-    get(key) {
-        if (this.disabled)
-            return undefined;
-        if (!key)
-            throw new Error("Key cannot be empty");
-        return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
-    }
-    push(key, value) {
-        if (this.disabled)
-            return;
-        const arr = this.get(key) || [];
-        if (!Array.isArray(arr))
-            throw new Error("Key does not point to an array");
-        arr.push(value);
-        this.set(key, arr);
-    }
-    delete(key) {
-        if (this.disabled)
-            return false;
-        if (!key)
-            throw new Error("Key cannot be empty");
-        const keys = key.split(".");
-        const lastKey = keys.pop();
-        let current = this.data;
-        for (const k of keys) {
-            if (typeof current[k] !== "object")
-                return false;
-            current = current[k];
-        }
-        if (lastKey && lastKey in current) {
-            delete current[lastKey];
-            this.saveData();
-            return true;
-        }
-        return false;
-    }
-    modifyData(key, value) {
-        if (this.disabled)
-            return;
-        const keys = key.split(".");
-        let current = this.data;
-        keys.forEach((k, i) => {
-            if (i === keys.length - 1) {
-                current[k] = value;
-            }
-            else {
-                current[k] = current[k] || {};
-                current = current[k];
-            }
-        });
-    }
-    loadData() {
-        if (this.disabled)
-            return;
-        const filePath = this.getFilePath();
-        if (fs_1.default.existsSync(filePath)) {
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Loading data from ${filePath}`);
+    _deserializeEntry(line) {
+        const parts = line.split('|');
+        if (parts.length < 2)
+            return null;
+        const opCode = parts[0];
+        const key = parts[1];
+        if (opCode === 's') {
             try {
-                const fileContent = fs_1.default.readFileSync(filePath, "utf-8");
-                this.data = JSON.parse(fileContent);
+                const value = JSON.parse(parts.slice(2).join('|'));
+                return { op: 'set', key, value };
             }
-            catch (err) {
-                index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Error loading/parsing data: ${err}`);
-                this.data = {};
+            catch {
+                return null;
             }
         }
-        else {
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > No data found for clientId(${this.id})`);
+        else if (opCode === 'd') {
+            return { op: 'delete', key };
+        }
+        return null;
+    }
+    _flushWALBuffer() {
+        if (this.disabled || !this.walStream || this.walBuffer.length === 0) {
+            return;
+        }
+        const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
+        this.walStream.write(dataToWrite);
+        this.walBuffer = [];
+    }
+    async loadSnapshot() {
+        try {
+            const raw = await fs_1.default.promises.readFile(this.snapshotPath, 'utf-8');
+            const wrapper = JSON.parse(raw);
+            this.store = wrapper.data || {};
+        }
+        catch (err) {
+            this.store = {};
+            if (err.code === 'ENOENT') {
+                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch(() => {
+                    this.disabled = true;
+                });
+            }
         }
     }
-    saveData() {
+    async replayWAL() {
+        let walContent;
+        try {
+            walContent = await fs_1.default.promises.readFile(this.logPath, 'utf-8');
+        }
+        catch (err) {
+            if (err.code === 'ENOENT') {
+                await fs_1.default.promises.writeFile(this.logPath, '').catch(() => { this.disabled = true; });
+            }
+            return;
+        }
+        const lines = walContent.split('\n');
+        for (const line of lines) {
+            if (!line)
+                continue;
+            const entry = this._deserializeEntry(line);
+            if (!entry)
+                continue;
+            if (entry.op === 'set') {
+                this.set(entry.key, entry.value, false);
+            }
+            else if (entry.op === 'delete') {
+                this.delete(entry.key, false);
+            }
+        }
+    }
+    openWALStream() {
         if (this.disabled)
             return;
         try {
-            const filePath = this.getFilePath();
-            fs_1.default.mkdirSync(path_1.default.dirname(filePath), { recursive: true });
-            fs_1.default.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
+            this.walStream = (0, fs_1.createWriteStream)(this.logPath, { flags: 'a' });
+            this.walStream.on('error', () => {
+                this.disabled = true;
+            });
         }
         catch (err) {
-            index_1.Structure.getManager().emit("debug", `Moonlink.js > Database > Failed to save data: ${err}`);
+            this.disabled = true;
         }
     }
-    getFilePath() {
-        return path_1.default.resolve(__dirname, "../datastore", `data.${this.id}.json`);
+    appendLog(op, key, value) {
+        if (this.disabled)
+            return;
+        const entry = { op, key, value };
+        this.walBuffer.push(entry);
+        if (this.walBuffer.length >= this.walBufferMaxSize) {
+            this._flushWALBuffer();
+        }
+    }
+    set(key, value, log = true) {
+        if (!key)
+            throw new Error("Key cannot be empty.");
+        const keys = key.split('.');
+        let current = this.store;
+        for (let i = 0; i < keys.length - 1; i++) {
+            const keyPart = keys[i];
+            if (typeof current[keyPart] !== 'object' || current[keyPart] === null) {
+                current[keyPart] = {};
+            }
+            current = current[keyPart];
+        }
+        const lastKey = keys[keys.length - 1];
+        const existingValue = current[lastKey];
+        if (typeof existingValue === 'object' && existingValue !== null && !Array.isArray(existingValue) &&
+            typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            current[lastKey] = { ...existingValue, ...value };
+        }
+        else {
+            current[lastKey] = value;
+        }
+        if (log) {
+            this.appendLog('set', key, value);
+        }
+    }
+    get(key) {
+        if (!key)
+            throw new Error("Key cannot be empty.");
+        const parts = key.split('.');
+        let value = this.store;
+        for (const part of parts) {
+            if (typeof value !== 'object' || value === null) {
+                return undefined;
+            }
+            value = value[part];
+        }
+        return value;
+    }
+    delete(key, log = true) {
+        if (!key)
+            throw new Error("Key cannot be empty.");
+        const keys = key.split('.');
+        let obj = this.store;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (typeof obj[keys[i]] !== 'object' || obj[keys[i]] === null) {
+                return false;
+            }
+            obj = obj[keys[i]];
+        }
+        const lastKey = keys[keys.length - 1];
+        const existed = obj && Object.prototype.hasOwnProperty.call(obj, lastKey);
+        if (existed) {
+            delete obj[lastKey];
+            if (log) {
+                this.appendLog('delete', key);
+            }
+        }
+        return existed;
+    }
+    keys() {
+        const allKeys = [];
+        const recurse = (obj, prefix) => {
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    const newPrefix = prefix ? `${prefix}.${key}` : key;
+                    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                        recurse(obj[key], newPrefix);
+                    }
+                    else {
+                        allKeys.push(newPrefix);
+                    }
+                }
+            }
+        };
+        recurse(this.store, '');
+        return allKeys;
+    }
+    clear() {
+        this.store = {};
+        this.walBuffer = [];
+        if (this.walStream && !this.disabled) {
+            this.walStream.end(() => {
+                fs_1.default.promises.writeFile(this.logPath, '').then(() => this.openWALStream());
+            });
+        }
+    }
+    async compact() {
+        if (this.disabled)
+            return;
+        this._flushWALBuffer();
+        if (this.walStream) {
+            await new Promise(resolve => this.walStream.end(resolve));
+            this.walStream = undefined;
+        }
+        try {
+            const wrapper = { data: this.store };
+            const raw = JSON.stringify(wrapper, null, 2);
+            await fs_1.default.promises.writeFile(this.snapshotPath, raw, 'utf-8');
+            await fs_1.default.promises.writeFile(this.logPath, '', 'utf-8');
+        }
+        catch (err) {
+            this.disabled = true;
+        }
+        finally {
+            if (!this.disabled) {
+                this.openWALStream();
+            }
+        }
+    }
+    async shutdown() {
+        if (this.compactionTimer)
+            clearInterval(this.compactionTimer);
+        if (this.walFlushInterval)
+            clearInterval(this.walFlushInterval);
+        if (!this.disabled) {
+            await this.compact();
+        }
+        if (this.walStream) {
+            await new Promise(resolve => this.walStream.end(resolve));
+            this.walStream = undefined;
+        }
     }
 }
 exports.Database = Database;
