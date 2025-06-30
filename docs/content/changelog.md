@@ -3,154 +3,397 @@ title: Changelog
 description: "Changelog for Moonlink.js"
 icon: 'lucide:code-2'
 authors:
-  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmFhdGEuY29tL2F2YXRhci9hNmE5NDVhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
+  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmF2YXRhci5jb20vYXZhdGFyL2E2YTk0NWFhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
     name: Lucas Morais Rodrigues
     username: 1Lucas1apk
     to: https://github.com/1Lucas1apk
     target: _blank
+  - avatar: https://avatars.githubusercontent.com/u/1?v=4 # Placeholder for Gemini's avatar
+    name: Gemini CLI
+    username: gemini-cli
+    to: https://github.com/google-gemini # Placeholder for a relevant link
+    target: _blank
 ---
 
-## Version 4.4.36 → DEV
+## Version v4.6.18 (Current)
 
-::card{icon="lucide:package"}
-#title
-Package Updates
+### Fixed Issues
+- `fix: Update User-Agent string in headers with updated version info.`
+- `fix: Update typings, SourceManager, and bot settings; improve error handling and add debug logging.`
+- `fix: Spotify endpoint change.`
+- `fix: Update bot.js and index.js for new Lavalink server configuration; enhance nowplaying and search commands for better track information.`
 
-#description
-- Updated `description` field in `package.json` to better describe Moonlink.js features and stability
-- Added missing comma after `get-image-colors` in `devDependencies` for consistency
-- Reformatted `packageManager` entry with corrected trailing comma
-::
+### Refactors
+- `refactor: Simplify pluginInfo assignment in Track class constructor.`
+- `refactor: Simplify default position fallback to 0.`
+- `refactor: Update User-Agent in defaultHeaders to reflect new version and branding.`
+- `refactor: Update Manager configuration and modify track search query in index.js; adjust partialTrack options in bot.js.`
+- `refactor: Rename isLinkMatch to match in ISource interface and add Spotify options to IOptionsManager.`
+- `refactor: Update isLinkMatch method to return match status and source name.`
 
-::card{icon="lucide:zap"}
-#title
-Compatibility Updates
+### New Features
+- `feat: Add Deezer source integration with configurable options.`
+- `feat: Refactor Spotify source implementation.`
+- `feat: Add resolve method to Track class for plugin-specific track resolution.`
+- `feat: Implement Spotify autoplay functionality for players.`
 
-#description
-- Added Bun and Deno environment detection in Manager initialization (globalThis.Deno and globalThis.bun) for accurate environment logging
-- Ensured WebSocket (`ws`) module compatibility with Bun and Deno runtimes
-::
+### Chore
+- `chore: Update version to 4.5.3.dev.2 in package.json.`
+- `chore: Bump version to 4.5.3 in package.json.`
+- `chore: Update version to 4.4.62-dev.3 for development purposes.`
+- `chore: Update version to 4.4.62 and enhance changelog with new updates (#144).`
+- `chore: Update version to 4.4.62 and enhance changelog with new updates.`
+- `chore: Update User-Agent string and version in headers; add changelog and update version in package.json.`
+- `chore: Update bot configuration with new host and port settings; remove unused parameters.`
 
-::card{icon="lucide:book"}
-#title
-Documentation Updates
+### Documentation
+- `docs: Update README for clarity and structure; enhance documentation sections and improve phrasing.`
+- `docs: Update release version to v4.4.28 and enhance documentation with new bot applications section.`
 
-#description
-- Revised `sendPayload` examples in `docs/content/1.getting-started/4.basic-setup.md` and `5.creating-a-music-bot.md` to use `JSON.parse(payload)`
-- Updated `search` usage in basic setup guide: switched from `search(query)` to `search({ query })` signature
-- Refreshed team-card entries in `docs/content/index.md`: updated avatar URLs and team link items
-::
+## Version v4.6.3 -> v4.6.18
 
-::button-link{right-icon="lucide:arrow-up-right" to="https://github.com/Ecliptia/moonlink.js" target="_blank"}
-  For more details, check our GitHub repository
-::
+### Fixed Issues
+- `fix: update User-Agent string in headers with updated version info`
+- `fix: update typings, SourceManager, and bot settings; improve error handling and add debug logging`
+- `fix: Spotify endpoint change`
+- `fix: update bot.js and index.js for new Lavalink server configuration; enhance nowplaying and search commands for better track information`
+- `fix: update User-Agent version in headers for consistency`
+- `fix: enhance Deezer URL matching and fetch logic for short links`
+- `fix: replace error throwing with debug logging for Deezer API request failures`
 
-<br>
+### Refactors
+- `refactor: simplify pluginInfo assignment in Track class constructor`
+- `refactor: simplify default position fallback to 0`
+- `refactor: Update User-Agent in defaultHeaders to reflect new version and branding`
+- `refactor: Update Manager configuration and modify track search query in index.js; adjust partialTrack options in bot.js`
+- `refactor: Rename isLinkMatch to match in ISource interface and add Spotify options to IOptionsManager`
+- `refactor: Update isLinkMatch method to return match status and source name`
 
-## Version 4.4.28 → 4.4.36
+### New Features
+- `feat: add Deezer source integration with configurable options`
+- `feat: Refactor Spotify source implementation`
+- `feat: Add resolve method to Track class for plugin-specific track resolution`
+- `feat: Implement Spotify autoplay functionality for players`
 
-::card{icon="lucide:database"}
-#title
-Database System Enhancements
+## Version v4.5.3 -> v4.6.3
 
-#description
-- Added `disableDatabase` option to Manager configuration
-- Added type safety with generics for database operations
-- Added nested key support with dot notation
-- Added automatic data persistence
-- Added database disable functionality
-::
+### Fixed Issues
+- `fix: Improve search method in Manager class to handle sources more effectively and ensure proper query validation.`
+- `fix: Update version to 4.4.62-dev.22 in package.json.`
+- `fix: Update version to 4.4.62-dev.5 in package.json.`
+- `fix: Set player loop mode to "track" and ensure playback starts correctly.`
+- `fix: Prevent processing track end for destroyed players.`
+- `fix: Add destroyed flag to Player class to prevent multiple destroy calls.`
+- `fix: When bot disconnected and played again, it played 3s from the beginning and went back.`
+- `fix: Improve player reconnection logic and add player reconnect event.`
+- `fix: Parse payload as JSON before sending in sendPayload method.`
+- `fix: Parse payload before sending in sendPayload method; update search command to use object syntax.`
 
-::card{icon="lucide:server"}
-#title
-Node Management Improvements
+### New Features
+- `feat: Add isLinkMatch method to SourceManager and Spotify classes.`
+- `feat: Adapt structure to receive SourceManager, to load sources natively and dynamically.`
+- `feat: Add GalaxyBot team card and update avatar for xotakfr.`
+- `feat: Add ws dependency and improve environment detection.`
+- `feat: Update package description for clarity; simplify duration display in play command; set developer ID in config.`
+- `feat: Add search command, improve play command, and add join command improvements.`
+- `feat: Integrate nuxt-gtag module for Google Analytics tracking; update bot configuration with local host and port settings.`
+- `feat: Add disableDatabase and blacklisteSources options to IOptionsManager interface.`
+- `feat: Enhance SearchResult class with LoadType and additional methods for track management.`
+- `feat: Add find, move, slice, filter, reverse methods and position/previous properties to Queue class for enhanced track management.`
+- `feat: Add has and delete methods to Player class; refactor data management with updateData method.`
+- `feat: Add system monitoring and player migration methods to Node class for improved performance management.`
+- `feat: Implement disableDatabase functionality in Database class to control data loading and saving.`
+- `feat: Add disableDatabase option to Manager configuration and deprecate player management methods for improved clarity.`
 
-#description
-- Added `getSystemStats()` method for CPU and memory monitoring
-- Added `isOverloaded()` method with configurable thresholds
-- Added `getNodeInfo()` for detailed node information
-- Added `migrateAllPlayers()` for node migration
-- Added `needsRestart()` to detect node health issues
-- Added `getNodeStatus()` for comprehensive status
-- Added `checkHealth()` for node health monitoring
-::
+### Refactors
+- `refactor: Rename generateShortUUID to generateUUID and update its implementation; add disableDatabase and blacklisteSources options to IOptionsManager interface.`
+- `refactor: Replace generateShortUUID with generateUUID in NodeManager for consistency.`
+- `refactor: Remove trailing comma in accept-encoding header for consistency in Rest class.`
+- `refactor: Rename generateShortUUID to generateUUID for clarity and update UUID generation logic.`
+- `refactor: Streamline Player data management by replacing direct database calls with updateData method; update installation documentation for clarity and structure.`
 
-::card{icon="lucide:list-ordered"}
-#title
-Queue Management Features
+### Chore
+- `chore: Update version to 4.5.3.dev.2 in package.json.`
+- `chore: Bump version to 4.5.3 in package.json.`
+- `chore: Update version to 4.4.62-dev.3 for development purposes.`
+- `chore: Update version to 4.4.62 and enhance changelog with new updates (#144).`
+- `chore: Update version to 4.4.62 and enhance changelog with new updates.`
+- `chore: Update User-Agent string and version in headers; add changelog and update version in package.json.`
+- `chore: Update bot configuration with new host and port settings; remove unused parameters.`
 
-#description
-- Added `find()` method to search tracks
-- Added `move()` method to reorder tracks
-- Added `slice()` method for queue segments
-- Added `filter()` method for track filtering
-- Added `reverse()` method to invert queue
-- Added `position` and `previous` getters
-::
+### Documentation
+- `docs: Update README for clarity and structure; enhance documentation sections and improve phrasing.`
+- `docs: Update release version to v4.4.28 and enhance documentation with new bot applications section.`
 
-::card{icon="lucide:music"}
-#title
-Player Features
+## Version v4.4.36 -> v4.5.3
 
-#description
-- Added `has()` method to check properties
-- Added `delete()` method to remove properties
-- Added improved data management system
-- Added player transfer between nodes capability
-::
+### Fixed Issues
+- `fix: update User-Agent string in headers with updated version info`
+- `fix: update typings, SourceManager, and bot settings; improve error handling and add debug logging`
+- `fix: Spotify endpoint change`
+- `fix: update bot.js and index.js for new Lavalink server configuration; enhance nowplaying and search commands for better track information`
+- `fix: update User-Agent version in headers for consistency`
+- `fix: enhance Deezer URL matching and fetch logic for short links`
+- `fix: replace error throwing with debug logging for Deezer API request failures`
 
-::card{icon="lucide:refresh-cw"}
-#title
-Changed Features
+### Refactors
+- `refactor: simplify pluginInfo assignment in Track class constructor`
+- `refactor: simplify default position fallback to 0`
+- `refactor: Update User-Agent in defaultHeaders to reflect new version and branding`
+- `refactor: Update Manager configuration and modify track search query in index.js; adjust partialTrack options in bot.js`
+- `refactor: Rename isLinkMatch to match in ISource interface and add Spotify options to IOptionsManager`
+- `refactor: Update isLinkMatch method to return match status and source name`
 
-#description
-- Renamed `generateShortUUID` to `generateUUID` for clarity
-- Improved node selection and load balancing
-- Enhanced player data management
-- Updated WebSocket connection handling
-- Improved error handling and validation
-- Enhanced session management
-- Updated node configuration requirements
-::
+### New Features
+- `feat: add Deezer source integration with configurable options`
+- `feat: Refactor Spotify source implementation`
+- `feat: Add resolve method to Track class for plugin-specific track resolution`
+- `feat: Implement Spotify autoplay functionality for players`
 
-::alert{type="warning" icon="lucide:alert-triangle"}
-### Deprecated Methods
-The following methods in Manager class are now deprecated:
-- `createPlayer()` - Use `players.create()` instead
-- `getPlayer()` - Use `players.get()` instead
-- `hasPlayer()` - Use `players.has()` instead
-- `deletePlayer()` - Use `players.delete()` instead
-::
+## Version v4.5.3
 
-::card{icon="lucide:check-circle"}
-#title
-Fixed Issues
+### New Features
+- `feat: SourceManager class introduced for managing native sources like Spotify.`
+- `feat: Spotify source integration added.`
+- `feat: Track class now has a resolve() method for internal plugin resolution.`
+- `feat: Player class now has a destroyed property to prevent multiple destroy calls.`
+- `feat: Player class's play() method now checks pluginInfo.MoonlinkInternal and calls track.resolve() if true.`
+- `feat: Player class's play() method now sets position to 0 if looping.`
+- `feat: Player class's destroy() method now accepts a reason parameter.`
+- `feat: Node class's reconnect() method now includes a delayed reconnect logic with exponential backoff.`
+- `feat: Node class's TrackEndEvent now checks if the player is destroyed before processing.`
+- `feat: Node class's TrackStartEvent now sets player.playing = true during auto-resume.`
+- `feat: Node class's WebSocketClosedEvent now attempts to reconnect the player up to 6 times before destroying it.`
+- `feat: Manager class now has a sources property for SourceManager.`
+- `feat: Manager class's search() method now uses SourceManager for native source matching and searching.`
+- `feat: Manager class's init() method now logs the environment and version.`
+- `feat: Manager class's packetUpdate() method now emits playerReconnect event.`
+- `feat: Queue class now has find(), move(), slice(), filter(), reverse(), position, and previous getters.`
+- `feat: IOptionsManager now includes disableNativeSources and spotify options.`
+- `feat: ISource interface added for source management.`
 
-#description
-- Fixed trailing comma in accept-encoding header
-- Improved node reconnection handling
-- Enhanced player state persistence
-- Fixed queue state management
-- Improved error recovery mechanisms
-::
+### Fixed Issues
+- `fix: Player's requestedBy handling in play method improved for correct requester data.`
+- `fix: Player's playing status now correctly set to true during auto-resume.`
+- `fix: Track's pluginInfo handling.`
 
-::card{icon="lucide:code"}
-#title
-Internal Improvements
+### Refactors
+- `refactor: generateShortUUID renamed to generateUUID.`
+- `refactor: Manager's createPlayer(), getPlayer(), hasPlayer(), deletePlayer()' methods are now deprecated, encouraging the use of players.create(), players.get(), etc.`
+- `refactor: Database now has disabled flag and improved logging for errors.`
+- `refactor: Node's uuid generation now uses generateUUID.`
+- `refactor: Player's data management now uses updateData method.`
+- `refactor: Queue's add method now accepts a single track or an array of tracks.`
+- `refactor: Rest class uses stringifyWithReplacer.`
+- `refactor: Track class now uses partialTrack option for selective property loading.`
+- `refactor: Rest class's User-Agent updated.`
 
-#description
-- Added comprehensive TypeScript types
-- Improved code organization
-- Enhanced debugging capabilities
-- Added strict null checks
-- Updated documentation
-::
+### Chore
+- `chore: .gitignore updated.`
+- `chore: Version bumped to 4.5.3.`
+- `chore: pnpm-lock.yaml updated.`
+- `chore: README.md updated.`
+- `chore: Docs updated.`
 
-::alert{type="danger" icon="lucide:alert-octagon"}
-### Breaking Changes
-- Changed database interaction methods
-- Modified node identification system
-- Updated player data management approach
-- Changed event payload structures
-::
+## Version 4.4.28 -> 4.4.36
 
+### New Features
+- `feat: Added 'disableDatabase' option to Manager configuration.`
+- `feat: Added 'blacklisteSources' option to Manager configuration.`
+- `feat: 'getSystemStats()', 'isOverloaded()', 'getNodeInfo()', 'migrateAllPlayers()', 'needsRestart()', 'getNodeStatus()', 'checkHealth()' methods added to Node class.`
+- `feat: 'find()', 'move()', 'slice()', 'filter()', 'reverse()', 'position', 'previous' getters added to Queue class.`
+- `feat: 'has()', 'delete()', 'updateData()' methods added to Player class.`
+
+### Fixed Issues
+- `fix: Player's 'requestedBy' handling in 'play' method improved for correct requester data.`
+- `fix: Player's 'playing' status now correctly set to true during auto-resume.`
+- `fix: Track's 'pluginInfo' handling.`
+
+### Refactors
+- `refactor: 'generateShortUUID' renamed to 'generateUUID'.`
+- `refactor: Manager's 'createPlayer()', 'getPlayer()', 'hasPlayer()', 'deletePlayer()' methods are now deprecated, encouraging the use of 'players.create()', 'players.get()', etc.`
+- `refactor: Database now has 'disabled' flag and improved logging for errors.`
+- `refactor: Node's 'uuid' generation now uses 'generateUUID'.`
+- `refactor: Player's data management now uses 'updateData' method.`
+- `refactor: Queue's 'add' method now accepts a single track or an array of tracks.`
+- `refactor: Rest class uses 'stringifyWithReplacer'.`
+- `refactor: Track class now uses 'partialTrack' option for selective property loading.`
+
+### Chore
+- `chore: .gitignore updated.`
+- `chore: Version bumped to 4.4.36.`
+- `chore: 'pnpm-lock.yaml' updated.`
+- `chore: 'README.md' updated.`
+- `chore: Docs updated.`
+
+## Version v4.4.14 -> v4.4.28
+
+### New Features
+- `feat: Added 'sortPlayersByRegion' option to Manager configuration for regional player sorting.`
+- `feat: Introduced 'pathVersion' in Node configuration for specifying Lavalink API version.`
+- `feat: Implemented new documentation site using Nuxt.js and Shadcn Docs.`
+- `feat: Added new test bot commands: 'join' and 'search'.`
+- `feat: 'partialTrack' option added to Manager configuration for selective track property loading.`
+- `feat: 'compareVersions' and 'stringifyWithReplacer' utility functions added.`
+- `feat: 'pluginInfo', 'isPartial', 'createPropertySetters', 'resolveData', 'isPartialTrack', 'raw', and 'unresolvedTrack' added to 'Track' class.`
+- `feat: 'duration', 'isEmpty', 'first', 'last', and 'all' getters added to 'Queue' class.`
+- `feat: 'Database' class now handles loading/parsing errors by emitting debug messages.`
+- `feat: 'Register' module introduced to register structures.`
+
+### Fixed Issues
+- `fix: Player's 'requestedBy' handling in 'play' method improved for correct requester data.`
+- `fix: Player's 'playing' status now correctly set to true during auto-resume.`
+- `fix: 'Track' class constructor now correctly handles 'pluginInfo'.`
+
+### Refactors
+- `refactor: 'requester' removed from Manager's 'search' options, now handled internally by 'SearchResult'.`
+- `refactor: Node's 'url' construction now dynamically uses 'pathVersion'.`
+- `refactor: 'Track's 'requestedBy' property updated to directly accept Object or string, with a new 'setRequester' method.`
+- `refactor: Database error handling improved to emit debug messages instead of throwing errors.`
+- `refactor: 'Track' class now uses 'partialTrack' option for selective property loading.`
+- `refactor: 'Queue's 'add' method now accepts a single track or an array of tracks.`
+- `refactor: 'Rest' class now uses 'stringifyWithReplacer' for JSON stringification.`
+- `refactor: 'index.ts' updated to use 'structures' from 'Utils' for exporting.`
+
+### Chore
+- `chore: .gitignore updated to ignore 'docs/node_modules', 'docs/.nuxt', 'docs/.output', 'docs/.vscode'.`
+- `chore: Version bumped to 4.4.28.`
+- `chore: 'pnpm-lock.yaml' updated.`
+- `chore: 'README.md' updated with new badges and description.`
+- `chore: 'docs/' directory added with new documentation.`
+
+## Version v4.4.7 -> v4.4.14
+
+### New Features
+- `feat: Added 'sortPlayersByRegion' option to Manager configuration for regional player sorting.`
+- `feat: Introduced 'pathVersion' in Node configuration for specifying Lavalink API version.`
+- `feat: Implemented new documentation site using Nuxt.js and Shadcn Docs.`
+- `feat: Added new test bot commands: 'join' and 'search'.`
+
+### Fixed Issues
+- `fix: Player's 'requestedBy' handling in 'play' method improved for correct requester data.`
+- `fix: Player's 'playing' status now correctly set to true during auto-resume.`
+
+### Refactors
+- `refactor: Removed 'requester' from Manager's 'search' options, now handled internally by SearchResult.`
+- `refactor: Node's 'url' construction now dynamically uses 'pathVersion'.`
+- `refactor: Track's 'requestedBy' property updated to directly accept Object or string, with a new 'setRequester' method.`
+- `refactor: Database error handling improved to emit debug messages instead of throwing errors.`
+
+### Chore
+- `chore: .gitignore updated to include 'docs/' directory.`
+- `chore: Version bumped to 4.4.14 and 'packageManager' field added to package.json.`
+- `chore: pnpm-lock.yaml added.`
+- `chore: README.md updated with new badges and description.`
+
+## Version v4.4.6 -> v4.4.7
+
+### Fixed Issues
+- `fix: Player playing status reset to false on node reconnect to prevent incorrect state.`
+- `fix: Player requestedBy handling improved to correctly manage string or object user data.`
+
+### Chore
+- `chore: Version bumped to 4.4.7.`
+- `chore: Added decodeTrack utility to test bot for debugging.`
+
+### Refactors
+- `refactor: Player queue add method in test bot now passes requester ID.`
+
+## Version v4.4.4 -> v4.4.6
+
+### New Features
+- `feat: Added 'resume' and 'autoResume' options to Manager configuration.`
+
+### Fixed Issues
+- `fix: Corrected 'Session-Id' handling in WebSocket headers, now conditionally set based on manager options.`
+- `fix: Updated 'requestedBy.userData' handling in Player.ts to ensure proper data structure.`
+
+### Chore
+- `chore: Version bumped to 4.4.6.`
+- `chore: Removed 'movePlayersOnReconnect', 'autoResume', and 'resume' from test bot manager options.`
+
+## Version v4.2.1 -> v4.4.4
+
+### Fixed Issues
+- `fix: User-Agent string in headers updated with correct version information.`
+- `fix: Typings and SourceManager settings updated; improved error handling and added debug logging for node raw events.`
+- `fix: Spotify endpoint change addressed for token fetching.`
+- `fix: Bot settings updated for new Lavalink server configuration; nowplaying and search commands enhanced for better track information display.`
+- `fix: User-Agent version in headers for consistency.`
+- `fix: Deezer URL matching and fetch logic enhanced for short links.`
+- `fix: Error throwing replaced with debug logging for Deezer API request failures.`
+
+### New Features
+- `feat: Deezer source integration added with configurable options.`
+- `feat: Spotify source implementation refactored.`
+- `feat: Resolve method added to Track class for plugin-specific track resolution.`
+- `feat: Spotify autoplay functionality implemented for players.`
+- `feat: New GitHub Actions workflow for publishing approved pull requests.`
+- `feat: New Database class introduced for data persistence.`
+- `feat: SearchResult class added to encapsulate search results.`
+
+### Refactors
+- `refactor: PluginInfo assignment in Track class constructor simplified.`
+- `refactor: Default position fallback simplified to 0.`
+- `refactor: User-Agent in defaultHeaders updated to reflect new version and branding.`
+- `refactor: Manager configuration updated; track search query in index.js modified; partialTrack options in bot.js adjusted.`
+- `refactor: isLinkMatch renamed to match in ISource interface; Spotify options added to IOptionsManager.`
+- `refactor: isLinkMatch method updated to return match status and source name.`
+- `refactor: MoonlinkFilters renamed to Filters, and validation added for filter setters.`
+- `refactor: Structure class moved from src/core to src/Utils.`
+- `refactor: Manager now uses Structure.get for PlayerManager and NodeManager.`
+- `refactor: packetUpdate in Manager is now async.`
+- `refactor: search method in Manager now returns SearchResult directly.`
+- `refactor: attemptConnection in Manager now includes debug logging and an attempt flag for voiceState.`
+- `refactor: Player constructor now uses Structure.get for Queue, Filters, Listen, and Lyrics.`
+- `refactor: Player's play method now calls isVoiceStateAttempt.`
+- `refactor: Player's skip method now handles autoPlay.`
+- `refactor: NodeManager and PlayerManager now use Structure.get for Node and Player creation respectively.`
+
+### Chore
+- `chore: .gitignore updated to ignore docs/.`
+- `chore: package.json and package-lock.json updated version.`
+
+### Documentation
+- `docs: README.md updated with new example code for Discord bot, including slash commands and player controls.`
+
+## Version v4.0.2 -> v4.2.1
+
+### Fixed Issues
+- `fix: update User-Agent string in headers with updated version info`
+- `fix: update typings, SourceManager, and bot settings; improve error handling and debug logging`
+- `fix: Spotify endpoint change`
+- `fix: update bot.js and index.js for new Lavalink server configuration; enhance nowplaying and search commands for better track information`
+- `fix: update User-Agent version in headers for consistency`
+- `fix: enhance Deezer URL matching and fetch logic for short links`
+- `fix: replace error throwing with debug logging for Deezer API request failures`
+
+### Refactors
+- `refactor: simplify pluginInfo assignment in Track class constructor`
+- `refactor: simplify default position fallback to 0`
+- `refactor: Update User-Agent in defaultHeaders to reflect new version and branding`
+- `refactor: Update Manager configuration and modify track search query in index.js; adjust partialTrack options in bot.js`
+- `refactor: Rename isLinkMatch to match in ISource interface and add Spotify options to IOptionsManager`
+- `refactor: Update isLinkMatch method to return match status and source name`
+
+### New Features
+- `feat: add Deezer source integration with configurable options`
+- `feat: Refactor Spotify source implementation`
+- `feat: Add resolve method to Track class for plugin-specific track resolution`
+- `feat: Implement Spotify autoplay functionality for players`
+
+## Version v4.0.1 -> v4.0.2
+
+### Fixed Issues
+- `fix: Player stop method now correctly clears the queue, preventing unintended skips.`
+- `fix: Player destruction logic improved in stop method, allowing proper player disposal.`
+- `fix: Default password for nodes is now correctly set to "youshallnotpass" if not provided.`
+- `fix: Search functionality now correctly handles sources not explicitly present in source variables and includes 'deflate' in 'accept-encoding' headers for improved compatibility.`
+- `fix: User-Agent string in headers updated with correct version information.`
+- `fix: Typings and SourceManager settings updated; improved error handling and added debug logging for node raw events.`
+- `fix: Spotify endpoint change addressed for token fetching.`
+- `fix: Bot settings updated for new Lavalink server configuration; nowplaying and search commands enhanced for better track information display.`
+
+### Miscellaneous
+- `misc: Version bumped to 4.0.2.`
+- `misc: Debug message for exceptions in Node.ts now stringifies the payload exception for better readability.`
