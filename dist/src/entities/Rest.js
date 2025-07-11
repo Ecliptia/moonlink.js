@@ -12,7 +12,7 @@ class Rest {
         this.defaultHeaders = {
             Authorization: this.node.password,
             Accept: "application/json",
-            "User-Agent": `Moonlink.js/${node.manager.version} (Aprecity/10.06.25)`,
+            "User-Agent": `Moonlink.js/${node.manager.version} (Epiphany/10.07.2025)`,
             "Content-Type": "application/json",
             "accept-encoding": "br, gzip, deflate"
         };
