@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
 const index_1 = require("../../index");
-const ws_1 = __importDefault(require("ws"));
+const WebSocket_1 = __importDefault(require("../services/WebSocket"));
+const types_1 = require("../typings/types");
 class Node {
     manager;
     uuid;
@@ -25,13 +26,16 @@ class Node {
     regions;
     secure;
     sessionId;
+    priority;
     socket;
     stats;
     info;
     version;
     url;
     rest;
+    state = types_1.NodeState.DISCONNECTED;
     constructor(manager, config) {
+        this.setState = this.setState.bind(this);
         this.manager = manager;
         this.uuid = (0, index_1.generateUUID)(config.host, config.port);
         this.host = config.host;
@@ -51,7 +55,13 @@ class Node {
     get address() {
         return `${this.host}:${this.port}`;
     }
+    setState(state) {
+        const oldState = this.state;
+        this.state = state;
+        this.manager.emit("nodeStateChange", this, oldState, state);
+    }
     connect() {
+        this.setState(types_1.NodeState.CONNECTING);
         this.manager.emit("debug", `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`);
         let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
         let headers = {
@@ -63,7 +73,7 @@ class Node {
             headers["Session-Id"] = sessionId;
             this.manager.emit("debug", `Moonlink.js > Node > Connect > Using resume session ID: ${sessionId} for ${this.identifier}`);
         }
-        this.socket = new ws_1.default(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
+        this.socket = new WebSocket_1.default(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
         });
         this.socket.addEventListener("open", this.open.bind(this), { once: true });
@@ -75,6 +85,7 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`);
     }
     reconnect() {
+        this.setState(types_1.NodeState.CONNECTING);
         const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier}) attempting to reconnect in ${delay / 1000}s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount})`);
         this.reconnectTimeout = setTimeout(() => {
@@ -111,10 +122,12 @@ class Node {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.connected = true;
+        this.setState(types_1.NodeState.CONNECTED);
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
         this.manager.emit("nodeConnected", this);
     }
-    close({ code, reason }) {
+    close(event) {
+        const { code, reason } = event;
         if (this.connected)
             this.connected = false;
         this.socket.close();
@@ -122,14 +135,27 @@ class Node {
             this.reconnect();
         }
         else {
+            if (this.getPlayersCount > 0) {
+                this.manager.emit("debug", `Moonlink.js > Node (${this.identifier}) exhausted reconnect attempts. Migrating ${this.getPlayersCount} players.`);
+                this.migrateAllPlayers();
+            }
             this.socket = null;
             this.destroyed = true;
+            this.setState(types_1.NodeState.DESTROYED);
         }
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has disconnected with code ${code} and reason ${reason}.`);
+        this.setState(types_1.NodeState.DISCONNECTED);
         this.manager.emit("nodeDisconnect", this, code, reason);
     }
     async message({ data }) {
-        let payload = JSON.parse(data);
+        let payload;
+        try {
+            payload = JSON.parse(data);
+        }
+        catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Node (${this.identifier}) received a malformed payload.`, data, e);
+            return;
+        }
         this.manager.emit("nodeRaw", this, payload);
         switch (payload.op) {
             case "ready":
@@ -146,8 +172,10 @@ class Node {
                         },
                     });
                     this.manager.emit("debug", "Moonlink.js > Node > Resuming node " + this.uuid + ".");
+                    this.setState(types_1.NodeState.RESUMING);
                 }
                 this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has been ready.`);
+                this.setState(types_1.NodeState.READY);
                 this.manager.emit("nodeReady", this, payload);
                 if (this.getPlayersCount > 0 && this.manager.options.autoResume) {
                     this.manager.emit("debug", "Moonlink.js > Node > Auto-resuming " +
@@ -167,34 +195,50 @@ class Node {
                     this.manager.emit("nodeAutoResumed", this, this.getPlayers());
                 }
                 if (this.manager.options.resume && this.resumed) {
-                    let players = await this.rest.getPlayers(this.sessionId);
-                    players.forEach(async (player) => {
-                        let guildId = player.guildId;
-                        let storage = this.manager.database.get(`players.${guildId}`);
-                        let queue = this.manager.database.get(`queues.${guildId}`);
-                        let current = storage.current;
-                        if (!storage)
-                            return;
-                        console.log(this.uuid);
-                        let reconstructedPlayer = this.manager.createPlayer({
+                    const players = await this.rest.getPlayers(this.sessionId);
+                    if (!players || players?.length === 0) {
+                        this.manager.emit("debug", `Moonlink.js > Node > No players to resume on node ${this.uuid}.`);
+                        return;
+                    }
+                    for (const playerInfo of players) {
+                        const guildId = playerInfo.guildId;
+                        const storage = this.manager.database.get(`players.${guildId}`);
+                        const queue = this.manager.database.get(`queues.${guildId}`);
+                        const current = storage?.current;
+                        if (!storage) {
+                            this.manager.emit("debug", `Moonlink.js > Node > No stored data found for player ${guildId}, skipping resume.`);
+                            continue;
+                        }
+                        this.manager.emit("debug", `Moonlink.js > Node > Attempting to resume player ${guildId} on node ${this.uuid}.`);
+                        const reconstructedPlayer = this.manager.createPlayer({
                             ...storage,
                             node: this.identifier ?? this.uuid,
                         });
-                        await reconstructedPlayer.connect({
+                        if (!reconstructedPlayer) {
+                            this.manager.emit("debug", `Moonlink.js > Node > Failed to create player instance for ${guildId}, skipping resume.`);
+                            continue;
+                        }
+                        this.manager.emit("playerResuming", reconstructedPlayer);
+                        reconstructedPlayer.connect({
                             setDeaf: false,
                             setMute: false,
                         });
-                        console.log(current, storage);
-                        reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
+                        if (current) {
+                            reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
+                        }
+                        else {
+                            this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
+                        }
                         if (queue?.tracks) {
-                            let tracks = queue.tracks.map(track => new index_1.Track((0, index_1.decodeTrack)(track)));
+                            const tracks = queue.tracks.map((track) => new index_1.Track((0, index_1.decodeTrack)(track)));
                             this.manager.database.delete(`queues.${guildId}`);
-                            for (let track of tracks) {
+                            for (const track of tracks) {
                                 reconstructedPlayer.queue.add(track);
                             }
                         }
-                        this.manager.emit("debug", "Moonlink.js > Player " + guildId + " has been resumed on node " + this.uuid + ".");
-                    });
+                        this.manager.emit("debug", `Moonlink.js > Player ${guildId} has been resumed on node ${this.uuid}.`);
+                        this.manager.emit("playerResumed", reconstructedPlayer);
+                    }
                 }
                 break;
             case "stats":
@@ -256,11 +300,14 @@ class Node {
                                 payload.reason +
                                 ". But the current track is null. " +
                                 player.current?.encoded);
-                        let track = new (index_1.Structure.get("Track"))({ ...payload.track }, player.current.requestedBy);
+                        let track = new (index_1.Structure.get("Track"))({ ...payload.track }, player.current?.requestedBy);
                         player.playing = false;
                         player.paused = false;
                         player.set("sendPlayerUpdateDebug", false);
                         player.previous.push(track);
+                        if (player.previous.length > player.historySize) {
+                            player.previous.shift();
+                        }
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (player.destroyed) {
                             this.manager.emit("debug", "Moonlink.js > Player " +
@@ -286,6 +333,12 @@ class Node {
                             return;
                         }
                         if (player.loop === "track") {
+                            if (player.loopCount !== undefined && player.loopCount > 0) {
+                                player.loopCount--;
+                                if (player.loopCount === 0) {
+                                    player.setLoop("off");
+                                }
+                            }
                             await this.rest.update({
                                 guildId: player.guildId,
                                 data: {
@@ -298,6 +351,12 @@ class Node {
                             return;
                         }
                         else if (player.loop === "queue") {
+                            if (player.loopCount !== undefined && player.loopCount > 0) {
+                                player.loopCount--;
+                                if (player.loopCount === 0) {
+                                    player.setLoop("off");
+                                }
+                            }
                             player.current.position = 0;
                             player.current.time = 0;
                             player.queue.add(player.current);
@@ -309,65 +368,8 @@ class Node {
                             player.play();
                             return;
                         }
-                        if (player.autoPlay && player.current.sourceName === "youtube") {
-                            let uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
-                            let res = await this.manager.search({
-                                query: uri,
-                            });
-                            if (payload.reason === "stopped") {
-                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay payload reason stopped ");
-                            }
-                            else if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
-                                this.manager.emit("debug", "Moonlink.js > Player " +
-                                    player.guildId +
-                                    " is autoplay payload is error loadType");
-                            }
-                            else {
-                                let randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
-                                if (randomTrack) {
-                                    player.queue.add(randomTrack);
-                                    player.play();
-                                    this.manager.emit("debug", "Moonlink.js > Player " +
-                                        player.guildId +
-                                        " is autoplaying track " +
-                                        randomTrack.title);
-                                    return;
-                                }
-                                else {
-                                    this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay failed ");
-                                }
-                            }
-                        }
-                        if (player.autoPlay && player.current.sourceName?.toLowerCase() == "spotify") {
-                            if (player.current.pluginInfo?.MoonlinkInternal) {
-                                let uri = `sprec:seed_tracks=${player.current.identifier}`;
-                                let res = await this.manager.search({
-                                    query: uri,
-                                });
-                                if (payload.reason === "stopped") {
-                                    this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay payload reason stopped ");
-                                }
-                                else if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
-                                    this.manager.emit("debug", "Moonlink.js > Player " +
-                                        player.guildId +
-                                        " is autoplay payload is error loadType");
-                                }
-                                else {
-                                    let randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
-                                    if (randomTrack) {
-                                        player.queue.add(randomTrack);
-                                        player.play();
-                                        this.manager.emit("debug", "Moonlink.js > Player " +
-                                            player.guildId +
-                                            " is autoplaying track " +
-                                            randomTrack.title);
-                                        return;
-                                    }
-                                    else {
-                                        this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is autoplay failed ");
-                                    }
-                                }
-                            }
+                        if (player.autoPlay) {
+                            await this._handleAutoplay(player, payload.reason);
                         }
                         if (player.autoLeave) {
                             player.destroy();
@@ -432,6 +434,40 @@ class Node {
             }
         }
     }
+    async _handleAutoplay(player, reason) {
+        let uri;
+        let sourceName;
+        if (player.current.sourceName === "youtube") {
+            uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
+            sourceName = "youtube";
+        }
+        else if (player.current.sourceName?.toLowerCase() === "spotify" && player.current.pluginInfo?.MoonlinkInternal) {
+            uri = `sprec:seed_tracks=${player.current.identifier}`;
+            sourceName = "spotify";
+        }
+        if (!uri) {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`);
+            return;
+        }
+        if (reason === "stopped") {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`);
+            return;
+        }
+        const res = await this.manager.search({ query: uri, source: sourceName });
+        if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`);
+            return;
+        }
+        const randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
+        if (randomTrack) {
+            player.queue.add(randomTrack);
+            player.play();
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplaying track ${randomTrack.title}`);
+        }
+        else {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no random track found`);
+        }
+    }
     error({ error }) {
         this.manager.emit("nodeError", this, error);
     }
@@ -475,19 +511,30 @@ class Node {
     get getPlayersCount() {
         return this.getPlayers().length;
     }
-    needsRestart() {
-        const stats = this.getSystemStats();
-        return (stats.cpuLoad > 80 ||
-            stats.memoryUsage > 80 ||
-            this.reconnectAttempts > 3);
-    }
-    getNodeStatus() {
+    async getNodeStatus(timeout = 2000) {
         const players = this.getPlayers();
         const { cpuLoad, memoryUsage } = this.stats?.cpu ? {
             cpuLoad: this.stats.cpu.systemLoad,
             memoryUsage: this.stats.memory.used
         } : { cpuLoad: 0, memoryUsage: 0 };
         const isNodeOverloaded = cpuLoad > 80 || memoryUsage > 80;
+        const needsRestart = isNodeOverloaded || this.reconnectAttempts > 3;
+        let responding = false;
+        let performance = 'poor';
+        try {
+            const start = Date.now();
+            await Promise.race([
+                this.rest.getVersion(),
+                new Promise((_, reject) => setTimeout(() => reject(), timeout))
+            ]);
+            responding = true;
+            const responseTime = Date.now() - start;
+            performance = responseTime < 100 ? 'excellent' : responseTime < 200 ? 'good' : 'poor';
+        }
+        catch {
+            responding = false;
+            performance = 'poor';
+        }
         return {
             identifier: this.identifier,
             connected: this.connected,
@@ -505,26 +552,11 @@ class Node {
             },
             health: {
                 status: isNodeOverloaded ? 'overloaded' : 'stable',
-                needsRestart: isNodeOverloaded || this.reconnectAttempts > 3
+                needsRestart: needsRestart,
+                responding: responding,
+                performance: performance
             }
         };
-    }
-    async checkHealth(timeout = 2000) {
-        try {
-            const start = Date.now();
-            await Promise.race([
-                this.rest.getVersion(),
-                new Promise((_, reject) => setTimeout(() => reject(), timeout))
-            ]);
-            const responseTime = Date.now() - start;
-            return {
-                responding: true,
-                performance: responseTime < 100 ? 'excellent' : responseTime < 200 ? 'good' : 'poor'
-            };
-        }
-        catch {
-            return { responding: false, performance: 'poor' };
-        }
     }
 }
 exports.Node = Node;
