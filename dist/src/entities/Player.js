@@ -101,7 +101,7 @@ class Player {
         return true;
     }
     setAutoLeave(autoLeave) {
-        (0, index_1.validateProperty)(autoLeave, (value) => typeof value !== "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave must be a boolean.");
+        (0, index_1.validateProperty)(autoLeave, (value) => typeof value === "boolean", "Moonlink.js > Player#setAutoLeave - autoLeave must be a boolean.");
         if (this.autoLeave === autoLeave)
             return false;
         this.autoLeave = autoLeave;
@@ -150,6 +150,7 @@ class Player {
             position: 0,
             requestedBy: this.current.requestedBy,
         });
+        this.set("isBackPlay", options.isBackPlay ?? false);
         this.node.rest.update({
             guildId: this.guildId,
             data: {
@@ -184,7 +185,7 @@ class Player {
             this.queue.unshift(this.current);
         }
         this.current = lastTrack;
-        await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
+        await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy, isBackPlay: true });
         this.manager.emit("playerTriggeredBack", this, lastTrack);
         return true;
     }

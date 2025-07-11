@@ -51,6 +51,7 @@ export declare class Player {
         };
         position?: number;
         endTime?: number;
+        isBackPlay?: boolean;
     }): Promise<boolean>;
     replay(): Promise<boolean>;
     back(): Promise<boolean>;
