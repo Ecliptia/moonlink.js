@@ -96,7 +96,8 @@ class Database {
                 const value = JSON.parse(parts.slice(2).join('|'));
                 return { op: 'set', key, value };
             }
-            catch {
+            catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Database > Failed to deserialize WAL entry: ${e.message}`);
                 return null;
             }
         }
@@ -109,9 +110,19 @@ class Database {
         if (this.disabled || !this.walStream || this.walBuffer.length === 0) {
             return;
         }
-        const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
-        this.walStream.write(dataToWrite);
-        this.walBuffer = [];
+        try {
+            const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
+            this.walStream.write(dataToWrite, (err) => {
+                if (err) {
+                    this.manager.emit("debug", `Moonlink.js > Database > Failed to write to WAL stream: ${err.message}`);
+                    this.disabled = true;
+                }
+            });
+            this.walBuffer = [];
+        }
+        catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Database > Failed to flush WAL buffer: ${e.message}`);
+        }
     }
     async loadSnapshot() {
         try {
@@ -122,9 +133,13 @@ class Database {
         catch (err) {
             this.store = {};
             if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch(() => {
+                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch((writeErr) => {
+                    this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial snapshot file: ${writeErr.message}`);
                     this.disabled = true;
                 });
+            }
+            else {
+                this.manager.emit("debug", `Moonlink.js > Database > Failed to load snapshot: ${err.message}`);
             }
         }
     }
@@ -135,7 +150,13 @@ class Database {
         }
         catch (err) {
             if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.logPath, '').catch(() => { this.disabled = true; });
+                await fs_1.default.promises.writeFile(this.logPath, '').catch((writeErr) => {
+                    this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial WAL file: ${writeErr.message}`);
+                    this.disabled = true;
+                });
+            }
+            else {
+                this.manager.emit("debug", `Moonlink.js > Database > Failed to replay WAL: ${err.message}`);
             }
             return;
         }
@@ -159,11 +180,13 @@ class Database {
             return;
         try {
             this.walStream = (0, fs_1.createWriteStream)(this.logPath, { flags: 'a' });
-            this.walStream.on('error', () => {
+            this.walStream.on('error', (err) => {
+                this.manager.emit("debug", `Moonlink.js > Database > WAL stream error: ${err.message}`);
                 this.disabled = true;
             });
         }
         catch (err) {
+            this.manager.emit("debug", `Moonlink.js > Database > Failed to open WAL stream: ${err.message}`);
             this.disabled = true;
         }
     }
@@ -277,6 +300,7 @@ class Database {
             await fs_1.default.promises.writeFile(this.logPath, '', 'utf-8');
         }
         catch (err) {
+            this.manager.emit("debug", `Moonlink.js > Database > Failed to compact database: ${err.message}`);
             this.disabled = true;
         }
         finally {
