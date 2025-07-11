@@ -24,8 +24,11 @@ export declare class Manager extends EventEmitter {
         source?: TSearchSources;
         node?: string;
         requester?: unknown;
+        fallbackSources?: TSearchSources[];
     }): Promise<SearchResult>;
     packetUpdate(packet: any): Promise<void>;
+    private _handleVoiceServerUpdate;
+    private _handleVoiceStateUpdate;
     attemptConnection(guildId: string): Promise<boolean>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;
