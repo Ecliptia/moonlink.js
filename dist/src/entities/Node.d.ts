@@ -1,6 +1,7 @@
 import { INodeStats, INode } from "../typings/Interfaces";
-import { Manager, Rest } from "../../index";
-import WebSocket from "ws";
+import { Manager, Rest, Player } from "../../index";
+import WebSocket from "../services/WebSocket";
+import { NodeState } from "../typings/types";
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -20,24 +21,28 @@ export declare class Node {
     regions: string[];
     secure: boolean;
     sessionId: string;
+    priority?: number;
     socket: WebSocket;
     stats?: INodeStats;
     info?: any;
     version?: string;
     url: string;
     rest: Rest;
+    state: NodeState;
     constructor(manager: Manager, config: INode);
     get address(): string;
+    setState(state: NodeState): void;
     connect(): void;
     reconnect(): void;
     protected open(): void;
-    protected close({ code, reason }: {
-        code: any;
-        reason: any;
+    protected close(event: {
+        code: number;
+        reason: string;
     }): void;
     protected message({ data }: {
         data: any;
     }): Promise<void>;
+    private _handleAutoplay;
     protected error({ error }: {
         error: any;
     }): void;
@@ -48,12 +53,28 @@ export declare class Node {
     };
     isOverloaded(cpuThreshold?: number, memoryThreshold?: number): boolean;
     migrateAllPlayers(targetNode?: Node): Promise<void>;
-    getPlayers(): import("./Player").Player[];
+    getPlayers(): Player[];
     get getPlayersCount(): number;
-    needsRestart(): boolean;
-    getNodeStatus(): object;
-    checkHealth(timeout?: number): Promise<{
-        responding: boolean;
-        performance: 'excellent' | 'good' | 'poor';
+    getNodeStatus(timeout?: number): Promise<{
+        identifier: string;
+        connected: boolean;
+        version?: string;
+        stats: {
+            cpu: number;
+            memory: number;
+            uptime: number;
+        };
+        players: {
+            total: number;
+            active: number;
+            paused: number;
+            idle: number;
+        };
+        health: {
+            status: 'overloaded' | 'stable';
+            needsRestart: boolean;
+            responding: boolean;
+            performance: 'excellent' | 'good' | 'poor';
+        };
     }>;
 }

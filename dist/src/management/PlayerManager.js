@@ -10,24 +10,31 @@ class PlayerManager {
         this.manager = manager;
     }
     create(config) {
-        (0, index_1.validateProperty)(config.guildId, value => value !== undefined || value !== "string", "(Moonlink.js) - Player > GuildId is required");
-        if (this.has(config.guildId))
-            return this.get(config.guildId);
-        (0, index_1.validateProperty)(config.voiceChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > VoiceChannelId is required");
-        (0, index_1.validateProperty)(config.textChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > TextChannelId is required");
-        (0, index_1.validateProperty)(config.volume, value => value === undefined || value >= 0, "(Moonlink.js) - Player > Invalid volume value. Volume must be a number between 0.");
-        if (config.node) {
-            (0, index_1.validateProperty)(this.manager.nodes.get(config.node), value => value !== undefined, "(Moonlink.js) - Player > Invalid node");
+        const finalConfig = { ...this.manager.options.defaultPlayer, ...config };
+        (0, index_1.validateProperty)(finalConfig.guildId, value => value !== undefined || value !== "string", "(Moonlink.js) - Player > GuildId is required");
+        if (this.has(finalConfig.guildId))
+            return this.get(finalConfig.guildId);
+        (0, index_1.validateProperty)(finalConfig.voiceChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > VoiceChannelId is required");
+        (0, index_1.validateProperty)(finalConfig.textChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > TextChannelId is required");
+        (0, index_1.validateProperty)(finalConfig.volume, value => value === undefined || value >= 0, "(Moonlink.js) - Player > Invalid volume value. Volume must be a number between 0.");
+        if (finalConfig.node) {
+            const node = this.manager.nodes.get(finalConfig.node);
+            if (!node) {
+                this.manager.emit("debug", `(Moonlink.js) - Player > Invalid node: ${finalConfig.node}`);
+                return undefined;
+            }
         }
         else {
-            let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players");
-            if (!node)
-                throw new Error("(Moonlink.js) - Player > No available nodes");
-            config.node = node.identifier ?? node.uuid;
+            let node = this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players", finalConfig.voiceChannelId);
+            if (!node) {
+                this.manager.emit("debug", "(Moonlink.js) - Player > No available nodes to create a player.");
+                return undefined;
+            }
+            finalConfig.node = node.identifier ?? node.uuid;
         }
-        const player = new (index_1.Structure.get("Player"))(this.manager, config);
-        this.cache.set(config.guildId, player);
-        this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " + config.guildId + " has been created", config);
+        const player = new (index_1.Structure.get("Player"))(this.manager, finalConfig);
+        this.cache.set(finalConfig.guildId, player);
+        this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " + finalConfig.guildId + " has been created", finalConfig);
         return player;
     }
     has(guildId) {
@@ -51,36 +58,24 @@ class PlayerManager {
 }
 exports.PlayerManager = PlayerManager;
 async function isVoiceStateAttempt(player) {
-    const voiceState = await player.node.rest.getPlayer(player.node.sessionId, player.guildId).voice;
     const logDebug = (message) => player.manager.emit("debug", `Moonlink.js > ${message}`);
-    const ensureConnection = async () => {
-        if (!player.voiceState?.attempt &&
-            player.voiceChannelId &&
-            player.guildId &&
-            !player.connected) {
-            logDebug(`Attempting to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}`);
-            await player.connect();
-            await (0, index_1.delay)(2000);
-        }
-        return player.voiceState?.attempt;
-    };
-    const verifyUpdate = async () => {
-        if (!player.voiceState?.attempt && player.connected) {
-            logDebug(`Waiting for voice state update for guild ${player.guildId}`);
-            await (0, index_1.delay)(2000);
-        }
-        return player.voiceState?.attempt;
-    };
-    const validateSession = () => voiceState?.sessionId === player.voiceState?.session_id;
-    const isConnected = await ensureConnection();
-    if (!isConnected && !(await verifyUpdate())) {
-        logDebug(`Failed to connect to voice channel ${player.voiceChannelId} for guild ${player.guildId}. Check if the packetUpdate function is getting data from Discord client side.`);
+    if (!player.voiceChannelId || !player.guildId) {
+        logDebug(`isVoiceStateAttempt: Missing voiceChannelId or guildId for player ${player.guildId}.`);
         return false;
     }
-    if (validateSession()) {
-        logDebug(`The voice state update for guild ${player.guildId} has been received`);
+    if (!player.connected && !player.voiceState?.attempt) {
+        logDebug(`isVoiceStateAttempt: Player ${player.guildId} not connected, attempting to connect.`);
+        await player.connect();
+        await (0, index_1.delay)(2000);
+    }
+    const voiceState = await player.node.rest.getPlayer(player.node.sessionId, player.guildId);
+    if (voiceState && voiceState.voice?.sessionId === player.voiceState?.sessionId) {
+        logDebug(`isVoiceStateAttempt: Voice state update received and session valid for player ${player.guildId}.`);
         return true;
     }
+    logDebug(`isVoiceStateAttempt: Failed to validate voice state for player ${player.guildId}. ` +
+        `Connected: ${player.connected}, VoiceStateAttempt: ${player.voiceState?.attempt}, ` +
+        `Lavalink SessionId: ${voiceState?.voice?.sessionId}, Player SessionId: ${player.voiceState?.sessionId}.`);
     return false;
 }
 //# sourceMappingURL=PlayerManager.js.map

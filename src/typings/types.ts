@@ -1,3 +1,20 @@
+export enum SearchSources {
+  YouTube = "ytsearch",
+  YouTubeMusic = "ytmsearch",
+  SoundCloud = "scsearch",
+  Local = "local",
+}
+
+export enum NodeState {
+  CONNECTING = "CONNECTING",
+  CONNECTED = "CONNECTED",
+  READY = "READY",
+  RESUMING = "RESUMING",
+  RESUMED = "RESUMED",
+  DISCONNECTED = "DISCONNECTED",
+  DESTROYED = "DESTROYED",
+}
+
 export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud" | string;
 export type TLoadResultType =
   | "track"
@@ -13,7 +30,7 @@ export type TLoadResultNodeLinkType =
   | "playlist"
   | "station"
   | "podcast"
-  | "show";
+  | "podcast";
 export type TSortTypeNode =
   | "players"
   | "playingPlayers"
@@ -41,3 +58,5 @@ export type TPartialTrackProperties =
   | "artworkUrl"
   | "isrc"
   | "sourceName";
+
+export type YoutubeThumbnailQuality = "default" | "hqdefault" | "mqdefault" | "sddefault" | "maxresdefault";

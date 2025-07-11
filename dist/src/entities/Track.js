@@ -88,6 +88,14 @@ class Track {
         const track = (0, Utils_1.decodeTrack)(this.encoded);
         return track;
     }
+    getThumbnailUrl(quality = "default") {
+        if (this.sourceName === "youtube" && this.identifier) {
+            const validQualities = ["default", "hqdefault", "mqdefault", "sddefault", "maxresdefault"];
+            const selectedQuality = validQualities.includes(quality) ? quality : "maxresdefault";
+            return `https://img.youtube.com/vi/${this.identifier}/${selectedQuality}.jpg`;
+        }
+        return this.artworkUrl;
+    }
     static async unresolvedTrack(options) {
         const manager = Utils_1.Structure.getManager();
         if (!manager)

@@ -1,132 +1,313 @@
-import fs from "fs";
+import { Manager } from "../../index";
+import fs, { createWriteStream, WriteStream } from "fs";
 import path from "path";
-import { Manager, Structure } from "../../index";
-type Data = Record<string, any>;
+
+type AnyObject = Record<string, any>;
+type Operation = { op: 'set' | 'delete'; key: string; value?: unknown };
 
 export class Database {
-  private disabled = false;
-  private data: Data = {};
-  private id: string;
-  
-  constructor(manager: Manager) {
-    this.id = manager.options.clientId;
-    this.disabled = manager.options.disableDatabase && !manager.options.resume;
+  private store: AnyObject = {};
+  private disabled: boolean;
+  private dir: string;
+  private snapshotPath: string;
+  private logPath: string;
+  private walStream?: WriteStream;
+  private compactionIntervalMs: number;
+  private compactionTimer?: NodeJS.Timeout;
+  private manager: Manager;
 
-    if (this.disabled) {
-      this.data = {};
-      Structure.getManager().emit(
-        "debug",
-        `Moonlink.js > Database > Database is disabled, no data will be loaded/saved`
-      );
-      return;
-    } else {
-      Structure.getManager().emit(
-        "debug",
-        `Moonlink.js > Database > Database is enabled, loading data...`
-      );
+  private walBuffer: Operation[] = [];
+  private readonly walBufferMaxSize: number = 50;
+  private walFlushInterval?: NodeJS.Timeout;
+  private readonly walFlushIntervalMs: number = 500;
+
+  private constructor(manager: Manager) {
+    this.manager = manager;
+    this.disabled = Boolean(manager.options.disableDatabase && !manager.options.resume);
+    this.compactionIntervalMs = 60000;
+    this.dir = path.resolve(__dirname, "../datastore");
+    this.snapshotPath = path.join(this.dir, `data.${manager.options.clientId}.json`);
+    this.logPath = path.join(this.dir, `data.${manager.options.clientId}.wal`);
+
+    this.manager.emit("debug", `Moonlink.js > Database > Mode set to ${this.disabled ? "MEMORY" : "WAL"}`);
+  }
+
+  public static async create(manager: Manager): Promise<Database> {
+    const db = new Database(manager);
+    if (!db.disabled) {
+      await db.init();
     }
-
-    this.loadData();
+    return db;
   }
 
-  set<T>(key: string, value: T): void {
-    if (this.disabled) return;
-    if (!key) throw new Error("Key cannot be empty");
-    this.modifyData(key, value);
-    this.saveData();
+  private async init(): Promise<void> {
+    await fs.promises.mkdir(this.dir, { recursive: true });
+    await this.loadSnapshot();
+    await this.replayWAL();
+    this.openWALStream();
+    this.compactionTimer = setInterval(() => this.compact(), this.compactionIntervalMs);
+    this.walFlushInterval = setInterval(() => this._flushWALBuffer(), this.walFlushIntervalMs);
   }
 
-  get<T>(key: string): T | undefined {
-    if (this.disabled) return undefined;
-    if (!key) throw new Error("Key cannot be empty");
-    return key.split(".").reduce((acc, curr) => acc?.[curr], this.data) ?? undefined;
-  }
-
-  push<T>(key: string, value: T): void {
-    if (this.disabled) return;
-    const arr = this.get<T[]>(key) || [];
-    if (!Array.isArray(arr)) throw new Error("Key does not point to an array");
-    arr.push(value);
-    this.set(key, arr);
-  }
-
-  delete(key: string): boolean {
-    if (this.disabled) return false;
-    if (!key) throw new Error("Key cannot be empty");
-    const keys = key.split(".");
-    const lastKey = keys.pop();
-    let current = this.data;
-
-    for (const k of keys) {
-      if (typeof current[k] !== "object") return false;
-      current = current[k];
+  private _serializeEntry(entry: Operation): string {
+    const opCode = entry.op === 'set' ? 's' : 'd';
+    if (entry.op === 'set') {
+      const valueStr = JSON.stringify(entry.value);
+      return `${opCode}|${entry.key}|${valueStr}\n`;
     }
-
-    if (lastKey && lastKey in current) {
-      delete current[lastKey];
-      this.saveData();
-      return true;
-    }
-
-    return false;
+    return `${opCode}|${entry.key}\n`;
   }
 
-  private modifyData(key: string, value: any): void {
-    if (this.disabled) return;
-    const keys = key.split(".");
-    let current = this.data;
+  private _deserializeEntry(line: string): Operation | null {
+    const parts = line.split('|');
+    if (parts.length < 2) return null;
 
-    keys.forEach((k, i) => {
-      if (i === keys.length - 1) {
-        current[k] = value;
-      } else {
-        current[k] = current[k] || {};
-        current = current[k];
-      }
-    });
-  }
+    const opCode = parts[0];
+    const key = parts[1];
 
-  private loadData(): void {
-    if (this.disabled) return;
-    const filePath = this.getFilePath();
-    if (fs.existsSync(filePath)) {
-      Structure.getManager().emit(
-        "debug",
-        `Moonlink.js > Database > Loading data from ${filePath}`
-      );
+    if (opCode === 's') {
       try {
-        const fileContent = fs.readFileSync(filePath, "utf-8");
-        this.data = JSON.parse(fileContent);
-      } catch (err) {
-        Structure.getManager().emit(
-          "debug",
-          `Moonlink.js > Database > Error loading/parsing data: ${err}`
-        );
-        this.data = {};
+        // Re-join remaining parts in case the value contained the separator '|'
+        const value = JSON.parse(parts.slice(2).join('|'));
+        return { op: 'set', key, value };
+      } catch (e) {
+        this.manager.emit("debug", `Moonlink.js > Database > Failed to deserialize WAL entry: ${e.message}`);
+        return null;
       }
-    } else {
-      Structure.getManager().emit(
-        "debug",
-        `Moonlink.js > Database > No data found for clientId(${this.id})`
-      );
+    } else if (opCode === 'd') {
+      return { op: 'delete', key };
+    }
+    return null;
+  }
+
+  private _flushWALBuffer(): void {
+    if (this.disabled || !this.walStream || this.walBuffer.length === 0) {
+      return;
+    }
+    try {
+      const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
+      this.walStream.write(dataToWrite, (err) => {
+        if (err) {
+          this.manager.emit("debug", `Moonlink.js > Database > Failed to write to WAL stream: ${err.message}`);
+          this.disabled = true;
+        }
+      });
+      this.walBuffer = [];
+    } catch (e) {
+      this.manager.emit("debug", `Moonlink.js > Database > Failed to flush WAL buffer: ${e.message}`);
     }
   }
 
-  private saveData(): void {
+  private async loadSnapshot(): Promise<void> {
+    try {
+      const raw = await fs.promises.readFile(this.snapshotPath, 'utf-8');
+      const wrapper = JSON.parse(raw) as { data: AnyObject };
+      this.store = wrapper.data || {};
+    } catch (err: any) {
+      this.store = {};
+      if (err.code === 'ENOENT') {
+        await fs.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch((writeErr) => {
+          this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial snapshot file: ${writeErr.message}`);
+          this.disabled = true;
+        });
+      } else {
+        this.manager.emit("debug", `Moonlink.js > Database > Failed to load snapshot: ${err.message}`);
+      }
+    }
+  }
+
+  private async replayWAL(): Promise<void> {
+    let walContent: string;
+    try {
+      walContent = await fs.promises.readFile(this.logPath, 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        await fs.promises.writeFile(this.logPath, '').catch((writeErr) => {
+          this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial WAL file: ${writeErr.message}`);
+          this.disabled = true;
+        });
+      } else {
+        this.manager.emit("debug", `Moonlink.js > Database > Failed to replay WAL: ${err.message}`);
+      }
+      return;
+    }
+
+    const lines = walContent.split('\n');
+    for (const line of lines) {
+      if (!line) continue;
+      const entry = this._deserializeEntry(line);
+      if (!entry) continue;
+
+      if (entry.op === 'set') {
+        this.set(entry.key, entry.value, false);
+      } else if (entry.op === 'delete') {
+        this.delete(entry.key, false);
+      }
+    }
+  }
+
+  private openWALStream(): void {
     if (this.disabled) return;
     try {
-      const filePath = this.getFilePath();
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-      fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2));
-    } catch (err) {
-      Structure.getManager().emit(
-        "debug",
-        `Moonlink.js > Database > Failed to save data: ${err}`
-      );
+      this.walStream = createWriteStream(this.logPath, { flags: 'a' });
+      this.walStream.on('error', (err) => {
+        this.manager.emit("debug", `Moonlink.js > Database > WAL stream error: ${err.message}`);
+        this.disabled = true;
+      });
+    } catch (err: any) {
+      this.manager.emit("debug", `Moonlink.js > Database > Failed to open WAL stream: ${err.message}`);
+      this.disabled = true;
     }
   }
 
-  private getFilePath(): string {
-    return path.resolve(__dirname, "../datastore", `data.${this.id}.json`);
+  private appendLog(op: 'set' | 'delete', key: string, value?: unknown): void {
+    if (this.disabled) return;
+
+    const entry: Operation = { op, key, value };
+    this.walBuffer.push(entry);
+
+    if (this.walBuffer.length >= this.walBufferMaxSize) {
+      this._flushWALBuffer();
+    }
+  }
+
+  public set<T>(key: string, value: T, log: boolean = true): void {
+    if (!key) throw new Error("Key cannot be empty.");
+
+    const keys = key.split('.');
+    let current = this.store;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const keyPart = keys[i];
+      if (typeof current[keyPart] !== 'object' || current[keyPart] === null) {
+        current[keyPart] = {};
+      }
+      current = current[keyPart];
+    }
+
+    const lastKey = keys[keys.length - 1];
+    const existingValue = current[lastKey];
+
+    if (
+      typeof existingValue === 'object' && existingValue !== null && !Array.isArray(existingValue) &&
+      typeof value === 'object' && value !== null && !Array.isArray(value)
+    ) {
+      current[lastKey] = { ...existingValue, ...value };
+    } else {
+      current[lastKey] = value;
+    }
+
+    if (log) {
+      this.appendLog('set', key, value);
+    }
+  }
+
+  public get<T>(key: string): T | undefined {
+    if (!key) throw new Error("Key cannot be empty.");
+
+    const parts = key.split('.');
+    let value: any = this.store;
+
+    for (const part of parts) {
+      if (typeof value !== 'object' || value === null) {
+        return undefined;
+      }
+      value = value[part];
+    }
+    return value as T;
+  }
+
+  public delete(key: string, log: boolean = true): boolean {
+    if (!key) throw new Error("Key cannot be empty.");
+
+    const keys = key.split('.');
+    let obj = this.store;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (typeof obj[keys[i]] !== 'object' || obj[keys[i]] === null) {
+        return false;
+      }
+      obj = obj[keys[i]];
+    }
+
+    const lastKey = keys[keys.length - 1];
+    const existed = obj && Object.prototype.hasOwnProperty.call(obj, lastKey);
+
+    if (existed) {
+      delete obj[lastKey];
+      if (log) {
+        this.appendLog('delete', key);
+      }
+    }
+    return existed;
+  }
+
+  public keys(): string[] {
+    const allKeys: string[] = [];
+    const recurse = (obj: AnyObject, prefix: string) => {
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const newPrefix = prefix ? `${prefix}.${key}` : key;
+          if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+            recurse(obj[key], newPrefix);
+          } else {
+            allKeys.push(newPrefix);
+          }
+        }
+      }
+    }
+    recurse(this.store, '');
+    return allKeys;
+  }
+
+  public clear(): void {
+    this.store = {};
+    this.walBuffer = [];
+    if (this.walStream && !this.disabled) {
+      this.walStream.end(() => {
+        fs.promises.writeFile(this.logPath, '').then(() => this.openWALStream());
+      });
+    }
+  }
+
+  private async compact(): Promise<void> {
+    if (this.disabled) return;
+
+    this._flushWALBuffer();
+
+    if (this.walStream) {
+      await new Promise<void>(resolve => this.walStream!.end(resolve));
+      this.walStream = undefined;
+    }
+
+    try {
+      const wrapper = { data: this.store };
+      const raw = JSON.stringify(wrapper, null, 2);
+      await fs.promises.writeFile(this.snapshotPath, raw, 'utf-8');
+
+      await fs.promises.writeFile(this.logPath, '', 'utf-8');
+    } catch (err: any) {
+      this.manager.emit("debug", `Moonlink.js > Database > Failed to compact database: ${err.message}`);
+      this.disabled = true;
+    } finally {
+      // Re-open the stream for future operations, unless an error disabled persistence.
+      if (!this.disabled) {
+        this.openWALStream();
+      }
+    }
+  }
+
+  public async shutdown(): Promise<void> {
+    if (this.compactionTimer) clearInterval(this.compactionTimer);
+    if (this.walFlushInterval) clearInterval(this.walFlushInterval);
+
+    if (!this.disabled) {
+      await this.compact();
+    }
+
+    if (this.walStream) {
+      await new Promise<void>(resolve => this.walStream!.end(resolve));
+      this.walStream = undefined;
+    }
   }
 }

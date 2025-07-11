@@ -26,8 +26,10 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    disableNativeSources: true,
     partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier"],
+    disableNativeSources: true,
+    resume: true,
+    autoResume: true,
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
@@ -69,8 +71,7 @@ client.once("ready", () => {
   console.log(`${client.user.tag} is ready!`);
 });
 
-client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
-client.manager.on("nodeRaw", console.log)
+client.manager.on("debug", msg => console.log("[DEBUG]:", msg))
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
 

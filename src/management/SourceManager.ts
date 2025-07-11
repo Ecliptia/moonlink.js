@@ -44,20 +44,36 @@ export class SourceManager {
     public getAll(): ISource[] {
         return Object.values(this.sources);
     }
-    public loadFolder() {
-        const fs = require("fs");
+
+    public async loadFolder() {
+        const fs = require("fs").promises;
         const path = require("path");
         const folderPath = path.join(__dirname, "../sources/");
-        fs.readdir(folderPath, (err: any, files: string[]) => {
-            if (err) throw err;
-            files.forEach((file: string) => {
+        try {
+            const files = await fs.readdir(folderPath);
+            for (const file of files) {
                 if (file.endsWith(".js")) {
-                    const source = require(path.join(folderPath, file)).default;
-                    if (!source) return;
-                    this.add(new source(this.manager));
+                    const sourceName = file.replace(".js", "");
+                    if (this.manager.options.enabledSources && !this.manager.options.enabledSources.includes(sourceName)) {
+                        this.manager.emit("debug", `Moonlink.js > Source > ${sourceName} skipped (not in enabledSources).`);
+                        continue;
+                    }
+
+                    try {
+                        const source = require(path.join(folderPath, file)).default;
+                        if (!source) {
+                            this.manager.emit("debug", `Moonlink.js > Source > ${sourceName} has no default export.`);
+                            continue;
+                        }
+                        this.add(new source(this.manager));
+                    } catch (error: any) {
+                        this.manager.emit("debug", `Moonlink.js > Failed to load source ${sourceName}: ${error.message}`);
+                    }
                 }
-            });
-        });
+            }
+        } catch (err: any) {
+            this.manager.emit("debug", `Moonlink.js > Error reading sources folder: ${err.message}`);
+        }
     }
     public isLinkMatch(url: string, _unusedSourceParam?: string): [boolean, string | null] {
         for (const src of Object.values(this.sources)) {

@@ -1,6 +1,6 @@
 import { ITrack, ITrackInfo } from "../typings/Interfaces";
 import { Structure, decodeTrack } from "../Utils";
-import { TPartialTrackProperties } from "../typings/types";
+import { TPartialTrackProperties, YoutubeThumbnailQuality } from "../typings/types";
 
 export class Track {
   public encoded: string;
@@ -94,6 +94,15 @@ export class Track {
     const track = decodeTrack(this.encoded);
 
     return track;
+  }
+
+  public getThumbnailUrl(quality: string = "default"): string | undefined {
+    if (this.sourceName === "youtube" && this.identifier) {
+      const validQualities: YoutubeThumbnailQuality[] = ["default", "hqdefault", "mqdefault", "sddefault", "maxresdefault"];
+      const selectedQuality: YoutubeThumbnailQuality = validQualities.includes(quality as YoutubeThumbnailQuality) ? (quality as YoutubeThumbnailQuality) : "maxresdefault";
+      return `https://img.youtube.com/vi/${this.identifier}/${selectedQuality}.jpg`;
+    }
+    return this.artworkUrl;
   }
 
   public static async unresolvedTrack(options: {
