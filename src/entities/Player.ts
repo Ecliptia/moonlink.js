@@ -97,7 +97,7 @@ export class Player {
   public setVoiceChannelId(voiceChannelId: string): boolean {
     validateProperty(
       voiceChannelId,
-      (value) => typeof value !== "string",
+      (value) => typeof value === "string",
       "Moonlink.js > Player#setVoiceChannelId - voiceChannelId must be a string."
     );
     if (this.voiceChannelId === voiceChannelId) return false;
@@ -111,7 +111,7 @@ export class Player {
   public setTextChannelId(textChannelId: string): boolean {
     validateProperty(
       textChannelId,
-      (value) => typeof value !== "string",
+      (value) => typeof value === "string",
       "Moonlink.js > Player#setTextChannelId - textChannelId must be a string."
     );
     if (this.textChannelId === textChannelId) return false;
@@ -125,7 +125,7 @@ export class Player {
   public setAutoPlay(autoPlay: boolean): boolean {
     validateProperty(
       autoPlay,
-      (value) => typeof value !== "boolean",
+      (value) => typeof value === "boolean",
       "Moonlink.js > Player#setAutoPlay - autoPlay must be a boolean."
     );
     if (this.autoPlay === autoPlay) return false;
@@ -265,7 +265,7 @@ export class Player {
   public async transferNode(node: Node | string): Promise<boolean> {
     validateProperty(
       node,
-      (value) => !(value instanceof Node || typeof value === "string"),
+      (value) => (value instanceof Node || typeof value === "string"),
       "Moonlink.js > Player#transferNode - node is not a valid Node or string."
     );
 
@@ -332,7 +332,7 @@ export class Player {
 
   public async skip(position?: number): Promise<boolean> {
     if (!this.queue.size) {
-      if(this.autoPlay) {
+      if (this.autoPlay) {
         await this.stop();
       }
       return false;
@@ -340,7 +340,7 @@ export class Player {
 
     validateProperty(
       position,
-      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
+      value => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
       "Moonlink.js > Player#skip - position not a number or out of range"
     );
 
@@ -364,7 +364,7 @@ export class Player {
   public seek(position: number): boolean {
     validateProperty(
       position,
-      (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > this.current.duration,
+      (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.current.duration,
       "Moonlink.js > Player#seek - position is not a number or is out of range."
     );
 
@@ -390,7 +390,7 @@ export class Player {
   public setVolume(volume: number): boolean {
     validateProperty(
       volume,
-      (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > 1000, // Lavalink supports up to 1000%
+      (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= 1000, // Lavalink supports up to 1000%
       "Moonlink.js > Player#setVolume - volume is not a number or is out of range (0-1000)."
     );
     if (this.volume === volume) return false;
@@ -411,7 +411,7 @@ export class Player {
   public setLoop(loop: TPlayerLoop, count?: number): boolean {
     validateProperty(
       loop,
-      (value) => !["off", "track", "queue"].includes(value),
+      (value) => ["off", "track", "queue"].includes(value),
       "Moonlink.js > Player#setLoop - loop must be 'off', 'track', or 'queue'."
     );
     if (count !== undefined) {
