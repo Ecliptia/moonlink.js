@@ -71,8 +71,7 @@ client.once("ready", () => {
   console.log(`${client.user.tag} is ready!`);
 });
 
-client.manager.on("debug", msg => console.log("[DEBUG]:", msg));
-client.manager.on("nodeRaw", console.log)
+client.manager.on("debug", msg => console.log("[DEBUG]:", msg))
 client.on("raw", d => client.manager.packetUpdate(d));
 client.on("messageCreate", message => handleCommand(client, message));
 
