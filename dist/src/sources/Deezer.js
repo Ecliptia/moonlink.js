@@ -23,24 +23,39 @@ class Deezer {
     async init() {
         if (this.licenseToken && this.checkForm)
             return;
-        const token = (0, crypto_1.randomBytes)(12).toString('base64').replace(/[+/=]/g, '').slice(0, 16);
-        const url = `https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=${token}`;
-        const resp = await fetch(url, { redirect: 'follow' });
-        if (!resp.ok)
-            this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
-        const data = await resp.json();
-        this.licenseToken = data.results.USER.OPTIONS.license_token;
-        this.checkForm = data.results.checkForm;
-        this.cookie = resp.headers.get('set-cookie');
+        try {
+            const token = (0, crypto_1.randomBytes)(12).toString('base64').replace(/[+/=]/g, '').slice(0, 16);
+            const url = `https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=${token}`;
+            const resp = await fetch(url, { redirect: 'follow' });
+            if (!resp.ok) {
+                this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
+                return;
+            }
+            const data = await resp.json();
+            this.licenseToken = data.results.USER.OPTIONS.license_token;
+            this.checkForm = data.results.checkForm;
+            this.cookie = resp.headers.get('set-cookie');
+        }
+        catch (e) {
+            this.manager.emit('debug', `Error initializing Deezer: ${e.message}`);
+        }
     }
     async apiRequest(path) {
         await this.init();
-        const url = path.startsWith('http') ? path : `https://api.deezer.com${path}`;
-        const headers = this.cookie ? { Cookie: this.cookie } : {};
-        const resp = await fetch(url, { headers, redirect: 'follow' });
-        if (!resp.ok)
-            this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
-        return resp.json();
+        try {
+            const url = path.startsWith('http') ? path : `https://api.deezer.com${path}`;
+            const headers = this.cookie ? { Cookie: this.cookie } : {};
+            const resp = await fetch(url, { headers, redirect: 'follow' });
+            if (!resp.ok) {
+                this.manager.emit('debug', `Deezer API request failed: ${resp.status}`);
+                return null;
+            }
+            return resp.json();
+        }
+        catch (e) {
+            this.manager.emit('debug', `Error in Deezer apiRequest: ${e.message}`);
+            return null;
+        }
     }
     async search(query) {
         const q = query.startsWith('dzsearch:') ? query.slice(9).trim() : query;
