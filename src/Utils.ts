@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { createHash } from "crypto";
+import http from "http";
+import https from "https";
+import zlib from "zlib";
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 
 export const structures: Record<string, any> = {};
@@ -14,15 +17,15 @@ export const sources = {
 
 export abstract class Structure {
   public static manager: any;
-  
+
   public static setManager(manager: any): void {
     this.manager = manager;
   }
-  
+
   public static getManager(): any {
     return this.manager;
   }
-  
+
   public static get(name: string): any {
     const structure = structures[name];
     if (!structure) {
@@ -30,7 +33,7 @@ export abstract class Structure {
     }
     return structure;
   }
-  
+
   public static extend(name: string, extender: any): void {
     structures[name] = extender;
   }
@@ -104,9 +107,9 @@ export function decodeTrack(encoded: string): ITrack {
 }
 
 export function encodeTrack(track: ITrackInfo): string {
-  const bufferArray = [];
+  const bufferArray: Buffer[] = [];
 
-  function write(type, value) {
+  function write(type: string, value: any): void {
     if (type === "byte") bufferArray.push(Buffer.from([value]));
     if (type === "ushort") {
       const buf = Buffer.alloc(2);
@@ -179,25 +182,112 @@ export function Log(message: string, LogPath: string): void {
 
   fs.exists(logpath, (exists: boolean) => {
     if (!exists) {
-      fs.mkdirSync(path.dirname(logpath), { recursive: true });
-      fs.writeFileSync(logpath, "");
+      try {
+        fs.mkdirSync(path.dirname(logpath), { recursive: true });
+        fs.writeFileSync(logpath, "");
+      } catch (error) {
+        console.error("Failed to create log file:", error);
+        return;
+      }
     }
     try {
       fs.appendFileSync(logpath, logmessage);
     } catch (error) {
-      return false;
+      console.error("Failed to append to log file:", error);
     }
   });
 }
+export async function makeRequest<T = any>(
+  url: string,
+  options: http.RequestOptions & { body?: any },
+  timeout = 10000,
+  retries = 3,
+  retryDelay = 1000
+): Promise<T | undefined> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await new Promise((resolve) => {
+        const urlObject = new URL(url);
+        const transport = urlObject.protocol === "https:" ? https : http;
 
-export function makeRequest<T>(url: string, options: RequestInit): Promise<T> {
-  let request = fetch(url, options)
-    .then(res => res.json().catch(() => res.text()))
-    .then(json => json as T);
+        options.headers = options.headers || {};
+        options.headers["Accept-Encoding"] = "gzip, deflate, br";
 
-  if (!request) return;
-  return request;
+        const req = transport.request(url, options, (res) => {
+          let stream: http.IncomingMessage | zlib.Gunzip | zlib.Inflate | zlib.BrotliDecompress = res;
+          const encoding = res.headers["content-encoding"];
+
+          if (encoding === "gzip") {
+            stream = res.pipe(zlib.createGunzip());
+          } else if (encoding === "deflate") {
+            stream = res.pipe(zlib.createInflate());
+          } else if (encoding === "br") {
+            stream = res.pipe(zlib.createBrotliDecompress());
+          }
+
+          const chunks: Buffer[] = [];
+
+          stream.on("data", (chunk) => chunks.push(chunk));
+          stream.on("error", () => resolve(undefined));
+
+          stream.on("end", () => {
+            const body = Buffer.concat(chunks);
+            const contentType = res.headers["content-type"] || "";
+
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              if (body.length === 0) {
+                if (contentType.includes("application/json")) {
+                  return resolve({} as T);
+                }
+                return resolve("" as any);
+              }
+
+              try {
+                if (contentType.includes("application/json")) {
+                  return resolve(JSON.parse(body.toString()) as T);
+                }
+                return resolve(body.toString() as any as T);
+              } catch {
+                return resolve(undefined);
+              }
+            }
+
+            resolve(undefined);
+          });
+        });
+
+        req.on("error", () => resolve(undefined));
+
+        req.on("timeout", () => {
+          req.destroy();
+          resolve(undefined);
+        });
+
+        req.setTimeout(timeout);
+
+        if (options.body) {
+          const bodyData =
+            typeof options.body === "object" && options.body !== null
+              ? JSON.stringify(options.body)
+              : options.body.toString();
+
+          req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+          req.write(bodyData);
+        }
+
+        req.end();
+      });
+    } catch (error) {
+      if (i < retries) {
+        await delay(retryDelay * Math.pow(2, i));
+      } else {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
 }
+
 
 export function compareVersions(current: string, required: string): number {
   const curr = current.split(".").map(Number);

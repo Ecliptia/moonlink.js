@@ -16,16 +16,20 @@ export declare class Player {
     paused: boolean;
     volume: number;
     loop: TPlayerLoop;
+    loopCount?: number;
     current: Track;
-    previous: Track | Track[];
+    previous: Track[];
+    historySize: number;
     ping: number;
-    queue: Queue;
+    readonly queue: Queue;
     node: Node;
-    data: Record<string, unknown>;
-    filters: Filters;
-    listen: Listen;
-    lyrics: Lyrics;
+    readonly data: Record<string, unknown>;
+    readonly filters: Filters;
+    private _listen;
+    private _lyrics;
     constructor(manager: Manager, config: IPlayerConfig);
+    get listen(): Listen;
+    get lyrics(): Lyrics;
     set(key: string, data: unknown): void;
     get<T>(key: string): T;
     has(key: string): boolean;
@@ -34,7 +38,7 @@ export declare class Player {
     setTextChannelId(textChannelId: string): boolean;
     setAutoPlay(autoPlay: boolean): boolean;
     setAutoLeave(autoLeave: boolean): boolean;
-    connect(options: {
+    connect(options?: {
         setMute?: boolean;
         setDeaf?: boolean;
     }): boolean;
@@ -48,7 +52,8 @@ export declare class Player {
         position?: number;
         endTime?: number;
     }): Promise<boolean>;
-    replay(): boolean;
+    replay(): Promise<boolean>;
+    back(): Promise<boolean>;
     restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
     pause(): boolean;
@@ -60,7 +65,9 @@ export declare class Player {
     seek(position: number): boolean;
     shuffle(): boolean;
     setVolume(volume: number): boolean;
-    setLoop(loop: TPlayerLoop): boolean;
+    setLoop(loop: TPlayerLoop, count?: number): boolean;
     destroy(reason?: string): boolean;
+    private _sendVoiceUpdate;
     private updateData;
+    getHistory(limit?: number): Track[];
 }

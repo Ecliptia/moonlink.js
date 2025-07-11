@@ -16,7 +16,7 @@ navigation: false
 ::hero
 ---
 announcement:
-  title: 'Release v4.4.36'
+  title: 'Release v4.6.18'
   icon: '🎉'
   to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.4.36
   target: _blank

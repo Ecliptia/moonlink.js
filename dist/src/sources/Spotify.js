@@ -5,21 +5,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = __importDefault(require("crypto"));
 const index_1 = require("../../index");
+const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
+const TOKEN_URL = 'https://open.spotify.com/api/token';
+const CLIENT_TOKEN_URL = 'https://clienttoken.spotify.com/v1/clienttoken';
+const OPEN_SPOTIFY_URL = 'https://open.spotify.com';
 class Spotify {
     name = 'Spotify';
     manager;
     accessToken = null;
     clientToken = null;
+    clientId = null;
+    userAgent = null;
     tokenInitialized = false;
-    static TOTP_SECRET = new Uint8Array([
-        53, 53, 48, 55, 49, 52, 53, 56, 53, 51, 52, 56, 55, 52, 57, 57,
-        53, 57, 50, 50, 52, 56, 54, 51, 48, 51, 50, 57, 51, 52, 55,
-    ]);
     constructor(manager) {
         this.manager = manager;
         this.manager.options.spotify = this.manager.options?.spotify ?? {};
-        this.manager.emit('debug', 'Moonlink.js > Spotify > Source loaded');
-        this.initTokens();
+        this.manager.emit('debug', 'Moonlink.js > Spotify > source loaded');
     }
     match(url) {
         return (url.includes('spotify.com') ||
@@ -27,189 +28,264 @@ class Spotify {
             url.startsWith('spsearch:') ||
             url.startsWith('sprec:'));
     }
-    generateTotp() {
-        const counter = Math.floor(Date.now() / 30000);
-        const buf = Buffer.alloc(8);
-        buf.writeBigInt64BE(BigInt(counter));
-        const hmac = crypto_1.default.createHmac('sha1', Spotify.TOTP_SECRET).update(buf).digest();
+    async fetchServerTime() {
+        try {
+            const res = await fetch(`${OPEN_SPOTIFY_URL}/`, {
+                headers: { 'Accept': 'application/json' },
+            });
+            if (!res.ok) {
+                return Date.now();
+            }
+            const dateHeader = res.headers.get('date');
+            return dateHeader ? new Date(dateHeader).getTime() : Date.now();
+        }
+        catch {
+            return Date.now();
+        }
+    }
+    generateTotp(serverTimeMs) {
+        const TOTP_SECRET = Uint8Array.from([
+            53, 53, 48, 55, 49, 52, 53, 56, 53, 51, 52, 56, 55, 52, 57, 57,
+            53, 57, 50, 50, 52, 56, 54, 51, 48, 51, 50, 57, 51, 52, 55,
+        ]);
+        const counter = Math.floor(serverTimeMs / 1000 / 30);
+        const ts = counter * 30000;
+        const buffer = Buffer.alloc(8);
+        buffer.writeBigUInt64BE(BigInt(counter));
+        const hmac = crypto_1.default
+            .createHmac('sha1', Buffer.from(TOTP_SECRET))
+            .update(buffer)
+            .digest();
         const offset = hmac[hmac.length - 1] & 0x0f;
-        const bin = ((hmac[offset] & 0x7f) << 24) |
+        const codeInt = ((hmac[offset] & 0x7f) << 24) |
             ((hmac[offset + 1] & 0xff) << 16) |
             ((hmac[offset + 2] & 0xff) << 8) |
             (hmac[offset + 3] & 0xff);
-        const totp = (bin % 1e6).toString().padStart(6, '0');
-        return [totp, counter * 30000];
+        const totp = (codeInt % 1e6).toString().padStart(6, '0');
+        return [totp, ts];
     }
     async initTokens() {
         if (this.tokenInitialized)
             return;
-        const [totp, ts] = this.generateTotp();
-        const params = new URLSearchParams({
-            reason: 'init',
-            productType: 'embed',
-            totp,
-            totpVer: '5',
-            ts: ts.toString(),
-        });
-        const resp1 = await fetch(`https://open.spotify.com/api/token?${params}`, { headers: { accept: 'application/json' } });
-        if (!resp1.ok)
-            console.warn('Spotify token error: ', resp1.status, resp1.statusText, ' - ', await resp1.text());
-        const tokenJson = (await resp1.json());
-        const resp2 = await fetch('https://clienttoken.spotify.com/v1/clienttoken', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', accept: 'application/json' },
-            body: JSON.stringify({
-                client_data: {
-                    client_version: '1.2.9.2269',
-                    client_id: tokenJson.clientId,
-                    js_sdk_data: { device_type: 'computer' },
+        try {
+            this.userAgent =
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 ' +
+                    '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+            const serverTimeMs = await this.fetchServerTime();
+            const [totp, ts] = this.generateTotp(serverTimeMs);
+            const params = new URLSearchParams({
+                reason: 'init',
+                productType: 'web-player',
+                totp,
+                totpVer: '5',
+                sTime: Math.floor(serverTimeMs / 1000).toString(),
+                cTime: Date.now().toString(),
+                ts: ts.toString(),
+            });
+            const tokenResponse = await fetch(`${TOKEN_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': this.userAgent,
+                    Accept: 'application/json',
+                    'App-Platform': 'WebPlayer',
+                    Referer: `${OPEN_SPOTIFY_URL}/`,
                 },
-            }),
-        });
-        if (!resp2.ok)
-            this.manager.emit('debug', `Spotify client token error: ${resp2.status} ${resp2.statusText}`);
-        const clientJson = await resp2.json();
-        if (clientJson.response_type !== 'RESPONSE_GRANTED_TOKEN_RESPONSE') {
-            this.manager.emit('debug', `Spotify client token error: ${clientJson.error}`);
+            });
+            if (!tokenResponse.ok) {
+                const errorBody = await tokenResponse.text();
+                this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing token: ${tokenResponse.status} - ${errorBody}`);
+                return;
+            }
+            const { accessToken, clientId } = (await tokenResponse.json());
+            this.accessToken = accessToken;
+            this.clientId = clientId;
+            const clientResponse = await fetch(CLIENT_TOKEN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    client_data: {
+                        client_version: '1.2.9.2269',
+                        client_id: this.clientId,
+                        js_sdk_data: { device_type: 'computer' },
+                    },
+                }),
+            });
+            if (!clientResponse.ok) {
+                this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing client token: ${clientResponse.status}`);
+                return;
+            }
+            const clientJson = (await clientResponse.json());
+            if (clientJson.response_type !== 'RESPONSE_GRANTED_TOKEN_RESPONSE') {
+                this.manager.emit('debug', `Moonlink.js > Spotify > Client token error: ${clientJson.error}`);
+                return;
+            }
+            this.clientToken = clientJson.granted_token.token;
+            this.tokenInitialized = true;
+            this.manager.emit('debug', 'Moonlink.js > Spotify > Tokens initialized successfully');
         }
-        this.accessToken = tokenJson.accessToken;
-        this.clientToken = clientJson.granted_token.token;
-        this.tokenInitialized = true;
+        catch (e) {
+            this.manager.emit('debug', `Error initializing Spotify tokens: ${e.message}`);
+        }
     }
     async apiRequest(path) {
         await this.initTokens();
-        const url = path.startsWith('http') ? path : `https://api.spotify.com/v1${path}`;
-        const resp = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${this.accessToken}`,
-                'client-token': this.clientToken,
-                accept: 'application/json',
-            },
-        });
-        if (!resp.ok) {
-            if (resp.status === 401) {
+        if (!this.accessToken || !this.clientId || !this.userAgent) {
+            this.manager.emit('debug', 'Moonlink.js > Spotify > API request failed: Tokens not available');
+            return null;
+        }
+        try {
+            const url = path.startsWith('http') ? path : `${SPOTIFY_API_BASE_URL}${path}`;
+            const res = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${this.accessToken}`,
+                    'Client-Id': this.clientId,
+                    'User-Agent': this.userAgent,
+                    Accept: 'application/json',
+                },
+            });
+            if (res.status === 401) {
                 this.tokenInitialized = false;
                 return this.apiRequest(path);
             }
-            this.manager.emit('debug', `Spotify API request failed: ${resp.status} ${resp.statusText}`);
-        }
-        return resp.json();
-    }
-    getLinkType(url) {
-        try {
-            const { pathname } = new URL(url);
-            const parts = pathname.split('/').filter(Boolean);
-            const types = ['track', 'album', 'playlist', 'artist'];
-            for (const type of types) {
-                const idx = parts.indexOf(type);
-                if (idx !== -1 && parts[idx + 1]) {
-                    return { type, id: parts[idx + 1].split('?')[0] };
-                }
+            if (!res.ok) {
+                this.manager.emit('debug', `Moonlink.js > Spotify > API error: ${res.status} ${res.statusText}`);
+                return null;
             }
+            return res.json();
         }
-        catch { }
-        const patterns = {
-            track: /(?:track\/|spotify:track:)([\w-]+)/,
-            album: /(?:album\/|spotify:album:)([\w-]+)/,
-            playlist: /(?:playlist\/|spotify:playlist:)([\w-]+)/,
-            artist: /(?:artist\/|spotify:artist:)([\w-]+)/,
-        };
-        for (const type of Object.keys(patterns)) {
-            const m = patterns[type].exec(url);
-            if (m)
-                return { type, id: m[1] };
+        catch (e) {
+            this.manager.emit('debug', `Error in Spotify apiRequest: ${e.message}`);
+            return null;
         }
-        return null;
     }
     buildTrack(item, uri) {
-        const artists = item.artists?.map((a) => a.name).join(', ') || '';
-        const artwork = item.album?.images?.[0]?.url;
+        const trackUri = uri ?? item.uri ?? `${OPEN_SPOTIFY_URL}/track/${item.id}`;
         const info = {
             identifier: item.id ?? 'local',
-            uri,
-            title: item.name ?? item.track?.name,
-            author: artists,
-            length: item.duration_ms ?? item.track?.duration_ms,
+            uri: trackUri,
+            title: item.name ?? 'Unknown Title',
+            author: item.artists?.map((a) => a.name).join(', ') ?? 'Unknown Artist',
+            length: item.duration_ms ?? 0,
             isSeekable: true,
             isStream: false,
-            artworkUrl: artwork || item.track?.album?.images?.[0]?.url,
+            artworkUrl: item.album?.images?.[0]?.url,
             sourceName: this.name,
             position: 0,
-            isrc: item.external_ids?.isrc ?? item.track?.external_ids?.isrc,
+            isrc: item.external_ids?.isrc,
         };
-        return { info, encoded: (0, index_1.encodeTrack)(info), pluginInfo: { MoonlinkInternal: true, needsStream: true } };
-    }
-    async recommendations(params) {
-        const limit = this.manager.options.spotify?.limitLoadRecommendations;
-        const qp = params + (limit != null ? `&limit=${limit}` : '');
-        const data = await this.apiRequest(`/recommendations?${qp}`);
-        if (data.error)
-            return { loadType: 'error', data: { message: 'Recommendations failed' } };
-        let tracks = data.tracks.map((t) => this.buildTrack(t, `https://open.spotify.com/track/${t.id}`));
         return {
-            loadType: 'playlist',
-            data: { info: { name: 'Spotify Recommendations', selectedTrack: 0 }, tracks },
+            info,
+            encoded: (0, index_1.encodeTrack)(info),
+            pluginInfo: { MoonlinkInternal: true, needsStream: true },
         };
     }
     async search(query) {
         const limit = this.manager.options.spotify?.limitLoadSearch ?? 20;
         const data = await this.apiRequest(`/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`);
-        if (data.error)
-            return { loadType: 'error', data: { message: 'Search failed' } };
-        if (!data.tracks?.items?.length)
+        if (!data || data.error) {
+            this.manager.emit('debug', `Moonlink.js > Spotify > Search failed: ${data?.error?.message}`);
+            return { loadType: 'error', data: { message: 'Search failed on Spotify.' } };
+        }
+        if (!data.tracks?.items?.length) {
             return { loadType: 'empty', data: {} };
-        const tracks = data.tracks.items.map((t) => this.buildTrack(t, t.external_urls.spotify));
-        return { loadType: 'search', data: tracks };
+        }
+        return {
+            loadType: 'search',
+            data: data.tracks.items.map((t) => this.buildTrack(t)),
+        };
     }
-    async load(url) {
-        if (url.startsWith('spsearch:')) {
-            const q = url.replace(/^spsearch:/, '').trim();
-            return this.search(q);
+    async recommendations(params) {
+        const limit = this.manager.options.spotify?.limitLoadRecommendations ?? 20;
+        const queryString = `${params}&limit=${limit}`;
+        const data = await this.apiRequest(`/recommendations?${queryString}`);
+        if (!data || data.error) {
+            this.manager.emit('debug', `Moonlink.js > Spotify > Recommendations failed: ${data?.error?.message}`);
+            return { loadType: 'error', data: { message: 'Failed to load recommendations.' } };
         }
-        if (url.startsWith('sprec:')) {
-            const params = url.replace(/^sprec:/, '');
-            return this.recommendations(params);
+        if (!data.tracks?.length) {
+            return { loadType: 'empty', data: {} };
         }
-        const link = this.getLinkType(url);
-        if (!link)
+        return {
+            loadType: 'playlist',
+            data: {
+                info: { name: 'Spotify Recommendations', selectedTrack: 0 },
+                tracks: data.tracks.map((t) => this.buildTrack(t)),
+            },
+        };
+    }
+    async load(rawUrl) {
+        const normalized = rawUrl
+            .replace(/open\.spotify\.com\/intl-[^/]+\//, 'open.spotify.com/')
+            .split('?')[0];
+        if (normalized.startsWith('spsearch:')) {
+            return this.search(normalized.slice(9).trim());
+        }
+        if (normalized.startsWith('sprec:')) {
+            return this.recommendations(normalized.slice(6));
+        }
+        const link = this.getLinkType(normalized);
+        if (!link) {
             return { loadType: 'error', data: { message: 'Invalid Spotify URL' } };
-        if (link.type === 'track') {
-            const data = await this.apiRequest(`/tracks/${link.id}`);
-            if (data.error)
-                return { loadType: 'error', data: { message: 'Track not found' } };
-            return { loadType: 'track', data: this.buildTrack(data, url) };
         }
-        if (link.type === 'artist') {
-            const artistData = await this.apiRequest(`/artists/${link.id}`);
-            if (artistData.error)
-                return { loadType: 'error', data: { message: 'Artist not found' } };
-            const top = await this.apiRequest(`/artists/${link.id}/top-tracks?market=US`);
-            if (top.error)
-                return { loadType: 'error', data: { message: 'Top tracks not found' } };
-            let tracks = top.tracks.map((t) => this.buildTrack(t, `https://open.spotify.com/track/${t.id}`));
-            const limit = this.manager.options.spotify?.limitLoadArtist;
-            if (limit != null)
-                tracks = tracks.slice(0, limit);
-            return { loadType: 'playlist', data: { info: { name: artistData.name, selectedTrack: 0 }, tracks } };
+        switch (link.type) {
+            case 'track': {
+                const data = await this.apiRequest(`/tracks/${link.id}`);
+                if (!data || data.error) {
+                    return { loadType: 'error', data: { message: 'Track not found.' } };
+                }
+                return { loadType: 'track', data: this.buildTrack(data, normalized) };
+            }
+            case 'artist': {
+                const artistInfo = await this.apiRequest(`/artists/${link.id}`);
+                const topTracks = await this.apiRequest(`/artists/${link.id}/top-tracks?market=US`);
+                if (!artistInfo || !topTracks?.tracks) {
+                    return { loadType: 'error', data: { message: 'Artist not found.' } };
+                }
+                let tracks = topTracks.tracks.map((t) => this.buildTrack(t));
+                const max = this.manager.options.spotify?.limitLoadArtist;
+                if (max != null)
+                    tracks = tracks.slice(0, max);
+                return {
+                    loadType: 'playlist',
+                    data: { info: { name: `${artistInfo.name}'s Top Tracks`, selectedTrack: 0 }, tracks },
+                };
+            }
+            case 'album':
+            case 'playlist': {
+                const base = link.type === 'album' ? 'albums' : 'playlists';
+                const data = await this.apiRequest(`/${base}/${link.id}`);
+                if (!data || data.error) {
+                    return { loadType: 'error', data: { message: `${link.type} not found.` } };
+                }
+                let items = link.type === 'playlist'
+                    ? data.tracks.items.map((i) => i.track)
+                    : data.tracks.items;
+                items = items.filter(Boolean);
+                const max = link.type === 'playlist'
+                    ? this.manager.options.spotify?.limitLoadPlaylist
+                    : this.manager.options.spotify?.limitLoadAlbum;
+                if (max != null)
+                    items = items.slice(0, max);
+                const tracks = items.map((item) => this.buildTrack(item, item.external_urls.spotify));
+                return { loadType: 'playlist', data: { info: { name: data.name, selectedTrack: 0 }, tracks } };
+            }
+            default:
+                return { loadType: 'error', data: { message: 'Unsupported Spotify URL type' } };
         }
-        const path = link.type === 'album' ? '/albums/' : '/playlists/';
-        const col = await this.apiRequest(`${path}${link.id}`);
-        if (col.error)
-            return { loadType: 'error', data: { message: `${link.type.charAt(0).toUpperCase() + link.type.slice(1)} not found` } };
-        const items = link.type === 'playlist' ? col.tracks.items.map((i) => i.track) : col.tracks.items;
-        let sliced = items;
-        if (link.type === 'playlist') {
-            const limit = this.manager.options.spotify?.limitLoadPlaylist;
-            if (limit != null)
-                sliced = sliced.slice(0, limit);
+    }
+    getLinkType(url) {
+        const regex = {
+            track: /open\.spotify\.com\/(?:intl-[^/]+\/)?track\/(\w+)/,
+            album: /open\.spotify\.com\/(?:intl-[^/]+\/)?album\/(\w+)/,
+            playlist: /open\.spotify\.com\/(?:intl-[^/]+\/)?playlist\/(\w+)/,
+            artist: /open\.spotify\.com\/(?:intl-[^/]+\/)?artist\/(\w+)/,
+        };
+        for (const type in regex) {
+            const match = url.match(regex[type]);
+            if (match) {
+                return { type, id: match[1] };
+            }
         }
-        else if (link.type === 'album') {
-            const limit = this.manager.options.spotify?.limitLoadAlbum;
-            if (limit != null)
-                sliced = sliced.slice(0, limit);
-        }
-        const tracks = sliced.map((item) => this.buildTrack(item, `https://open.spotify.com/track/${item.id}`));
-        return { loadType: 'playlist', data: { info: { name: col.name, selectedTrack: 0 }, tracks } };
+        return null;
     }
     resolve(url) {
         return this.load(url);

@@ -252,6 +252,7 @@ export class Filters {
             }
         };
         await this.rest.update(dataToUpdate);
-        return true;
+    this.manager.emit("filtersUpdate", this.player, this);
+    return true;
     }
 }

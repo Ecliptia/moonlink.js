@@ -1,3 +1,4 @@
+import http from "http";
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 export declare const structures: Record<string, any>;
 export declare const sources: {
@@ -19,7 +20,9 @@ export declare function decodeTrack(encoded: string): ITrack;
 export declare function encodeTrack(track: ITrackInfo): string;
 export declare function generateUUID(host: string, port: number): string;
 export declare function Log(message: string, LogPath: string): void;
-export declare function makeRequest<T>(url: string, options: RequestInit): Promise<T>;
+export declare function makeRequest<T = any>(url: string, options: http.RequestOptions & {
+    body?: any;
+}, timeout?: number, retries?: number, retryDelay?: number): Promise<T | undefined>;
 export declare function compareVersions(current: string, required: string): number;
 export declare function stringifyWithReplacer(obj: any): string;
 export declare class Plugin {

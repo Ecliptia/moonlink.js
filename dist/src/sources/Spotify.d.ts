@@ -4,17 +4,28 @@ export default class Spotify implements ISource {
     private manager;
     private accessToken;
     private clientToken;
+    private clientId;
+    private userAgent;
     private tokenInitialized;
-    private static TOTP_SECRET;
     constructor(manager: Manager);
     match(url: string): boolean;
+    private fetchServerTime;
     private generateTotp;
     private initTokens;
     private apiRequest;
-    private getLinkType;
     private buildTrack;
+    search(query: string): Promise<{
+        loadType: string;
+        data: any;
+    }>;
     private recommendations;
-    search(query: string): Promise<any>;
-    load(url: string): Promise<any>;
-    resolve(url: string): Promise<any>;
+    load(rawUrl: string): Promise<{
+        loadType: string;
+        data: any;
+    }>;
+    private getLinkType;
+    resolve(url: string): Promise<{
+        loadType: string;
+        data: any;
+    }>;
 }

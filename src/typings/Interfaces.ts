@@ -13,7 +13,7 @@ import {
   SearchResult,
   Database,
 } from "../../index";
-import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTrackProperties } from "./types";
+import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTrackProperties, NodeState } from "./types";
 export interface IEvents {
   autoLeaved: (player: Player, track: Track) => void;
   debug: (...args: any) => void;
@@ -47,26 +47,38 @@ export interface IEvents {
     currentQueue: Track[]
   ) => void;
   playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
-  playerChangedLoop: (player: Player, oldLoop: TPlayerLoop, loop: TPlayerLoop) => void;
+  playerChangedLoop: (player: Player, oldLoop: TPlayerLoop, loop: TPlayerLoop, oldLoopCount?: number, newLoopCount?: number) => void;
   playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
   playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
   playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
   playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
   playerNodeSet: (player: Player, oldNode: string, newNode: string) => void;
+  playerConnecting: (player: Player) => void;
+  playerReady: (player: Player) => void;
+  playerResuming: (player: Player) => void;
+  playerResumed: (player: Player) => void;
   playerConnected: (player: Player) => void;
   playerDisconnected: (player: Player) => void;
   playerReconnect: (player: Player, reason?: string) => void;
   playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
   playerDestroyed: (player: Player, reason?: string) => void;
+  playerTriggeredBack: (player: Player, track: Track) => void;
   trackStart: (player: Player, track: Track) => void;
   trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
   trackStuck: (player: Player, track: Track, threshold: number) => void;
   trackException: (player: Player, track: Track, exception: any) => void;
   queueEnd: (player: Player, track?: any) => void;
   socketClosed: (player: Player, code: number, reason: string, byRemote: boolean) => void;
+  queueAdd: (player: Player, tracks: Track | Track[]) => void;
+  queueRemove: (player: Player, tracks: Track | Track[]) => void;
+  queueMoveRange: (player: Player, tracks: Track[], fromIndex: number, toIndex: number) => void;
+  queueRemoveRange: (player: Player, tracks: Track[], startIndex: number, endIndex: number) => void;
+  queueDuplicate: (player: Player, tracks: Track[], index: number) => void;
+  filtersUpdate: (player: Player, filters: Filters) => void;
   sourceAdd: (source: ISource) => void;
   sourceRemove: (source: string) => void;
   sourceClear: () => void;
+  nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
 }
 
 export interface INode {
@@ -81,6 +93,7 @@ export interface INode {
   secure?: boolean;
   sessionId?: string;
   pathVersion?: string;
+  priority?: number;
 }
 
 export interface ISource {
@@ -126,7 +139,6 @@ export interface IOptionsManager {
   plugins?: Plugin[];
   noReplace?: boolean;
   NodeLinkFeatures?: boolean;
-  previousInArray?: boolean;
   logFile?: { path: string; log: boolean };
   movePlayersOnReconnect?: boolean;
   sortPlayersByRegion?: boolean;
@@ -136,6 +148,7 @@ export interface IOptionsManager {
   disableDatabase?: boolean;
   disableNativeSources?: boolean;
   blacklisteSources?: string[];
+  enabledSources?: string[];
   spotify?: {
     limitLoadPlaylist?: number;
     limitLoadAlbum?: number;
@@ -149,6 +162,9 @@ export interface IOptionsManager {
     maxPlaylistTracks?: number;
     maxArtistTracks?: number;
   };
+  nodeHealthCheckInterval?: number;
+  defaultPlayer?: IPlayerConfig;
+  enableSourceFallback?: boolean;
 }
 
 export interface IPlayerConfig {
@@ -157,6 +173,7 @@ export interface IPlayerConfig {
   textChannelId: string;
   volume?: number;
   loop?: TPlayerLoop;
+  loopCount?: number;
   autoPlay?: boolean;
   autoLeave?: boolean;
   node?: string;
@@ -335,4 +352,61 @@ export interface IRESTGetPlayers {
   state: Object;
   voice: IVoiceState;
   filters: Object;
+}
+
+export interface INodeInfo {
+  version: {
+    semver: string;
+    major: number;
+    minor: number;
+    patch: number;
+    preRelease?: string;
+  };
+  buildTime: number;
+  git: {
+    branch: string;
+    commit: string;
+    commitTime: number;
+  };
+  jvm: string;
+  lavaplayer: string;
+  sourceManagers: string[];
+  filters: string[];
+  plugins: {
+    name: string;
+    version: string;
+  }[];
+}
+
+export interface INodeVersion {
+    semver: string;
+    major: number;
+    minor: number;
+    patch: number;
+    preRelease?: string;
+}
+
+export interface ISession {
+    resuming: boolean;
+    timeout: number;
+}
+
+export interface IRoutePlannerStatus {
+  class?: string;
+  details?: {
+    ipBlock: {
+      type: string;
+      size: string;
+    };
+    failingAddresses: {
+      address: string;
+      failingTimestamp: number;
+      failingTime: string;
+    }[];
+    rotateIndex: string;
+    ipIndex: string;
+    currentAddress: string;
+    blockIndex: string;
+    currentAddressIndex: string;
+  };
 }

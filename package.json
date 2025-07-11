@@ -1,6 +1,6 @@
 {
   "name": "moonlink.js",
-  "version": "4.6.18",
+  "version": "4.28.32",
   "description": "Moonlink.js 🌙🌟 is a stable and feature-rich Lavalink client for Node.js, designed to make building Discord music bots easier 🎵. With an intuitive and easy-to-use API, it provides seamless integration with the Lavalink server, allowing you to manage and control audio playback efficiently and at scale 🚀🎧.",
   "keywords": [
     "bot",
@@ -49,8 +49,5 @@
     "get-image-colors": "^4.0.1",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
-  "dependencies": {
-    "ws": "^8.18.1"
-  }
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
