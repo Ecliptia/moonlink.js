@@ -22,7 +22,7 @@ export declare function generateUUID(host: string, port: number): string;
 export declare function Log(message: string, LogPath: string): void;
 export declare function makeRequest<T = any>(url: string, options: http.RequestOptions & {
     body?: any;
-}, timeout?: number): Promise<T | undefined>;
+}, timeout?: number, retries?: number, retryDelay?: number): Promise<T | undefined>;
 export declare function compareVersions(current: string, required: string): number;
 export declare function stringifyWithReplacer(obj: any): string;
 export declare class Plugin {

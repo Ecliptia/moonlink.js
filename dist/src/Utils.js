@@ -186,66 +186,78 @@ function Log(message, LogPath) {
         }
     });
 }
-function makeRequest(url, options, timeout = 10000) {
-    return new Promise((resolve) => {
-        const urlObject = new URL(url);
-        console.log(urlObject, options);
-        const transport = urlObject.protocol === "https:" ? https_1.default : http_1.default;
-        options.headers = options.headers || {};
-        options.headers["Accept-Encoding"] = "gzip, deflate, br";
-        const req = transport.request(url, options, (res) => {
-            let stream = res;
-            const encoding = res.headers["content-encoding"];
-            if (encoding === "gzip") {
-                stream = res.pipe(zlib_1.default.createGunzip());
-            }
-            else if (encoding === "deflate") {
-                stream = res.pipe(zlib_1.default.createInflate());
-            }
-            else if (encoding === "br") {
-                stream = res.pipe(zlib_1.default.createBrotliDecompress());
-            }
-            const chunks = [];
-            stream.on("data", (chunk) => chunks.push(chunk));
-            stream.on("error", () => resolve(undefined));
-            stream.on("end", () => {
-                const body = Buffer.concat(chunks);
-                const contentType = res.headers["content-type"] || "";
-                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-                    if (body.length === 0) {
-                        if (contentType.includes("application/json")) {
-                            return resolve({});
+async function makeRequest(url, options, timeout = 10000, retries = 3, retryDelay = 1000) {
+    for (let i = 0; i <= retries; i++) {
+        try {
+            return await new Promise((resolve) => {
+                const urlObject = new URL(url);
+                const transport = urlObject.protocol === "https:" ? https_1.default : http_1.default;
+                options.headers = options.headers || {};
+                options.headers["Accept-Encoding"] = "gzip, deflate, br";
+                const req = transport.request(url, options, (res) => {
+                    let stream = res;
+                    const encoding = res.headers["content-encoding"];
+                    if (encoding === "gzip") {
+                        stream = res.pipe(zlib_1.default.createGunzip());
+                    }
+                    else if (encoding === "deflate") {
+                        stream = res.pipe(zlib_1.default.createInflate());
+                    }
+                    else if (encoding === "br") {
+                        stream = res.pipe(zlib_1.default.createBrotliDecompress());
+                    }
+                    const chunks = [];
+                    stream.on("data", (chunk) => chunks.push(chunk));
+                    stream.on("error", () => resolve(undefined));
+                    stream.on("end", () => {
+                        const body = Buffer.concat(chunks);
+                        const contentType = res.headers["content-type"] || "";
+                        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                            if (body.length === 0) {
+                                if (contentType.includes("application/json")) {
+                                    return resolve({});
+                                }
+                                return resolve("");
+                            }
+                            try {
+                                if (contentType.includes("application/json")) {
+                                    return resolve(JSON.parse(body.toString()));
+                                }
+                                return resolve(body.toString());
+                            }
+                            catch {
+                                return resolve(undefined);
+                            }
                         }
-                        return resolve("");
-                    }
-                    try {
-                        if (contentType.includes("application/json")) {
-                            return resolve(JSON.parse(body.toString()));
-                        }
-                        return resolve(body.toString());
-                    }
-                    catch {
-                        return resolve(undefined);
-                    }
+                        resolve(undefined);
+                    });
+                });
+                req.on("error", () => resolve(undefined));
+                req.on("timeout", () => {
+                    req.destroy();
+                    resolve(undefined);
+                });
+                req.setTimeout(timeout);
+                if (options.body) {
+                    const bodyData = typeof options.body === "object" && options.body !== null
+                        ? JSON.stringify(options.body)
+                        : options.body.toString();
+                    req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+                    req.write(bodyData);
                 }
-                resolve(undefined);
+                req.end();
             });
-        });
-        req.on("error", () => resolve(undefined));
-        req.on("timeout", () => {
-            req.destroy();
-            resolve(undefined);
-        });
-        req.setTimeout(timeout);
-        if (options.body) {
-            const bodyData = typeof options.body === "object" && options.body !== null
-                ? JSON.stringify(options.body)
-                : options.body.toString();
-            req.setHeader("Content-Length", Buffer.byteLength(bodyData));
-            req.write(bodyData);
         }
-        req.end();
-    });
+        catch (error) {
+            if (i < retries) {
+                await delay(retryDelay * Math.pow(2, i));
+            }
+            else {
+                return undefined;
+            }
+        }
+    }
+    return undefined;
 }
 function compareVersions(current, required) {
     const curr = current.split(".").map(Number);

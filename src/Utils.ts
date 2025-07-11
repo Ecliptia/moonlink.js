@@ -197,83 +197,95 @@ export function Log(message: string, LogPath: string): void {
     }
   });
 }
-export function makeRequest<T = any>(
+export async function makeRequest<T = any>(
   url: string,
   options: http.RequestOptions & { body?: any },
-  timeout = 10000
+  timeout = 10000,
+  retries = 3,
+  retryDelay = 1000
 ): Promise<T | undefined> {
-  return new Promise((resolve) => {
-    const urlObject = new URL(url);
-    console.log(urlObject, options);
-    const transport = urlObject.protocol === "https:" ? https : http;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await new Promise((resolve) => {
+        const urlObject = new URL(url);
+        const transport = urlObject.protocol === "https:" ? https : http;
 
-    options.headers = options.headers || {};
-    options.headers["Accept-Encoding"] = "gzip, deflate, br";
+        options.headers = options.headers || {};
+        options.headers["Accept-Encoding"] = "gzip, deflate, br";
 
-    const req = transport.request(url, options, (res) => {
-      let stream: http.IncomingMessage | zlib.Gunzip | zlib.Inflate | zlib.BrotliDecompress = res;
-      const encoding = res.headers["content-encoding"];
+        const req = transport.request(url, options, (res) => {
+          let stream: http.IncomingMessage | zlib.Gunzip | zlib.Inflate | zlib.BrotliDecompress = res;
+          const encoding = res.headers["content-encoding"];
 
-      if (encoding === "gzip") {
-        stream = res.pipe(zlib.createGunzip());
-      } else if (encoding === "deflate") {
-        stream = res.pipe(zlib.createInflate());
-      } else if (encoding === "br") {
-        stream = res.pipe(zlib.createBrotliDecompress());
-      }
-
-      const chunks: Buffer[] = [];
-
-      stream.on("data", (chunk) => chunks.push(chunk));
-      stream.on("error", () => resolve(undefined));
-
-      stream.on("end", () => {
-        const body = Buffer.concat(chunks);
-        const contentType = res.headers["content-type"] || "";
-
-        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-          if (body.length === 0) {
-            if (contentType.includes("application/json")) {
-              return resolve({} as T);
-            }
-            return resolve("" as any);
+          if (encoding === "gzip") {
+            stream = res.pipe(zlib.createGunzip());
+          } else if (encoding === "deflate") {
+            stream = res.pipe(zlib.createInflate());
+          } else if (encoding === "br") {
+            stream = res.pipe(zlib.createBrotliDecompress());
           }
 
-          try {
-            if (contentType.includes("application/json")) {
-              return resolve(JSON.parse(body.toString()) as T);
+          const chunks: Buffer[] = [];
+
+          stream.on("data", (chunk) => chunks.push(chunk));
+          stream.on("error", () => resolve(undefined));
+
+          stream.on("end", () => {
+            const body = Buffer.concat(chunks);
+            const contentType = res.headers["content-type"] || "";
+
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              if (body.length === 0) {
+                if (contentType.includes("application/json")) {
+                  return resolve({} as T);
+                }
+                return resolve("" as any);
+              }
+
+              try {
+                if (contentType.includes("application/json")) {
+                  return resolve(JSON.parse(body.toString()) as T);
+                }
+                return resolve(body.toString() as any as T);
+              } catch {
+                return resolve(undefined);
+              }
             }
-            return resolve(body.toString() as any as T);
-          } catch {
-            return resolve(undefined);
-          }
+
+            resolve(undefined);
+          });
+        });
+
+        req.on("error", () => resolve(undefined));
+
+        req.on("timeout", () => {
+          req.destroy();
+          resolve(undefined);
+        });
+
+        req.setTimeout(timeout);
+
+        if (options.body) {
+          const bodyData =
+            typeof options.body === "object" && options.body !== null
+              ? JSON.stringify(options.body)
+              : options.body.toString();
+
+          req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+          req.write(bodyData);
         }
 
-        resolve(undefined);
+        req.end();
       });
-    });
-
-    req.on("error", () => resolve(undefined));
-
-    req.on("timeout", () => {
-      req.destroy();
-      resolve(undefined);
-    });
-
-    req.setTimeout(timeout);
-
-    if (options.body) {
-      const bodyData =
-        typeof options.body === "object" && options.body !== null
-          ? JSON.stringify(options.body)
-          : options.body.toString();
-
-      req.setHeader("Content-Length", Buffer.byteLength(bodyData));
-      req.write(bodyData);
+    } catch (error) {
+      if (i < retries) {
+        await delay(retryDelay * Math.pow(2, i));
+      } else {
+        return undefined;
+      }
     }
-
-    req.end();
-  });
+  }
+  return undefined;
 }
 
 
