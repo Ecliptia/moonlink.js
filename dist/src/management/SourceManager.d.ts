@@ -9,6 +9,6 @@ export declare class SourceManager {
     remove(name: string): void;
     clear(): void;
     getAll(): ISource[];
-    loadFolder(): void;
+    loadFolder(): Promise<void>;
     isLinkMatch(url: string, _unusedSourceParam?: string): [boolean, string | null];
 }
