@@ -4,10 +4,10 @@ export declare class PlayerManager {
     readonly manager: Manager;
     cache: Map<string, Player>;
     constructor(manager: Manager);
-    create(config: IPlayerConfig): Player;
+    create(config: IPlayerConfig): Player | undefined;
     has(guildId: string): boolean;
     get(guildId: string): Player;
     delete(guildId: string): Promise<void>;
     get all(): Player[];
 }
-export declare function isVoiceStateAttempt(player: any): Promise<boolean>;
+export declare function isVoiceStateAttempt(player: Player): Promise<boolean>;
