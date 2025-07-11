@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Listen = void 0;
 const events_1 = require("events");
+const WebSocket_1 = __importDefault(require("../services/WebSocket"));
 class Listen {
     player;
     voiceReceiverWs;
@@ -9,9 +13,9 @@ class Listen {
         this.player = player;
     }
     start() {
-        if (this.player.node.info.isNodeLink)
+        if (!this.player.node.info.isNodeLink)
             throw new Error("Moonlink.js > Listen#start - Node not is a NodeLink, switch to a NodeLink");
-        this.voiceReceiverWs = new WebSocket(`ws${this.player.node.secure ? "s" : ""}://${this.player.node.address}/connection/data`, {
+        this.voiceReceiverWs = new WebSocket_1.default(`ws${this.player.node.secure ? "s" : ""}://${this.player.node.address}/connection/data`, {
             headers: {
                 Authorization: this.player.node.password,
                 "Client-Name": `Moonlink.js/${this.player.manager.version}`,
