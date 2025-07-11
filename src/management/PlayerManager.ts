@@ -11,7 +11,7 @@ export class PlayerManager {
 
     validateProperty(
       finalConfig.guildId,
-      value => value !== undefined || value !== "string",
+      value => typeof value === "string",
       "(Moonlink.js) - Player > GuildId is required"
     );
 
@@ -19,12 +19,12 @@ export class PlayerManager {
 
     validateProperty(
       finalConfig.voiceChannelId,
-      value => value !== undefined || value == "string",
+      value => typeof value === "string",
       "(Moonlink.js) - Player > VoiceChannelId is required"
     );
     validateProperty(
       finalConfig.textChannelId,
-      value => value !== undefined || value == "string",
+      value => typeof value === "string",
       "(Moonlink.js) - Player > TextChannelId is required"
     );
     validateProperty(
