@@ -11,3 +11,4 @@ yarn.lock
 yarn.lock
 tsconfig.json
 moonlink.log
+/tests
