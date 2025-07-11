@@ -67,59 +67,64 @@ class Spotify {
     async initTokens() {
         if (this.tokenInitialized)
             return;
-        this.userAgent =
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 ' +
-                '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
-        const serverTimeMs = await this.fetchServerTime();
-        const [totp, ts] = this.generateTotp(serverTimeMs);
-        const params = new URLSearchParams({
-            reason: 'init',
-            productType: 'web-player',
-            totp,
-            totpVer: '5',
-            sTime: Math.floor(serverTimeMs / 1000).toString(),
-            cTime: Date.now().toString(),
-            ts: ts.toString(),
-        });
-        const tokenResponse = await fetch(`${TOKEN_URL}?${params.toString()}`, {
-            headers: {
-                'User-Agent': this.userAgent,
-                Accept: 'application/json',
-                'App-Platform': 'WebPlayer',
-                Referer: `${OPEN_SPOTIFY_URL}/`,
-            },
-        });
-        if (!tokenResponse.ok) {
-            const errorBody = await tokenResponse.text();
-            this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing token: ${tokenResponse.status} - ${errorBody}`);
-            return;
-        }
-        const { accessToken, clientId } = (await tokenResponse.json());
-        this.accessToken = accessToken;
-        this.clientId = clientId;
-        const clientResponse = await fetch(CLIENT_TOKEN_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({
-                client_data: {
-                    client_version: '1.2.9.2269',
-                    client_id: this.clientId,
-                    js_sdk_data: { device_type: 'computer' },
+        try {
+            this.userAgent =
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 ' +
+                    '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+            const serverTimeMs = await this.fetchServerTime();
+            const [totp, ts] = this.generateTotp(serverTimeMs);
+            const params = new URLSearchParams({
+                reason: 'init',
+                productType: 'web-player',
+                totp,
+                totpVer: '5',
+                sTime: Math.floor(serverTimeMs / 1000).toString(),
+                cTime: Date.now().toString(),
+                ts: ts.toString(),
+            });
+            const tokenResponse = await fetch(`${TOKEN_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': this.userAgent,
+                    Accept: 'application/json',
+                    'App-Platform': 'WebPlayer',
+                    Referer: `${OPEN_SPOTIFY_URL}/`,
                 },
-            }),
-        });
-        if (!clientResponse.ok) {
-            this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing client token: ${clientResponse.status}`);
-            return;
+            });
+            if (!tokenResponse.ok) {
+                const errorBody = await tokenResponse.text();
+                this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing token: ${tokenResponse.status} - ${errorBody}`);
+                return;
+            }
+            const { accessToken, clientId } = (await tokenResponse.json());
+            this.accessToken = accessToken;
+            this.clientId = clientId;
+            const clientResponse = await fetch(CLIENT_TOKEN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    client_data: {
+                        client_version: '1.2.9.2269',
+                        client_id: this.clientId,
+                        js_sdk_data: { device_type: 'computer' },
+                    },
+                }),
+            });
+            if (!clientResponse.ok) {
+                this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing client token: ${clientResponse.status}`);
+                return;
+            }
+            const clientJson = (await clientResponse.json());
+            if (clientJson.response_type !== 'RESPONSE_GRANTED_TOKEN_RESPONSE') {
+                this.manager.emit('debug', `Moonlink.js > Spotify > Client token error: ${clientJson.error}`);
+                return;
+            }
+            this.clientToken = clientJson.granted_token.token;
+            this.tokenInitialized = true;
+            this.manager.emit('debug', 'Moonlink.js > Spotify > Tokens initialized successfully');
         }
-        const clientJson = (await clientResponse.json());
-        if (clientJson.response_type !== 'RESPONSE_GRANTED_TOKEN_RESPONSE') {
-            this.manager.emit('debug', `Moonlink.js > Spotify > Client token error: ${clientJson.error}`);
-            return;
+        catch (e) {
+            this.manager.emit('debug', `Error initializing Spotify tokens: ${e.message}`);
         }
-        this.clientToken = clientJson.granted_token.token;
-        this.tokenInitialized = true;
-        this.manager.emit('debug', 'Moonlink.js > Spotify > Tokens initialized successfully');
     }
     async apiRequest(path) {
         await this.initTokens();
@@ -127,24 +132,30 @@ class Spotify {
             this.manager.emit('debug', 'Moonlink.js > Spotify > API request failed: Tokens not available');
             return null;
         }
-        const url = path.startsWith('http') ? path : `${SPOTIFY_API_BASE_URL}${path}`;
-        const res = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${this.accessToken}`,
-                'Client-Id': this.clientId,
-                'User-Agent': this.userAgent,
-                Accept: 'application/json',
-            },
-        });
-        if (res.status === 401) {
-            this.tokenInitialized = false;
-            return this.apiRequest(path);
+        try {
+            const url = path.startsWith('http') ? path : `${SPOTIFY_API_BASE_URL}${path}`;
+            const res = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${this.accessToken}`,
+                    'Client-Id': this.clientId,
+                    'User-Agent': this.userAgent,
+                    Accept: 'application/json',
+                },
+            });
+            if (res.status === 401) {
+                this.tokenInitialized = false;
+                return this.apiRequest(path);
+            }
+            if (!res.ok) {
+                this.manager.emit('debug', `Moonlink.js > Spotify > API error: ${res.status} ${res.statusText}`);
+                return null;
+            }
+            return res.json();
         }
-        if (!res.ok) {
-            this.manager.emit('debug', `Moonlink.js > Spotify > API error: ${res.status} ${res.statusText}`);
+        catch (e) {
+            this.manager.emit('debug', `Error in Spotify apiRequest: ${e.message}`);
             return null;
         }
-        return res.json();
     }
     buildTrack(item, uri) {
         const trackUri = uri ?? item.uri ?? `${OPEN_SPOTIFY_URL}/track/${item.id}`;
