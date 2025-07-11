@@ -1,5 +1,6 @@
 import { Player } from "./Player";
 import { EventEmitter } from "events";
+import WebSocket from "../services/WebSocket";
 export class Listen {
   public player: Player;
   public voiceReceiverWs: WebSocket;
