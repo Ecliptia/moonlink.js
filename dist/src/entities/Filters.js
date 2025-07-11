@@ -164,6 +164,7 @@ class Filters {
             }
         };
         await this.rest.update(dataToUpdate);
+        this.manager.emit("filtersUpdate", this.player, this);
         return true;
     }
 }
