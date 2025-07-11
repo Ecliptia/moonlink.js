@@ -16,8 +16,10 @@ export declare class Player {
     paused: boolean;
     volume: number;
     loop: TPlayerLoop;
+    loopCount?: number;
     current: Track;
-    readonly previous: Track[];
+    previous: Track[];
+    historySize: number;
     ping: number;
     readonly queue: Queue;
     node: Node;
@@ -51,6 +53,7 @@ export declare class Player {
         endTime?: number;
     }): Promise<boolean>;
     replay(): Promise<boolean>;
+    back(): Promise<boolean>;
     restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
     pause(): boolean;
@@ -62,8 +65,9 @@ export declare class Player {
     seek(position: number): boolean;
     shuffle(): boolean;
     setVolume(volume: number): boolean;
-    setLoop(loop: TPlayerLoop): boolean;
+    setLoop(loop: TPlayerLoop, count?: number): boolean;
     destroy(reason?: string): boolean;
     private _sendVoiceUpdate;
     private updateData;
+    getHistory(limit?: number): Track[];
 }

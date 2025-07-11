@@ -29,8 +29,10 @@ export class Player {
   public paused: boolean = false;
   public volume: number = 80;
   public loop: TPlayerLoop = "off";
+  public loopCount?: number;
   public current: Track;
-  public readonly previous: Track[] = [];
+  public previous: Track[] = [];
+  public historySize: number = 10;
   public ping: number = 0;
   public readonly queue: Queue;
   public node: Node;
@@ -47,6 +49,7 @@ export class Player {
     this.textChannelId = config.textChannelId;
     this.volume = config.volume ?? 80;
     this.loop = config.loop ?? "off";
+    this.loopCount = config.loopCount;
     this.autoPlay = config.autoPlay ?? false;
     this.autoLeave = config.autoLeave ?? false;
     this.queue = new (Structure.get("Queue"))(this);
@@ -148,6 +151,7 @@ export class Player {
   }
 
   public connect(options: { setMute?: boolean; setDeaf?: boolean } = {}): boolean {
+    this.manager.emit("playerConnecting", this);
     this.voiceState.attempt = false;
     this._sendVoiceUpdate({
       channel_id: this.voiceChannelId,
@@ -222,6 +226,23 @@ export class Player {
       requestedBy: this.current.requestedBy,
       position: 0,
     });
+  }
+
+  public async back(): Promise<boolean> {
+    if (this.previous.length === 0) return false;
+
+    const lastTrack = this.previous.pop();
+    if (!lastTrack) return false;
+
+    if (this.current) {
+      this.queue.unshift(this.current);
+    }
+
+    this.current = lastTrack;
+    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
+
+    this.manager.emit("playerTriggeredBack", this, lastTrack);
+    return true;
   }
 
   public async restart(): Promise<boolean> {
@@ -319,8 +340,8 @@ export class Player {
 
     validateProperty(
       position,
-      (value) => value !== undefined && (isNaN(value) || value < 0 || value >= this.queue.size),
-      "Moonlink.js > Player#skip - position is not a number or is out of range."
+      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
+      "Moonlink.js > Player#skip - position not a number or out of range"
     );
 
     const oldTrack = this.current;
@@ -387,18 +408,30 @@ export class Player {
     return true;
   }
 
-  public setLoop(loop: TPlayerLoop): boolean {
+  public setLoop(loop: TPlayerLoop, count?: number): boolean {
     validateProperty(
       loop,
       (value) => !["off", "track", "queue"].includes(value),
       "Moonlink.js > Player#setLoop - loop must be 'off', 'track', or 'queue'."
     );
-    if (this.loop === loop) return false;
+    if (count !== undefined) {
+      validateProperty(
+        count,
+        (value) => typeof value === "number" && value >= 0,
+        "Moonlink.js > Player#setLoop - count must be a non-negative number."
+      );
+    }
+
+    if (this.loop === loop && this.loopCount === count) return false;
 
     const oldLoop = this.loop;
+    const oldLoopCount = this.loopCount;
     this.loop = loop;
-    this.manager.emit("playerChangedLoop", this, oldLoop, loop);
+    this.loopCount = (loop === "track" || loop === "queue") && count !== undefined ? count : undefined;
+
+    this.manager.emit("playerChangedLoop", this, oldLoop, loop, oldLoopCount, this.loopCount);
     this.updateData("loop", loop);
+    this.updateData("loopCount", this.loopCount);
     return true;
   }
 
@@ -431,5 +464,12 @@ export class Player {
   private updateData<T>(path?: string, data?: T): void {
     const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
     this.manager.database.set(dbPath, data);
+  }
+
+  public getHistory(limit?: number): Track[] {
+    if (limit === undefined) {
+      return [...this.previous];
+    }
+    return this.previous.slice(Math.max(0, this.previous.length - limit));
   }
 }
