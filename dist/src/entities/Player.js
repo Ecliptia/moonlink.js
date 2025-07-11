@@ -266,7 +266,9 @@ class Player {
             }
             return false;
         }
-        (0, index_1.validateProperty)(position, value => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1, "Moonlink.js > Player#skip - position not a number or out of range");
+        if (position !== undefined) {
+            (0, index_1.validateProperty)(position, (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1, "Moonlink.js > Player#skip - position not a number or out of range");
+        }
         const oldTrack = this.current;
         if (position !== undefined) {
             const trackToSkipTo = this.queue.get(position);
