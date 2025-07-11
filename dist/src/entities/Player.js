@@ -74,7 +74,7 @@ class Player {
         return delete this.data[key];
     }
     setVoiceChannelId(voiceChannelId) {
-        (0, index_1.validateProperty)(voiceChannelId, (value) => typeof value !== "string", "Moonlink.js > Player#setVoiceChannelId - voiceChannelId must be a string.");
+        (0, index_1.validateProperty)(voiceChannelId, (value) => typeof value === "string", "Moonlink.js > Player#setVoiceChannelId - voiceChannelId must be a string.");
         if (this.voiceChannelId === voiceChannelId)
             return false;
         const oldVoiceChannelId = this.voiceChannelId;
@@ -83,7 +83,7 @@ class Player {
         return true;
     }
     setTextChannelId(textChannelId) {
-        (0, index_1.validateProperty)(textChannelId, (value) => typeof value !== "string", "Moonlink.js > Player#setTextChannelId - textChannelId must be a string.");
+        (0, index_1.validateProperty)(textChannelId, (value) => typeof value === "string", "Moonlink.js > Player#setTextChannelId - textChannelId must be a string.");
         if (this.textChannelId === textChannelId)
             return false;
         const oldTextChannelId = this.textChannelId;
@@ -92,7 +92,7 @@ class Player {
         return true;
     }
     setAutoPlay(autoPlay) {
-        (0, index_1.validateProperty)(autoPlay, (value) => typeof value !== "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay must be a boolean.");
+        (0, index_1.validateProperty)(autoPlay, (value) => typeof value === "boolean", "Moonlink.js > Player#setAutoPlay - autoPlay must be a boolean.");
         if (this.autoPlay === autoPlay)
             return false;
         this.autoPlay = autoPlay;
@@ -205,7 +205,7 @@ class Player {
         return true;
     }
     async transferNode(node) {
-        (0, index_1.validateProperty)(node, (value) => !(value instanceof index_1.Node || typeof value === "string"), "Moonlink.js > Player#transferNode - node is not a valid Node or string.");
+        (0, index_1.validateProperty)(node, (value) => (value instanceof index_1.Node || typeof value === "string"), "Moonlink.js > Player#transferNode - node is not a valid Node or string.");
         const targetNode = typeof node === "string" ? this.manager.nodes.get(node) : node;
         if (!targetNode)
             return false;
@@ -283,7 +283,7 @@ class Player {
         return true;
     }
     seek(position) {
-        (0, index_1.validateProperty)(position, (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > this.current.duration, "Moonlink.js > Player#seek - position is not a number or is out of range.");
+        (0, index_1.validateProperty)(position, (value) => typeof value === "number" || isNaN(value) || value < 0 || value > this.current.duration, "Moonlink.js > Player#seek - position is not a number or is out of range.");
         this.node.rest.update({
             guildId: this.guildId,
             data: { position },
@@ -301,7 +301,7 @@ class Player {
         return true;
     }
     setVolume(volume) {
-        (0, index_1.validateProperty)(volume, (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > 1000, "Moonlink.js > Player#setVolume - volume is not a number or is out of range (0-1000).");
+        (0, index_1.validateProperty)(volume, (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= 1000, "Moonlink.js > Player#setVolume - volume is not a number or is out of range (0-1000).");
         if (this.volume === volume)
             return false;
         const oldVolume = this.volume;
@@ -315,7 +315,7 @@ class Player {
         return true;
     }
     setLoop(loop, count) {
-        (0, index_1.validateProperty)(loop, (value) => !["off", "track", "queue"].includes(value), "Moonlink.js > Player#setLoop - loop must be 'off', 'track', or 'queue'.");
+        (0, index_1.validateProperty)(loop, (value) => ["off", "track", "queue"].includes(value), "Moonlink.js > Player#setLoop - loop must be 'off', 'track', or 'queue'.");
         if (count !== undefined) {
             (0, index_1.validateProperty)(count, (value) => typeof value === "number" && value >= 0, "Moonlink.js > Player#setLoop - count must be a non-negative number.");
         }
