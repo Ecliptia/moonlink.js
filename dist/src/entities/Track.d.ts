@@ -23,6 +23,7 @@ export declare class Track {
     resolveData(): Track;
     isPartialTrack(): boolean;
     raw(): ITrack;
+    getThumbnailUrl(quality?: string): string | undefined;
     static unresolvedTrack(options: {
         title: string;
         author: string;
