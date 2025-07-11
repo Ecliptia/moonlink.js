@@ -340,7 +340,7 @@ export class Player {
 
     validateProperty(
       position,
-      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
+      value => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
       "Moonlink.js > Player#skip - position not a number or out of range"
     );
 
@@ -364,7 +364,7 @@ export class Player {
   public seek(position: number): boolean {
     validateProperty(
       position,
-      (value) => typeof value === "number" || isNaN(value) || value < 0 || value > this.current.duration,
+      (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.current.duration,
       "Moonlink.js > Player#seek - position is not a number or is out of range."
     );
 
