@@ -2,6 +2,7 @@ import { Database, Player, Track } from "../../index";
 export declare class Queue {
     database: Database;
     guildId: string;
+    player: Player;
     constructor(player: Player);
     tracks: Track[];
     add(track: Track | Track[]): boolean;
@@ -13,6 +14,10 @@ export declare class Queue {
     pop(): Track;
     clear(): boolean;
     shuffle(): boolean;
+    removeDuplicates(): boolean;
+    sortByTitle(): boolean;
+    sortByAuthor(): boolean;
+    sortByDuration(): boolean;
     get size(): number;
     get duration(): number;
     get isEmpty(): boolean;
@@ -21,6 +26,10 @@ export declare class Queue {
     get all(): Track[];
     find(query: string): Track | undefined;
     move(from: number, to: number): boolean;
+    moveRange(fromIndex: number, toIndex: number, count: number): boolean;
+    removeRange(startIndex: number, endIndex: number): boolean;
+    duplicate(index: number, count?: number): boolean;
+    jump(index: number): boolean;
     slice(start: number, end?: number): Track[];
     filter(predicate: (track: Track) => boolean): Track[];
     reverse(): boolean;
