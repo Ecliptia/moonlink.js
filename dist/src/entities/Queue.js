@@ -1,0 +1,209 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Queue = void 0;
+class Queue {
+    database;
+    guildId;
+    player;
+    constructor(player) {
+        this.database = player.manager.database;
+        this.guildId = player.guildId;
+        this.player = player;
+    }
+    tracks = [];
+    add(track) {
+        if (Array.isArray(track)) {
+            if (track.length === 0)
+                return true;
+            for (let t of track) {
+                this.tracks.push(t);
+            }
+        }
+        else {
+            this.tracks.push(track);
+        }
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueAdd", this.player, track);
+        return true;
+    }
+    get(position) {
+        return this.tracks[position];
+    }
+    has(track) {
+        return this.tracks.includes(track);
+    }
+    remove(position) {
+        const removed = this.tracks.splice(position, 1);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueRemove", this.player, removed[0]);
+        return true;
+    }
+    shift() {
+        let track = this.tracks.shift();
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        if (track) {
+            this.player.manager.emit("queueRemove", this.player, track);
+        }
+        return track;
+    }
+    unshift(track) {
+        this.tracks.unshift(track);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueAdd", this.player, track);
+        return true;
+    }
+    pop() {
+        let tracks = this.tracks.pop();
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        if (tracks) {
+            this.player.manager.emit("queueRemove", this.player, tracks);
+        }
+        return tracks;
+    }
+    clear() {
+        const clearedTracks = [...this.tracks];
+        this.tracks = [];
+        this.database.delete(`queues.${this.guildId}`);
+        this.player.manager.emit("queueRemove", this.player, clearedTracks);
+        return true;
+    }
+    shuffle() {
+        this.tracks = this.tracks.sort(() => Math.random() - 0.5);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    removeDuplicates() {
+        if (this.tracks.length < 2)
+            return false;
+        const uniqueTracks = [];
+        const seenEncoded = new Set();
+        for (const track of this.tracks) {
+            if (!seenEncoded.has(track.encoded)) {
+                uniqueTracks.push(track);
+                seenEncoded.add(track.encoded);
+            }
+        }
+        if (uniqueTracks.length === this.tracks.length) {
+            return false;
+        }
+        this.tracks = uniqueTracks;
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    sortByTitle() {
+        if (this.tracks.length < 2)
+            return false;
+        this.tracks.sort((a, b) => a.title.localeCompare(b.title));
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    sortByAuthor() {
+        if (this.tracks.length < 2)
+            return false;
+        this.tracks.sort((a, b) => a.author.localeCompare(b.author));
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    sortByDuration() {
+        if (this.tracks.length < 2)
+            return false;
+        this.tracks.sort((a, b) => a.duration - b.duration);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    get size() {
+        return this.tracks.length;
+    }
+    get duration() {
+        return this.tracks.reduce((acc, cur) => acc + cur.duration, 0);
+    }
+    get isEmpty() {
+        return this.tracks.length === 0;
+    }
+    get first() {
+        return this.tracks[0];
+    }
+    get last() {
+        return this.tracks[this.tracks.length - 1];
+    }
+    get all() {
+        return this.tracks;
+    }
+    find(query) {
+        const searchTerm = query.toLowerCase();
+        return this.tracks.find(t => t.identifier === query ||
+            t.title.toLowerCase().includes(searchTerm));
+    }
+    move(from, to) {
+        if (from < 0 || to < 0 || from >= this.tracks.length || to >= this.tracks.length)
+            return false;
+        const track = this.tracks.splice(from, 1)[0];
+        this.tracks.splice(to, 0, track);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    moveRange(fromIndex, toIndex, count) {
+        if (fromIndex < 0 || fromIndex >= this.tracks.length ||
+            toIndex < 0 || toIndex > this.tracks.length ||
+            count <= 0 || fromIndex + count > this.tracks.length) {
+            return false;
+        }
+        const tracksToMove = this.tracks.splice(fromIndex, count);
+        this.tracks.splice(toIndex, 0, ...tracksToMove);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueMoveRange", this.player, tracksToMove, fromIndex, toIndex);
+        return true;
+    }
+    removeRange(startIndex, endIndex) {
+        if (startIndex < 0 || startIndex >= this.tracks.length ||
+            endIndex < startIndex || endIndex >= this.tracks.length) {
+            return false;
+        }
+        const removedTracks = this.tracks.splice(startIndex, endIndex - startIndex + 1);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueRemoveRange", this.player, removedTracks, startIndex, endIndex);
+        return true;
+    }
+    duplicate(index, count = 1) {
+        if (index < 0 || index >= this.tracks.length || count <= 0) {
+            return false;
+        }
+        const trackToDuplicate = this.tracks[index];
+        const duplicatedTracks = [];
+        for (let i = 0; i < count; i++) {
+            duplicatedTracks.push(trackToDuplicate);
+        }
+        this.tracks.splice(index + 1, 0, ...duplicatedTracks);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        this.player.manager.emit("queueDuplicate", this.player, duplicatedTracks, index);
+        return true;
+    }
+    jump(index) {
+        if (index < 0 || index >= this.tracks.length)
+            return false;
+        if (index === 0)
+            return true;
+        const tracksToSkip = this.tracks.splice(0, index);
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    slice(start, end) {
+        return this.tracks.slice(start, end);
+    }
+    filter(predicate) {
+        return this.tracks.filter(predicate);
+    }
+    reverse() {
+        this.tracks.reverse();
+        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        return true;
+    }
+    get position() {
+        return this.tracks.findIndex(track => track === this.first);
+    }
+    get previous() {
+        return this.tracks.slice(0, this.position);
+    }
+}
+exports.Queue = Queue;
+//# sourceMappingURL=Queue.js.map

@@ -1,0 +1,75 @@
+import { IPlayerConfig, IVoiceState, IFloweryTTSOptions } from "../typings/Interfaces";
+import { TPlayerLoop } from "../typings/types";
+import { Lyrics, Listen, Manager, Node, Filters, Queue, Track } from "../../index";
+export declare class Player {
+    readonly manager: Manager;
+    guildId: string;
+    voiceChannelId: string;
+    textChannelId: string;
+    region: string;
+    voiceState: IVoiceState;
+    autoPlay: boolean;
+    autoLeave: boolean;
+    connected: boolean;
+    playing: boolean;
+    destroyed: boolean;
+    paused: boolean;
+    volume: number;
+    loop: TPlayerLoop;
+    loopCount?: number;
+    current: Track;
+    previous: Track[];
+    historySize: number;
+    ping: number;
+    readonly queue: Queue;
+    node: Node;
+    readonly data: Record<string, unknown>;
+    readonly filters: Filters;
+    private _listen;
+    private _lyrics;
+    constructor(manager: Manager, config: IPlayerConfig);
+    get listen(): Listen;
+    get lyrics(): Lyrics;
+    set(key: string, data: unknown): void;
+    get<T>(key: string): T;
+    has(key: string): boolean;
+    delete(key: string): boolean;
+    setVoiceChannelId(voiceChannelId: string): boolean;
+    setTextChannelId(textChannelId: string): boolean;
+    setAutoPlay(autoPlay: boolean): boolean;
+    setAutoLeave(autoLeave: boolean): boolean;
+    connect(options?: {
+        setMute?: boolean;
+        setDeaf?: boolean;
+    }): boolean;
+    disconnect(): boolean;
+    play(options?: {
+        encoded?: string;
+        requestedBy?: string | {
+            id?: any;
+            userData?: any;
+        };
+        position?: number;
+        endTime?: number;
+        isBackPlay?: boolean;
+    }): Promise<boolean>;
+    replay(): Promise<boolean>;
+    back(): Promise<boolean>;
+    restart(): Promise<boolean>;
+    transferNode(node: Node | string): Promise<boolean>;
+    pause(): boolean;
+    resume(): boolean;
+    stop(options?: {
+        destroy?: boolean;
+    }): boolean;
+    skip(position?: number): Promise<boolean>;
+    seek(position: number): boolean;
+    shuffle(): boolean;
+    setVolume(volume: number): boolean;
+    setLoop(loop: TPlayerLoop, count?: number): boolean;
+    destroy(reason?: string): boolean;
+    private _sendVoiceUpdate;
+    private updateData;
+    getHistory(limit?: number): Track[];
+    speak(text: string, options?: IFloweryTTSOptions): Promise<boolean>;
+}
