@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
+import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
 import { Database, NodeManager, PlayerManager, SourceManager, Player, SearchResult, PluginManager } from "../../index";
 export declare interface Manager {
@@ -38,6 +38,13 @@ export declare class Manager extends EventEmitter {
     private _handleVoiceServerUpdate;
     private _handleVoiceStateUpdate;
     attemptConnection(guildId: string): Promise<boolean>;
+    getLyrics(options: {
+        player?: Player;
+        encodedTrack?: string;
+        skipTrackSource?: boolean;
+    }): Promise<ILavaLyricsObject | null>;
+    subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void>;
+    unsubscribeLyrics(guildId: string): Promise<void>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;
     hasPlayer(guildId: string): boolean;

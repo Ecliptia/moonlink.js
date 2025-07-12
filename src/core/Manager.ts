@@ -5,8 +5,9 @@ import {
   IConfigManager,
   IOptionsManager,
   IPlayerConfig,
-  IRESTLoadTracks,
-  ILavaSearchResultData
+  ILavaLyricsObject,
+  ILavaLyricsLine,
+  INode
 } from "../typings/Interfaces";
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
 import {
@@ -19,13 +20,15 @@ import {
   Player,
   validateProperty,
   SearchResult,
-  PluginManager
+  PluginManager,
+  Node
 } from "../../index";
 
 import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
 import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
 import { SponsorBlockPlugin } from "../plugins/SponsorBlockPlugin";
+import { LavaLyricsPlugin } from "../plugins/LavaLyricsPlugin";
 import { LavaSearchPlugin } from "../plugins/LavaSearchPlugin";
 
 export declare interface Manager {
@@ -86,6 +89,7 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(YouTubePlugin);
     this.pluginManager.registerPlugin(GoogleCloudTTSPlugin);
     this.pluginManager.registerPlugin(SponsorBlockPlugin);
+    this.pluginManager.registerPlugin(LavaLyricsPlugin);
     this.pluginManager.registerPlugin(LavaSearchPlugin);
   }
 
@@ -352,6 +356,119 @@ export class Manager extends EventEmitter {
 
     if (attempts) player.voiceState.attempt = true;
     return true;
+  }
+
+  public async getLyrics(options: {
+    player?: Player;
+    encodedTrack?: string;
+    skipTrackSource?: boolean;
+  }): Promise<ILavaLyricsObject | null> {
+    validateProperty(
+      options,
+      (value) => value !== undefined,
+      "(Moonlink.js) - Manager > getLyrics > Options is required"
+    );
+
+    const { player, encodedTrack, skipTrackSource } = options;
+
+    let targetNode: Node | undefined;
+    let guildId: string | undefined;
+
+    if (player) {
+      targetNode = player.node;
+      guildId = player.guildId;
+    } else if (encodedTrack) {
+      // For encodedTrack, we need to find a node that supports LavaLyrics
+      targetNode = this.nodes.getNodeWithCapability("lavalyrics");
+    }
+
+    if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
+      this.emit("debug", `Moonlink.js > getLyrics > No connected node with lavalyrics capability found.`);
+      return null;
+    }
+
+    const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
+    if (!lavaLyricsPlugin || !(lavaLyricsPlugin as any).getLyricsForCurrentTrack || !(lavaLyricsPlugin as any).getLyricsForTrack) {
+      this.emit("debug", `Moonlink.js > getLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
+      return null;
+    }
+
+    try {
+      if (player && guildId) {
+        return await (lavaLyricsPlugin as any).getLyricsForCurrentTrack(guildId, skipTrackSource);
+      } else if (encodedTrack) {
+        return await (lavaLyricsPlugin as any).getLyricsForTrack(encodedTrack, skipTrackSource);
+      }
+      return null;
+    } catch (e: any) {
+      this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics: ${e.message}`);
+      return null;
+    }
+  }
+
+  public async subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void> {
+    validateProperty(
+      guildId,
+      (value) => typeof value === "string",
+      "(Moonlink.js) - Manager > subscribeLyrics > guildId is required and must be a string."
+    );
+    validateProperty(
+      callback,
+      (value) => typeof value === "function",
+      "(Moonlink.js) - Manager > subscribeLyrics > callback is required and must be a function."
+    );
+
+    const player = this.players.get(guildId);
+    if (!player) {
+      this.emit("debug", `Moonlink.js > subscribeLyrics > Player not found for guild ${guildId}.`);
+      return;
+    }
+
+    const targetNode = player.node;
+    if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
+      this.emit("debug", `Moonlink.js > subscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);
+      return;
+    }
+
+    const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
+    if (!lavaLyricsPlugin || !(lavaLyricsPlugin as any).subscribeToLiveLyrics || !(lavaLyricsPlugin as any).registerLyricsCallback) {
+      this.emit("debug", `Moonlink.js > subscribeLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
+      return;
+    }
+
+    (lavaLyricsPlugin as any).registerLyricsCallback(guildId, callback);
+    await (lavaLyricsPlugin as any).subscribeToLiveLyrics(guildId, skipTrackSource);
+    this.emit("debug", `Moonlink.js > subscribeLyrics > Subscribed to live lyrics for guild ${guildId}.`);
+  }
+
+  public async unsubscribeLyrics(guildId: string): Promise<void> {
+    validateProperty(
+      guildId,
+      (value) => typeof value === "string",
+      "(Moonlink.js) - Manager > unsubscribeLyrics > guildId is required and must be a string."
+    );
+
+    const player = this.players.get(guildId);
+    if (!player) {
+      this.emit("debug", `Moonlink.js > unsubscribeLyrics > Player not found for guild ${guildId}.`);
+      return;
+    }
+
+    const targetNode = player.node;
+    if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
+      this.emit("debug", `Moonlink.js > unsubscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);
+      return;
+    }
+
+    const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
+    if (!lavaLyricsPlugin || !(lavaLyricsPlugin as any).unsubscribeFromLiveLyrics || !(lavaLyricsPlugin as any).unregisterLyricsCallback) {
+      this.emit("debug", `Moonlink.js > unsubscribeLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
+      return;
+    }
+
+    (lavaLyricsPlugin as any).unregisterLyricsCallback(guildId);
+    await (lavaLyricsPlugin as any).unsubscribeFromLiveLyrics(guildId);
+    this.emit("debug", `Moonlink.js > unsubscribeLyrics > Unsubscribed from live lyrics for guild ${guildId}.`);
   }
 
   public createPlayer(config: IPlayerConfig): Player {
