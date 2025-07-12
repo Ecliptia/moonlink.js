@@ -4,7 +4,9 @@ import {
   IVoiceState,
   IConfigManager,
   IOptionsManager,
-  IPlayerConfig
+  IPlayerConfig,
+  IRESTLoadTracks,
+  ILavaSearchResultData
 } from "../typings/Interfaces";
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
 import {
@@ -24,6 +26,7 @@ import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
 import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
 import { SponsorBlockPlugin } from "../plugins/SponsorBlockPlugin";
+import { LavaSearchPlugin } from "../plugins/LavaSearchPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -83,6 +86,7 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(YouTubePlugin);
     this.pluginManager.registerPlugin(GoogleCloudTTSPlugin);
     this.pluginManager.registerPlugin(SponsorBlockPlugin);
+    this.pluginManager.registerPlugin(LavaSearchPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
@@ -174,6 +178,61 @@ export class Manager extends EventEmitter {
     }
 
     return new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
+  }
+
+  public async lavaSearch(options: {
+    query: string;
+    source?: TSearchSources;
+    node?: string;
+    requester?: unknown;
+    types?: string;
+  }): Promise<SearchResult> {
+    validateProperty(
+      options,
+      (value) => value !== undefined,
+      "(Moonlink.js) - Manager > LavaSearch > Options is required"
+    );
+    validateProperty(
+      options.query,
+      (value) => typeof value === "string",
+      "(Moonlink.js) - Manager > LavaSearch > Query is required"
+    );
+
+    const { query, source, node: preferredNode, requester, types } = options;
+    const initialSource = source ?? this.options.defaultPlatformSearch;
+
+    const capability = `search:${initialSource}`;
+    let targetNode = preferredNode
+      ? this.nodes.get(preferredNode)
+      : this.nodes.getNodeWithCapability(capability);
+
+    if (!targetNode || !targetNode.connected) {
+      this.emit("debug", `Moonlink.js > LavaSearch > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
+      targetNode = this.nodes.sortByUsage("players");
+      if (!targetNode || !targetNode.connected) {
+        this.emit("debug", `Moonlink.js > LavaSearch > No connected node available to handle the request.`);
+        return new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
+      }
+    }
+
+    if (!targetNode.capabilities.has("lavasearch")) {
+      this.emit("debug", `Moonlink.js > LavaSearch > Node ${targetNode.identifier} does not support LavaSearch. Falling back to standard search.`);
+      return this.search(options);
+    }
+
+    try {
+      const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
+      if (lavaSearchPlugin && (lavaSearchPlugin as any).search) {
+        const data = await (lavaSearchPlugin as any).search(query, { source: initialSource, types });
+        return new (Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+      } else {
+        this.emit("debug", `Moonlink.js > LavaSearch > LavaSearchPlugin not found or does not have a search method on node ${targetNode.identifier}. Falling back to standard search.`);
+        return this.search(options);
+      }
+    } catch (e: any) {
+      this.emit("debug", `Moonlink.js > LavaSearch > Failed to perform LavaSearch: ${e.message}. Falling back to standard search.`);
+      return this.search(options);
+    }
   }
   
   public async packetUpdate(packet: any): Promise<void> {

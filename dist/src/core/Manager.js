@@ -8,6 +8,7 @@ const LavaSrcPlugin_1 = require("../plugins/LavaSrcPlugin");
 const YouTubePlugin_1 = require("../plugins/YouTubePlugin");
 const GoogleCloudTTSPlugin_1 = require("../plugins/GoogleCloudTTSPlugin");
 const SponsorBlockPlugin_1 = require("../plugins/SponsorBlockPlugin");
+const LavaSearchPlugin_1 = require("../plugins/LavaSearchPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -42,6 +43,7 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager.registerPlugin(YouTubePlugin_1.YouTubePlugin);
         this.pluginManager.registerPlugin(GoogleCloudTTSPlugin_1.GoogleCloudTTSPlugin);
         this.pluginManager.registerPlugin(SponsorBlockPlugin_1.SponsorBlockPlugin);
+        this.pluginManager.registerPlugin(LavaSearchPlugin_1.LavaSearchPlugin);
     }
     async init(clientId) {
         if (this.initialize)
@@ -112,6 +114,43 @@ class Manager extends node_events_1.EventEmitter {
             }
         }
         return new (index_1.Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
+    }
+    async lavaSearch(options) {
+        (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > LavaSearch > Options is required");
+        (0, index_1.validateProperty)(options.query, (value) => typeof value === "string", "(Moonlink.js) - Manager > LavaSearch > Query is required");
+        const { query, source, node: preferredNode, requester, types } = options;
+        const initialSource = source ?? this.options.defaultPlatformSearch;
+        const capability = `search:${initialSource}`;
+        let targetNode = preferredNode
+            ? this.nodes.get(preferredNode)
+            : this.nodes.getNodeWithCapability(capability);
+        if (!targetNode || !targetNode.connected) {
+            this.emit("debug", `Moonlink.js > LavaSearch > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
+            targetNode = this.nodes.sortByUsage("players");
+            if (!targetNode || !targetNode.connected) {
+                this.emit("debug", `Moonlink.js > LavaSearch > No connected node available to handle the request.`);
+                return new (index_1.Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
+            }
+        }
+        if (!targetNode.capabilities.has("lavasearch")) {
+            this.emit("debug", `Moonlink.js > LavaSearch > Node ${targetNode.identifier} does not support LavaSearch. Falling back to standard search.`);
+            return this.search(options);
+        }
+        try {
+            const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
+            if (lavaSearchPlugin && lavaSearchPlugin.search) {
+                const data = await lavaSearchPlugin.search(query, { source: initialSource, types });
+                return new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+            }
+            else {
+                this.emit("debug", `Moonlink.js > LavaSearch > LavaSearchPlugin not found or does not have a search method on node ${targetNode.identifier}. Falling back to standard search.`);
+                return this.search(options);
+            }
+        }
+        catch (e) {
+            this.emit("debug", `Moonlink.js > LavaSearch > Failed to perform LavaSearch: ${e.message}. Falling back to standard search.`);
+            return this.search(options);
+        }
     }
     async packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
