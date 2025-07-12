@@ -2,8 +2,6 @@
 import { Manager, ISource, encodeTrack } from '../../index';
 
 const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
-const TOKEN_URL = 'https://open.spotify.com/api/token';
-
 
 export default class Spotify implements ISource {
   public name = 'Spotify';
