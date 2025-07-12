@@ -1,0 +1,39 @@
+import { EventEmitter } from "node:events";
+import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
+import { TSearchSources } from "../typings/types";
+import { Database, NodeManager, PlayerManager, SourceManager, Player, SearchResult, PluginManager } from "../../index";
+export declare interface Manager {
+    on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
+    once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
+    emit<K extends keyof IEvents>(event: K, ...args: Parameters<IEvents[K]>): boolean;
+    off<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
+}
+export declare class Manager extends EventEmitter {
+    initialize: boolean;
+    readonly options: IOptionsManager;
+    readonly sendPayload: Function;
+    nodes: NodeManager;
+    players: PlayerManager;
+    version: string;
+    database: Database;
+    sources: SourceManager;
+    pluginManager: PluginManager;
+    constructor(config: IConfigManager);
+    init(clientId: string): Promise<void>;
+    search(options: {
+        query: string;
+        source?: TSearchSources;
+        node?: string;
+        requester?: unknown;
+        fallbackSources?: TSearchSources[];
+    }): Promise<SearchResult>;
+    packetUpdate(packet: any): Promise<void>;
+    private _handleVoiceServerUpdate;
+    private _handleVoiceStateUpdate;
+    attemptConnection(guildId: string): Promise<boolean>;
+    createPlayer(config: IPlayerConfig): Player;
+    getPlayer(guildId: string): Player;
+    hasPlayer(guildId: string): boolean;
+    deletePlayer(guildId: string): boolean;
+    getAllPlayers(): Map<string, Player>;
+}
