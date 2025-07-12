@@ -13,41 +13,47 @@ class NodeManager {
         });
     }
     check(node) {
-        let hasError = false;
-        const reportError = (message) => {
-            this.manager.emit("debug", message);
-            hasError = true;
-        };
-        if (!node.host)
-            reportError("(Moonlink.js) - Node > Host is required");
+        if (!node.host) {
+            this.manager.emit("debug", "(Moonlink.js) - Node > Host is required");
+            return false;
+        }
         if (node.port !== undefined && (node.port < 0 || node.port > 65535)) {
-            reportError("(Moonlink.js) - Node > Invalid port value. Port must be a number between 0 and 65535.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid port value. Port must be a number between 0 and 65535.");
+            return false;
         }
         if (node.password !== undefined && typeof node.password !== "string") {
-            reportError("(Moonlink.js) - Node > Invalid password value. Password must be a string.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid password value. Password must be a string.");
+            return false;
         }
         if (node.secure !== undefined && typeof node.secure !== "boolean") {
-            reportError("(Moonlink.js) - Node > Invalid secure value. Secure must be a boolean.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid secure value. Secure must be a boolean.");
+            return false;
         }
         if (node.sessionId !== undefined && typeof node.sessionId !== "string") {
-            reportError("(Moonlink.js) - Node > Invalid sessionId value. SessionId must be a string.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid sessionId value. SessionId must be a string.");
+            return false;
         }
         if (node.id !== undefined && typeof node.id !== "number") {
-            reportError("(Moonlink.js) - Node > Invalid id value. Id must be a number.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid id value. Id must be a number.");
+            return false;
         }
         if (node.identifier !== undefined && typeof node.identifier !== "string") {
-            reportError("(Moonlink.js) - Node > Invalid identifier value. Identifier must be a string.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid identifier value. Identifier must be a string.");
+            return false;
         }
         if (node.regions !== undefined && !Array.isArray(node.regions)) {
-            reportError("(Moonlink.js) - Node > Invalid regions value. Regions must be an array.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid regions value. Regions must be an array.");
+            return false;
         }
         if (node.retryDelay !== undefined && node.retryDelay < 0) {
-            reportError("(Moonlink.js) - Node > Invalid retryDelay value. ReconnectTimeout must be a number greater than or equal to 0.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid retryDelay value. ReconnectTimeout must be a number greater than or equal to 0.");
+            return false;
         }
         if (node.retryAmount !== undefined && node.retryAmount < 0) {
-            reportError("(Moonlink.js) - Node > Invalid retryAmount value. ReconnectAmount must be a number greater than or equal to 0.");
+            this.manager.emit("debug", "(Moonlink.js) - Node > Invalid retryAmount value. ReconnectAmount must be a number greater than or equal to 0.");
+            return false;
         }
-        return !hasError;
+        return true;
     }
     init() {
         this.cache.forEach(node => {
@@ -104,6 +110,40 @@ class NodeManager {
     get best() {
         return this.sortByUsage("players");
     }
+    getNodeWithCapability(capability, preferredNodeIdentifier) {
+        let nodes = [...this.cache.values()].filter(node => node.connected && node.capabilities.has(capability));
+        if (preferredNodeIdentifier) {
+            const preferredNode = nodes.find(node => node.identifier === preferredNodeIdentifier);
+            if (preferredNode) {
+                return preferredNode;
+            }
+        }
+        if (!nodes.length) {
+            this.manager.emit("debug", `(Moonlink.js) - Node > No available nodes with capability: ${capability}`);
+            return undefined;
+        }
+        return nodes.sort((a, b) => {
+            if (a.priority !== b.priority) {
+                return (b.priority || 0) - (a.priority || 0);
+            }
+            return a.getPlayersCount - b.getPlayersCount;
+        })[0];
+    }
+    getBestNodeForTrack(track) {
+        if (track.originNodeIdentifier) {
+            const originNode = this.getNodeWithCapability(`search:${track.sourceName}`, track.originNodeIdentifier);
+            if (originNode) {
+                return originNode;
+            }
+        }
+        if (track.sourceName) {
+            const nodeWithSource = this.getNodeWithCapability(`search:${track.sourceName}`);
+            if (nodeWithSource) {
+                return nodeWithSource;
+            }
+        }
+        return this.best;
+    }
     sortByUsage(sortType, region) {
         let nodes = [...this.cache.values()].filter(node => node.connected === true);
         if (!nodes.length) {
@@ -114,9 +154,6 @@ class NodeManager {
             const regionalNodes = nodes.filter(node => node.regions && node.regions.includes(region));
             if (regionalNodes.length > 0) {
                 nodes = regionalNodes;
-            }
-            else {
-                this.manager.emit("debug", `(Moonlink.js) - Node > No nodes found for region: ${region}, falling back to all available nodes.`);
             }
         }
         return nodes.sort((a, b) => {
