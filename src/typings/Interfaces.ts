@@ -79,6 +79,7 @@ export interface IEvents {
   sourceRemove: (source: string) => void;
   sourceClear: () => void;
   nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
+  playerSpeak: (player: Player, text: string, options?: IFloweryTTSOptions) => void;
 }
 
 export interface INode {
@@ -247,6 +248,7 @@ export interface ITrackInfo {
   identifier?: string;
   isrc?: string;
   sourceName?: string;
+  originNodeIdentifier?: string;
 }
 
 export interface IPlaylistInfo {
@@ -409,4 +411,12 @@ export interface IRoutePlannerStatus {
     blockIndex: string;
     currentAddressIndex: string;
   };
+}
+
+export interface IFloweryTTSOptions {
+  voice?: string;
+  translate?: boolean;
+  silence?: number;
+  speed?: number;
+  audio_format?: "mp3" | "ogg_opus" | "ogg_vorbis" | "aac" | "wav" | "flac";
 }
