@@ -22,6 +22,7 @@ import {
 
 import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
+import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -79,6 +80,7 @@ export class Manager extends EventEmitter {
     //register plugins supported by client
     this.pluginManager.registerPlugin(LavaSrcPlugin);
     this.pluginManager.registerPlugin(YouTubePlugin);
+    this.pluginManager.registerPlugin(GoogleCloudTTSPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
