@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState, ISpeakOptions, IChapter } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, ISpeakOptions, IChapter, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import {
   Lyrics,
@@ -684,5 +684,21 @@ export class Player {
       return [...this.previous];
     }
     return this.previous.slice(Math.max(0, this.previous.length - limit));
+  }
+
+  public async getLyrics(encodedTrack?: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null> {
+    return this.manager.getLyrics({
+      player: this,
+      encodedTrack,
+      skipTrackSource,
+    });
+  }
+
+  public async subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void> {
+    return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource);
+  }
+
+  public async unsubscribeLyrics(): Promise<void> {
+    return this.manager.unsubscribeLyrics(this.guildId);
   }
 }

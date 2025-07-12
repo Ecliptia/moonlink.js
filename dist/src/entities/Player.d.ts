@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState, ISpeakOptions } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, ISpeakOptions, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import { Lyrics, Listen, Manager, Node, Filters, Queue, Track } from "../../index";
 export declare class Player {
@@ -76,4 +76,7 @@ export declare class Player {
     clearSponsorBlockCategories(): Promise<void>;
     private updateData;
     getHistory(limit?: number): Track[];
+    getLyrics(encodedTrack?: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null>;
+    subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void>;
+    unsubscribeLyrics(): Promise<void>;
 }
