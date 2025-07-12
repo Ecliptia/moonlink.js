@@ -406,10 +406,13 @@ export class Node {
             player.playing = false;
             player.paused = false;
             player.set("sendPlayerUpdateDebug", false);
-            player.previous.push(track);
-            if (player.previous.length > player.historySize) {
-              player.previous.shift();
+            if (!player.get("isBackPlay")) {
+              player.previous.push(track);
+              if (player.previous.length > player.historySize) {
+                player.previous.shift();
+              }
             }
+            player.set("isBackPlay", false);
 
             this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
             

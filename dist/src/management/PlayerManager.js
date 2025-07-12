@@ -11,11 +11,11 @@ class PlayerManager {
     }
     create(config) {
         const finalConfig = { ...this.manager.options.defaultPlayer, ...config };
-        (0, index_1.validateProperty)(finalConfig.guildId, value => value !== undefined || value !== "string", "(Moonlink.js) - Player > GuildId is required");
+        (0, index_1.validateProperty)(finalConfig.guildId, value => typeof value === "string", "(Moonlink.js) - Player > GuildId is required");
         if (this.has(finalConfig.guildId))
             return this.get(finalConfig.guildId);
-        (0, index_1.validateProperty)(finalConfig.voiceChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > VoiceChannelId is required");
-        (0, index_1.validateProperty)(finalConfig.textChannelId, value => value !== undefined || value == "string", "(Moonlink.js) - Player > TextChannelId is required");
+        (0, index_1.validateProperty)(finalConfig.voiceChannelId, value => typeof value === "string", "(Moonlink.js) - Player > VoiceChannelId is required");
+        (0, index_1.validateProperty)(finalConfig.textChannelId, value => typeof value === "string", "(Moonlink.js) - Player > TextChannelId is required");
         (0, index_1.validateProperty)(finalConfig.volume, value => value === undefined || value >= 0, "(Moonlink.js) - Player > Invalid volume value. Volume must be a number between 0.");
         if (finalConfig.node) {
             const node = this.manager.nodes.get(finalConfig.node);

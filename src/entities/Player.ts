@@ -139,7 +139,7 @@ export class Player {
   public setAutoLeave(autoLeave: boolean): boolean {
     validateProperty(
       autoLeave,
-      (value) => typeof value !== "boolean",
+      (value) => typeof value === "boolean",
       "Moonlink.js > Player#setAutoLeave - autoLeave must be a boolean."
     );
     if (this.autoLeave === autoLeave) return false;
@@ -176,6 +176,7 @@ export class Player {
       requestedBy?: string | { id?: any; userData?: any };
       position?: number;
       endTime?: number;
+      isBackPlay?: boolean;
     } = {}
   ): Promise<boolean> {
     if (!options.encoded && !this.queue.size) return false;
@@ -201,6 +202,8 @@ export class Player {
       position: 0,
       requestedBy: this.current.requestedBy,
     });
+
+    this.set("isBackPlay", options.isBackPlay ?? false);
 
     this.node.rest.update({
       guildId: this.guildId,
@@ -239,7 +242,7 @@ export class Player {
     }
 
     this.current = lastTrack;
-    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
+    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy, isBackPlay: true });
 
     this.manager.emit("playerTriggeredBack", this, lastTrack);
     return true;
@@ -338,11 +341,13 @@ export class Player {
       return false;
     }
 
-    validateProperty(
-      position,
-      value => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
-      "Moonlink.js > Player#skip - position not a number or out of range"
-    );
+    if (position !== undefined) {
+      validateProperty(
+        position,
+        (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
+        "Moonlink.js > Player#skip - position not a number or out of range"
+      );
+    }
 
     const oldTrack = this.current;
     if (position !== undefined) {
