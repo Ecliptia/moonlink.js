@@ -27,6 +27,13 @@ export declare class Manager extends EventEmitter {
         requester?: unknown;
         fallbackSources?: TSearchSources[];
     }): Promise<SearchResult>;
+    lavaSearch(options: {
+        query: string;
+        source?: TSearchSources;
+        node?: string;
+        requester?: unknown;
+        types?: string;
+    }): Promise<SearchResult>;
     packetUpdate(packet: any): Promise<void>;
     private _handleVoiceServerUpdate;
     private _handleVoiceStateUpdate;
