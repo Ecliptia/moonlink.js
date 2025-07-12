@@ -40,6 +40,7 @@ export interface IEvents {
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
     playerDestroyed: (player: Player, reason?: string) => void;
     playerTriggeredBack: (player: Player, track: Track) => void;
+    playerChapterSkipped: (player: Player, chapter: IChapter) => void;
     trackStart: (player: Player, track: Track) => void;
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;
@@ -57,6 +58,16 @@ export interface IEvents {
     sourceClear: () => void;
     nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
     playerSpeak: (player: Player, text: string, options?: ISpeakOptions) => void;
+    segmentsLoaded: (player: Player, segments: ISegment[]) => void;
+    segmentSkipped: (player: Player, segment: ISegment) => void;
+    chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
+    chapterStarted: (player: Player, chapter: IChapter) => void;
+}
+export interface IChapter {
+    name: string;
+    start: number;
+    end: number;
+    duration: string;
 }
 export interface INode {
     host: string;
@@ -144,6 +155,7 @@ export interface IOptionsManager {
     nodeHealthCheckInterval?: number;
     defaultPlayer?: IPlayerConfig;
     enableSourceFallback?: boolean;
+    defaultSponsorBlockCategories?: string[];
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -217,7 +229,15 @@ export interface ITrackInfo {
     identifier?: string;
     isrc?: string;
     sourceName?: string;
-    originNodeIdentifier?: string;
+}
+export interface ITrack {
+    encoded: string;
+    info: ITrackInfo;
+    pluginInfo: Object;
+    userData: Object;
+    origin?: string;
+    chapters?: IChapter[];
+    currentChapterIndex?: number;
 }
 export interface IPlaylistInfo {
     name: string;
@@ -370,6 +390,11 @@ export interface IFloweryTTSOptions {
     silence?: number;
     speed?: number;
     audio_format?: "mp3" | "ogg_opus" | "ogg_vorbis" | "aac" | "wav" | "flac";
+}
+export interface ISegment {
+    category: string;
+    start: number;
+    end: number;
 }
 export interface ISpeakOptions {
     text: string;
