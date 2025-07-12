@@ -127,6 +127,8 @@ export interface IOptionsManager {
     blacklisteSources?: string[];
     enabledSources?: string[];
     spotify?: {
+        clientId?: string;
+        clientSecret?: string;
         limitLoadPlaylist?: number;
         limitLoadAlbum?: number;
         limitLoadArtist?: number;

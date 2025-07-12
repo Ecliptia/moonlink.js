@@ -151,6 +151,8 @@ export interface IOptionsManager {
   blacklisteSources?: string[];
   enabledSources?: string[];
   spotify?: {
+    clientId?: string;
+    clientSecret?: string;
     limitLoadPlaylist?: number;
     limitLoadAlbum?: number;
     limitLoadArtist?: number;
@@ -381,16 +383,16 @@ export interface INodeInfo {
 }
 
 export interface INodeVersion {
-    semver: string;
-    major: number;
-    minor: number;
-    patch: number;
-    preRelease?: string;
+  semver: string;
+  major: number;
+  minor: number;
+  patch: number;
+  preRelease?: string;
 }
 
 export interface ISession {
-    resuming: boolean;
-    timeout: number;
+  resuming: boolean;
+  timeout: number;
 }
 
 export interface IRoutePlannerStatus {
