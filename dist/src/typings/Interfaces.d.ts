@@ -421,3 +421,18 @@ export interface ISpeakOptions {
     };
     addToQueue?: boolean;
 }
+export interface ILavaLyricsLine {
+    timestamp: number;
+    duration?: number;
+    line: string;
+    plugin: Object;
+}
+export interface ILavaLyricsObject {
+    sourceName: string;
+    provider: string;
+    text?: string;
+    lines: ILavaLyricsLine[];
+    plugin: Object;
+}
+export interface IRESTGetLyricsLavaLyrics extends ILavaLyricsObject {
+}
