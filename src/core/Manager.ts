@@ -23,6 +23,7 @@ import {
 import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
 import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
+import { SponsorBlockPlugin } from "../plugins/SponsorBlockPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -81,6 +82,7 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(LavaSrcPlugin);
     this.pluginManager.registerPlugin(YouTubePlugin);
     this.pluginManager.registerPlugin(GoogleCloudTTSPlugin);
+    this.pluginManager.registerPlugin(SponsorBlockPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
