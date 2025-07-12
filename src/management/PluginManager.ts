@@ -61,9 +61,9 @@ export class PluginManager {
     for (const pluginInstance of node.plugins.values()) {
       try {
         pluginInstance.unload(node);
-        this.manager.emit("debug", `Moonlink.js > PluginManager > Plugin ${pluginInstance.name} unloaded for node ${node.identifier}.`);
+        this.manager.emit("debug", `Moonlink.js > PluginManager > Plugin ${pluginInstance.name} unloaded for node ${node.identifier ?? node.uuid}.`);
       } catch (e: any) {
-        this.manager.emit("debug", `Moonlink.js > PluginManager > Failed to unload plugin ${pluginInstance.name} for node ${node.identifier}: ${e.message}`);
+        this.manager.emit("debug", `Moonlink.js > PluginManager > Failed to unload plugin ${pluginInstance.name} for node ${node.identifier ?? node.uuid}: ${e.message}`);
       }
     }
     node.capabilities.clear();
