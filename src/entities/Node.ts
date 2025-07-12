@@ -367,6 +367,11 @@ export class Node {
         }
         break;
       case "event": {
+        const sponsorBlockPlugin = this.plugins.get("sponsorblock-plugin");
+        if (sponsorBlockPlugin && (sponsorBlockPlugin as any).handleEvent) {
+            (sponsorBlockPlugin as any).handleEvent(this, payload);
+        }
+
         let player = this.manager.getPlayer(payload.guildId);
         if (!player) return;
 
