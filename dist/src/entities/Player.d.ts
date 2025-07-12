@@ -53,6 +53,7 @@ export declare class Player {
         endTime?: number;
         isBackPlay?: boolean;
     }): Promise<boolean>;
+    speak(options: ISpeakOptions): Promise<boolean>;
     replay(): Promise<boolean>;
     back(): Promise<boolean>;
     restart(): Promise<boolean>;
@@ -63,13 +64,16 @@ export declare class Player {
         destroy?: boolean;
     }): boolean;
     skip(position?: number): Promise<boolean>;
+    skipChapter(value?: number, type?: 'index' | 'count'): Promise<boolean>;
     seek(position: number): boolean;
     shuffle(): boolean;
     setVolume(volume: number): boolean;
     setLoop(loop: TPlayerLoop, count?: number): boolean;
     destroy(reason?: string): boolean;
     private _sendVoiceUpdate;
+    getSponsorBlockCategories(): Promise<string[]>;
+    setSponsorBlockCategories(categories: string[]): Promise<void>;
+    clearSponsorBlockCategories(): Promise<void>;
     private updateData;
     getHistory(limit?: number): Track[];
-    speak(options: ISpeakOptions): Promise<boolean>;
 }
