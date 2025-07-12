@@ -1,4 +1,4 @@
-import { ITrack } from "../typings/Interfaces";
+import { ITrack, IChapter } from "../typings/Interfaces";
 export declare class Track {
     encoded: string;
     url?: string;
@@ -13,9 +13,11 @@ export declare class Track {
     isrc?: string;
     time?: number;
     sourceName?: string;
-    originNodeIdentifier?: string;
+    origin?: string;
     requestedBy?: Object | string;
     pluginInfo: Record<string, any>;
+    chapters?: IChapter[];
+    currentChapterIndex?: number;
     private isPartial;
     constructor(trackData: ITrack, requester?: Object);
     private createPropertySetters;
