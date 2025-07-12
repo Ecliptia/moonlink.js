@@ -13,11 +13,13 @@ export declare enum NodeState {
     DISCONNECTED = "DISCONNECTED",
     DESTROYED = "DESTROYED"
 }
-export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud" | string;
+export type TNativeSearchSources = "youtube" | "youtubemusic" | "soundcloud" | "local";
+export type TLavaSrcSearchSources = "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "dzrec" | "ymsearch" | "ymrec" | "ftts" | "vksearch" | "vkrec" | "tdsearch" | "tdrec" | "qbsearch" | "qbisrc" | "qbrec";
+export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | string;
 export type TLoadResultType = "track" | "playlist" | "search" | "empty" | "error" | TLoadResultNodeLinkType;
 export type TLoadResultNodeLinkType = "short" | "album" | "artist" | "playlist" | "station" | "podcast" | "podcast";
 export type TSortTypeNode = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "random";
 export type TPlayerLoop = "off" | "track" | "queue";
 export type TTrackEndType = "queueEnd" | "loadFailed" | "stopped" | "replaced" | "cleanup" | "finished";
-export type TPartialTrackProperties = "url" | "duration" | "position" | "identifier" | "isSeekable" | "isStream" | "artworkUrl" | "isrc" | "sourceName";
+export type TPartialTrackProperties = "url" | "duration" | "position" | "identifier" | "isSeekable" | "isStream" | "artworkUrl" | "isrc" | "sourceName" | "originNodeIdentifier";
 export type YoutubeThumbnailQuality = "default" | "hqdefault" | "mqdefault" | "sddefault" | "maxresdefault";
