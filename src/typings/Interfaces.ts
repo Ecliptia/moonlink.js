@@ -244,12 +244,7 @@ export interface ILoadResultData {
   pluginInfo: Object;
 }
 
-export interface ITrack {
-  encoded: string;
-  info: ITrackInfo;
-  pluginInfo: Object;
-  userData: Object;
-}
+
 
 export interface ITrackInfo {
   title: string;
@@ -287,19 +282,47 @@ export interface IObjectTrack {
   userData?: unknown;
 }
 
+export interface ILavaSearchAlbum extends ILoadResultData {
+  tracks: []; // Albums in LavaSearch have empty tracks array
+}
+
+export interface ILavaSearchArtist extends ILoadResultData {
+  tracks: []; // Artists in LavaSearch have empty tracks array
+}
+
+export interface ILavaSearchPlaylist extends ILoadResultData {
+  tracks: []; // Playlists in LavaSearch have empty tracks array
+}
+
+export interface ILavaSearchText {
+  text: string;
+  plugin: Object;
+}
+
+export interface ILavaSearchResultData {
+  tracks?: ITrack[];
+  albums?: ILavaSearchAlbum[];
+  artists?: ILavaSearchArtist[];
+  playlists?: ILavaSearchPlaylist[];
+  texts?: ILavaSearchText[];
+  plugin?: Object;
+}
+
 export interface ISearchResult {
   loadType: TLoadResultType;
   tracks: Track[];
   playlistInfo: IPlaylistInfo;
-  data: {
-    playlistInfo: IPlaylistInfo;
-    tracks: ITrack[];
-    pluginInfo: any;
-  };
+  data: ILoadResultData | ILavaSearchResultData; // Can be either standard or LavaSearch data
   exception?: {
     message: string;
     severity: string;
   };
+  albums?: ILavaSearchAlbum[];
+  artists?: ILavaSearchArtist[];
+  playlists?: ILavaSearchPlaylist[];
+  texts?: ILavaSearchText[];
+  lavasearchPluginInfo?: Object;
+  isLavaSearchResult?: boolean;
 }
 export interface Equalizer {
   band: number;

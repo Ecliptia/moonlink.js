@@ -211,12 +211,6 @@ export interface ILoadResultData {
     tracks?: ITrack[];
     pluginInfo: Object;
 }
-export interface ITrack {
-    encoded: string;
-    info: ITrackInfo;
-    pluginInfo: Object;
-    userData: Object;
-}
 export interface ITrackInfo {
     title: string;
     uri?: string;
@@ -249,19 +243,42 @@ export interface IObjectTrack {
     identifier?: string;
     userData?: unknown;
 }
+export interface ILavaSearchAlbum extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchArtist extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchPlaylist extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchText {
+    text: string;
+    plugin: Object;
+}
+export interface ILavaSearchResultData {
+    tracks?: ITrack[];
+    albums?: ILavaSearchAlbum[];
+    artists?: ILavaSearchArtist[];
+    playlists?: ILavaSearchPlaylist[];
+    texts?: ILavaSearchText[];
+    plugin?: Object;
+}
 export interface ISearchResult {
     loadType: TLoadResultType;
     tracks: Track[];
     playlistInfo: IPlaylistInfo;
-    data: {
-        playlistInfo: IPlaylistInfo;
-        tracks: ITrack[];
-        pluginInfo: any;
-    };
+    data: ILoadResultData | ILavaSearchResultData;
     exception?: {
         message: string;
         severity: string;
     };
+    albums?: ILavaSearchAlbum[];
+    artists?: ILavaSearchArtist[];
+    playlists?: ILavaSearchPlaylist[];
+    texts?: ILavaSearchText[];
+    lavasearchPluginInfo?: Object;
+    isLavaSearchResult?: boolean;
 }
 export interface Equalizer {
     band: number;
