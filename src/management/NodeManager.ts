@@ -148,8 +148,8 @@ export class NodeManager {
   }
 
   public getBestNodeForTrack(track: Track): Node | undefined {
-    if (track.originNodeIdentifier) {
-      const originNode = this.getNodeWithCapability(`search:${track.sourceName}`, track.originNodeIdentifier);
+    if (track.origin) {
+      const originNode = this.getNodeWithCapability(`search:${track.sourceName}`, track.origin);
       if (originNode) {
         return originNode;
       }
