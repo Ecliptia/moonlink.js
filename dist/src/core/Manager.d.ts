@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
-import { Database, NodeManager, PlayerManager, SourceManager, Player, SearchResult } from "../../index";
+import { Database, NodeManager, PlayerManager, SourceManager, Player, SearchResult, PluginManager } from "../../index";
 export declare interface Manager {
     on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
     once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -17,6 +17,7 @@ export declare class Manager extends EventEmitter {
     version: string;
     database: Database;
     sources: SourceManager;
+    pluginManager: PluginManager;
     constructor(config: IConfigManager);
     init(clientId: string): Promise<void>;
     search(options: {
