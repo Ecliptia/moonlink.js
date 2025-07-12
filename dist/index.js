@@ -22,6 +22,7 @@ __exportStar(require("./src/Utils"), exports);
 __exportStar(require("./src/core/Manager"), exports);
 __exportStar(require("./src/management/NodeManager"), exports);
 __exportStar(require("./src/management/PlayerManager"), exports);
+__exportStar(require("./src/management/PluginManager"), exports);
 __exportStar(require("./src/management/SourceManager"), exports);
 __exportStar(require("./src/structures/SearchResult"), exports);
 __exportStar(require("./src/entities/Database"), exports);
@@ -35,7 +36,7 @@ __exportStar(require("./src/entities/Listen"), exports);
 __exportStar(require("./src/entities/Lyrics"), exports);
 const Utils_1 = require("./src/Utils");
 [["Database", "./src/entities/Database"], ["NodeManager", "./src/management/NodeManager"],
-    ["PlayerManager", "./src/management/PlayerManager"], ["SearchResult", "./src/structures/SearchResult"],
+    ["PlayerManager", "./src/management/PlayerManager"], ["PluginManager", "./src/management/PluginManager"], ["SearchResult", "./src/structures/SearchResult"],
     ["Player", "./src/entities/Player"], ["Queue", "./src/entities/Queue"], ["Node", "./src/entities/Node"],
     ["Rest", "./src/entities/Rest"], ["Filters", "./src/entities/Filters"], ["Track", "./src/entities/Track"],
     ["Lyrics", "./src/entities/Lyrics"], ["Listen", "./src/entities/Listen"], ["SourceManager", "./src/management/SourceManager"]].map(([n, p]) => Utils_1.structures[n] = require(p)[n]);

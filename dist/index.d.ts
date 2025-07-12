@@ -5,6 +5,7 @@ export * from "./src/Utils";
 export * from "./src/core/Manager";
 export * from "./src/management/NodeManager";
 export * from "./src/management/PlayerManager";
+export * from "./src/management/PluginManager";
 export * from "./src/management/SourceManager";
 export * from "./src/structures/SearchResult";
 export * from "./src/entities/Database";
