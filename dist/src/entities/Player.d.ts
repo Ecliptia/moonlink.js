@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, IFloweryTTSOptions } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import { Lyrics, Listen, Manager, Node, Filters, Queue, Track } from "../../index";
 export declare class Player {
@@ -71,4 +71,5 @@ export declare class Player {
     private _sendVoiceUpdate;
     private updateData;
     getHistory(limit?: number): Track[];
+    speak(text: string, options?: IFloweryTTSOptions): Promise<boolean>;
 }

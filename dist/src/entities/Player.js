@@ -145,13 +145,70 @@ class Player {
         if (this.current?.pluginInfo?.MoonlinkInternal && !(await this.current.resolve())) {
             return false;
         }
+        let targetNode = this.node;
+        if (this.current) {
+            const requiredCapability = this.current.sourceName ? `search:${this.current.sourceName}` : undefined;
+            if (requiredCapability && (!this.node.connected || !this.node.capabilities.has(requiredCapability))) {
+                this.manager.emit("debug", `Moonlink.js > Player > Current node ${this.node.identifier} not suitable for source ${this.current.sourceName}.`);
+                let foundNode;
+                if (this.current.originNodeIdentifier) {
+                    foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability, this.current.originNodeIdentifier);
+                    if (foundNode) {
+                        this.manager.emit("debug", `Moonlink.js > Player > Found suitable node from originNodeIdentifier: ${foundNode.identifier}`);
+                    }
+                }
+                if (!foundNode && requiredCapability) {
+                    foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability);
+                    if (foundNode) {
+                        this.manager.emit("debug", `Moonlink.js > Player > Found best node with capability: ${foundNode.identifier}`);
+                    }
+                }
+                if (!foundNode) {
+                    this.manager.emit("debug", `Moonlink.js > Player > No suitable node found for source ${this.current.sourceName}. Attempting generic search fallback.`);
+                    const searchResult = await this.manager.search({
+                        query: `${this.current.title} ${this.current.author}`,
+                        source: this.manager.options.defaultPlatformSearch,
+                        requester: this.current.requestedBy,
+                    });
+                    if (searchResult.tracks.length > 0) {
+                        this.current = searchResult.tracks[0];
+                        foundNode = this.manager.nodes.getBestNodeForTrack(this.current);
+                        if (foundNode) {
+                            this.manager.emit("debug", `Moonlink.js > Player > Successfully reconstructed track and found new node: ${foundNode.identifier}`);
+                        }
+                        else {
+                            this.manager.emit("debug", `Moonlink.js > Player > Failed to find node for reconstructed track. Aborting play.`);
+                            return false;
+                        }
+                    }
+                    else {
+                        this.manager.emit("debug", `Moonlink.js > Player > Generic search fallback failed for track: ${this.current.title}. Aborting play.`);
+                        return false;
+                    }
+                }
+                if (foundNode && foundNode.identifier !== this.node.identifier) {
+                    this.manager.emit("debug", `Moonlink.js > Player > Transferring player to new suitable node: ${foundNode.identifier}`);
+                    try {
+                        await this.transferNode(foundNode);
+                        targetNode = foundNode;
+                    }
+                    catch (e) {
+                        this.manager.emit("debug", `Moonlink.js > Player > Failed to transfer to new node ${foundNode.identifier}: ${e.message}. Aborting play.`);
+                        return false;
+                    }
+                }
+                else if (foundNode && foundNode.identifier === this.node.identifier) {
+                    this.manager.emit("debug", `Moonlink.js > Player > Current node ${this.node.identifier} is now suitable.`);
+                }
+            }
+        }
         this.updateData("current", {
             encoded: this.current.encoded,
             position: 0,
             requestedBy: this.current.requestedBy,
         });
         this.set("isBackPlay", options.isBackPlay ?? false);
-        this.node.rest.update({
+        targetNode.rest.update({
             guildId: this.guildId,
             data: {
                 track: {
@@ -213,7 +270,16 @@ class Player {
         const oldNode = this.node;
         this.node = targetNode;
         if (this.current || this.queue.size) {
-            await this.restart();
+            if (this.current) {
+                await this.play({
+                    encoded: this.current.encoded,
+                    requestedBy: this.current.requestedBy,
+                    position: this.current.position,
+                });
+            }
+            else {
+                await this.connect();
+            }
         }
         else {
             await this.connect();
@@ -360,6 +426,47 @@ class Player {
             return [...this.previous];
         }
         return this.previous.slice(Math.max(0, this.previous.length - limit));
+    }
+    async speak(text, options) {
+        (0, index_1.validateProperty)(text, (value) => typeof value === "string" && value.length > 0, "Moonlink.js > Player#speak - text must be a non-empty string.");
+        if (!this.node.capabilities.has("search:flowerytts")) {
+            this.manager.emit("debug", `Moonlink.js > Player#speak - Node ${this.node.identifier} does not support Flowery TTS.`);
+            return false;
+        }
+        let uri = `ftts://${encodeURIComponent(text)}`;
+        if (options) {
+            const params = new URLSearchParams();
+            if (options.voice)
+                params.append("voice", options.voice);
+            if (options.translate !== undefined)
+                params.append("translate", String(options.translate));
+            if (options.silence !== undefined)
+                params.append("silence", String(options.silence));
+            if (options.speed !== undefined)
+                params.append("speed", String(options.speed));
+            if (options.audio_format)
+                params.append("audio_format", options.audio_format);
+            if (params.toString()) {
+                uri += `?${params.toString()}`;
+            }
+        }
+        const searchResult = await this.manager.search({
+            query: uri,
+            source: "flowerytts",
+            requester: this.manager.options.clientId,
+        });
+        if (searchResult.loadType === "track" && searchResult.tracks.length > 0) {
+            this.queue.unshift(searchResult.tracks[0]);
+            if (!this.playing) {
+                await this.play();
+            }
+            this.manager.emit("playerSpeak", this, text, options);
+            return true;
+        }
+        else {
+            this.manager.emit("debug", `Moonlink.js > Player#speak - Failed to load Flowery TTS track for text: ${text}`);
+            return false;
+        }
     }
 }
 exports.Player = Player;
