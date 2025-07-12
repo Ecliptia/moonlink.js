@@ -244,8 +244,6 @@ export interface ILoadResultData {
   pluginInfo: Object;
 }
 
-
-
 export interface ITrackInfo {
   title: string;
   uri?: string;
@@ -283,15 +281,15 @@ export interface IObjectTrack {
 }
 
 export interface ILavaSearchAlbum extends ILoadResultData {
-  tracks: []; // Albums in LavaSearch have empty tracks array
+  tracks: [];
 }
 
 export interface ILavaSearchArtist extends ILoadResultData {
-  tracks: []; // Artists in LavaSearch have empty tracks array
+  tracks: [];
 }
 
 export interface ILavaSearchPlaylist extends ILoadResultData {
-  tracks: []; // Playlists in LavaSearch have empty tracks array
+  tracks: []
 }
 
 export interface ILavaSearchText {
@@ -480,3 +478,20 @@ export interface ISpeakOptions {
   options?: IFloweryTTSOptions | { language?: string };
   addToQueue?: boolean;
 }
+
+export interface ILavaLyricsLine {
+  timestamp: number;
+  duration?: number;
+  line: string;
+  plugin: Object;
+}
+
+export interface ILavaLyricsObject {
+  sourceName: string;
+  provider: string;
+  text?: string;
+  lines: ILavaLyricsLine[];
+  plugin: Object;
+}
+
+export interface IRESTGetLyricsLavaLyrics extends ILavaLyricsObject {}
