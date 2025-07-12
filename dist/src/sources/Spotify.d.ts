@@ -3,14 +3,11 @@ export default class Spotify implements ISource {
     name: string;
     private manager;
     private accessToken;
-    private clientToken;
     private clientId;
-    private userAgent;
+    private clientSecret;
     private tokenInitialized;
     constructor(manager: Manager);
     match(url: string): boolean;
-    private fetchServerTime;
-    private generateTotp;
     private initTokens;
     private apiRequest;
     private buildTrack;

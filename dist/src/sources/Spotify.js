@@ -1,21 +1,13 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const crypto_1 = __importDefault(require("crypto"));
 const index_1 = require("../../index");
 const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
-const TOKEN_URL = 'https://open.spotify.com/api/token';
-const CLIENT_TOKEN_URL = 'https://clienttoken.spotify.com/v1/clienttoken';
-const OPEN_SPOTIFY_URL = 'https://open.spotify.com';
 class Spotify {
     name = 'Spotify';
     manager;
     accessToken = null;
-    clientToken = null;
     clientId = null;
-    userAgent = null;
+    clientSecret = null;
     tokenInitialized = false;
     constructor(manager) {
         this.manager = manager;
@@ -28,97 +20,32 @@ class Spotify {
             url.startsWith('spsearch:') ||
             url.startsWith('sprec:'));
     }
-    async fetchServerTime() {
-        try {
-            const res = await fetch(`${OPEN_SPOTIFY_URL}/`, {
-                headers: { 'Accept': 'application/json' },
-            });
-            if (!res.ok) {
-                return Date.now();
-            }
-            const dateHeader = res.headers.get('date');
-            return dateHeader ? new Date(dateHeader).getTime() : Date.now();
-        }
-        catch {
-            return Date.now();
-        }
-    }
-    generateTotp(serverTimeMs) {
-        const TOTP_SECRET = Uint8Array.from([
-            53, 53, 48, 55, 49, 52, 53, 56, 53, 51, 52, 56, 55, 52, 57, 57,
-            53, 57, 50, 50, 52, 56, 54, 51, 48, 51, 50, 57, 51, 52, 55,
-        ]);
-        const counter = Math.floor(serverTimeMs / 1000 / 30);
-        const ts = counter * 30000;
-        const buffer = Buffer.alloc(8);
-        buffer.writeBigUInt64BE(BigInt(counter));
-        const hmac = crypto_1.default
-            .createHmac('sha1', Buffer.from(TOTP_SECRET))
-            .update(buffer)
-            .digest();
-        const offset = hmac[hmac.length - 1] & 0x0f;
-        const codeInt = ((hmac[offset] & 0x7f) << 24) |
-            ((hmac[offset + 1] & 0xff) << 16) |
-            ((hmac[offset + 2] & 0xff) << 8) |
-            (hmac[offset + 3] & 0xff);
-        const totp = (codeInt % 1e6).toString().padStart(6, '0');
-        return [totp, ts];
-    }
     async initTokens() {
         if (this.tokenInitialized)
             return;
         try {
-            this.userAgent =
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 ' +
-                    '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
-            const serverTimeMs = await this.fetchServerTime();
-            const [totp, ts] = this.generateTotp(serverTimeMs);
-            const params = new URLSearchParams({
-                reason: 'init',
-                productType: 'web-player',
-                totp,
-                totpVer: '5',
-                sTime: Math.floor(serverTimeMs / 1000).toString(),
-                cTime: Date.now().toString(),
-                ts: ts.toString(),
-            });
-            const tokenResponse = await fetch(`${TOKEN_URL}?${params.toString()}`, {
+            this.clientId = this.manager.options.spotify?.clientId;
+            this.clientSecret = this.manager.options.spotify?.clientSecret;
+            if (!this.clientId || !this.clientSecret) {
+                this.manager.emit('debug', 'Moonlink.js > Spotify > Client ID or Client Secret not provided.');
+                return;
+            }
+            const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+            const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
                 headers: {
-                    'User-Agent': this.userAgent,
-                    Accept: 'application/json',
-                    'App-Platform': 'WebPlayer',
-                    Referer: `${OPEN_SPOTIFY_URL}/`,
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
+                body: 'grant_type=client_credentials',
             });
             if (!tokenResponse.ok) {
                 const errorBody = await tokenResponse.text();
                 this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing token: ${tokenResponse.status} - ${errorBody}`);
                 return;
             }
-            const { accessToken, clientId } = (await tokenResponse.json());
+            const { access_token: accessToken } = (await tokenResponse.json());
             this.accessToken = accessToken;
-            this.clientId = clientId;
-            const clientResponse = await fetch(CLIENT_TOKEN_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                body: JSON.stringify({
-                    client_data: {
-                        client_version: '1.2.9.2269',
-                        client_id: this.clientId,
-                        js_sdk_data: { device_type: 'computer' },
-                    },
-                }),
-            });
-            if (!clientResponse.ok) {
-                this.manager.emit('debug', `Moonlink.js > Spotify > Error initializing client token: ${clientResponse.status}`);
-                return;
-            }
-            const clientJson = (await clientResponse.json());
-            if (clientJson.response_type !== 'RESPONSE_GRANTED_TOKEN_RESPONSE') {
-                this.manager.emit('debug', `Moonlink.js > Spotify > Client token error: ${clientJson.error}`);
-                return;
-            }
-            this.clientToken = clientJson.granted_token.token;
             this.tokenInitialized = true;
             this.manager.emit('debug', 'Moonlink.js > Spotify > Tokens initialized successfully');
         }
@@ -128,7 +55,7 @@ class Spotify {
     }
     async apiRequest(path) {
         await this.initTokens();
-        if (!this.accessToken || !this.clientId || !this.userAgent) {
+        if (!this.accessToken || !this.clientId) {
             this.manager.emit('debug', 'Moonlink.js > Spotify > API request failed: Tokens not available');
             return null;
         }
@@ -137,8 +64,6 @@ class Spotify {
             const res = await fetch(url, {
                 headers: {
                     Authorization: `Bearer ${this.accessToken}`,
-                    'Client-Id': this.clientId,
-                    'User-Agent': this.userAgent,
                     Accept: 'application/json',
                 },
             });
@@ -158,7 +83,7 @@ class Spotify {
         }
     }
     buildTrack(item, uri) {
-        const trackUri = uri ?? item.uri ?? `${OPEN_SPOTIFY_URL}/track/${item.id}`;
+        const trackUri = uri ?? item.uri ?? `https://open.spotify.com/track/${item.id}`;
         const info = {
             identifier: item.id ?? 'local',
             uri: trackUri,
