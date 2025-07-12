@@ -52,7 +52,7 @@ class Manager extends node_events_1.EventEmitter {
             return;
         try {
             if (this.options.logFile?.log) {
-                (0, index_1.validateProperty)(this.options.logFile?.path, value => value !== undefined || typeof value !== "string", "Moonlink.js > Options > A path to save the log was not provided");
+                (0, index_1.validateProperty)(this.options.logFile?.path, value => typeof value === "string", "Moonlink.js > Options > A path to save the log was not provided");
                 this.on("debug", (message) => (0, index_1.Log)(message, this.options.logFile?.path));
             }
             index_1.Structure.manager = this;

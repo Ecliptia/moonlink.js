@@ -93,7 +93,7 @@ export class Manager extends EventEmitter {
       if (this.options.logFile?.log) {
         validateProperty(
           this.options.logFile?.path,
-          value => value !== undefined || typeof value !== "string",
+          value => typeof value === "string",
           "Moonlink.js > Options > A path to save the log was not provided"
         );
         this.on("debug", (message: string) => Log(message, this.options.logFile?.path));
