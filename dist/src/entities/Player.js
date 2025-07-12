@@ -215,7 +215,7 @@ class Player {
                     encoded: this.current.encoded,
                     userData: options.requestedBy ?? this.current?.requestedBy,
                 },
-                position: options.position ?? 0,
+                position: options.position ?? this.current.position ?? 0,
                 endTime: options.endTime,
                 volume: this.volume,
             },
@@ -427,44 +427,76 @@ class Player {
         }
         return this.previous.slice(Math.max(0, this.previous.length - limit));
     }
-    async speak(text, options) {
-        (0, index_1.validateProperty)(text, (value) => typeof value === "string" && value.length > 0, "Moonlink.js > Player#speak - text must be a non-empty string.");
-        if (!this.node.capabilities.has("search:flowerytts")) {
-            this.manager.emit("debug", `Moonlink.js > Player#speak - Node ${this.node.identifier} does not support Flowery TTS.`);
-            return false;
+    async speak(options) {
+        (0, index_1.validateProperty)(options.text, (value) => typeof value === "string" && value.length > 0, "Moonlink.js > Player#speak - text must be a non-empty string.");
+        const provider = options.provider || 'flowery';
+        let capability;
+        let uri;
+        switch (provider) {
+            case 'flowery':
+                capability = "search:flowerytts";
+                uri = `ftts://${encodeURIComponent(options.text)}`;
+                if (options.options) {
+                    const params = new URLSearchParams();
+                    const floweryOptions = options.options;
+                    if (floweryOptions.voice)
+                        params.append("voice", floweryOptions.voice);
+                    if (floweryOptions.translate !== undefined)
+                        params.append("translate", String(floweryOptions.translate));
+                    if (floweryOptions.silence !== undefined)
+                        params.append("silence", String(floweryOptions.silence));
+                    if (floweryOptions.speed !== undefined)
+                        params.append("speed", String(floweryOptions.speed));
+                    if (floweryOptions.audio_format)
+                        params.append("audio_format", floweryOptions.audio_format);
+                    if (params.toString()) {
+                        uri += `?${params.toString()}`;
+                    }
+                }
+                break;
+            case 'google':
+                capability = "search:tts";
+                uri = `tts://${encodeURIComponent(options.text)}`;
+                if (options.options && options.options.language) {
+                    uri += `?language=${options.options.language}`;
+                }
+                break;
+            default:
+                this.manager.emit("debug", `Moonlink.js > Player#speak - Unsupported TTS provider: ${provider}`);
+                return false;
         }
-        let uri = `ftts://${encodeURIComponent(text)}`;
-        if (options) {
-            const params = new URLSearchParams();
-            if (options.voice)
-                params.append("voice", options.voice);
-            if (options.translate !== undefined)
-                params.append("translate", String(options.translate));
-            if (options.silence !== undefined)
-                params.append("silence", String(options.silence));
-            if (options.speed !== undefined)
-                params.append("speed", String(options.speed));
-            if (options.audio_format)
-                params.append("audio_format", options.audio_format);
-            if (params.toString()) {
-                uri += `?${params.toString()}`;
-            }
+        if (!this.node.capabilities.has(capability)) {
+            this.manager.emit("debug", `Moonlink.js > Player#speak - Node ${this.node.identifier} does not support ${provider} TTS.`);
+            return false;
         }
         const searchResult = await this.manager.search({
             query: uri,
-            source: "flowerytts",
+            source: capability.split(":")[1],
             requester: this.manager.options.clientId,
         });
         if (searchResult.loadType === "track" && searchResult.tracks.length > 0) {
-            this.queue.unshift(searchResult.tracks[0]);
-            if (!this.playing) {
+            const ttsTrack = searchResult.tracks[0];
+            if (options.addToQueue) {
+                this.queue.add(ttsTrack);
+                if (!this.playing) {
+                    await this.play();
+                }
+            }
+            else {
+                const trackToResume = this.current;
+                if (trackToResume) {
+                    const clonedTrackToResume = new index_1.Track(trackToResume.raw(), trackToResume.requestedBy);
+                    clonedTrackToResume.position = trackToResume.position;
+                    this.queue.unshift(clonedTrackToResume);
+                }
+                this.queue.unshift(ttsTrack);
                 await this.play();
             }
-            this.manager.emit("playerSpeak", this, text, options);
+            this.manager.emit("playerSpeak", this, options.text, options);
             return true;
         }
         else {
-            this.manager.emit("debug", `Moonlink.js > Player#speak - Failed to load Flowery TTS track for text: ${text}`);
+            this.manager.emit("debug", `Moonlink.js > Player#speak - Failed to load TTS track for text: ${options.text}`);
             return false;
         }
     }
