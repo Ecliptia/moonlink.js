@@ -56,7 +56,7 @@ export interface IEvents {
     sourceRemove: (source: string) => void;
     sourceClear: () => void;
     nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
-    playerSpeak: (player: Player, text: string, options?: IFloweryTTSOptions) => void;
+    playerSpeak: (player: Player, text: string, options?: ISpeakOptions) => void;
 }
 export interface INode {
     host: string;
@@ -370,4 +370,12 @@ export interface IFloweryTTSOptions {
     silence?: number;
     speed?: number;
     audio_format?: "mp3" | "ogg_opus" | "ogg_vorbis" | "aac" | "wav" | "flac";
+}
+export interface ISpeakOptions {
+    text: string;
+    provider?: 'flowery' | 'google';
+    options?: IFloweryTTSOptions | {
+        language?: string;
+    };
+    addToQueue?: boolean;
 }
