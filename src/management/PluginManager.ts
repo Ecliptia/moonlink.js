@@ -31,7 +31,7 @@ export class PluginManager {
           pluginInstance.load(node);
           node.plugins.set(pluginInstance.name, pluginInstance);
           pluginInstance.capabilities.forEach(cap => node.capabilities.add(cap));
-          this.manager.emit("debug", `Moonlink.js > PluginManager > Plugin ${pluginInstance.name} (v${lavalinkPlugin.version}) loaded for node ${node.identifier}. Capabilities: [${pluginInstance.capabilities.join(', ')}]`);
+          this.manager.emit("debug", `Moonlink.js > PluginManager > Plugin ${pluginInstance.name} (v${lavalinkPlugin.version}) loaded for node ${node.identifier}.${pluginInstance.capabilities.length > 0 ? ` Capabilities: [${pluginInstance.capabilities.join(', ')}]` : ''}`);
         } catch (e: any) {
           this.manager.emit("debug", `Moonlink.js > PluginManager > Failed to load plugin ${lavalinkPlugin.name} for node ${node.identifier}: ${e.message}`);
         }
