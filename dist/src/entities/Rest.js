@@ -149,6 +149,13 @@ class Rest {
             headers: this.defaultHeaders,
         });
     }
+    async post(path, data) {
+        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
+            method: "POST",
+            body: data ? (0, index_1.stringifyWithReplacer)(data) : undefined,
+            headers: this.defaultHeaders,
+        });
+    }
     async delete(path) {
         return (0, index_1.makeRequest)(`${this.url}/${path}`, {
             method: "DELETE",

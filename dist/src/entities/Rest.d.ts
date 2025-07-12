@@ -25,5 +25,6 @@ export declare class Rest {
     patch(path: string, data: any): Promise<unknown>;
     get(path: string): Promise<unknown>;
     put(path: string, data: any): Promise<unknown>;
+    post(path: string, data?: any): Promise<unknown>;
     delete(path: string): Promise<unknown>;
 }
