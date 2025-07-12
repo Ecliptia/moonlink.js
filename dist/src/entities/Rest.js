@@ -136,6 +136,25 @@ class Rest {
             headers: this.defaultHeaders,
         });
     }
+    async get(path) {
+        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
+            method: "GET",
+            headers: this.defaultHeaders,
+        });
+    }
+    async put(path, data) {
+        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
+            method: "PUT",
+            body: (0, index_1.stringifyWithReplacer)(data),
+            headers: this.defaultHeaders,
+        });
+    }
+    async delete(path) {
+        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
+            method: "DELETE",
+            headers: this.defaultHeaders,
+        });
+    }
 }
 exports.Rest = Rest;
 //# sourceMappingURL=Rest.js.map
