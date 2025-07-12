@@ -34,6 +34,8 @@ class Node {
     url;
     rest;
     state = types_1.NodeState.DISCONNECTED;
+    capabilities = new Set();
+    plugins = new Map();
     constructor(manager, config) {
         this.setState = this.setState.bind(this);
         this.manager = manager;
@@ -125,8 +127,12 @@ class Node {
         this.setState(types_1.NodeState.CONNECTED);
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
         this.manager.emit("nodeConnected", this);
+        if (this.info && this.info.plugins) {
+            this.manager.pluginManager.loadPluginsForNode(this, this.info.plugins);
+        }
     }
     close(event) {
+        this.manager.pluginManager.unloadPluginsForNode(this);
         const { code, reason } = event;
         if (this.connected)
             this.connected = false;
@@ -164,6 +170,7 @@ class Node {
                 this.version = this.info.version;
                 this.resumed = payload.resumed;
                 this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+                this.manager.pluginManager.updateNodePlugins(this);
                 if (this.manager.options.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
@@ -439,14 +446,44 @@ class Node {
     }
     async _handleAutoplay(player, reason) {
         let uri;
-        let sourceName;
-        if (player.current.sourceName === "youtube") {
-            uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
-            sourceName = "youtube";
+        let prefix;
+        if (!player.current?.sourceName || !player.current.identifier) {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no current track, sourceName or identifier`);
+            return;
         }
-        else if (player.current.sourceName?.toLowerCase() === "spotify" && player.current.pluginInfo?.MoonlinkInternal) {
-            uri = `sprec:seed_tracks=${player.current.identifier}`;
-            sourceName = "spotify";
+        const source = player.current.sourceName.toLowerCase();
+        const identifier = player.current.identifier;
+        if (source === "youtube") {
+            uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+            prefix = "youtube";
+        }
+        else if (this.plugins.has("lavasrc-plugin")) {
+            switch (source) {
+                case "spotify":
+                    uri = `seed_tracks=${identifier}`;
+                    prefix = "sprec";
+                    break;
+                case "deezer":
+                    uri = `${identifier}`;
+                    prefix = "dzrec";
+                    break;
+                case "yandexmusic":
+                    uri = `${identifier}`;
+                    prefix = "ymrec";
+                    break;
+                case "vkmusic":
+                    uri = `${identifier}`;
+                    prefix = "vkrec";
+                    break;
+                case "tidal":
+                    uri = `${identifier}`;
+                    prefix = "tdrec";
+                    break;
+                case "qobuz":
+                    uri = `${identifier}`;
+                    prefix = "qbrec";
+                    break;
+            }
         }
         if (!uri) {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`);
@@ -456,7 +493,7 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`);
             return;
         }
-        const res = await this.manager.search({ query: uri, source: sourceName });
+        const res = await this.manager.search({ query: uri, source: prefix });
         if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`);
             return;
