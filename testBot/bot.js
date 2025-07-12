@@ -26,7 +26,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier"],
+    partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier", "position"],
     disableNativeSources: true,
     resume: true,
     autoResume: true,
