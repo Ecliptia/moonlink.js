@@ -11,6 +11,7 @@ import {
 
 import WebSocket from "../services/WebSocket"
 import { NodeState } from "../typings/types";
+import { AbstractPlugin } from "../plugins/AbstractPlugin";
 
 export class Node {
   public readonly manager: Manager;
@@ -39,6 +40,8 @@ export class Node {
   public url: string;
   public rest: Rest;
   public state: NodeState = NodeState.DISCONNECTED;
+  public capabilities: Set<string> = new Set();
+  public plugins: Map<string, AbstractPlugin> = new Map();
   constructor(manager: Manager, config: INode) {
     this.setState = this.setState.bind(this);
     this.manager = manager;
@@ -173,8 +176,12 @@ export class Node {
       `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`
     );
     this.manager.emit("nodeConnected", this);
+    if (this.info && this.info.plugins) {
+      this.manager.pluginManager.loadPluginsForNode(this, this.info.plugins);
+    }
   }
   protected close(event: { code: number, reason: string }): void {
+    this.manager.pluginManager.unloadPluginsForNode(this);
     const { code, reason } = event;
     if (this.connected) this.connected = false;
 
@@ -220,6 +227,7 @@ export class Node {
         this.version = this.info.version;
         this.resumed = payload.resumed;
         this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+        this.manager.pluginManager.updateNodePlugins(this);
 
         if (this.manager.options.resume) {
           this.rest.patch(`sessions/${this.sessionId}`, {
@@ -586,30 +594,74 @@ export class Node {
   }
   private async _handleAutoplay(player: Player, reason: string): Promise<void> {
     let uri: string | undefined;
-    let sourceName: string | undefined;
+    let prefix: string | undefined;
 
-    if (player.current.sourceName === "youtube") {
-      uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
-      sourceName = "youtube";
-    } else if (player.current.sourceName?.toLowerCase() === "spotify" && player.current.pluginInfo?.MoonlinkInternal) {
-      uri = `sprec:seed_tracks=${player.current.identifier}`;
-      sourceName = "spotify";
+    if (!player.current?.sourceName || !player.current.identifier) {
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplay failed: no current track, sourceName or identifier`
+      );
+      return;
+    }
+
+    const source = player.current.sourceName.toLowerCase();
+    const identifier = player.current.identifier;
+
+    if (source === "youtube") {
+      uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+      prefix = "youtube";
+    } else if (this.plugins.has("lavasrc-plugin")) {
+      switch (source) {
+        case "spotify":
+          uri = `seed_tracks=${identifier}`;
+          prefix = "sprec";
+          break;
+        case "deezer":
+          uri = `${identifier}`;
+          prefix = "dzrec";
+          break;
+        case "yandexmusic":
+          uri = `${identifier}`;
+          prefix = "ymrec";
+          break;
+        case "vkmusic":
+          uri = `${identifier}`;
+          prefix = "vkrec";
+          break;
+        case "tidal":
+          uri = `${identifier}`;
+          prefix = "tdrec";
+          break;
+        case "qobuz":
+          uri = `${identifier}`;
+          prefix = "qbrec";
+          break;
+      }
     }
 
     if (!uri) {
-      this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`);
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`
+      );
       return;
     }
 
     if (reason === "stopped") {
-      this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`);
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`
+      );
       return;
     }
 
-    const res = await this.manager.search({ query: uri, source: sourceName });
+    const res = await this.manager.search({ query: uri, source: prefix });
 
     if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
-      this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`);
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`
+      );
       return;
     }
 
@@ -617,9 +669,15 @@ export class Node {
     if (randomTrack) {
       player.queue.add(randomTrack as Track);
       player.play();
-      this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplaying track ${randomTrack.title}`);
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplaying track ${randomTrack.title}`
+      );
     } else {
-      this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no random track found`);
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Player ${player.guildId} is autoplay failed: no random track found`
+      );
     }
   }
 
