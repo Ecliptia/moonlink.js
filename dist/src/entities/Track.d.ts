@@ -13,6 +13,7 @@ export declare class Track {
     isrc?: string;
     time?: number;
     sourceName?: string;
+    originNodeIdentifier?: string;
     requestedBy?: Object | string;
     pluginInfo: Record<string, any>;
     private isPartial;
