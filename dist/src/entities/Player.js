@@ -547,6 +547,19 @@ class Player {
         }
         return this.previous.slice(Math.max(0, this.previous.length - limit));
     }
+    async getLyrics(encodedTrack, skipTrackSource) {
+        return this.manager.getLyrics({
+            player: this,
+            encodedTrack,
+            skipTrackSource,
+        });
+    }
+    async subscribeLyrics(callback, skipTrackSource) {
+        return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource);
+    }
+    async unsubscribeLyrics() {
+        return this.manager.unsubscribeLyrics(this.guildId);
+    }
 }
 exports.Player = Player;
 //# sourceMappingURL=Player.js.map
