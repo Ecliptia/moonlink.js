@@ -6,6 +6,7 @@ const types_1 = require("../typings/types");
 const index_1 = require("../../index");
 const LavaSrcPlugin_1 = require("../plugins/LavaSrcPlugin");
 const YouTubePlugin_1 = require("../plugins/YouTubePlugin");
+const GoogleCloudTTSPlugin_1 = require("../plugins/GoogleCloudTTSPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -38,6 +39,7 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager = new (index_1.Structure.get("PluginManager"))(this);
         this.pluginManager.registerPlugin(LavaSrcPlugin_1.LavaSrcPlugin);
         this.pluginManager.registerPlugin(YouTubePlugin_1.YouTubePlugin);
+        this.pluginManager.registerPlugin(GoogleCloudTTSPlugin_1.GoogleCloudTTSPlugin);
     }
     async init(clientId) {
         if (this.initialize)
