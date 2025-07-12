@@ -78,7 +78,6 @@ export type TPartialTrackProperties =
   | "isStream"
   | "artworkUrl"
   | "isrc"
-  | "sourceName"
-  | "originNodeIdentifier";
+  | "sourceName";
 
 export type YoutubeThumbnailQuality = "default" | "hqdefault" | "mqdefault" | "sddefault" | "maxresdefault";
