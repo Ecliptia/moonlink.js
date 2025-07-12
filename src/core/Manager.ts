@@ -6,7 +6,7 @@ import {
   IOptionsManager,
   IPlayerConfig
 } from "../typings/Interfaces";
-import { SearchSources, TSearchSources } from "../typings/types";
+import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
 import {
   Log,
   Structure,
@@ -17,8 +17,11 @@ import {
   Player,
   validateProperty,
   SearchResult,
-  compareVersions
+  PluginManager
 } from "../../index";
+
+import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
+import { YouTubePlugin } from "../plugins/YouTubePlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -36,6 +39,7 @@ export class Manager extends EventEmitter {
   public version: string = require("../../index").version;
   public database: Database;
   public sources: SourceManager;
+  public pluginManager: PluginManager;
   constructor(config: IConfigManager) {
     super();
 
@@ -71,21 +75,11 @@ export class Manager extends EventEmitter {
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
-    
-    if (this.options.plugins) {
-        this.options.plugins.forEach(plugin => {
-          try {
-            if (plugin.minVersion && compareVersions(this.version, plugin.minVersion) < 0) {
-              this.emit("debug", `Moonlink.js > Plugin ${plugin.name || "unknown"} requires at least version ${plugin.minVersion}. Current version: ${this.version}`);
-              return;
-            }
-            plugin.load(this);
-          } catch (e) {
-            this.emit("debug", `Moonlink.js > Failed to load plugin ${plugin.name || "unknown"}: ${e.message}`);
-          }
-        });
-      }
-    }
+    this.pluginManager = new (Structure.get("PluginManager"))(this);
+    //register plugins supported by client
+    this.pluginManager.registerPlugin(LavaSrcPlugin);
+    this.pluginManager.registerPlugin(YouTubePlugin);
+  }
 
   public async init(clientId: string): Promise<void> {
     if (this.initialize) return;
@@ -118,63 +112,64 @@ export class Manager extends EventEmitter {
     requester?: unknown;
     fallbackSources?: TSearchSources[];
   }): Promise<SearchResult> {
-    return new Promise(async (resolve, reject) => {
-      validateProperty(
-        options,
-        value => value !== undefined,
-        "(Moonlink.js) - Manager > Search > Options is required"
-      );
-      validateProperty(
-        options.query,
-        value => typeof value === "string",
-        "(Moonlink.js) - Manager > Search > Query is required"
-      );
-  
-      const query = options.query;
-      const initialSource = options.source ?? this.options.defaultPlatformSearch;
-      const sourcesToTry = this.options.enableSourceFallback ? [initialSource, ...(options.fallbackSources || [])] : [initialSource];
+    validateProperty(
+      options,
+      (value) => value !== undefined,
+      "(Moonlink.js) - Manager > Search > Options is required"
+    );
+    validateProperty(
+      options.query,
+      (value) => typeof value === "string",
+      "(Moonlink.js) - Manager > Search > Query is required"
+    );
 
-      for (const sourceName of sourcesToTry) {
-        let result: SearchResult | undefined;
-        try {
-          const [ matched, sourceMatched ] = this.sources.isLinkMatch(query, sourceName)
-          if (!this.options.disableNativeSources && matched) {
-            const nativeSource = this.sources.get(sourceMatched)!;
-            if (nativeSource) {
-              const data = await nativeSource.load(query, options);
-              result = new (Structure.get("SearchResult"))(data, options);
-            }
-          } else if (
-            !this.options.disableNativeSources &&
-            this.sources.has(sourceName)
-          ) {
-            const nativeSource = this.sources.get(sourceName)!;
-            const data = await nativeSource.search(query, options);
-            result = new (Structure.get("SearchResult"))(data, options);
-          } else {
-            const available = [...this.nodes.cache.values()].filter(n => n.connected);
-            if (available.length === 0) {
-              throw new Error("No available nodes to search from.");
-            }
-        
-            const node = options.node && this.nodes.cache.has(options.node)
-              ? this.nodes.get(options.node)!
-              : this.nodes.best;
-        
-            const data = await node.rest.loadTracks(sourceName, query);
+    const { query, source, node: preferredNode, requester, fallbackSources } = options;
+    const initialSource = source ?? this.options.defaultPlatformSearch;
+    const sourcesToTry = this.options.enableSourceFallback ? [initialSource, ...(fallbackSources || [])] : [initialSource];
+
+    for (const sourceName of sourcesToTry) {
+      let result: SearchResult | undefined;
+      try {
+        const [matched, sourceMatched] = this.sources.isLinkMatch(query, sourceName);
+
+        if (!this.options.disableNativeSources && matched) {
+          const nativeSource = this.sources.get(sourceMatched)!;
+          if (nativeSource) {
+            const data = await nativeSource.load(query, options);
             result = new (Structure.get("SearchResult"))(data, options);
           }
+        } else if (!this.options.disableNativeSources && this.sources.has(sourceName)) {
+          const nativeSource = this.sources.get(sourceName)!;
+          const data = await nativeSource.search(query, options);
+          result = new (Structure.get("SearchResult"))(data, options);
+        } else {
+          const capability = `search:${sourceName}`;
+          let targetNode = preferredNode
+            ? this.nodes.get(preferredNode)
+            : this.nodes.getNodeWithCapability(capability);
 
-          if (result && result.loadType !== "empty" && result.loadType !== "error") {
-            return resolve(result);
+          if (!targetNode || !targetNode.connected) {
+            this.emit("debug", `Moonlink.js > Search > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
+            targetNode = this.nodes.sortByUsage("players");
+            if (!targetNode || !targetNode.connected) {
+              this.emit("debug", `Moonlink.js > Search > No connected node available to handle the request.`);
+              continue; 
+            }
           }
-        } catch (e) {
-          this.emit("debug", `Moonlink.js > Search > Failed to search with source ${sourceName}: ${e.message}`);
+
+          const data = await targetNode.rest.loadTracks(sourceName, query);
+          result = new (Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
         }
-      }
 
-      return resolve(new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options));
-    });
+        if (result && result.loadType !== "empty" && result.loadType !== "error") {
+          return result; 
+        }
+      } catch (e: any) {
+        this.emit("debug", `Moonlink.js > Search > Failed to search with source ${sourceName}: ${e.message}`);
+      }
+    }
+
+    return new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
   }
   
   public async packetUpdate(packet: any): Promise<void> {
