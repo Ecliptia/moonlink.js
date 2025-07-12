@@ -1,4 +1,4 @@
-import { IPlaylistInfo, Track } from "../../index";
+import { IPlaylistInfo, Track, ILavaSearchAlbum, ILavaSearchArtist, ILavaSearchPlaylist, ILavaSearchText, IRESTLoadTracks, ILavaSearchResultData } from "../../index";
 
 export type LoadType = 'track' | 'search' | 'playlist' | 'error' | 'empty' | 'short';
 
@@ -15,20 +15,51 @@ export class SearchResult {
   public loadType: LoadType;
   public playlistInfo: IPlaylistInfo;
   public error?: string;
+  public albums?: ILavaSearchAlbum[];
+  public artists?: ILavaSearchArtist[];
+  public playlists?: ILavaSearchPlaylist[];
+  public texts?: ILavaSearchText[];
+  public lavasearchPluginInfo?: Object;
+  public isLavaSearchResult?: boolean;
 
   constructor(req: any, options: SearchResultOptions) {
     this.query = options.query;
     this.source = options.source || "unknown";
-    this.loadType = req.loadType;
-    this.tracks = this.resolveTracks(req, options.requester);
+
+    if (req.albums || req.artists || req.playlists || req.texts) {
+      this.isLavaSearchResult = true;
+      this.loadType = "search";
+
+      if (req.tracks) {
+        this.tracks = req.tracks.map((data) => new Track(data, options.requester));
+      } else {
+        this.tracks = [];
+      }
+      this.albums = req.albums;
+      this.artists = req.artists;
+      this.playlists = req.playlists;
+      this.texts = req.texts;
+      this.lavasearchPluginInfo = req.plugin;
+      console.log(req)
+      if (this.tracks.length > 0 && !this.albums && !this.artists && !this.playlists && !this.texts) {
+        this.loadType = "track";
+      } else if (this.playlists && this.playlists.length > 0) {
+        this.loadType = "playlist";
+        this.playlistInfo = this.playlists[0].info;
+      }
+
+    } else {
+      this.isLavaSearchResult = false;
+      this.loadType = req.loadType;
+      this.tracks = this.resolveTracks(req, options.requester);
+    }
+
+    if (req.loadType === "error" || req.loadType === "empty") {
+      this.error = req.data;
+    }
   }
 
   private resolveTracks(req: any, requester: unknown): Track[] {
-    if (req.loadType === "error" || req.loadType === "empty") {
-        this.error = req.data;
-      return [];
-    }
-
     let rawTracks: any[] = [];
     switch (req.loadType) {
       case "track":
