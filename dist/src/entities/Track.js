@@ -16,6 +16,7 @@ class Track {
     isrc;
     time = 0;
     sourceName;
+    originNodeIdentifier;
     requestedBy;
     pluginInfo = {};
     isPartial = false;
@@ -37,6 +38,7 @@ class Track {
         else {
             Object.values(trackProps).forEach(setter => setter());
         }
+        this.originNodeIdentifier = trackData.info.originNodeIdentifier;
         if (requester)
             this.requestedBy = requester;
         Object.keys(this).forEach(key => {
@@ -55,7 +57,8 @@ class Track {
             isStream: () => (this.isStream = info.isStream),
             artworkUrl: () => info.artworkUrl && (this.artworkUrl = info.artworkUrl),
             isrc: () => info.isrc && (this.isrc = info.isrc),
-            sourceName: () => info.sourceName && (this.sourceName = info.sourceName)
+            sourceName: () => info.sourceName && (this.sourceName = info.sourceName),
+            originNodeIdentifier: () => info.originNodeIdentifier && (this.originNodeIdentifier = info.originNodeIdentifier)
         };
     }
     setRequester(requester) {
