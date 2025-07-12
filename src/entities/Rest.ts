@@ -146,4 +146,23 @@ export class Rest {
       headers: this.defaultHeaders,
     });
   }
+  public async get(path: string): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async put(path: string, data: any): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "PUT",
+      body: stringifyWithReplacer(data),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async delete(path: string): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "DELETE",
+      headers: this.defaultHeaders,
+    });
+  }
 }

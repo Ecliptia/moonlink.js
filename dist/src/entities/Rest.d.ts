@@ -23,4 +23,7 @@ export declare class Rest {
     unmarkFailedAddress(address: string): Promise<any>;
     unmarkAllFailedAddresses(): Promise<any>;
     patch(path: string, data: any): Promise<unknown>;
+    get(path: string): Promise<unknown>;
+    put(path: string, data: any): Promise<unknown>;
+    delete(path: string): Promise<unknown>;
 }
