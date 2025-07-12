@@ -22,12 +22,8 @@ class LavaSrcPlugin extends AbstractPlugin_1.AbstractPlugin {
         "search:qbrec",
         "search:ytdlp",
     ];
-    load(node) {
-        node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Loaded for node: ${node.identifier}`);
-    }
-    unload(node) {
-        node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Unloaded from node: ${node.identifier}`);
-    }
+    load(node) { }
+    unload(node) { }
     onNodeInfoUpdate(node) {
         node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Node info updated for node: ${node.identifier}`);
     }
