@@ -22,15 +22,9 @@ export class LavaSrcPlugin extends AbstractPlugin {
     "search:ytdlp",
   ];
 
-  public load(node: Node): void {
-    node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Loaded for node: ${node.identifier}`);
-    
-  }
+  public load(node: Node): void {}
 
-  public unload(node: Node): void {
-    node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Unloaded from node: ${node.identifier}`);
-    
-  }
+  public unload(node: Node): void {}
 
   public onNodeInfoUpdate(node: Node): void {
     node.manager.emit("debug", `Moonlink.js > LavaSrcPlugin > Node info updated for node: ${node.identifier}`);
