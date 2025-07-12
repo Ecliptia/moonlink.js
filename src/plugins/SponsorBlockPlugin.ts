@@ -4,7 +4,7 @@ import { IChapter, ISegment } from "../typings/Interfaces";
 
 export class SponsorBlockPlugin extends AbstractPlugin {
     public name: string = "sponsorblock-plugin";
-    public capabilities: string[] = [];
+    public capabilities: string[] = []
     public node: Node;
 
     public load(node: Node): void {
