@@ -372,6 +372,11 @@ export class Node {
             (sponsorBlockPlugin as any).handleEvent(this, payload);
         }
 
+        const lavaLyricsPlugin = this.plugins.get("lavalyrics-plugin");
+        if (lavaLyricsPlugin && (lavaLyricsPlugin as any).handleEvent) {
+            (lavaLyricsPlugin as any).handleEvent(this, payload);
+        }
+
         let player = this.manager.getPlayer(payload.guildId);
         if (!player) return;
 
