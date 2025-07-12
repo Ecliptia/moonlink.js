@@ -16,9 +16,11 @@ class Track {
     isrc;
     time = 0;
     sourceName;
-    originNodeIdentifier;
+    origin;
     requestedBy;
     pluginInfo = {};
+    chapters = [];
+    currentChapterIndex = -1;
     isPartial = false;
     constructor(trackData, requester) {
         const manager = Utils_1.Structure.getManager();
@@ -38,7 +40,7 @@ class Track {
         else {
             Object.values(trackProps).forEach(setter => setter());
         }
-        this.originNodeIdentifier = trackData.info.originNodeIdentifier;
+        this.origin = trackData.origin;
         if (requester)
             this.requestedBy = requester;
         Object.keys(this).forEach(key => {
@@ -57,8 +59,7 @@ class Track {
             isStream: () => (this.isStream = info.isStream),
             artworkUrl: () => info.artworkUrl && (this.artworkUrl = info.artworkUrl),
             isrc: () => info.isrc && (this.isrc = info.isrc),
-            sourceName: () => info.sourceName && (this.sourceName = info.sourceName),
-            originNodeIdentifier: () => info.originNodeIdentifier && (this.originNodeIdentifier = info.originNodeIdentifier)
+            sourceName: () => info.sourceName && (this.sourceName = info.sourceName)
         };
     }
     setRequester(requester) {
