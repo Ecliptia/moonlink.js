@@ -35,8 +35,7 @@ __exportStar(require("./src/entities/Queue"), exports);
 __exportStar(require("./src/entities/Listen"), exports);
 __exportStar(require("./src/entities/Lyrics"), exports);
 const Utils_1 = require("./src/Utils");
-[["Database", "./src/entities/Database"], ["NodeManager", "./src/management/NodeManager"],
-    ["PlayerManager", "./src/management/PlayerManager"], ["PluginManager", "./src/management/PluginManager"], ["SearchResult", "./src/structures/SearchResult"],
+[["Database", "./src/entities/Database"], ["NodeManager", "./src/management/NodeManager"], ["PlayerManager", "./src/management/PlayerManager"], ["PluginManager", "./src/management/PluginManager"], ["SearchResult", "./src/structures/SearchResult"],
     ["Player", "./src/entities/Player"], ["Queue", "./src/entities/Queue"], ["Node", "./src/entities/Node"],
     ["Rest", "./src/entities/Rest"], ["Filters", "./src/entities/Filters"], ["Track", "./src/entities/Track"],
     ["Lyrics", "./src/entities/Lyrics"], ["Listen", "./src/entities/Listen"], ["SourceManager", "./src/management/SourceManager"]].map(([n, p]) => Utils_1.structures[n] = require(p)[n]);
