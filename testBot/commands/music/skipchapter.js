@@ -39,7 +39,8 @@ module.exports = {
         try {
             const skipped = await player.skipChapter(value, type);
             if (skipped) {
-                message.channel.send(`Successfully skipped chapter.`);
+                const chapterInfo = type === 'index' ? `Chapter index: ${value}` : `Skipped ${value} chapters`;
+                message.channel.send(`Successfully skipped chapter. ${chapterInfo}`);
             } else {
                 message.channel.send(`Failed to skip chapter. Check if the value and type are valid.`);
             }
