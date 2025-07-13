@@ -34,6 +34,7 @@ import { SkybotPlugin } from "../plugins/SkybotPlugin";
 import { LyricsKtPlugin } from "../plugins/LyricsKtPlugin";
 import { JavaLyricsPlugin } from "../plugins/JavaLyricsPlugin";
 import { JavaLavaLyricsPlugin } from "../plugins/JavaLavaLyricsPlugin";
+import { LavaDSPXPlugin } from "../plugins/LavaDSPXPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -100,6 +101,7 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(LyricsKtPlugin);
     this.pluginManager.registerPlugin(JavaLyricsPlugin);
     this.pluginManager.registerPlugin(JavaLavaLyricsPlugin);
+    this.pluginManager.registerPlugin(LavaDSPXPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
