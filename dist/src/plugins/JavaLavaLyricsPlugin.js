@@ -164,7 +164,7 @@ class JavaLavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
             this.node.manager.emit("debug", `Moonlink.js > JavaLavaLyricsPlugin > No lyrics found for guild ${guildId}. Cannot subscribe.`);
             return;
         }
-        this.node.manager.emit("debug", `Moonlink.js > JavaLavaLyricsPlugin > Subscribed to live lyrics for guild ${guildId}`);
+        this.node.manager.emit("debug", `Moonlink.js > JavaLavaLyricsPlugin > Subscribed to live lyrics for guild ${guildId}. Player playing: ${player.playing}, paused: ${player.paused}`);
         const firstLineIndex = lyrics.lines.findIndex(l => l.timestamp >= (player.current?.position ?? 0));
         this.scheduleNextLine(player, lyrics, firstLineIndex === -1 ? 0 : firstLineIndex);
     }
@@ -178,9 +178,9 @@ class JavaLavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
             return;
         }
         const currentLine = lyrics.lines[lineIndex];
-        const currentTime = (player.current?.position ?? 0) + 150;
-        const delay = currentLine.timestamp - currentTime;
-        if (delay < 0) {
+        const currentTime = player.current?.position ?? 0;
+        const pollingInterval = 50;
+        if (currentTime >= currentLine.timestamp) {
             const callback = this.lyricsCallbacks.get(player.guildId);
             if (callback && player.playing && !player.paused) {
                 callback(currentLine);
@@ -188,13 +188,11 @@ class JavaLavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
             this.scheduleNextLine(player, lyrics, lineIndex + 1);
             return;
         }
+        const delay = currentLine.timestamp - currentTime;
+        const timeoutDuration = Math.min(delay, pollingInterval);
         const timeout = setTimeout(() => {
-            const callback = this.lyricsCallbacks.get(player.guildId);
-            if (callback && player.playing && !player.paused) {
-                callback(currentLine);
-            }
-            this.scheduleNextLine(player, lyrics, lineIndex + 1);
-        }, delay);
+            this.scheduleNextLine(player, lyrics, lineIndex);
+        }, timeoutDuration);
         this.liveLyricsTimeouts.set(player.guildId, timeout);
     }
     async unsubscribeFromLiveLyrics(guildId) {
