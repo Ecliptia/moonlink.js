@@ -11,6 +11,7 @@ const SponsorBlockPlugin_1 = require("../plugins/SponsorBlockPlugin");
 const LavaLyricsPlugin_1 = require("../plugins/LavaLyricsPlugin");
 const LavaSearchPlugin_1 = require("../plugins/LavaSearchPlugin");
 const SkybotPlugin_1 = require("../plugins/SkybotPlugin");
+const LyricsKtPlugin_1 = require("../plugins/LyricsKtPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -48,6 +49,7 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager.registerPlugin(LavaLyricsPlugin_1.LavaLyricsPlugin);
         this.pluginManager.registerPlugin(LavaSearchPlugin_1.LavaSearchPlugin);
         this.pluginManager.registerPlugin(SkybotPlugin_1.SkybotPlugin);
+        this.pluginManager.registerPlugin(LyricsKtPlugin_1.LyricsKtPlugin);
     }
     async init(clientId) {
         if (this.initialize)
@@ -254,77 +256,177 @@ class Manager extends node_events_1.EventEmitter {
     }
     async getLyrics(options) {
         (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > getLyrics > Options is required");
-        const { player, encodedTrack, skipTrackSource } = options;
+        const { player, encodedTrack, videoId, skipTrackSource, provider } = options;
         let targetNode;
         let guildId;
         if (player) {
             targetNode = player.node;
             guildId = player.guildId;
         }
-        else if (encodedTrack) {
+        else if (provider === 'lavalyrics') {
             targetNode = this.nodes.getNodeWithCapability("lavalyrics");
         }
-        if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
-            this.emit("debug", `Moonlink.js > getLyrics > No connected node with lavalyrics capability found.`);
-            return null;
+        else if (provider === 'lyrics') {
+            targetNode = this.nodes.getNodeWithCapability("lyrics");
         }
-        const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
-        if (!lavaLyricsPlugin || !lavaLyricsPlugin.getLyricsForCurrentTrack || !lavaLyricsPlugin.getLyricsForTrack) {
-            this.emit("debug", `Moonlink.js > getLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
-            return null;
+        else if (encodedTrack) {
+            targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics");
         }
-        try {
-            if (player && guildId) {
-                return await lavaLyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
+        else if (videoId) {
+            targetNode = this.nodes.getNodeWithCapability("lyrics");
+        }
+        const pluginsToTry = [];
+        if (provider === 'lavalyrics') {
+            pluginsToTry.push('lavalyrics-plugin');
+        }
+        else if (provider === 'lyrics') {
+            pluginsToTry.push('lyrics');
+        }
+        else {
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+        }
+        for (const pluginName of pluginsToTry) {
+            if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(pluginName.replace('-plugin', ''))) {
+                this.emit("debug", `Moonlink.js > getLyrics > No connected node with ${pluginName.replace('-plugin', '')} capability found.`);
+                continue;
             }
-            else if (encodedTrack) {
-                return await lavaLyricsPlugin.getLyricsForTrack(encodedTrack, skipTrackSource);
+            const lyricsPlugin = targetNode.plugins.get(pluginName);
+            if (lyricsPlugin && lyricsPlugin.getLyricsForCurrentTrack || lyricsPlugin.getLyricsForTrack || lyricsPlugin.getLyricsByVideoId) {
+                try {
+                    if (player && guildId) {
+                        return await lyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
+                    }
+                    else if (pluginName === 'lavalyrics-plugin' && encodedTrack) {
+                        return await lyricsPlugin.getLyricsForTrack(encodedTrack, skipTrackSource);
+                    }
+                    else if (pluginName === 'lyrics') {
+                        if (videoId) {
+                            return await lyricsPlugin.getLyricsByVideoId(videoId);
+                        }
+                        else if (encodedTrack) {
+                            const trackInfo = (0, index_1.decodeTrack)(encodedTrack);
+                            if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube') {
+                                return await lyricsPlugin.getLyricsByVideoId(trackInfo.info.identifier);
+                            }
+                        }
+                    }
+                }
+                catch (e) {
+                    this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics with ${pluginName}: ${e.message}`);
+                }
             }
-            return null;
         }
-        catch (e) {
-            this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics: ${e.message}`);
-            return null;
-        }
+        return null;
     }
-    async subscribeLyrics(guildId, callback, skipTrackSource) {
+    async searchLyrics(options) {
+        (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > searchLyrics > Options is required");
+        (0, index_1.validateProperty)(options.query, (value) => typeof value === "string", "(Moonlink.js) - Manager > searchLyrics > Query is required");
+        const { query, provider, node: preferredNode } = options;
+        const pluginsToTry = [];
+        if (provider === 'lavalyrics') {
+            pluginsToTry.push('lavalyrics-plugin');
+        }
+        else if (provider === 'lyrics') {
+            pluginsToTry.push('lyrics');
+        }
+        else {
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+        }
+        for (const pluginName of pluginsToTry) {
+            const capability = pluginName;
+            let targetNode = preferredNode
+                ? this.nodes.get(preferredNode)
+                : this.nodes.getNodeWithCapability(capability);
+            if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
+                this.emit("debug", `Moonlink.js > searchLyrics > No connected node found with capability '${capability}'.`);
+                continue;
+            }
+            const lyricsPlugin = targetNode.plugins.get(pluginName);
+            if (lyricsPlugin && lyricsPlugin.search) {
+                try {
+                    return await lyricsPlugin.search(query);
+                }
+                catch (e) {
+                    this.emit("debug", `Moonlink.js > searchLyrics > Failed to search lyrics with ${pluginName}: ${e.message}`);
+                }
+            }
+        }
+        return null;
+    }
+    async subscribeLyrics(guildId, callback, skipTrackSource, provider) {
         (0, index_1.validateProperty)(guildId, (value) => typeof value === "string", "(Moonlink.js) - Manager > subscribeLyrics > guildId is required and must be a string.");
         (0, index_1.validateProperty)(callback, (value) => typeof value === "function", "(Moonlink.js) - Manager > subscribeLyrics > callback is required and must be a function.");
         const player = this.players.get(guildId);
         if (!player)
             return;
-        const targetNode = player.node;
-        if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
-            this.emit("debug", `Moonlink.js > subscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);
-            return;
+        const pluginsToTry = [];
+        if (provider === 'lavalyrics') {
+            pluginsToTry.push('lavalyrics-plugin');
         }
-        const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
-        if (!lavaLyricsPlugin || !lavaLyricsPlugin.subscribeToLiveLyrics || !lavaLyricsPlugin.registerLyricsCallback) {
-            this.emit("debug", `Moonlink.js > subscribeLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
-            return;
+        else if (provider === 'lyrics') {
+            pluginsToTry.push('lyrics-kt-plugin');
         }
-        lavaLyricsPlugin.registerLyricsCallback(guildId, callback);
-        await lavaLyricsPlugin.subscribeToLiveLyrics(guildId, skipTrackSource);
-        this.emit("debug", `Moonlink.js > subscribeLyrics > Subscribed to live lyrics for guild ${guildId}.`);
+        else {
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics-kt-plugin');
+        }
+        for (const pluginName of pluginsToTry) {
+            const capability = pluginName.replace('-plugin', '');
+            const targetNode = player.node;
+            if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
+                this.emit("debug", `Moonlink.js > subscribeLyrics > No connected node with ${capability} capability found for player ${guildId}.`);
+                continue;
+            }
+            const lyricsPlugin = targetNode.plugins.get(pluginName);
+            if (lyricsPlugin && lyricsPlugin.subscribeToLiveLyrics && lyricsPlugin.registerLyricsCallback) {
+                try {
+                    lyricsPlugin.registerLyricsCallback(guildId, callback);
+                    await lyricsPlugin.subscribeToLiveLyrics(guildId, skipTrackSource);
+                    this.emit("debug", `Moonlink.js > subscribeLyrics > Subscribed to live lyrics for guild ${guildId} using ${pluginName}.`);
+                    return;
+                }
+                catch (e) {
+                    this.emit("debug", `Moonlink.js > subscribeLyrics > Failed to subscribe with ${pluginName}: ${e.message}`);
+                }
+            }
+        }
+        this.emit("debug", `Moonlink.js > subscribeLyrics > No suitable plugin found to subscribe to live lyrics for guild ${guildId}.`);
     }
-    async unsubscribeLyrics(guildId) {
+    async unsubscribeLyrics(guildId, provider) {
         (0, index_1.validateProperty)(guildId, (value) => typeof value === "string", "(Moonlink.js) - Manager > unsubscribeLyrics > guildId is required and must be a string.");
         const player = this.players.get(guildId);
         if (!player)
             return;
-        const targetNode = player.node;
-        if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
-            this.emit("debug", `Moonlink.js > unsubscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);
-            return;
+        const pluginsToTry = [];
+        if (provider === 'lavalyrics') {
+            pluginsToTry.push('lavalyrics-plugin');
         }
-        const lavaLyricsPlugin = targetNode.plugins.get("lavalyrics-plugin");
-        if (!lavaLyricsPlugin || !lavaLyricsPlugin.unsubscribeFromLiveLyrics || !lavaLyricsPlugin.unregisterLyricsCallback) {
-            this.emit("debug", `Moonlink.js > unsubscribeLyrics > LavaLyricsPlugin not found or missing methods on node ${targetNode.identifier}.`);
-            return;
+        else if (provider === 'lyrics') {
+            pluginsToTry.push('lyrics-kt-plugin');
         }
-        lavaLyricsPlugin.unregisterLyricsCallback(guildId);
-        await lavaLyricsPlugin.unsubscribeFromLiveLyrics(guildId);
-        this.emit("debug", `Moonlink.js > unsubscribeLyrics > Unsubscribed from live lyrics for guild ${guildId}.`);
+        else {
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics-kt-plugin');
+        }
+        for (const pluginName of pluginsToTry) {
+            const capability = pluginName.replace('-plugin', '');
+            const targetNode = player.node;
+            if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
+                this.emit("debug", `Moonlink.js > unsubscribeLyrics > No connected node with ${capability} capability found for player ${guildId}.`);
+                continue;
+            }
+            const lyricsPlugin = targetNode.plugins.get(pluginName);
+            if (lyricsPlugin && lyricsPlugin.unsubscribeFromLiveLyrics && lyricsPlugin.unregisterLyricsCallback) {
+                try {
+                    lyricsPlugin.unregisterLyricsCallback(guildId);
+                    await lyricsPlugin.unsubscribeFromLiveLyrics(guildId);
+                    this.emit("debug", `Moonlink.js > unsubscribeLyrics > Unsubscribed from live lyrics for guild ${guildId} using ${pluginName}.`);
+                    return;
+                }
+                catch (e) {
+                    this.emit("debug", `Moonlink.js > unsubscribeLyrics > Failed to unsubscribe with ${pluginName}: ${e.message}`);
+                }
+            }
+        }
+        this.emit("debug", `Moonlink.js > unsubscribeLyrics > No suitable plugin found to unsubscribe from live lyrics for guild ${guildId}.`);
     }
     createPlayer(config) {
         return this.players.create(config);
