@@ -725,19 +725,27 @@ export class Player {
     return this.previous.slice(Math.max(0, this.previous.length - limit));
   }
 
-  public async getLyrics(encodedTrack?: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null> {
+  public async getLyrics(encodedTrack?: string, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<ILavaLyricsObject | null> {
     return this.manager.getLyrics({
       player: this,
       encodedTrack,
       skipTrackSource,
+      provider,
     });
   }
 
-  public async subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void> {
-    return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource);
+  public async subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+    return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource, provider);
   }
 
-  public async unsubscribeLyrics(): Promise<void> {
-    return this.manager.unsubscribeLyrics(this.guildId);
+  public async unsubscribeLyrics(provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+    return this.manager.unsubscribeLyrics(this.guildId, provider);
+  }
+
+  public async searchLyrics(query: string, provider?: 'lavalyrics' | 'lyrics'): Promise<any[] | null> {
+    return this.manager.searchLyrics({
+      query,
+      provider,
+    });
   }
 }
