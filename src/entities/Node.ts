@@ -309,6 +309,9 @@ export class Node {
               setMute: false,
             });
 
+            reconstructedPlayer.playing = playerInfo.paused === false;
+            reconstructedPlayer.paused = playerInfo.paused ?? false;
+
             if (current) {
                 reconstructedPlayer.current = new Track(decodeTrack(current.encoded));
             } else {
@@ -343,8 +346,9 @@ export class Node {
         const player = this.manager.getPlayer(payload.guildId);
         if (!player) return;
         if (!player.current) return;
-        if (player.connected !== payload.state.connected)
-          player.connected = payload.state.connected;
+        player.connected = payload.state.connected;
+        player.paused = payload.state.paused ?? false;
+        player.playing = player.connected && !payload.state.paused && player.current !== null;
         player.current.position = payload.state.position;
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;
