@@ -10,6 +10,7 @@ const GoogleCloudTTSPlugin_1 = require("../plugins/GoogleCloudTTSPlugin");
 const SponsorBlockPlugin_1 = require("../plugins/SponsorBlockPlugin");
 const LavaLyricsPlugin_1 = require("../plugins/LavaLyricsPlugin");
 const LavaSearchPlugin_1 = require("../plugins/LavaSearchPlugin");
+const SkybotPlugin_1 = require("../plugins/SkybotPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -46,6 +47,7 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager.registerPlugin(SponsorBlockPlugin_1.SponsorBlockPlugin);
         this.pluginManager.registerPlugin(LavaLyricsPlugin_1.LavaLyricsPlugin);
         this.pluginManager.registerPlugin(LavaSearchPlugin_1.LavaSearchPlugin);
+        this.pluginManager.registerPlugin(SkybotPlugin_1.SkybotPlugin);
     }
     async init(clientId) {
         if (this.initialize)
@@ -108,6 +110,10 @@ class Manager extends node_events_1.EventEmitter {
                     result = new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
                 }
                 if (result && result.loadType !== "empty" && result.loadType !== "error") {
+                    result.tracks = result.tracks.filter(track => !(0, index_1.isSourceBlacklisted)(this, track.sourceName));
+                    if (result.tracks.length === 0) {
+                        result.loadType = "empty";
+                    }
                     return result;
                 }
             }
@@ -142,7 +148,12 @@ class Manager extends node_events_1.EventEmitter {
             const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
             if (lavaSearchPlugin && lavaSearchPlugin.search) {
                 const data = await lavaSearchPlugin.search(query, { source: initialSource, types });
-                return new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+                const result = new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+                result.tracks = result.tracks.filter(track => !(0, index_1.isSourceBlacklisted)(this, track.sourceName));
+                if (result.tracks.length === 0) {
+                    result.loadType = "empty";
+                }
+                return result;
             }
             else {
                 this.emit("debug", `Moonlink.js > LavaSearch > LavaSearchPlugin not found or does not have a search method on node ${targetNode.identifier}. Falling back to standard search.`);
@@ -280,10 +291,8 @@ class Manager extends node_events_1.EventEmitter {
         (0, index_1.validateProperty)(guildId, (value) => typeof value === "string", "(Moonlink.js) - Manager > subscribeLyrics > guildId is required and must be a string.");
         (0, index_1.validateProperty)(callback, (value) => typeof value === "function", "(Moonlink.js) - Manager > subscribeLyrics > callback is required and must be a function.");
         const player = this.players.get(guildId);
-        if (!player) {
-            this.emit("debug", `Moonlink.js > subscribeLyrics > Player not found for guild ${guildId}.`);
+        if (!player)
             return;
-        }
         const targetNode = player.node;
         if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
             this.emit("debug", `Moonlink.js > subscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);
@@ -301,10 +310,8 @@ class Manager extends node_events_1.EventEmitter {
     async unsubscribeLyrics(guildId) {
         (0, index_1.validateProperty)(guildId, (value) => typeof value === "string", "(Moonlink.js) - Manager > unsubscribeLyrics > guildId is required and must be a string.");
         const player = this.players.get(guildId);
-        if (!player) {
-            this.emit("debug", `Moonlink.js > unsubscribeLyrics > Player not found for guild ${guildId}.`);
+        if (!player)
             return;
-        }
         const targetNode = player.node;
         if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
             this.emit("debug", `Moonlink.js > unsubscribeLyrics > No connected node with lavalyrics capability found for player ${guildId}.`);

@@ -10,8 +10,7 @@ import {
   INode
 } from "../typings/Interfaces";
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
-import {
-  Log,
+import { Log,
   Structure,
   Database,
   NodeManager,
@@ -21,8 +20,8 @@ import {
   validateProperty,
   SearchResult,
   PluginManager,
-  Node
-} from "../../index";
+  Node,
+  isSourceBlacklisted } from "../../index";
 
 import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
@@ -30,6 +29,7 @@ import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
 import { SponsorBlockPlugin } from "../plugins/SponsorBlockPlugin";
 import { LavaLyricsPlugin } from "../plugins/LavaLyricsPlugin";
 import { LavaSearchPlugin } from "../plugins/LavaSearchPlugin";
+import { SkybotPlugin } from "../plugins/SkybotPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -91,6 +91,7 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(SponsorBlockPlugin);
     this.pluginManager.registerPlugin(LavaLyricsPlugin);
     this.pluginManager.registerPlugin(LavaSearchPlugin);
+    this.pluginManager.registerPlugin(SkybotPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
@@ -174,6 +175,10 @@ export class Manager extends EventEmitter {
         }
 
         if (result && result.loadType !== "empty" && result.loadType !== "error") {
+          result.tracks = result.tracks.filter(track => !isSourceBlacklisted(this, track.sourceName));
+          if (result.tracks.length === 0) {
+            result.loadType = "empty";
+          }
           return result; 
         }
       } catch (e: any) {
@@ -228,7 +233,12 @@ export class Manager extends EventEmitter {
       const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
       if (lavaSearchPlugin && (lavaSearchPlugin as any).search) {
         const data = await (lavaSearchPlugin as any).search(query, { source: initialSource, types });
-        return new (Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+        const result = new (Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+        result.tracks = result.tracks.filter(track => !isSourceBlacklisted(this, track.sourceName));
+        if (result.tracks.length === 0) {
+          result.loadType = "empty";
+        }
+        return result;
       } else {
         this.emit("debug", `Moonlink.js > LavaSearch > LavaSearchPlugin not found or does not have a search method on node ${targetNode.identifier}. Falling back to standard search.`);
         return this.search(options);
@@ -419,10 +429,7 @@ export class Manager extends EventEmitter {
     );
 
     const player = this.players.get(guildId);
-    if (!player) {
-      this.emit("debug", `Moonlink.js > subscribeLyrics > Player not found for guild ${guildId}.`);
-      return;
-    }
+    if (!player) return;
 
     const targetNode = player.node;
     if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
@@ -449,10 +456,7 @@ export class Manager extends EventEmitter {
     );
 
     const player = this.players.get(guildId);
-    if (!player) {
-      this.emit("debug", `Moonlink.js > unsubscribeLyrics > Player not found for guild ${guildId}.`);
-      return;
-    }
+    if (!player) return;
 
     const targetNode = player.node;
     if (!targetNode || !targetNode.connected || !targetNode.capabilities.has("lavalyrics")) {
