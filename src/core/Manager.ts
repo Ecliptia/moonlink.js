@@ -32,6 +32,8 @@ import { LavaLyricsPlugin } from "../plugins/LavaLyricsPlugin";
 import { LavaSearchPlugin } from "../plugins/LavaSearchPlugin";
 import { SkybotPlugin } from "../plugins/SkybotPlugin";
 import { LyricsKtPlugin } from "../plugins/LyricsKtPlugin";
+import { JavaLyricsPlugin } from "../plugins/JavaLyricsPlugin";
+import { JavaLavaLyricsPlugin } from "../plugins/JavaLavaLyricsPlugin";
 
 export declare interface Manager {
   on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -96,6 +98,8 @@ export class Manager extends EventEmitter {
     this.pluginManager.registerPlugin(LavaSearchPlugin);
     this.pluginManager.registerPlugin(SkybotPlugin);
     this.pluginManager.registerPlugin(LyricsKtPlugin);
+    this.pluginManager.registerPlugin(JavaLyricsPlugin);
+    this.pluginManager.registerPlugin(JavaLavaLyricsPlugin);
   }
 
   public async init(clientId: string): Promise<void> {
@@ -377,7 +381,7 @@ export class Manager extends EventEmitter {
     encodedTrack?: string;
     videoId?: string;
     skipTrackSource?: boolean;
-    provider?: 'lavalyrics' | 'lyrics';
+    provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
   }): Promise<ILavaLyricsObject | null> {
     validateProperty(
       options,
@@ -406,10 +410,12 @@ export class Manager extends EventEmitter {
       targetNode = this.nodes.getNodeWithCapability("lavalyrics");
     } else if (provider === 'lyrics') {
       targetNode = this.nodes.getNodeWithCapability("lyrics");
+    } else if (provider === 'java-lyrics-plugin') {
+        targetNode = this.nodes.getNodeWithCapability("java-lyrics-plugin");
     } else if (encodedTrack) {
-      targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics");
+      targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
     } else if (videoId) {
-      targetNode = this.nodes.getNodeWithCapability("lyrics");
+      targetNode = this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
     }
 
     const pluginsToTry = [];
@@ -417,8 +423,10 @@ export class Manager extends EventEmitter {
       pluginsToTry.push('lavalyrics-plugin');
     } else if (provider === 'lyrics') {
       pluginsToTry.push('lyrics');
+    } else if (provider === 'java-lyrics-plugin') {
+        pluginsToTry.push('java-lyrics-plugin');
     } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+       pluginsToTry.push('java-lyrics-plugin', 'lavalyrics-plugin', 'lyrics');
     }
 
     for (const pluginName of pluginsToTry) {
@@ -428,34 +436,32 @@ export class Manager extends EventEmitter {
       }
 
       const lyricsPlugin = targetNode.plugins.get(pluginName);
-      if (lyricsPlugin && (lyricsPlugin as any).getLyricsForCurrentTrack || (lyricsPlugin as any).getLyricsForTrack || (lyricsPlugin as any).getLyricsByVideoId) {
+      if (lyricsPlugin && ((lyricsPlugin as any).getLyricsForCurrentTrack || (lyricsPlugin as any).getLyricsForTrack || (lyricsPlugin as any).getLyricsByVideoId)) {
         try {
           let resultLyrics: ILavaLyricsObject | null = null;
           if (player && guildId) {
-            let lyrics = await (lyricsPlugin as any).getLyricsForCurrentTrack(guildId, skipTrackSource);
-
-             if ((!lyrics || !lyrics.lines || lyrics.lines.length === 0) && pluginName === 'lyrics') {
-                this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found via getLyricsForCurrentTrack for guild ${guildId} with LyricsKtPlugin. Attempting static search.`);
-                lyrics = await (lyricsPlugin as any).getStaticLyricsForTrack(guildId);
+            resultLyrics = await (lyricsPlugin as any).getLyricsForCurrentTrack(guildId, skipTrackSource);
+             if ((!resultLyrics || !resultLyrics.lines || resultLyrics.lines.length === 0) && (lyricsPlugin as any).getStaticLyricsForTrack) {
+                this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found for guild ${guildId} with ${pluginName}. Attempting static search.`);
+                resultLyrics = await (lyricsPlugin as any).getStaticLyricsForTrack(guildId);
             }
-            resultLyrics = lyrics;
           } else if (pluginName === 'lavalyrics-plugin' && encodedTrack) {
             resultLyrics = await (lyricsPlugin as any).getLyricsForTrack(encodedTrack, skipTrackSource);
-          } else if (pluginName === 'lyrics') {
-            if (videoId) {
-              resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(videoId);
-            } else if (encodedTrack) {
-              const trackInfo = decodeTrack(encodedTrack);
-              if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube') {
-                resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(trackInfo.info.identifier);
-              }
+          } else if (videoId) {
+            resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(videoId);
+          } else if (encodedTrack) {
+            const trackInfo = decodeTrack(encodedTrack);
+            if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube' && (lyricsPlugin as any).getLyricsByVideoId) {
+              resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(trackInfo.info.identifier);
             }
           }
 
-          if (cacheKey && resultLyrics) {
-              this.lyricsResultCache.set(cacheKey, resultLyrics);
+          if (resultLyrics && (resultLyrics.text || (resultLyrics.lines && resultLyrics.lines.length > 0))) {
+              if (cacheKey && resultLyrics) {
+                  this.lyricsResultCache.set(cacheKey, resultLyrics);
+              }
+              return resultLyrics;
           }
-          return resultLyrics;
         } catch (e: any) {
           this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics with ${pluginName}: ${e.message}`);
         }
@@ -466,8 +472,9 @@ export class Manager extends EventEmitter {
 
   public async searchLyrics(options: {
     query: string;
-    provider?: 'lavalyrics' | 'lyrics';
+    provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
     node?: string;
+    source?: string;
   }): Promise<any[] | null> {
     validateProperty(
       options,
@@ -480,15 +487,17 @@ export class Manager extends EventEmitter {
       "(Moonlink.js) - Manager > searchLyrics > Query is required"
     );
 
-    const { query, provider, node: preferredNode } = options;
+    const { query, provider, node: preferredNode, source } = options;
 
     const pluginsToTry = [];
     if (provider === 'lavalyrics') {
       pluginsToTry.push('lavalyrics-plugin');
     } else if (provider === 'lyrics') {
       pluginsToTry.push('lyrics');
+    } else if (provider === 'java-lyrics-plugin') {
+        pluginsToTry.push('java-lyrics-plugin');
     } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
     }
 
     for (const pluginName of pluginsToTry) {
@@ -505,7 +514,7 @@ export class Manager extends EventEmitter {
       const lyricsPlugin = targetNode.plugins.get(pluginName);
       if (lyricsPlugin && (lyricsPlugin as any).search) {
         try {
-          return await (lyricsPlugin as any).search(query);
+          return await (lyricsPlugin as any).search(query, source);
         } catch (e: any) {
           this.emit("debug", `Moonlink.js > searchLyrics > Failed to search lyrics with ${pluginName}: ${e.message}`);
         }
@@ -514,7 +523,7 @@ export class Manager extends EventEmitter {
     return null;
   }
 
-  public async subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+  public async subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void> {
     validateProperty(
       guildId,
       (value) => typeof value === "string",
@@ -534,8 +543,10 @@ export class Manager extends EventEmitter {
       pluginsToTry.push('lavalyrics-plugin');
     } else if (provider === 'lyrics') {
       pluginsToTry.push('lyrics');
+    } else if (provider === 'java-lyrics-plugin') {
+        pluginsToTry.push('java-lyrics-plugin');
     } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
     }
 
     for (const pluginName of pluginsToTry) {
@@ -562,7 +573,7 @@ export class Manager extends EventEmitter {
     this.emit("debug", `Moonlink.js > subscribeLyrics > No suitable plugin found to subscribe to live lyrics for guild ${guildId}.`);
   }
 
-  public async unsubscribeLyrics(guildId: string, provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+  public async unsubscribeLyrics(guildId: string, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void> {
     validateProperty(
       guildId,
       (value) => typeof value === "string",
@@ -577,8 +588,10 @@ export class Manager extends EventEmitter {
       pluginsToTry.push('lavalyrics-plugin');
     } else if (provider === 'lyrics') {
       pluginsToTry.push('lyrics');
+    } else if (provider === 'java-lyrics-plugin') {
+        pluginsToTry.push('java-lyrics-plugin');
     } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
     }
 
     for (const pluginName of pluginsToTry) {

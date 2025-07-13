@@ -44,15 +44,16 @@ export declare class Manager extends EventEmitter {
         encodedTrack?: string;
         videoId?: string;
         skipTrackSource?: boolean;
-        provider?: 'lavalyrics' | 'lyrics';
+        provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
     }): Promise<ILavaLyricsObject | null>;
     searchLyrics(options: {
         query: string;
-        provider?: 'lavalyrics' | 'lyrics';
+        provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
         node?: string;
+        source?: string;
     }): Promise<any[] | null>;
-    subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
-    unsubscribeLyrics(guildId: string, provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
+    subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void>;
+    unsubscribeLyrics(guildId: string, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void>;
     createPlayer(config: IPlayerConfig): Player;
     getPlayer(guildId: string): Player;
     hasPlayer(guildId: string): boolean;
