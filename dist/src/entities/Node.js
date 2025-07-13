@@ -242,6 +242,7 @@ class Node {
                             for (const track of tracks) {
                                 reconstructedPlayer.queue.add(track);
                             }
+                            reconstructedPlayer.queue.removeBlacklistedTracks();
                         }
                         this.manager.emit("debug", `Moonlink.js > Player ${guildId} has been resumed on node ${this.uuid}.`);
                         this.manager.emit("playerResumed", reconstructedPlayer);

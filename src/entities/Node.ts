@@ -324,6 +324,7 @@ export class Node {
               for (const track of tracks) {
                 reconstructedPlayer.queue.add(track);
               }
+              reconstructedPlayer.queue.removeBlacklistedTracks();
             }
 
             this.manager.emit(
