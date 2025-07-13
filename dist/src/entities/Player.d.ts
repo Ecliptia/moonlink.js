@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, ISpeakOptions, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import { Lyrics, Listen, Manager, Node, Filters, Queue, Track } from "../../index";
 export declare class Player {
@@ -51,7 +51,9 @@ export declare class Player {
         };
         position?: number;
         endTime?: number;
+        isBackPlay?: boolean;
     }): Promise<boolean>;
+    speak(options: ISpeakOptions): Promise<boolean>;
     replay(): Promise<boolean>;
     back(): Promise<boolean>;
     restart(): Promise<boolean>;
@@ -62,12 +64,20 @@ export declare class Player {
         destroy?: boolean;
     }): boolean;
     skip(position?: number): Promise<boolean>;
+    skipChapter(value?: number, type?: 'index' | 'count'): Promise<boolean>;
     seek(position: number): boolean;
     shuffle(): boolean;
     setVolume(volume: number): boolean;
     setLoop(loop: TPlayerLoop, count?: number): boolean;
     destroy(reason?: string): boolean;
     private _sendVoiceUpdate;
+    getSponsorBlockCategories(): Promise<string[]>;
+    setSponsorBlockCategories(categories: string[]): Promise<void>;
+    clearSponsorBlockCategories(): Promise<void>;
     private updateData;
     getHistory(limit?: number): Track[];
+    getLyrics(encodedTrack?: string, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<ILavaLyricsObject | null>;
+    subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
+    unsubscribeLyrics(provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
+    searchLyrics(query: string, provider?: 'lavalyrics' | 'lyrics'): Promise<any[] | null>;
 }

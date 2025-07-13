@@ -9,17 +9,47 @@ class SearchResult {
     loadType;
     playlistInfo;
     error;
+    albums;
+    artists;
+    playlists;
+    texts;
+    lavasearchPluginInfo;
+    isLavaSearchResult;
     constructor(req, options) {
         this.query = options.query;
         this.source = options.source || "unknown";
-        this.loadType = req.loadType;
-        this.tracks = this.resolveTracks(req, options.requester);
-    }
-    resolveTracks(req, requester) {
+        if (req.albums || req.artists || req.playlists || req.texts) {
+            this.isLavaSearchResult = true;
+            this.loadType = "search";
+            if (req.tracks) {
+                this.tracks = req.tracks.map((data) => new index_1.Track(data, options.requester));
+            }
+            else {
+                this.tracks = [];
+            }
+            this.albums = req.albums;
+            this.artists = req.artists;
+            this.playlists = req.playlists;
+            this.texts = req.texts;
+            this.lavasearchPluginInfo = req.plugin;
+            if (this.tracks.length > 0 && !this.albums && !this.artists && !this.playlists && !this.texts) {
+                this.loadType = "track";
+            }
+            else if (this.playlists && this.playlists.length > 0) {
+                this.loadType = "playlist";
+                this.playlistInfo = this.playlists[0].info;
+            }
+        }
+        else {
+            this.isLavaSearchResult = false;
+            this.loadType = req.loadType;
+            this.tracks = this.resolveTracks(req, options.requester);
+        }
         if (req.loadType === "error" || req.loadType === "empty") {
             this.error = req.data;
-            return [];
         }
+    }
+    resolveTracks(req, requester) {
         let rawTracks = [];
         switch (req.loadType) {
             case "track":

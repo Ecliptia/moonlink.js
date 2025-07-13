@@ -323,3 +323,10 @@ export class Plugin {
   public load(manager: any): void {}
   public unload(manager: any): void {}
 }
+
+export function isSourceBlacklisted(manager: any, sourceName: string): boolean {
+  if (!manager || !manager.options || !manager.options.blacklistedSources) {
+    return false;
+  }
+  return manager.options.blacklistedSources.includes(sourceName);
+}

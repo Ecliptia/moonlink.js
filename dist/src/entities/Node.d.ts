@@ -2,6 +2,7 @@ import { INodeStats, INode } from "../typings/Interfaces";
 import { Manager, Rest, Player } from "../../index";
 import WebSocket from "../services/WebSocket";
 import { NodeState } from "../typings/types";
+import { AbstractPlugin } from "../plugins/AbstractPlugin";
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -29,6 +30,8 @@ export declare class Node {
     url: string;
     rest: Rest;
     state: NodeState;
+    capabilities: Set<string>;
+    plugins: Map<string, AbstractPlugin>;
     constructor(manager: Manager, config: INode);
     get address(): string;
     setState(state: NodeState): void;

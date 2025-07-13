@@ -15,7 +15,50 @@ export enum NodeState {
   DESTROYED = "DESTROYED",
 }
 
-export type TSearchSources = "youtube" | "youtubemusic" | "soundcloud" | string;
+export type TNativeSearchSources = "youtube" | "youtubemusic" | "soundcloud" | "local";
+
+export type TLavaSrcSearchSources =
+  | "spsearch"
+  | "sprec"
+  | "amsearch"
+  | "dzsearch"
+  | "dzisrc"
+  | "dzrec"
+  | "ymsearch"
+  | "ymrec"
+  | "ftts"
+  | "vksearch"
+  | "vkrec"
+  | "tdsearch"
+  | "tdrec"
+  | "qbsearch"
+  | "qbisrc"
+  | "qbrec"
+  | "phsearch"
+  | "speak"
+  | "mixcloud"
+  | "ocremix"
+  | "clypit"
+  | "reddit"
+  | "getyarn"
+  | "tiktok"
+  | "soundgasm"
+  | "pixeldrain"
+  | "streamdeck";
+
+export type TDirectSources =
+  | "mixcloud"
+  | "ocremix"
+  | "clypit"
+  | "reddit"
+  | "getyarn"
+  | "tiktok"
+  | "soundgasm"
+  | "pixeldrain"
+  | "streamdeck";
+
+export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | TDirectSources | string;
+
 export type TLoadResultType =
   | "track"
   | "playlist"
@@ -23,7 +66,7 @@ export type TLoadResultType =
   | "empty"
   | "error"
   | TLoadResultNodeLinkType
-export type TLoadResultNodeLinkType = 
+export type TLoadResultNodeLinkType =
   | "short"
   | "album"
   | "artist"
@@ -48,7 +91,7 @@ export type TTrackEndType =
   | "cleanup"
   | "finished";
 
-export type TPartialTrackProperties = 
+export type TPartialTrackProperties =
   | "url"
   | "duration"
   | "position"

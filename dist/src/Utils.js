@@ -13,6 +13,7 @@ exports.Log = Log;
 exports.makeRequest = makeRequest;
 exports.compareVersions = compareVersions;
 exports.stringifyWithReplacer = stringifyWithReplacer;
+exports.isSourceBlacklisted = isSourceBlacklisted;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
@@ -293,4 +294,10 @@ class Plugin {
     unload(manager) { }
 }
 exports.Plugin = Plugin;
+function isSourceBlacklisted(manager, sourceName) {
+    if (!manager || !manager.options || !manager.options.blacklistedSources) {
+        return false;
+    }
+    return manager.options.blacklistedSources.includes(sourceName);
+}
 //# sourceMappingURL=Utils.js.map

@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, ISpeakOptions, IChapter, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import {
   Lyrics,
@@ -12,6 +12,7 @@ import {
   validateProperty,
   isVoiceStateAttempt,
   decodeTrack,
+  isSourceBlacklisted,
 } from "../../index";
 
 export class Player {
@@ -97,7 +98,7 @@ export class Player {
   public setVoiceChannelId(voiceChannelId: string): boolean {
     validateProperty(
       voiceChannelId,
-      (value) => typeof value !== "string",
+      (value) => typeof value === "string",
       "Moonlink.js > Player#setVoiceChannelId - voiceChannelId must be a string."
     );
     if (this.voiceChannelId === voiceChannelId) return false;
@@ -111,7 +112,7 @@ export class Player {
   public setTextChannelId(textChannelId: string): boolean {
     validateProperty(
       textChannelId,
-      (value) => typeof value !== "string",
+      (value) => typeof value === "string",
       "Moonlink.js > Player#setTextChannelId - textChannelId must be a string."
     );
     if (this.textChannelId === textChannelId) return false;
@@ -125,7 +126,7 @@ export class Player {
   public setAutoPlay(autoPlay: boolean): boolean {
     validateProperty(
       autoPlay,
-      (value) => typeof value !== "boolean",
+      (value) => typeof value === "boolean",
       "Moonlink.js > Player#setAutoPlay - autoPlay must be a boolean."
     );
     if (this.autoPlay === autoPlay) return false;
@@ -139,7 +140,7 @@ export class Player {
   public setAutoLeave(autoLeave: boolean): boolean {
     validateProperty(
       autoLeave,
-      (value) => typeof value !== "boolean",
+      (value) => typeof value === "boolean",
       "Moonlink.js > Player#setAutoLeave - autoLeave must be a boolean."
     );
     if (this.autoLeave === autoLeave) return false;
@@ -176,16 +177,23 @@ export class Player {
       requestedBy?: string | { id?: any; userData?: any };
       position?: number;
       endTime?: number;
+      isBackPlay?: boolean;
     } = {}
   ): Promise<boolean> {
     if (!options.encoded && !this.queue.size) return false;
     await isVoiceStateAttempt(this);
 
+    let positionToStart = options.position ?? 0;
+
     if (options.encoded) {
       const decodedTrack = decodeTrack(options.encoded);
       this.current = new Track(decodedTrack, options.requestedBy);
     } else {
-      this.current = this.queue.shift();
+      const trackFromQueue = this.queue.shift();
+      if (trackFromQueue) {
+        this.current = trackFromQueue;
+        positionToStart = options.position ?? trackFromQueue.position ?? 0;
+      }
     }
 
     if (typeof options.requestedBy === "string" || typeof this.current?.requestedBy === "string") {
@@ -196,27 +204,185 @@ export class Player {
       return false;
     }
 
+    if (isSourceBlacklisted(this.manager, this.current.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Track from blacklisted source (${this.current.sourceName}) detected for guild ${this.guildId}. Skipping.`);
+      this.manager.emit("trackBlacklisted", this, this.current);
+      if (this.queue.size > 0) {
+        return this.play();
+      } else {
+        this.current = null;
+        this.playing = false;
+        return false;
+      }
+    }
+
+    let targetNode: Node = this.node;
+    if (this.current) {
+      const requiredCapability = this.current.sourceName ? `search:${this.current.sourceName}` : undefined;
+
+      if (requiredCapability && (!this.node.connected || !this.node.capabilities.has(requiredCapability))) {
+        this.manager.emit("debug", `Moonlink.js > Player > Current node ${this.node.identifier} not suitable for source ${this.current.sourceName}.`);
+
+        let foundNode: Node | undefined;
+
+        if (this.current.origin) {
+          foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability, this.current.origin);
+          if (foundNode) {
+            this.manager.emit("debug", `Moonlink.js > Player > Found suitable node from originNodeIdentifier: ${foundNode.identifier}`);
+          }
+        }
+
+        if (!foundNode && requiredCapability) {
+          foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability);
+          if (foundNode) {
+            this.manager.emit("debug", `Moonlink.js > Player > Found best node with capability: ${foundNode.identifier}`);
+          }
+        }
+
+        if (!foundNode) {
+          this.manager.emit("debug", `Moonlink.js > Player > No suitable node found for source ${this.current.sourceName}. Attempting generic search fallback.`);
+          const searchResult = await this.manager.search({
+            query: `${this.current.title} ${this.current.author}`,
+            source: this.manager.options.defaultPlatformSearch,
+            requester: this.current.requestedBy,
+          });
+
+          if (searchResult.tracks.length > 0) {
+            this.current = searchResult.tracks[0];
+            foundNode = this.manager.nodes.getBestNodeForTrack(this.current);
+            if (foundNode) {
+              this.manager.emit("debug", `Moonlink.js > Player > Successfully reconstructed track and found new node: ${foundNode.identifier}`);
+            } else {
+              this.manager.emit("debug", `Moonlink.js > Player > Failed to find node for reconstructed track. Aborting play.`);
+              return false;
+            }
+          } else {
+            this.manager.emit("debug", `Moonlink.js > Player > Generic search fallback failed for track: ${this.current.title}. Aborting play.`);
+            return false;
+          }
+        }
+
+        if (foundNode && foundNode.identifier !== this.node.identifier) {
+          this.manager.emit("debug", `Moonlink.js > Player > Transferring player to new suitable node: ${foundNode.identifier}`);
+          try {
+            await this.transferNode(foundNode);
+            targetNode = foundNode;
+          } catch (e: any) {
+            this.manager.emit("debug", `Moonlink.js > Player > Failed to transfer to new node ${foundNode.identifier}: ${e.message}. Aborting play.`);
+            return false;
+          }
+        } else if (foundNode && foundNode.identifier === this.node.identifier) {
+          this.manager.emit("debug", `Moonlink.js > Player > Current node ${this.node.identifier} is now suitable.`);
+        }
+      }
+    }
+
     this.updateData("current", {
       encoded: this.current.encoded,
       position: 0,
       requestedBy: this.current.requestedBy,
     });
 
-    this.node.rest.update({
+    this.set("isBackPlay", options.isBackPlay ?? false);
+    targetNode.rest.update({
       guildId: this.guildId,
       data: {
         track: {
           encoded: this.current.encoded,
           userData: options.requestedBy ?? this.current?.requestedBy,
         },
-        position: options.position ?? 0,
+        position: positionToStart,
         endTime: options.endTime,
         volume: this.volume,
       },
     });
 
+    this.playing = true;
+    this.paused = false;
     this.manager.emit("playerTriggeredPlay", this, this.current);
-    return (this.playing = true);
+    return true;
+  }
+
+  public async speak(options: ISpeakOptions): Promise<boolean> {
+    validateProperty(
+      options.text,
+      (value) => typeof value === "string" && value.length > 0,
+      "Moonlink.js > Player#speak - text must be a non-empty string."
+    );
+
+    const provider = options.provider || 'flowery';
+    let capability: string;
+    let uri: string;
+
+    switch (provider) {
+      case 'flowery':
+        capability = "search:flowerytts";
+        uri = `ftts://${encodeURIComponent(options.text)}`;
+        if (options.options) {
+          const params = new URLSearchParams();
+          const floweryOptions = options.options as any;
+          if (floweryOptions.voice) params.append("voice", floweryOptions.voice);
+          if (floweryOptions.translate !== undefined) params.append("translate", String(floweryOptions.translate));
+          if (floweryOptions.silence !== undefined) params.append("silence", String(floweryOptions.silence));
+          if (floweryOptions.speed !== undefined) params.append("speed", String(floweryOptions.speed));
+          if (floweryOptions.audio_format) params.append("audio_format", floweryOptions.audio_format);
+          if (params.toString()) {
+            uri += `?${params.toString()}`;
+          }
+        }
+        break;
+      case 'google':
+        capability = "search:tts";
+        uri = `tts://${encodeURIComponent(options.text)}`;
+        if (options.options && (options.options as any).language) {
+          uri += `?language=${(options.options as any).language}`;
+        }
+        break;
+      case 'skybot':
+        capability = "search:speak";
+        uri = `${options.text}`;
+        break;
+      default:
+        this.manager.emit("debug", `Moonlink.js > Player#speak - Unsupported TTS provider: ${provider}`);
+        return false;
+    }
+
+    if (!this.node.capabilities.has(capability)) {
+      this.manager.emit("debug", `Moonlink.js > Player#speak - Node ${this.node.identifier} does not support ${provider} TTS.`);
+      return false;
+    }
+
+    const searchResult = await this.manager.search({
+      query: uri,
+      source: capability.split(":")[1],
+      requester: this.manager.options.clientId,
+    });
+
+    if (searchResult.loadType === "track" && searchResult.tracks.length > 0) {
+      const ttsTrack = searchResult.tracks[0];
+      if (options.addToQueue) {
+        this.queue.add(ttsTrack);
+        if (!this.playing) {
+          await this.play();
+        }
+      } else {
+        const trackToResume = this.current;
+
+        if (trackToResume) {
+          const clonedTrackToResume = new Track(trackToResume.raw(), trackToResume.requestedBy);
+          clonedTrackToResume.setPosition(Number(trackToResume.position));
+          this.queue.unshift(clonedTrackToResume);
+        }
+
+        this.queue.unshift(ttsTrack);
+        await this.play();
+      }
+      this.manager.emit("playerSpeak", this, options.text, options);
+      return true;
+    } else {
+      this.manager.emit("debug", `Moonlink.js > Player#speak - Failed to load TTS track for text: ${options.text}`);
+      return false;
+    }
   }
 
   public async replay(): Promise<boolean> {
@@ -234,12 +400,24 @@ export class Player {
     const lastTrack = this.previous.pop();
     if (!lastTrack) return false;
 
+    let trackToPlay = lastTrack;
+    while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from previous tracks.`);
+      this.manager.emit("trackBlacklisted", this, trackToPlay);
+      trackToPlay = this.previous.pop();
+    }
+
+    if (!trackToPlay) {
+      this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found in previous tracks.`);
+      return false;
+    }
+
     if (this.current) {
       this.queue.unshift(this.current);
     }
 
-    this.current = lastTrack;
-    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
+    this.current = trackToPlay;
+    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy, isBackPlay: true });
 
     this.manager.emit("playerTriggeredBack", this, lastTrack);
     return true;
@@ -265,7 +443,7 @@ export class Player {
   public async transferNode(node: Node | string): Promise<boolean> {
     validateProperty(
       node,
-      (value) => !(value instanceof Node || typeof value === "string"),
+      (value) => (value instanceof Node || typeof value === "string"),
       "Moonlink.js > Player#transferNode - node is not a valid Node or string."
     );
 
@@ -276,7 +454,15 @@ export class Player {
     this.node = targetNode;
 
     if (this.current || this.queue.size) {
-      await this.restart();
+      if (this.current) {
+        await this.play({
+          encoded: this.current.encoded,
+          requestedBy: this.current.requestedBy,
+          position: this.current.position,
+        });
+      } else {
+        await this.connect();
+      }
     } else {
       await this.connect();
     }
@@ -332,39 +518,84 @@ export class Player {
 
   public async skip(position?: number): Promise<boolean> {
     if (!this.queue.size) {
-      if(this.autoPlay) {
+      if (this.autoPlay) {
         await this.stop();
       }
       return false;
     }
 
-    validateProperty(
-      position,
-      value => value !== undefined || isNaN(value) || value < 0 || value > this.queue.size - 1,
-      "Moonlink.js > Player#skip - position not a number or out of range"
-    );
-
-    const oldTrack = this.current;
+    let trackToPlay: Track | undefined;
     if (position !== undefined) {
-      const trackToSkipTo = this.queue.get(position);
-      if (!trackToSkipTo) return false;
-
+      validateProperty(
+        position,
+        (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
+        "Moonlink.js > Player#skip - position not a number or out of range"
+      );
+      trackToPlay = this.queue.get(position);
+      if (!trackToPlay) return false;
       this.queue.remove(position);
-      this.current = trackToSkipTo;
-
-      await this.play({ encoded: this.current.encoded });
     } else {
-      await this.play();
+      trackToPlay = this.queue.shift();
     }
 
+    while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
+      this.manager.emit("trackBlacklisted", this, trackToPlay);
+      trackToPlay = this.queue.shift();
+    }
+
+    if (!trackToPlay) {
+      this.current = null;
+      this.playing = false;
+      this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found after skipping.`);
+      return false;
+    }
+
+    const oldTrack = this.current;
+    this.current = trackToPlay;
+
+    await this.play({ encoded: this.current.encoded });
+
     this.manager.emit("playerTriggeredSkip", this, oldTrack, this.current, position ?? 0);
+    return true;
+  }
+
+  public async skipChapter(value: number = 1, type: 'index' | 'count' = 'count'): Promise<boolean> {
+    if (!this.current?.chapters || this.current.chapters.length === 0) {
+      this.manager.emit("debug", `Moonlink.js > Player#skipChapter - No chapters available for guild ${this.guildId}.`);
+      return false;
+    }
+
+    let targetIndex: number;
+
+    if (type === 'index') {
+      targetIndex = value;
+    } else {
+      targetIndex = (this.current.currentChapterIndex ?? -1) + value;
+    }
+
+    if (targetIndex < 0 || targetIndex >= this.current.chapters.length) {
+      this.manager.emit("debug", `Moonlink.js > Player#skipChapter - Target chapter index ${targetIndex} is out of bounds for guild ${this.guildId}.`);
+      return false;
+    }
+
+    const targetChapter = this.current.chapters[targetIndex];
+    if (!targetChapter) {
+      this.manager.emit("debug", `Moonlink.js > Player#skipChapter - Target chapter not found for index ${targetIndex} in guild ${this.guildId}.`);
+      return false;
+    }
+
+    this.current.currentChapterIndex = targetIndex;
+    await this.seek(targetChapter.start);
+    this.manager.emit("playerChapterSkipped", this, targetChapter);
+    this.manager.emit("debug", `Moonlink.js > Player#skipChapter - Skipped to chapter ${targetChapter.name} at ${targetChapter.start}ms for guild ${this.guildId}.`);
     return true;
   }
 
   public seek(position: number): boolean {
     validateProperty(
       position,
-      (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > this.current.duration,
+      (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.current.duration,
       "Moonlink.js > Player#seek - position is not a number or is out of range."
     );
 
@@ -390,7 +621,7 @@ export class Player {
   public setVolume(volume: number): boolean {
     validateProperty(
       volume,
-      (value) => typeof value !== "number" || isNaN(value) || value < 0 || value > 1000, // Lavalink supports up to 1000%
+      (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= 1000,
       "Moonlink.js > Player#setVolume - volume is not a number or is out of range (0-1000)."
     );
     if (this.volume === volume) return false;
@@ -411,7 +642,7 @@ export class Player {
   public setLoop(loop: TPlayerLoop, count?: number): boolean {
     validateProperty(
       loop,
-      (value) => !["off", "track", "queue"].includes(value),
+      (value) => ["off", "track", "queue"].includes(value),
       "Moonlink.js > Player#setLoop - loop must be 'off', 'track', or 'queue'."
     );
     if (count !== undefined) {
@@ -461,6 +692,29 @@ export class Player {
     );
   }
 
+  public async getSponsorBlockCategories(): Promise<string[]> {
+    const plugin = this.node.plugins.get("sponsorblock-plugin");
+    if (plugin && (plugin as any).getCategories) {
+      const categories = await (plugin as any).getCategories(this.guildId);
+      return Array.isArray(categories) ? categories : [];
+    }
+    return [];
+  }
+
+  public async setSponsorBlockCategories(categories: string[]): Promise<void> {
+    const plugin = this.node.plugins.get("sponsorblock-plugin");
+    if (plugin && (plugin as any).setCategories) {
+      return (plugin as any).setCategories(this.guildId, categories);
+    }
+  }
+
+  public async clearSponsorBlockCategories(): Promise<void> {
+    const plugin = this.node.plugins.get("sponsorblock-plugin");
+    if (plugin && (plugin as any).deleteCategories) {
+      return (plugin as any).deleteCategories(this.guildId);
+    }
+  }
+
   private updateData<T>(path?: string, data?: T): void {
     const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
     this.manager.database.set(dbPath, data);
@@ -471,5 +725,29 @@ export class Player {
       return [...this.previous];
     }
     return this.previous.slice(Math.max(0, this.previous.length - limit));
+  }
+
+  public async getLyrics(encodedTrack?: string, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<ILavaLyricsObject | null> {
+    return this.manager.getLyrics({
+      player: this,
+      encodedTrack,
+      skipTrackSource,
+      provider,
+    });
+  }
+
+  public async subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+    return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource, provider);
+  }
+
+  public async unsubscribeLyrics(provider?: 'lavalyrics' | 'lyrics'): Promise<void> {
+    return this.manager.unsubscribeLyrics(this.guildId, provider);
+  }
+
+  public async searchLyrics(query: string, provider?: 'lavalyrics' | 'lyrics'): Promise<any[] | null> {
+    return this.manager.searchLyrics({
+      query,
+      provider,
+    });
   }
 }

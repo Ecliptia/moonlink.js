@@ -1,4 +1,4 @@
-import { ITrack, ITrackInfo } from "../typings/Interfaces";
+import { ITrack, ITrackInfo, IChapter } from "../typings/Interfaces";
 import { Structure, decodeTrack } from "../Utils";
 import { TPartialTrackProperties, YoutubeThumbnailQuality } from "../typings/types";
 
@@ -16,8 +16,11 @@ export class Track {
   public isrc?: string;
   public time?: number = 0;
   public sourceName?: string;
+  public origin?: string;
   public requestedBy?: Object | string;
   public pluginInfo: Record<string, any> = {};
+  public chapters?: IChapter[] = [];
+  public currentChapterIndex?: number = -1;
   private isPartial: boolean = false;
 
   constructor(trackData: ITrack, requester?: Object) {
@@ -40,6 +43,8 @@ export class Track {
       Object.values(trackProps).forEach(setter => setter());
     }
 
+    this.origin = trackData.origin;
+
     if (requester) this.requestedBy = requester;
 
     Object.keys(this).forEach(key => {
@@ -61,6 +66,18 @@ export class Track {
       isrc: () => info.isrc && (this.isrc = info.isrc),
       sourceName: () => info.sourceName && (this.sourceName = info.sourceName)
     };
+  }
+
+  public setPosition(position: number): void {
+    this.position = position;
+  }
+
+  public setTime(time: number): void {
+    this.time = time;
+  }
+
+  public setChapters(chapters: IChapter[]): void {
+    this.chapters = chapters;
   }
 
   public setRequester(requester: Object | string): void {

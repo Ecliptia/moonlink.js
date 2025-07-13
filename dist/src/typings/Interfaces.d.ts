@@ -40,6 +40,7 @@ export interface IEvents {
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
     playerDestroyed: (player: Player, reason?: string) => void;
     playerTriggeredBack: (player: Player, track: Track) => void;
+    playerChapterSkipped: (player: Player, chapter: IChapter) => void;
     trackStart: (player: Player, track: Track) => void;
     trackEnd: (player: Player, track: Track, type: TTrackEndType, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number) => void;
@@ -56,6 +57,18 @@ export interface IEvents {
     sourceRemove: (source: string) => void;
     sourceClear: () => void;
     nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
+    playerSpeak: (player: Player, text: string, options?: ISpeakOptions) => void;
+    trackBlacklisted: (player: Player, track: Track) => void;
+    segmentsLoaded: (player: Player, segments: ISegment[]) => void;
+    segmentSkipped: (player: Player, segment: ISegment) => void;
+    chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
+    chapterStarted: (player: Player, chapter: IChapter) => void;
+}
+export interface IChapter {
+    name: string;
+    start: number;
+    end: number;
+    duration: string;
 }
 export interface INode {
     host: string;
@@ -126,6 +139,8 @@ export interface IOptionsManager {
     blacklisteSources?: string[];
     enabledSources?: string[];
     spotify?: {
+        clientId?: string;
+        clientSecret?: string;
         limitLoadPlaylist?: number;
         limitLoadAlbum?: number;
         limitLoadArtist?: number;
@@ -141,6 +156,8 @@ export interface IOptionsManager {
     nodeHealthCheckInterval?: number;
     defaultPlayer?: IPlayerConfig;
     enableSourceFallback?: boolean;
+    blacklistedSources?: string[];
+    defaultSponsorBlockCategories?: string[];
 }
 export interface IPlayerConfig {
     guildId: string;
@@ -196,12 +213,6 @@ export interface ILoadResultData {
     tracks?: ITrack[];
     pluginInfo: Object;
 }
-export interface ITrack {
-    encoded: string;
-    info: ITrackInfo;
-    pluginInfo: Object;
-    userData: Object;
-}
 export interface ITrackInfo {
     title: string;
     uri?: string;
@@ -215,6 +226,15 @@ export interface ITrackInfo {
     isrc?: string;
     sourceName?: string;
 }
+export interface ITrack {
+    encoded: string;
+    info: ITrackInfo;
+    pluginInfo: Object;
+    userData: Object;
+    origin?: string;
+    chapters?: IChapter[];
+    currentChapterIndex?: number;
+}
 export interface IPlaylistInfo {
     name: string;
     selectedTrack: number;
@@ -225,19 +245,42 @@ export interface IObjectTrack {
     identifier?: string;
     userData?: unknown;
 }
+export interface ILavaSearchAlbum extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchArtist extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchPlaylist extends ILoadResultData {
+    tracks: [];
+}
+export interface ILavaSearchText {
+    text: string;
+    plugin: Object;
+}
+export interface ILavaSearchResultData {
+    tracks?: ITrack[];
+    albums?: ILavaSearchAlbum[];
+    artists?: ILavaSearchArtist[];
+    playlists?: ILavaSearchPlaylist[];
+    texts?: ILavaSearchText[];
+    plugin?: Object;
+}
 export interface ISearchResult {
     loadType: TLoadResultType;
     tracks: Track[];
     playlistInfo: IPlaylistInfo;
-    data: {
-        playlistInfo: IPlaylistInfo;
-        tracks: ITrack[];
-        pluginInfo: any;
-    };
+    data: ILoadResultData | ILavaSearchResultData;
     exception?: {
         message: string;
         severity: string;
     };
+    albums?: ILavaSearchAlbum[];
+    artists?: ILavaSearchArtist[];
+    playlists?: ILavaSearchPlaylist[];
+    texts?: ILavaSearchText[];
+    lavasearchPluginInfo?: Object;
+    isLavaSearchResult?: boolean;
 }
 export interface Equalizer {
     band: number;
@@ -359,4 +402,65 @@ export interface IRoutePlannerStatus {
         blockIndex: string;
         currentAddressIndex: string;
     };
+}
+export interface IFloweryTTSOptions {
+    voice?: string;
+    translate?: boolean;
+    silence?: number;
+    speed?: number;
+    audio_format?: "mp3" | "ogg_opus" | "ogg_vorbis" | "aac" | "wav" | "flac";
+}
+export interface ISegment {
+    category: string;
+    start: number;
+    end: number;
+}
+export interface ISpeakOptions {
+    text: string;
+    provider?: 'flowery' | 'google' | 'skybot';
+    options?: IFloweryTTSOptions | {
+        language?: string;
+    };
+    addToQueue?: boolean;
+}
+export interface ILavaLyricsLine {
+    timestamp: number;
+    duration?: number;
+    line: string;
+    plugin: Object;
+}
+export interface ILavaLyricsObject {
+    type: "timed" | "text";
+    track?: {
+        title: string;
+        author: string;
+        album?: string;
+        albumArt?: {
+            url: string;
+            height: number;
+            width: number;
+        }[];
+    };
+    source?: string;
+    text?: string;
+    lines: ILavaLyricsLine[];
+    plugin: Object;
+}
+export interface IRESTGetLyricsLavaLyrics extends ILavaLyricsObject {
+}
+export interface HighPass {
+    cutoffFrequency: number;
+    boostFactor?: number;
+}
+export interface LowPass {
+    cutoffFrequency: number;
+    boostFactor?: number;
+}
+export interface Normalization {
+    maxAmplitude?: number;
+    adaptive?: boolean;
+}
+export interface Echo {
+    echoLength?: number;
+    decay?: number;
 }
