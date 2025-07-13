@@ -138,12 +138,11 @@ export class NodeManager {
       return undefined;
     }
 
-    // Sort by usage, then by priority
     return nodes.sort((a, b) => {
       if (a.priority !== b.priority) {
         return (b.priority || 0) - (a.priority || 0);
       }
-      return a.getPlayersCount - b.getPlayersCount; // Prioritize nodes with fewer players
+      return a.getPlayersCount - b.getPlayersCount; 
     })[0];
   }
 
@@ -155,15 +154,13 @@ export class NodeManager {
       }
     }
 
-    // Fallback to finding any node with the source capability
     if (track.sourceName) {
       const nodeWithSource = this.getNodeWithCapability(`search:${track.sourceName}`);
       if (nodeWithSource) {
         return nodeWithSource;
       }
     }
-
-    // Fallback to any connected node if no specific source is needed or found
+    
     return this.best;
   }
 
