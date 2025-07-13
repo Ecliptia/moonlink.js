@@ -21,6 +21,9 @@ export declare class Track {
     private isPartial;
     constructor(trackData: ITrack, requester?: Object);
     private createPropertySetters;
+    setPosition(position: number): void;
+    setTime(time: number): void;
+    setChapters(chapters: IChapter[]): void;
     setRequester(requester: Object | string): void;
     resolve(): Promise<boolean>;
     resolveData(): Track;

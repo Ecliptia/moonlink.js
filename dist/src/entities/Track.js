@@ -62,6 +62,15 @@ class Track {
             sourceName: () => info.sourceName && (this.sourceName = info.sourceName)
         };
     }
+    setPosition(position) {
+        this.position = position;
+    }
+    setTime(time) {
+        this.time = time;
+    }
+    setChapters(chapters) {
+        this.chapters = chapters;
+    }
     setRequester(requester) {
         this.requestedBy = requester;
     }

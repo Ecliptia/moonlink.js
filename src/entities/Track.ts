@@ -68,6 +68,18 @@ export class Track {
     };
   }
 
+  public setPosition(position: number): void {
+    this.position = position;
+  }
+
+  public setTime(time: number): void {
+    this.time = time;
+  }
+
+  public setChapters(chapters: IChapter[]): void {
+    this.chapters = chapters;
+  }
+
   public setRequester(requester: Object | string): void {
     this.requestedBy = requester;
   }
