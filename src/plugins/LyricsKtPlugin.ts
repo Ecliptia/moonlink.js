@@ -2,6 +2,7 @@ import { AbstractPlugin } from "./AbstractPlugin";
 import { Node } from "../entities/Node";
 import { ILavaLyricsObject, ILavaLyricsLine, ITrack, IOptionsManager } from "../typings/Interfaces";
 import { decodeTrack } from "../Utils";
+import { Player } from "../entities/Player";
 
 export class LyricsKtPlugin extends AbstractPlugin {
     public name: string = "lyrics";
@@ -10,6 +11,7 @@ export class LyricsKtPlugin extends AbstractPlugin {
     private lyricsCallbacks: Map<string, (line: ILavaLyricsLine) => void> = new Map();
     private lyricsCache: Map<string, ILavaLyricsObject> = new Map();
     private searchCache: Map<string, any[]> = new Map();
+    private liveLyricsTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
     public load(node: Node): void {
         this.node = node;
@@ -20,10 +22,16 @@ export class LyricsKtPlugin extends AbstractPlugin {
         this.lyricsCallbacks.clear();
         this.lyricsCache.clear();
         this.searchCache.clear();
+        for (const timeout of this.liveLyricsTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.liveLyricsTimeouts.clear();
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Unloaded for node ${node.identifier}`);
     }
 
-    
+    public onTrackEnd(player: Player): void {
+        this.unsubscribeFromLiveLyrics(player.guildId);
+    }
 
     private mapLyricsKtResponse(data: any): ILavaLyricsObject | null {
         if (!data) return null;
@@ -112,8 +120,6 @@ export class LyricsKtPlugin extends AbstractPlugin {
         }
     }
 
-    private liveLyricsIntervals: Map<string, NodeJS.Timeout> = new Map();
-
     private cleanTrackTitle(title: string): string {
         let cleanedTitle = title.replace(/ *\([^)]*\) */g, "").replace(/ *\[[^\]]*\] */g, "");
         cleanedTitle = cleanedTitle.replace(/feat\./gi, "").replace(/ft\./gi, "");
@@ -157,51 +163,74 @@ export class LyricsKtPlugin extends AbstractPlugin {
     public async subscribeToLiveLyrics(guildId: string): Promise<void> {
         const player = this.node.manager.players.get(guildId);
         if (!player || !player.current) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Cannot subscribe to live lyrics: No player or current track for guild ${guildId}`);
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Cannot subscribe: No player or track for guild ${guildId}`);
             return;
         }
 
-        if (this.liveLyricsIntervals.has(guildId)) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Already subscribed to live lyrics for guild ${guildId}`);
+        if (this.liveLyricsTimeouts.has(guildId)) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Already subscribed for guild ${guildId}`);
             return;
         }
 
         let lyrics = await this.getLyricsForCurrentTrack(guildId);
-
-        if (!lyrics || lyrics.lines.length === 0) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found for current track for guild ${guildId}. Attempting search-based lyrics.`);
+        if (!lyrics || !lyrics.lines || lyrics.lines.length === 0) {
             lyrics = await this.getStaticLyricsForTrack(guildId);
-
-            if (!lyrics || lyrics.lines.length === 0) {
-                this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found via search for current track for guild ${guildId}. Cannot subscribe to live lyrics.`);
-                return;
-            }
         }
 
-        let lastLineIndex = -1;
-        const interval = setInterval(() => {
-            if (!player.playing || player.paused) return;
+        if (!lyrics || !lyrics.lines || lyrics.lines.length === 0) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No lyrics found for guild ${guildId}. Cannot subscribe.`);
+            return;
+        }
 
-            const currentTime = player.current.position;
-            const currentLineIndex = lyrics!.lines.findIndex(line => currentTime >= line.timestamp && currentTime < (line.timestamp + (line.duration || 0)));
-
-            if (currentLineIndex !== -1 && currentLineIndex !== lastLineIndex) {
-                const callback = this.lyricsCallbacks.get(guildId);
-                if (callback) {
-                    callback(lyrics!.lines[currentLineIndex]);
-                }
-                lastLineIndex = currentLineIndex;
-            }
-        }, 500);
-
-        this.liveLyricsIntervals.set(guildId, interval);
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Subscribed to live lyrics for guild ${guildId}`);
+        
+        const firstLineIndex = lyrics.lines.findIndex(l => l.timestamp >= (player.current?.position ?? 0));
+        this.scheduleNextLine(player, lyrics, firstLineIndex === -1 ? 0 : firstLineIndex);
+    }
+
+    private scheduleNextLine(player: Player, lyrics: ILavaLyricsObject, lineIndex: number): void {
+        if (!player.playing || player.paused) {
+            this.unsubscribeFromLiveLyrics(player.guildId);
+            return;
+        }
+        
+        if (lineIndex >= lyrics.lines.length) {
+            this.unsubscribeFromLiveLyrics(player.guildId);
+            return;
+        }
+
+        const currentLine = lyrics.lines[lineIndex];
+        const currentTime = (player.current?.position ?? 0) + 150; 
+        
+        const delay = currentLine.timestamp - currentTime;
+
+        if (delay < 0) {
+            const callback = this.lyricsCallbacks.get(player.guildId);
+            if (callback && player.playing && !player.paused) {
+                callback(currentLine);
+            }
+            this.scheduleNextLine(player, lyrics, lineIndex + 1);
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            const callback = this.lyricsCallbacks.get(player.guildId);
+            if (callback && player.playing && !player.paused) {
+                callback(currentLine);
+            }
+            this.scheduleNextLine(player, lyrics, lineIndex + 1);
+        }, delay);
+
+        this.liveLyricsTimeouts.set(player.guildId, timeout);
     }
 
     public async unsubscribeFromLiveLyrics(guildId: string): Promise<void> {
-        if (this.liveLyricsIntervals.has(guildId)) {
-            clearInterval(this.liveLyricsIntervals.get(guildId)!);
-            this.liveLyricsIntervals.delete(guildId);
+        if (this.liveLyricsTimeouts.has(guildId)) {
+            clearTimeout(this.liveLyricsTimeouts.get(guildId)!);
+            this.liveLyricsTimeouts.delete(guildId);
+        }
+        if (this.lyricsCallbacks.has(guildId)) {
+            this.lyricsCallbacks.delete(guildId);
             this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Unsubscribed from live lyrics for guild ${guildId}`);
         }
     }

@@ -9,6 +9,7 @@ class LyricsKtPlugin extends AbstractPlugin_1.AbstractPlugin {
     lyricsCallbacks = new Map();
     lyricsCache = new Map();
     searchCache = new Map();
+    liveLyricsTimeouts = new Map();
     load(node) {
         this.node = node;
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Loaded for node ${node.identifier}`);
@@ -17,7 +18,14 @@ class LyricsKtPlugin extends AbstractPlugin_1.AbstractPlugin {
         this.lyricsCallbacks.clear();
         this.lyricsCache.clear();
         this.searchCache.clear();
+        for (const timeout of this.liveLyricsTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.liveLyricsTimeouts.clear();
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Unloaded for node ${node.identifier}`);
+    }
+    onTrackEnd(player) {
+        this.unsubscribeFromLiveLyrics(player.guildId);
     }
     mapLyricsKtResponse(data) {
         if (!data)
@@ -100,7 +108,6 @@ class LyricsKtPlugin extends AbstractPlugin_1.AbstractPlugin {
             return null;
         }
     }
-    liveLyricsIntervals = new Map();
     cleanTrackTitle(title) {
         let cleanedTitle = title.replace(/ *\([^)]*\) */g, "").replace(/ *\[[^\]]*\] */g, "");
         cleanedTitle = cleanedTitle.replace(/feat\./gi, "").replace(/ft\./gi, "");
@@ -137,43 +144,61 @@ class LyricsKtPlugin extends AbstractPlugin_1.AbstractPlugin {
     async subscribeToLiveLyrics(guildId) {
         const player = this.node.manager.players.get(guildId);
         if (!player || !player.current) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Cannot subscribe to live lyrics: No player or current track for guild ${guildId}`);
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Cannot subscribe: No player or track for guild ${guildId}`);
             return;
         }
-        if (this.liveLyricsIntervals.has(guildId)) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Already subscribed to live lyrics for guild ${guildId}`);
+        if (this.liveLyricsTimeouts.has(guildId)) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Already subscribed for guild ${guildId}`);
             return;
         }
         let lyrics = await this.getLyricsForCurrentTrack(guildId);
-        if (!lyrics || lyrics.lines.length === 0) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found for current track for guild ${guildId}. Attempting search-based lyrics.`);
+        if (!lyrics || !lyrics.lines || lyrics.lines.length === 0) {
             lyrics = await this.getStaticLyricsForTrack(guildId);
-            if (!lyrics || lyrics.lines.length === 0) {
-                this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found via search for current track for guild ${guildId}. Cannot subscribe to live lyrics.`);
-                return;
-            }
         }
-        let lastLineIndex = -1;
-        const interval = setInterval(() => {
-            if (!player.playing || player.paused)
-                return;
-            const currentTime = player.current.position;
-            const currentLineIndex = lyrics.lines.findIndex(line => currentTime >= line.timestamp && currentTime < (line.timestamp + (line.duration || 0)));
-            if (currentLineIndex !== -1 && currentLineIndex !== lastLineIndex) {
-                const callback = this.lyricsCallbacks.get(guildId);
-                if (callback) {
-                    callback(lyrics.lines[currentLineIndex]);
-                }
-                lastLineIndex = currentLineIndex;
-            }
-        }, 500);
-        this.liveLyricsIntervals.set(guildId, interval);
+        if (!lyrics || !lyrics.lines || lyrics.lines.length === 0) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No lyrics found for guild ${guildId}. Cannot subscribe.`);
+            return;
+        }
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Subscribed to live lyrics for guild ${guildId}`);
+        const firstLineIndex = lyrics.lines.findIndex(l => l.timestamp >= (player.current?.position ?? 0));
+        this.scheduleNextLine(player, lyrics, firstLineIndex === -1 ? 0 : firstLineIndex);
+    }
+    scheduleNextLine(player, lyrics, lineIndex) {
+        if (!player.playing || player.paused) {
+            this.unsubscribeFromLiveLyrics(player.guildId);
+            return;
+        }
+        if (lineIndex >= lyrics.lines.length) {
+            this.unsubscribeFromLiveLyrics(player.guildId);
+            return;
+        }
+        const currentLine = lyrics.lines[lineIndex];
+        const currentTime = (player.current?.position ?? 0) + 150;
+        const delay = currentLine.timestamp - currentTime;
+        if (delay < 0) {
+            const callback = this.lyricsCallbacks.get(player.guildId);
+            if (callback && player.playing && !player.paused) {
+                callback(currentLine);
+            }
+            this.scheduleNextLine(player, lyrics, lineIndex + 1);
+            return;
+        }
+        const timeout = setTimeout(() => {
+            const callback = this.lyricsCallbacks.get(player.guildId);
+            if (callback && player.playing && !player.paused) {
+                callback(currentLine);
+            }
+            this.scheduleNextLine(player, lyrics, lineIndex + 1);
+        }, delay);
+        this.liveLyricsTimeouts.set(player.guildId, timeout);
     }
     async unsubscribeFromLiveLyrics(guildId) {
-        if (this.liveLyricsIntervals.has(guildId)) {
-            clearInterval(this.liveLyricsIntervals.get(guildId));
-            this.liveLyricsIntervals.delete(guildId);
+        if (this.liveLyricsTimeouts.has(guildId)) {
+            clearTimeout(this.liveLyricsTimeouts.get(guildId));
+            this.liveLyricsTimeouts.delete(guildId);
+        }
+        if (this.lyricsCallbacks.has(guildId)) {
+            this.lyricsCallbacks.delete(guildId);
             this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Unsubscribed from live lyrics for guild ${guildId}`);
         }
     }
