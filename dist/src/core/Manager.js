@@ -22,6 +22,7 @@ class Manager extends node_events_1.EventEmitter {
     database;
     sources;
     pluginManager;
+    lyricsResultCache = new Map();
     constructor(config) {
         super();
         (0, index_1.validateProperty)(config, (value) => value !== undefined, "Moonlink.js > Manager > Config is required.");
@@ -257,6 +258,14 @@ class Manager extends node_events_1.EventEmitter {
     async getLyrics(options) {
         (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > getLyrics > Options is required");
         const { player, encodedTrack, videoId, skipTrackSource, provider } = options;
+        let cacheKey;
+        if (player && player.current) {
+            cacheKey = `${player.guildId}-${player.current.encoded}`;
+            if (this.lyricsResultCache.has(cacheKey)) {
+                this.emit("debug", `Moonlink.js > getLyrics > Cache hit for guild ${player.guildId}`);
+                return this.lyricsResultCache.get(cacheKey);
+            }
+        }
         let targetNode;
         let guildId;
         if (player) {
@@ -293,23 +302,33 @@ class Manager extends node_events_1.EventEmitter {
             const lyricsPlugin = targetNode.plugins.get(pluginName);
             if (lyricsPlugin && lyricsPlugin.getLyricsForCurrentTrack || lyricsPlugin.getLyricsForTrack || lyricsPlugin.getLyricsByVideoId) {
                 try {
+                    let resultLyrics = null;
                     if (player && guildId) {
-                        return await lyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
+                        let lyrics = await lyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
+                        if ((!lyrics || !lyrics.lines || lyrics.lines.length === 0) && pluginName === 'lyrics') {
+                            this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found via getLyricsForCurrentTrack for guild ${guildId} with LyricsKtPlugin. Attempting static search.`);
+                            lyrics = await lyricsPlugin.getStaticLyricsForTrack(guildId);
+                        }
+                        resultLyrics = lyrics;
                     }
                     else if (pluginName === 'lavalyrics-plugin' && encodedTrack) {
-                        return await lyricsPlugin.getLyricsForTrack(encodedTrack, skipTrackSource);
+                        resultLyrics = await lyricsPlugin.getLyricsForTrack(encodedTrack, skipTrackSource);
                     }
                     else if (pluginName === 'lyrics') {
                         if (videoId) {
-                            return await lyricsPlugin.getLyricsByVideoId(videoId);
+                            resultLyrics = await lyricsPlugin.getLyricsByVideoId(videoId);
                         }
                         else if (encodedTrack) {
                             const trackInfo = (0, index_1.decodeTrack)(encodedTrack);
                             if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube') {
-                                return await lyricsPlugin.getLyricsByVideoId(trackInfo.info.identifier);
+                                resultLyrics = await lyricsPlugin.getLyricsByVideoId(trackInfo.info.identifier);
                             }
                         }
                     }
+                    if (cacheKey && resultLyrics) {
+                        this.lyricsResultCache.set(cacheKey, resultLyrics);
+                    }
+                    return resultLyrics;
                 }
                 catch (e) {
                     this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics with ${pluginName}: ${e.message}`);
@@ -364,10 +383,10 @@ class Manager extends node_events_1.EventEmitter {
             pluginsToTry.push('lavalyrics-plugin');
         }
         else if (provider === 'lyrics') {
-            pluginsToTry.push('lyrics-kt-plugin');
+            pluginsToTry.push('lyrics');
         }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics-kt-plugin');
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
         }
         for (const pluginName of pluginsToTry) {
             const capability = pluginName.replace('-plugin', '');
@@ -401,10 +420,10 @@ class Manager extends node_events_1.EventEmitter {
             pluginsToTry.push('lavalyrics-plugin');
         }
         else if (provider === 'lyrics') {
-            pluginsToTry.push('lyrics-kt-plugin');
+            pluginsToTry.push('lyrics');
         }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics-kt-plugin');
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
         }
         for (const pluginName of pluginsToTry) {
             const capability = pluginName.replace('-plugin', '');

@@ -18,6 +18,7 @@ export declare class Manager extends EventEmitter {
     database: Database;
     sources: SourceManager;
     pluginManager: PluginManager;
+    private lyricsResultCache;
     constructor(config: IConfigManager);
     init(clientId: string): Promise<void>;
     search(options: {
