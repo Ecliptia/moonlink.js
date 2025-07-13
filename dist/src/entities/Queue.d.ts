@@ -15,6 +15,7 @@ export declare class Queue {
     clear(): boolean;
     shuffle(): boolean;
     removeDuplicates(): boolean;
+    removeBlacklistedTracks(): boolean;
     sortByTitle(): boolean;
     sortByAuthor(): boolean;
     sortByDuration(): boolean;

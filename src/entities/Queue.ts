@@ -1,4 +1,4 @@
-import { Database, Player, Structure, Track } from "../../index";
+import { Database, Player, Structure, Track, isSourceBlacklisted } from "../../index";
 export class Queue {
   public database: Database;
   public guildId: string;
@@ -11,18 +11,22 @@ export class Queue {
   public tracks: Track[] = [];
 
   public add(track: Track | Track[]): boolean {
-    if (Array.isArray(track)) {
-      if (track.length === 0) return true;
-      
-      for (let t of track) {
-      this.tracks.push(t);
+    const tracksToAdd = Array.isArray(track) ? track : [track];
+    const filteredTracks = tracksToAdd.filter(t => {
+      if (this.player.manager.options.blacklistedSources && this.player.manager.options.blacklistedSources.includes(t.sourceName)) {
+        this.player.manager.emit("debug", `Moonlink.js > Queue > Track from blacklisted source (${t.sourceName}) detected. Not adding to queue.`);
+        this.player.manager.emit("trackBlacklisted", this.player, t);
+        return false;
       }
-    } else {
-      this.tracks.push(track);
-    }
+      return true;
+    });
+
+    if (filteredTracks.length === 0) return true;
+
+    this.tracks.push(...filteredTracks);
     
     this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
-    this.player.manager.emit("queueAdd", this.player, track);
+    this.player.manager.emit("queueAdd", this.player, filteredTracks);
     return true;
   }
   public get(position: number): Track {
@@ -92,6 +96,28 @@ export class Queue {
     this.tracks = uniqueTracks;
     this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
+  }
+
+  public removeBlacklistedTracks(): boolean {
+    if (!this.player.manager.options.blacklistedSources || this.player.manager.options.blacklistedSources.length === 0) {
+      return false;
+    }
+
+    const initialSize = this.tracks.length;
+    this.tracks = this.tracks.filter(track => {
+      if (this.player.manager.options.blacklistedSources.includes(track.sourceName)) {
+        this.player.manager.emit("debug", `Moonlink.js > Queue > Removing blacklisted track (${track.sourceName}) from queue.`);
+        this.player.manager.emit("trackBlacklisted", this.player, track);
+        return false;
+      }
+      return true;
+    });
+
+    if (this.tracks.length < initialSize) {
+      this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+      return true;
+    }
+    return false;
   }
 
   public sortByTitle(): boolean {
