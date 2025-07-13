@@ -312,7 +312,7 @@ export interface ISearchResult {
   loadType: TLoadResultType;
   tracks: Track[];
   playlistInfo: IPlaylistInfo;
-  data: ILoadResultData | ILavaSearchResultData; // Can be either standard or LavaSearch data
+  data: ILoadResultData | ILavaSearchResultData; 
   exception?: {
     message: string;
     severity: string;
