@@ -327,6 +327,10 @@ class Node {
                             }
                         }
                         player.set("isBackPlay", false);
+                        const lyricsPlugin = this.plugins.get("lyrics");
+                        if (lyricsPlugin && lyricsPlugin.onTrackEnd) {
+                            lyricsPlugin.onTrackEnd(player);
+                        }
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (player.destroyed) {
                             this.manager.emit("debug", "Moonlink.js > Player " +

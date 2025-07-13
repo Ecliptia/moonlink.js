@@ -433,6 +433,11 @@ export class Node {
             }
             player.set("isBackPlay", false);
 
+            const lyricsPlugin = this.plugins.get("lyrics");
+            if (lyricsPlugin && (lyricsPlugin as any).onTrackEnd) {
+                (lyricsPlugin as any).onTrackEnd(player);
+            }
+
             this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
             
             if (player.destroyed) {
