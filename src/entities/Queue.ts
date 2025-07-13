@@ -208,7 +208,7 @@ export class Queue {
     const trackToDuplicate = this.tracks[index];
     const duplicatedTracks: Track[] = [];
     for (let i = 0; i < count; i++) {
-      duplicatedTracks.push(trackToDuplicate); // Add reference, not deep copy
+      duplicatedTracks.push(trackToDuplicate);
     }
 
     this.tracks.splice(index + 1, 0, ...duplicatedTracks);
