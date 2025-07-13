@@ -44,6 +44,14 @@ module.exports = {
       )
       .setColor(config.colors.player);
     
+    if (track.chapters && track.chapters.length > 0) {
+      const chapterList = track.chapters.map((chapter, index) => {
+        const isCurrent = index === track.currentChapterIndex;
+        return `${isCurrent ? '**[CURRENT]** ' : ''}${chapter.name} (${formatDuration(chapter.start)})`;
+      }).join("\n");
+      embed.addFields({ name: 'Chapters', value: chapterList, inline: false });
+    }
+
     if (track.thumbnail) {
       embed.setThumbnail(track.thumbnail);
     }

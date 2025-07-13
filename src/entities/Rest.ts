@@ -15,7 +15,7 @@ export class Rest {
     this.defaultHeaders = {
       Authorization: this.node.password,
       Accept: "application/json",
-      "User-Agent": `Moonlink.js/${node.manager.version} (Epiphany/10.07.2025)`,
+      "User-Agent": `Moonlink.js/${node.manager.version} (Epiphany/13.07.2025)`,
       "Content-Type": "application/json",
       "accept-encoding": "br, gzip, deflate"
     };
@@ -23,8 +23,13 @@ export class Rest {
   public async loadTracks(source: string, query: string): Promise<any> {
     return new Promise(async resolve => {
       let identifier: string;
-      if (query.startsWith("http://") || query.startsWith("https://")) identifier = query;
-      else identifier = `${sources[source] ?? source}:${query}`;
+      if (query.startsWith("http://") || query.startsWith("https://")) {
+        identifier = query;
+      } else if (source === "flowerytts" || source === "tts") {
+        identifier = query;
+      } else {
+        identifier = `${sources[source] ?? source}:${query}`;
+      }
 
       let params = new URLSearchParams({
         identifier,
@@ -138,6 +143,32 @@ export class Rest {
     return makeRequest(`${this.url}/${path}`, {
       method: "PATCH",
       body: stringifyWithReplacer(data.data),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async get(path: string): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+  }
+  public async put(path: string, data: any): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "PUT",
+      body: stringifyWithReplacer(data),
+      headers: this.defaultHeaders,
+    });
+  }
+  public async post(path: string, data?: any): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "POST",
+      body: data ? stringifyWithReplacer(data) : undefined,
+      headers: this.defaultHeaders,
+    });
+  }
+  public async delete(path: string): Promise<unknown> {
+    return makeRequest(`${this.url}/${path}`, {
+      method: "DELETE",
       headers: this.defaultHeaders,
     });
   }

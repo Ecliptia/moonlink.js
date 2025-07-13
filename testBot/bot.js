@@ -11,8 +11,8 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 3000,
-      password: "123",
+      port: 2333,
+      password: "yeah",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -26,7 +26,7 @@ client.manager = new Manager({
       log: true,
       path: "moonlink.log",
     },
-    partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier"],
+    partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier", "position"],
     disableNativeSources: true,
     resume: true,
     autoResume: true,

@@ -1,4 +1,4 @@
-import { IPlaylistInfo, Track } from "../../index";
+import { IPlaylistInfo, Track, ILavaSearchAlbum, ILavaSearchArtist, ILavaSearchPlaylist, ILavaSearchText } from "../../index";
 export type LoadType = 'track' | 'search' | 'playlist' | 'error' | 'empty' | 'short';
 export interface SearchResultOptions {
     query: string;
@@ -12,6 +12,12 @@ export declare class SearchResult {
     loadType: LoadType;
     playlistInfo: IPlaylistInfo;
     error?: string;
+    albums?: ILavaSearchAlbum[];
+    artists?: ILavaSearchArtist[];
+    playlists?: ILavaSearchPlaylist[];
+    texts?: ILavaSearchText[];
+    lavasearchPluginInfo?: Object;
+    isLavaSearchResult?: boolean;
     constructor(req: any, options: SearchResultOptions);
     private resolveTracks;
     getFirst(): Track | undefined;

@@ -34,6 +34,8 @@ class Node {
     url;
     rest;
     state = types_1.NodeState.DISCONNECTED;
+    capabilities = new Set();
+    plugins = new Map();
     constructor(manager, config) {
         this.setState = this.setState.bind(this);
         this.manager = manager;
@@ -125,8 +127,12 @@ class Node {
         this.setState(types_1.NodeState.CONNECTED);
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) has connected.`);
         this.manager.emit("nodeConnected", this);
+        if (this.info && this.info.plugins) {
+            this.manager.pluginManager.loadPluginsForNode(this, this.info.plugins);
+        }
     }
     close(event) {
+        this.manager.pluginManager.unloadPluginsForNode(this);
         const { code, reason } = event;
         if (this.connected)
             this.connected = false;
@@ -164,6 +170,7 @@ class Node {
                 this.version = this.info.version;
                 this.resumed = payload.resumed;
                 this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+                this.manager.pluginManager.updateNodePlugins(this);
                 if (this.manager.options.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
                         data: {
@@ -223,6 +230,8 @@ class Node {
                             setDeaf: false,
                             setMute: false,
                         });
+                        reconstructedPlayer.playing = playerInfo.paused === false;
+                        reconstructedPlayer.paused = playerInfo.paused ?? false;
                         if (current) {
                             reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
                         }
@@ -235,6 +244,7 @@ class Node {
                             for (const track of tracks) {
                                 reconstructedPlayer.queue.add(track);
                             }
+                            reconstructedPlayer.queue.removeBlacklistedTracks();
                         }
                         this.manager.emit("debug", `Moonlink.js > Player ${guildId} has been resumed on node ${this.uuid}.`);
                         this.manager.emit("playerResumed", reconstructedPlayer);
@@ -251,8 +261,9 @@ class Node {
                     return;
                 if (!player.current)
                     return;
-                if (player.connected !== payload.state.connected)
-                    player.connected = payload.state.connected;
+                player.connected = payload.state.connected;
+                player.paused = payload.state.paused ?? false;
+                player.playing = player.connected && !payload.state.paused && player.current !== null;
                 player.current.position = payload.state.position;
                 player.current.time = payload.state.time;
                 player.ping = payload.state.ping;
@@ -271,6 +282,14 @@ class Node {
                 }
                 break;
             case "event": {
+                const sponsorBlockPlugin = this.plugins.get("sponsorblock-plugin");
+                if (sponsorBlockPlugin && sponsorBlockPlugin.handleEvent) {
+                    sponsorBlockPlugin.handleEvent(this, payload);
+                }
+                const lavaLyricsPlugin = this.plugins.get("lavalyrics-plugin");
+                if (lavaLyricsPlugin && lavaLyricsPlugin.handleEvent) {
+                    lavaLyricsPlugin.handleEvent(this, payload);
+                }
                 let player = this.manager.getPlayer(payload.guildId);
                 if (!player)
                     return;
@@ -304,9 +323,16 @@ class Node {
                         player.playing = false;
                         player.paused = false;
                         player.set("sendPlayerUpdateDebug", false);
-                        player.previous.push(track);
-                        if (player.previous.length > player.historySize) {
-                            player.previous.shift();
+                        if (!player.get("isBackPlay")) {
+                            player.previous.push(track);
+                            if (player.previous.length > player.historySize) {
+                                player.previous.shift();
+                            }
+                        }
+                        player.set("isBackPlay", false);
+                        const lyricsPlugin = this.plugins.get("lyrics");
+                        if (lyricsPlugin && lyricsPlugin.onTrackEnd) {
+                            lyricsPlugin.onTrackEnd(player);
                         }
                         this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
                         if (player.destroyed) {
@@ -436,14 +462,44 @@ class Node {
     }
     async _handleAutoplay(player, reason) {
         let uri;
-        let sourceName;
-        if (player.current.sourceName === "youtube") {
-            uri = `https://www.youtube.com/watch?v=${player.current.identifier}&list=RD${player.current.identifier}`;
-            sourceName = "youtube";
+        let prefix;
+        if (!player.current?.sourceName || !player.current.identifier) {
+            this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no current track, sourceName or identifier`);
+            return;
         }
-        else if (player.current.sourceName?.toLowerCase() === "spotify" && player.current.pluginInfo?.MoonlinkInternal) {
-            uri = `sprec:seed_tracks=${player.current.identifier}`;
-            sourceName = "spotify";
+        const source = player.current.sourceName.toLowerCase();
+        const identifier = player.current.identifier;
+        if (source === "youtube") {
+            uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+            prefix = "youtube";
+        }
+        else if (this.plugins.has("lavasrc-plugin")) {
+            switch (source) {
+                case "spotify":
+                    uri = `seed_tracks=${identifier}`;
+                    prefix = "sprec";
+                    break;
+                case "deezer":
+                    uri = `${identifier}`;
+                    prefix = "dzrec";
+                    break;
+                case "yandexmusic":
+                    uri = `${identifier}`;
+                    prefix = "ymrec";
+                    break;
+                case "vkmusic":
+                    uri = `${identifier}`;
+                    prefix = "vkrec";
+                    break;
+                case "tidal":
+                    uri = `${identifier}`;
+                    prefix = "tdrec";
+                    break;
+                case "qobuz":
+                    uri = `${identifier}`;
+                    prefix = "qbrec";
+                    break;
+            }
         }
         if (!uri) {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`);
@@ -453,7 +509,7 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`);
             return;
         }
-        const res = await this.manager.search({ query: uri, source: sourceName });
+        const res = await this.manager.search({ query: uri, source: prefix });
         if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
             this.manager.emit("debug", `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`);
             return;

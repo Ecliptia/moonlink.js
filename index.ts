@@ -6,6 +6,7 @@ export * from "./src/Utils";
 export * from "./src/core/Manager";
 export * from "./src/management/NodeManager";
 export * from "./src/management/PlayerManager";
+export * from "./src/management/PluginManager";
 export * from "./src/management/SourceManager";
 export * from "./src/structures/SearchResult";
 export * from "./src/entities/Database";
@@ -20,9 +21,7 @@ export * from "./src/entities/Lyrics";
 
 import { structures } from "./src/Utils";
 
-[["Database","./src/entities/Database"],["NodeManager","./src/management/NodeManager"],
-["PlayerManager","./src/management/PlayerManager"],["SearchResult","./src/structures/SearchResult"],
+[["Database","./src/entities/Database"],["NodeManager","./src/management/NodeManager"],["PlayerManager","./src/management/PlayerManager"],["PluginManager","./src/management/PluginManager"],["SearchResult","./src/structures/SearchResult"],
 ["Player","./src/entities/Player"],["Queue","./src/entities/Queue"],["Node","./src/entities/Node"],
 ["Rest","./src/entities/Rest"],["Filters","./src/entities/Filters"],["Track","./src/entities/Track"],
 ["Lyrics","./src/entities/Lyrics"],["Listen","./src/entities/Listen"],["SourceManager", "./src/management/SourceManager"]].map(([n,p])=>structures[n]=require(p)[n]);
-

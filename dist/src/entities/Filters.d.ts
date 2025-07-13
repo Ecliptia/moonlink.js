@@ -1,5 +1,5 @@
 import { Player } from "../../index";
-import { Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, ChannelMix, LowPass } from "../typings/Interfaces";
+import { Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, ChannelMix, LowPass, HighPass, LowPass as LowPassDSPX, Normalization, Echo } from "../typings/Interfaces";
 export declare class Filters {
     private player;
     private manager;
@@ -17,6 +17,10 @@ export declare class Filters {
     setDistortion(distortion: Distortion | undefined): this;
     setChannelMix(channelMix: ChannelMix | undefined): this;
     setLowPass(lowPass: LowPass | undefined): this;
+    setHighPass(highPass: HighPass | undefined): this;
+    setLowPassDSPX(lowPassDSPX: LowPassDSPX | undefined): this;
+    setNormalization(normalization: Normalization | undefined): this;
+    setEcho(echo: Echo | undefined): this;
     resetFilters(): this;
     private updateFiltersFromRest;
 }

@@ -34,3 +34,4 @@ export declare class Plugin {
     load(manager: any): void;
     unload(manager: any): void;
 }
+export declare function isSourceBlacklisted(manager: any, sourceName: string): boolean;
