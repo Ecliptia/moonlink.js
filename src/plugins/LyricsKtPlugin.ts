@@ -114,6 +114,46 @@ export class LyricsKtPlugin extends AbstractPlugin {
 
     private liveLyricsIntervals: Map<string, NodeJS.Timeout> = new Map();
 
+    private cleanTrackTitle(title: string): string {
+        let cleanedTitle = title.replace(/ *\([^)]*\) */g, "").replace(/ *\[[^\]]*\] */g, "");
+        cleanedTitle = cleanedTitle.replace(/feat\./gi, "").replace(/ft\./gi, "");
+        return cleanedTitle.trim();
+    }
+
+    public async getStaticLyricsForTrack(guildId: string): Promise<ILavaLyricsObject | null> {
+        const player = this.node.manager.players.get(guildId);
+        if (!player || !player.current) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No player or current track for guild ${guildId}. Cannot search for static lyrics.`);
+            return null;
+        }
+
+        const trackTitle = player.current.title;
+        const cleanedTitle = this.cleanTrackTitle(trackTitle);
+
+        if (!cleanedTitle) {
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Cleaned track title is empty for guild ${guildId}. Cannot search for static lyrics.`);
+            return null;
+        }
+
+        let foundLyrics: ILavaLyricsObject | null = null;
+
+        const searchResults = await this.search(cleanedTitle);
+        if (searchResults && searchResults.length > 0) {
+            for (const result of searchResults) {
+                if (result && result.videoId) {
+                    foundLyrics = await this.getLyricsByVideoId(result.videoId);
+                    if (foundLyrics && (foundLyrics.text || (foundLyrics.lines && foundLyrics.lines.length > 0))) {
+                        this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Found static lyrics via videoId search for guild ${guildId}`);
+                        return foundLyrics;
+                    }
+                }
+            }
+        }
+
+        this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No static lyrics found via search for current track for guild ${guildId}`);
+        return null;
+    }
+
     public async subscribeToLiveLyrics(guildId: string): Promise<void> {
         const player = this.node.manager.players.get(guildId);
         if (!player || !player.current) {
@@ -126,11 +166,16 @@ export class LyricsKtPlugin extends AbstractPlugin {
             return;
         }
 
-        const lyrics = await this.getLyricsForCurrentTrack(guildId);
+        let lyrics = await this.getLyricsForCurrentTrack(guildId);
 
         if (!lyrics || lyrics.lines.length === 0) {
-            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found for current track for guild ${guildId}`);
-            return;
+            this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found for current track for guild ${guildId}. Attempting search-based lyrics.`);
+            lyrics = await this.getStaticLyricsForTrack(guildId);
+
+            if (!lyrics || lyrics.lines.length === 0) {
+                this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > No timed lyrics found via search for current track for guild ${guildId}. Cannot subscribe to live lyrics.`);
+                return;
+            }
         }
 
         let lastLineIndex = -1;
@@ -138,16 +183,16 @@ export class LyricsKtPlugin extends AbstractPlugin {
             if (!player.playing || player.paused) return;
 
             const currentTime = player.current.position;
-            const currentLineIndex = lyrics.lines.findIndex(line => currentTime >= line.timestamp && currentTime < (line.timestamp + (line.duration || 0)));
+            const currentLineIndex = lyrics!.lines.findIndex(line => currentTime >= line.timestamp && currentTime < (line.timestamp + (line.duration || 0)));
 
             if (currentLineIndex !== -1 && currentLineIndex !== lastLineIndex) {
                 const callback = this.lyricsCallbacks.get(guildId);
                 if (callback) {
-                    callback(lyrics.lines[currentLineIndex]);
+                    callback(lyrics!.lines[currentLineIndex]);
                 }
                 lastLineIndex = currentLineIndex;
             }
-        }, 500); // Check every 500ms
+        }, 500);
 
         this.liveLyricsIntervals.set(guildId, interval);
         this.node.manager.emit("debug", `Moonlink.js > LyricsKtPlugin > Subscribed to live lyrics for guild ${guildId}`);
