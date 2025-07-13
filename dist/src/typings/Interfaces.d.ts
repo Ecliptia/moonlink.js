@@ -448,3 +448,19 @@ export interface ILavaLyricsObject {
 }
 export interface IRESTGetLyricsLavaLyrics extends ILavaLyricsObject {
 }
+export interface HighPass {
+    cutoffFrequency: number;
+    boostFactor?: number;
+}
+export interface LowPass {
+    cutoffFrequency: number;
+    boostFactor?: number;
+}
+export interface Normalization {
+    maxAmplitude?: number;
+    adaptive?: boolean;
+}
+export interface Echo {
+    echoLength?: number;
+    decay?: number;
+}
