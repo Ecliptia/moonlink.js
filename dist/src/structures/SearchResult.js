@@ -32,7 +32,6 @@ class SearchResult {
             this.playlists = req.playlists;
             this.texts = req.texts;
             this.lavasearchPluginInfo = req.plugin;
-            console.log(req);
             if (this.tracks.length > 0 && !this.albums && !this.artists && !this.playlists && !this.texts) {
                 this.loadType = "track";
             }
