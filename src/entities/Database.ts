@@ -67,7 +67,6 @@ export class Database {
 
     if (opCode === 's') {
       try {
-        // Re-join remaining parts in case the value contained the separator '|'
         const value = JSON.parse(parts.slice(2).join('|'));
         return { op: 'set', key, value };
       } catch (e) {
@@ -290,7 +289,6 @@ export class Database {
       this.manager.emit("debug", `Moonlink.js > Database > Failed to compact database: ${err.message}`);
       this.disabled = true;
     } finally {
-      // Re-open the stream for future operations, unless an error disabled persistence.
       if (!this.disabled) {
         this.openWALStream();
       }
