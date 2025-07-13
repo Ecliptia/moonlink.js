@@ -10,7 +10,7 @@ module.exports = {
     async execute(client, message, args) {
         const player = client.manager.players.get(message.guild.id);
 
-        let provider = "lyrics";
+        let provider = "java-lyrics-plugin";
         const providerIndex = args.indexOf("--provider");
         if (providerIndex !== -1 && args.length > providerIndex + 1) {
             provider = args[providerIndex + 1];
@@ -27,7 +27,6 @@ module.exports = {
         const loadingMsg = await message.channel.send({ embeds: [loadingEmbed] });
 
         try {
-            // Fetch the full lyrics object first
             const fullLyrics = await client.manager.getLyrics({
                 player: player,
                 provider: provider,
@@ -76,10 +75,9 @@ module.exports = {
     },
 };
 
-// Helper function to format the lyrics display
 function formatLyricsDisplay(allLines, currentIndex) {
     const numLinesToShow = 9;
-    const linesAround = Math.floor(numLinesToShow / 2); // 4 lines before, 4 lines after
+    const linesAround = Math.floor(numLinesToShow / 2);
 
     const start = Math.max(0, currentIndex - linesAround);
     const end = Math.min(allLines.length - 1, currentIndex + linesAround);
@@ -88,7 +86,7 @@ function formatLyricsDisplay(allLines, currentIndex) {
     for (let i = start; i <= end; i++) {
         const line = allLines[i];
         if (i === currentIndex) {
-            display += `**${line.line}**\n`; // Highlight current line
+            display += `**${line.line}**\n`;
         } else {
             display += `${line.line}\n`;
         }
