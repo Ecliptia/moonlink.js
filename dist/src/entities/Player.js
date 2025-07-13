@@ -237,8 +237,10 @@ class Player {
                 volume: this.volume,
             },
         });
+        this.playing = true;
+        this.paused = false;
         this.manager.emit("playerTriggeredPlay", this, this.current);
-        return (this.playing = true);
+        return true;
     }
     async speak(options) {
         (0, index_1.validateProperty)(options.text, (value) => typeof value === "string" && value.length > 0, "Moonlink.js > Player#speak - text must be a non-empty string.");

@@ -249,7 +249,7 @@ export class Player {
 
           if (searchResult.tracks.length > 0) {
             this.current = searchResult.tracks[0];
-            foundNode = this.manager.nodes.getBestNodeForTrack(this.current); // Re-evaluate best node for reconstructed track
+            foundNode = this.manager.nodes.getBestNodeForTrack(this.current);
             if (foundNode) {
               this.manager.emit("debug", `Moonlink.js > Player > Successfully reconstructed track and found new node: ${foundNode.identifier}`);
             } else {
@@ -297,8 +297,10 @@ export class Player {
       },
     });
 
+    this.playing = true;
+    this.paused = false;
     this.manager.emit("playerTriggeredPlay", this, this.current);
-    return (this.playing = true);
+    return true;
   }
 
   public async speak(options: ISpeakOptions): Promise<boolean> {
