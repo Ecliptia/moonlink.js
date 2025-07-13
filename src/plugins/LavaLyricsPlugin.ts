@@ -34,8 +34,6 @@ export class LavaLyricsPlugin extends AbstractPlugin {
         const trackInfo = player?.current ? {
             title: player.current.title,
             author: player.current.author,
-            // LavaLyrics API doesn't provide album/albumArt directly in lyrics response
-            // We could try to get it from player.current if available, but it might not be accurate for the lyrics source
         } : undefined;
 
         return {
@@ -66,7 +64,6 @@ export class LavaLyricsPlugin extends AbstractPlugin {
             params.append("skipTrackSource", String(skipTrackSource));
         }
         const response = await this.node.rest.get(`lyrics?${params.toString()}`);
-        // For getLyricsForTrack, we don't have a player context directly, so track info might be limited
         return this.mapLavaLyricsResponse(response);
     }
 
