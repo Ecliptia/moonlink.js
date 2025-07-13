@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder } = require("discord.js")
 const config = require("../../config");
 
 module.exports = {
@@ -9,6 +9,12 @@ module.exports = {
     },
     async execute(client, message, args) {
         const player = client.manager.players.get(message.guild.id);
+
+        let provider = null;
+        const providerIndex = args.indexOf("--provider");
+        if (providerIndex !== -1 && args.length > providerIndex + 1) {
+            provider = args[providerIndex + 1];
+        }
 
         if (!player || !player.current) {
             return message.reply("There is no track playing in this guild.");
@@ -25,7 +31,7 @@ module.exports = {
             await player.subscribeLyrics((line) => {
                 lyricsEmbed.setDescription(line.line);
                 lyricsMessage.edit({ embeds: [lyricsEmbed] }).catch(console.error);
-            });
+            }, false, provider);
             message.channel.send("Successfully subscribed to live lyrics. Lyrics will appear above.");
         } catch (error) {
             console.error("Error subscribing to live lyrics:", error);
