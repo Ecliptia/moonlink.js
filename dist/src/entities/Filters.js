@@ -22,6 +22,10 @@ class Filters {
             distortion: player.get("distortion") || undefined,
             channelMix: player.get("channelMix") || undefined,
             lowPass: player.get("lowPass") || undefined,
+            highPass: player.get("highPass") || undefined,
+            lowPassDSPX: player.get("lowPassDSPX") || undefined,
+            normalization: player.get("normalization") || undefined,
+            echo: player.get("echo") || undefined,
         };
     }
     setFilter(filterName, value) {
@@ -149,6 +153,70 @@ class Filters {
             return (smoothing === undefined || typeof smoothing === 'number');
         }, "Moonlink.js > Filters#setLowPass - lowPass not a valid LowPass object or undefined");
         return this.setFilter("lowPass", lowPass);
+    }
+    setHighPass(highPass) {
+        if (highPass !== undefined && !this.player.node.capabilities.has("lavadspx")) {
+            this.manager.emit("debug", `Moonlink.js > Filters#setHighPass - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
+            throw new Error("Node does not support LavaDSPX filters.");
+        }
+        (0, index_1.validateProperty)(highPass, (value) => {
+            if (value === undefined)
+                return true;
+            if (typeof value !== 'object')
+                return false;
+            const { cutoffFrequency, boostFactor } = value;
+            return ((cutoffFrequency === undefined || (typeof cutoffFrequency === 'number' && cutoffFrequency > 0)) &&
+                (boostFactor === undefined || (typeof boostFactor === 'number' && boostFactor > 0.0)));
+        }, "Moonlink.js > Filters#setHighPass - highPass not a valid HighPass object or undefined");
+        return this.setFilter("highPass", highPass);
+    }
+    setLowPassDSPX(lowPassDSPX) {
+        if (lowPassDSPX !== undefined && !this.player.node.capabilities.has("lavadspx")) {
+            this.manager.emit("debug", `Moonlink.js > Filters#setLowPassDSPX - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
+            throw new Error("Node does not support LavaDSPX filters.");
+        }
+        (0, index_1.validateProperty)(lowPassDSPX, (value) => {
+            if (value === undefined)
+                return true;
+            if (typeof value !== 'object')
+                return false;
+            const { cutoffFrequency, boostFactor } = value;
+            return ((cutoffFrequency === undefined || (typeof cutoffFrequency === 'number' && cutoffFrequency > 0)) &&
+                (boostFactor === undefined || (typeof boostFactor === 'number' && boostFactor > 0.0)));
+        }, "Moonlink.js > Filters#setLowPassDSPX - lowPassDSPX not a valid LowPassDSPX object or undefined");
+        return this.setFilter("lowPassDSPX", lowPassDSPX);
+    }
+    setNormalization(normalization) {
+        if (normalization !== undefined && !this.player.node.capabilities.has("lavadspx")) {
+            this.manager.emit("debug", `Moonlink.js > Filters#setNormalization - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
+            throw new Error("Node does not support LavaDSPX filters.");
+        }
+        (0, index_1.validateProperty)(normalization, (value) => {
+            if (value === undefined)
+                return true;
+            if (typeof value !== 'object')
+                return false;
+            const { maxAmplitude, adaptive } = value;
+            return ((maxAmplitude === undefined || (typeof maxAmplitude === 'number' && maxAmplitude >= 0.0 && maxAmplitude <= 1.0)) &&
+                (adaptive === undefined || typeof adaptive === 'boolean'));
+        }, "Moonlink.js > Filters#setNormalization - normalization not a valid Normalization object or undefined");
+        return this.setFilter("normalization", normalization);
+    }
+    setEcho(echo) {
+        if (echo !== undefined && !this.player.node.capabilities.has("lavadspx")) {
+            this.manager.emit("debug", `Moonlink.js > Filters#setEcho - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
+            throw new Error("Node does not support LavaDSPX filters.");
+        }
+        (0, index_1.validateProperty)(echo, (value) => {
+            if (value === undefined)
+                return true;
+            if (typeof value !== 'object')
+                return false;
+            const { echoLength, decay } = value;
+            return ((echoLength === undefined || (typeof echoLength === 'number' && echoLength > 0.0)) &&
+                (decay === undefined || (typeof decay === 'number' && decay >= 0.0 && decay <= 1.0)));
+        }, "Moonlink.js > Filters#setEcho - echo not a valid Echo object or undefined");
+        return this.setFilter("echo", echo);
     }
     resetFilters() {
         Object.keys(this.filters).forEach(key => {
