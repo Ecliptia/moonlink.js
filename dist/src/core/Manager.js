@@ -14,6 +14,7 @@ const SkybotPlugin_1 = require("../plugins/SkybotPlugin");
 const LyricsKtPlugin_1 = require("../plugins/LyricsKtPlugin");
 const JavaLyricsPlugin_1 = require("../plugins/JavaLyricsPlugin");
 const JavaLavaLyricsPlugin_1 = require("../plugins/JavaLavaLyricsPlugin");
+const LavaDSPXPlugin_1 = require("../plugins/LavaDSPXPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -55,6 +56,7 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager.registerPlugin(LyricsKtPlugin_1.LyricsKtPlugin);
         this.pluginManager.registerPlugin(JavaLyricsPlugin_1.JavaLyricsPlugin);
         this.pluginManager.registerPlugin(JavaLavaLyricsPlugin_1.JavaLavaLyricsPlugin);
+        this.pluginManager.registerPlugin(LavaDSPXPlugin_1.LavaDSPXPlugin);
     }
     async init(clientId) {
         if (this.initialize)
