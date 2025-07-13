@@ -489,8 +489,18 @@ export interface ILavaLyricsLine {
 }
 
 export interface ILavaLyricsObject {
-  sourceName: string;
-  provider: string;
+  type: "timed" | "text";
+  track?: {
+    title: string;
+    author: string;
+    album?: string;
+    albumArt?: {
+      url: string;
+      height: number;
+      width: number;
+    }[];
+  };
+  source?: string;
   text?: string;
   lines: ILavaLyricsLine[];
   plugin: Object;
