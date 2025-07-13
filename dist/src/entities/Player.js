@@ -588,18 +588,25 @@ class Player {
         }
         return this.previous.slice(Math.max(0, this.previous.length - limit));
     }
-    async getLyrics(encodedTrack, skipTrackSource) {
+    async getLyrics(encodedTrack, skipTrackSource, provider) {
         return this.manager.getLyrics({
             player: this,
             encodedTrack,
             skipTrackSource,
+            provider,
         });
     }
-    async subscribeLyrics(callback, skipTrackSource) {
-        return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource);
+    async subscribeLyrics(callback, skipTrackSource, provider) {
+        return this.manager.subscribeLyrics(this.guildId, callback, skipTrackSource, provider);
     }
-    async unsubscribeLyrics() {
-        return this.manager.unsubscribeLyrics(this.guildId);
+    async unsubscribeLyrics(provider) {
+        return this.manager.unsubscribeLyrics(this.guildId, provider);
+    }
+    async searchLyrics(query, provider) {
+        return this.manager.searchLyrics({
+            query,
+            provider,
+        });
     }
 }
 exports.Player = Player;

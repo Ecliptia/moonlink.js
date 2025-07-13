@@ -76,7 +76,8 @@ export declare class Player {
     clearSponsorBlockCategories(): Promise<void>;
     private updateData;
     getHistory(limit?: number): Track[];
-    getLyrics(encodedTrack?: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null>;
-    subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean): Promise<void>;
-    unsubscribeLyrics(): Promise<void>;
+    getLyrics(encodedTrack?: string, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<ILavaLyricsObject | null>;
+    subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
+    unsubscribeLyrics(provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
+    searchLyrics(query: string, provider?: 'lavalyrics' | 'lyrics'): Promise<any[] | null>;
 }
