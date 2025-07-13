@@ -15,6 +15,8 @@ export declare class LyricsKtPlugin extends AbstractPlugin {
     getLyricsByVideoId(videoId: string): Promise<ILavaLyricsObject | null>;
     getLyricsForCurrentTrack(guildId: string): Promise<ILavaLyricsObject | null>;
     private liveLyricsIntervals;
+    private cleanTrackTitle;
+    getStaticLyricsForTrack(guildId: string): Promise<ILavaLyricsObject | null>;
     subscribeToLiveLyrics(guildId: string): Promise<void>;
     unsubscribeFromLiveLyrics(guildId: string): Promise<void>;
     registerLyricsCallback(guildId: string, callback: (line: ILavaLyricsLine) => void): void;
