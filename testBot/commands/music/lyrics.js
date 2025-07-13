@@ -28,13 +28,12 @@ module.exports = {
     const player = client.manager.players.get(message.guild.id);
 
     let query = null;
-    let provider = null;
+    let provider = "lyrics";
 
-    // Manual argument parsing for query and provider
     const providerIndex = args.indexOf("--provider");
     if (providerIndex !== -1 && args.length > providerIndex + 1) {
       provider = args[providerIndex + 2];
-      args.splice(providerIndex, 2); // Remove --provider and its value from args
+      args.splice(providerIndex, 2);
     }
     query = args.join(" ");
     if (query === "") query = null;
@@ -50,7 +49,6 @@ module.exports = {
 
     try {
       if (query) {
-        // Search for lyrics
         const searchResults = await client.manager.searchLyrics({
           query: query,
           provider: provider,
@@ -83,7 +81,6 @@ module.exports = {
         }
 
         if (!foundLyrics) {
-          // Fallback if no lyrics found from search results, try direct query if supported
           lyrics = await client.manager.getLyrics({
             query: query,
             provider: provider,
@@ -93,7 +90,6 @@ module.exports = {
           }
         }
       } else {
-        // Get lyrics for current playing song
         if (!player || !player.current) {
           loadingMsg.edit({
             embeds: [
@@ -129,7 +125,6 @@ module.exports = {
         lyricsContent = lyrics.text;
       }
 
-      // Split lyrics into chunks of 4000 characters
       const chunks = [];
       for (let i = 0; i < lyricsContent.length; i += 4000) {
         chunks.push(lyricsContent.substring(i, i + 4000));
@@ -170,9 +165,8 @@ module.exports = {
         components: [row],
       });
 
-      // Handle pagination
       const collector = initialMessage.createMessageComponentCollector({
-        time: 300000, // 5 minutes
+        time: 300000,
       });
 
       collector.on("collect", async (interaction) => {
