@@ -16,13 +16,46 @@ export class LavaLyricsPlugin extends AbstractPlugin {
         this.lyricsCallbacks.clear();
     }
 
+    private mapLavaLyricsResponse(data: any, player?: any): ILavaLyricsObject | null {
+        if (!data || !data.data) return null;
+
+        const lines: ILavaLyricsLine[] = data.data.data?.map((line: any) => ({
+            timestamp: line.startTime,
+            duration: line.endTime - line.startTime,
+            line: line.text,
+            plugin: data.plugin || {}
+        })) || [];
+
+        let type: "timed" | "text" = "text";
+        if (data.data.synced && lines.length > 0) {
+            type = "timed";
+        }
+
+        const trackInfo = player?.current ? {
+            title: player.current.title,
+            author: player.current.author,
+            // LavaLyrics API doesn't provide album/albumArt directly in lyrics response
+            // We could try to get it from player.current if available, but it might not be accurate for the lyrics source
+        } : undefined;
+
+        return {
+            type: type,
+            track: trackInfo,
+            source: "LavaLyrics",
+            text: data.data.text || (type === "text" ? lines.map(l => l.line).join("\n") : undefined),
+            lines: lines,
+            plugin: data.plugin || {}
+        };
+    }
+
     public async getLyricsForCurrentTrack(guildId: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null> {
+        const player = this.node.manager.players.get(guildId);
         const params = new URLSearchParams();
         if (skipTrackSource !== undefined) {
             params.append("skipTrackSource", String(skipTrackSource));
         }
         const response = await this.node.rest.get(`sessions/${this.node.sessionId}/players/${guildId}/track/lyrics?${params.toString()}`);
-        return response as ILavaLyricsObject;
+        return this.mapLavaLyricsResponse(response, player);
     }
 
     public async getLyricsForTrack(encodedTrack: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null> {
@@ -33,7 +66,8 @@ export class LavaLyricsPlugin extends AbstractPlugin {
             params.append("skipTrackSource", String(skipTrackSource));
         }
         const response = await this.node.rest.get(`lyrics?${params.toString()}`);
-        return response as ILavaLyricsObject;
+        // For getLyricsForTrack, we don't have a player context directly, so track info might be limited
+        return this.mapLavaLyricsResponse(response);
     }
 
     public async subscribeToLiveLyrics(guildId: string, skipTrackSource?: boolean): Promise<void> {
@@ -70,10 +104,8 @@ export class LavaLyricsPlugin extends AbstractPlugin {
                 }
                 break;
             case "LyricsFoundEvent":
-                // Handle LyricsFoundEvent if needed, e.g., emit to manager
                 break;
             case "LyricsNotFoundEvent":
-                // Handle LyricsNotFoundEvent if needed, e.g., emit to manager
                 break;
         }
     }

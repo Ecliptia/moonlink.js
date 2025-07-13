@@ -13,13 +13,40 @@ class LavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
     unload(node) {
         this.lyricsCallbacks.clear();
     }
+    mapLavaLyricsResponse(data, player) {
+        if (!data || !data.data)
+            return null;
+        const lines = data.data.data?.map((line) => ({
+            timestamp: line.startTime,
+            duration: line.endTime - line.startTime,
+            line: line.text,
+            plugin: data.plugin || {}
+        })) || [];
+        let type = "text";
+        if (data.data.synced && lines.length > 0) {
+            type = "timed";
+        }
+        const trackInfo = player?.current ? {
+            title: player.current.title,
+            author: player.current.author,
+        } : undefined;
+        return {
+            type: type,
+            track: trackInfo,
+            source: "LavaLyrics",
+            text: data.data.text || (type === "text" ? lines.map(l => l.line).join("\n") : undefined),
+            lines: lines,
+            plugin: data.plugin || {}
+        };
+    }
     async getLyricsForCurrentTrack(guildId, skipTrackSource) {
+        const player = this.node.manager.players.get(guildId);
         const params = new URLSearchParams();
         if (skipTrackSource !== undefined) {
             params.append("skipTrackSource", String(skipTrackSource));
         }
         const response = await this.node.rest.get(`sessions/${this.node.sessionId}/players/${guildId}/track/lyrics?${params.toString()}`);
-        return response;
+        return this.mapLavaLyricsResponse(response, player);
     }
     async getLyricsForTrack(encodedTrack, skipTrackSource) {
         const params = new URLSearchParams({
@@ -29,7 +56,7 @@ class LavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
             params.append("skipTrackSource", String(skipTrackSource));
         }
         const response = await this.node.rest.get(`lyrics?${params.toString()}`);
-        return response;
+        return this.mapLavaLyricsResponse(response);
     }
     async subscribeToLiveLyrics(guildId, skipTrackSource) {
         const params = new URLSearchParams();
