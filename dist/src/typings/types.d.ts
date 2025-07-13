@@ -14,8 +14,9 @@ export declare enum NodeState {
     DESTROYED = "DESTROYED"
 }
 export type TNativeSearchSources = "youtube" | "youtubemusic" | "soundcloud" | "local";
-export type TLavaSrcSearchSources = "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "dzrec" | "ymsearch" | "ymrec" | "ftts" | "vksearch" | "vkrec" | "tdsearch" | "tdrec" | "qbsearch" | "qbisrc" | "qbrec";
-export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | string;
+export type TLavaSrcSearchSources = "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "dzrec" | "ymsearch" | "ymrec" | "ftts" | "vksearch" | "vkrec" | "tdsearch" | "tdrec" | "qbsearch" | "qbisrc" | "qbrec" | "phsearch" | "speak" | "mixcloud" | "ocremix" | "clypit" | "reddit" | "getyarn" | "tiktok" | "soundgasm" | "pixeldrain" | "streamdeck";
+export type TDirectSources = "mixcloud" | "ocremix" | "clypit" | "reddit" | "getyarn" | "tiktok" | "soundgasm" | "pixeldrain" | "streamdeck";
+export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | TDirectSources | string;
 export type TLoadResultType = "track" | "playlist" | "search" | "empty" | "error" | TLoadResultNodeLinkType;
 export type TLoadResultNodeLinkType = "short" | "album" | "artist" | "playlist" | "station" | "podcast" | "podcast";
 export type TSortTypeNode = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "random";

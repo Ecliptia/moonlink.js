@@ -33,9 +33,31 @@ export type TLavaSrcSearchSources =
   | "tdrec"
   | "qbsearch"
   | "qbisrc"
-  | "qbrec";
+  | "qbrec"
+  | "phsearch"
+  | "speak"
+  | "mixcloud"
+  | "ocremix"
+  | "clypit"
+  | "reddit"
+  | "getyarn"
+  | "tiktok"
+  | "soundgasm"
+  | "pixeldrain"
+  | "streamdeck";
 
-export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | string;
+export type TDirectSources =
+  | "mixcloud"
+  | "ocremix"
+  | "clypit"
+  | "reddit"
+  | "getyarn"
+  | "tiktok"
+  | "soundgasm"
+  | "pixeldrain"
+  | "streamdeck";
+
+export type TSearchSources = TNativeSearchSources | TLavaSrcSearchSources | TDirectSources | string;
 
 export type TLoadResultType =
   | "track"
