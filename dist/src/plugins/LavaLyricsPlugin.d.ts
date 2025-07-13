@@ -8,6 +8,7 @@ export declare class LavaLyricsPlugin extends AbstractPlugin {
     private lyricsCallbacks;
     load(node: Node): void;
     unload(node: Node): void;
+    private mapLavaLyricsResponse;
     getLyricsForCurrentTrack(guildId: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null>;
     getLyricsForTrack(encodedTrack: string, skipTrackSource?: boolean): Promise<ILavaLyricsObject | null>;
     subscribeToLiveLyrics(guildId: string, skipTrackSource?: boolean): Promise<void>;
