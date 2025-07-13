@@ -12,6 +12,8 @@ const LavaLyricsPlugin_1 = require("../plugins/LavaLyricsPlugin");
 const LavaSearchPlugin_1 = require("../plugins/LavaSearchPlugin");
 const SkybotPlugin_1 = require("../plugins/SkybotPlugin");
 const LyricsKtPlugin_1 = require("../plugins/LyricsKtPlugin");
+const JavaLyricsPlugin_1 = require("../plugins/JavaLyricsPlugin");
+const JavaLavaLyricsPlugin_1 = require("../plugins/JavaLavaLyricsPlugin");
 class Manager extends node_events_1.EventEmitter {
     initialize = false;
     options;
@@ -51,6 +53,8 @@ class Manager extends node_events_1.EventEmitter {
         this.pluginManager.registerPlugin(LavaSearchPlugin_1.LavaSearchPlugin);
         this.pluginManager.registerPlugin(SkybotPlugin_1.SkybotPlugin);
         this.pluginManager.registerPlugin(LyricsKtPlugin_1.LyricsKtPlugin);
+        this.pluginManager.registerPlugin(JavaLyricsPlugin_1.JavaLyricsPlugin);
+        this.pluginManager.registerPlugin(JavaLavaLyricsPlugin_1.JavaLavaLyricsPlugin);
     }
     async init(clientId) {
         if (this.initialize)
@@ -278,11 +282,14 @@ class Manager extends node_events_1.EventEmitter {
         else if (provider === 'lyrics') {
             targetNode = this.nodes.getNodeWithCapability("lyrics");
         }
+        else if (provider === 'java-lyrics-plugin') {
+            targetNode = this.nodes.getNodeWithCapability("java-lyrics-plugin");
+        }
         else if (encodedTrack) {
-            targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics");
+            targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
         }
         else if (videoId) {
-            targetNode = this.nodes.getNodeWithCapability("lyrics");
+            targetNode = this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
         }
         const pluginsToTry = [];
         if (provider === 'lavalyrics') {
@@ -291,8 +298,11 @@ class Manager extends node_events_1.EventEmitter {
         else if (provider === 'lyrics') {
             pluginsToTry.push('lyrics');
         }
+        else if (provider === 'java-lyrics-plugin') {
+            pluginsToTry.push('java-lyrics-plugin');
+        }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+            pluginsToTry.push('java-lyrics-plugin', 'lavalyrics-plugin', 'lyrics');
         }
         for (const pluginName of pluginsToTry) {
             if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(pluginName.replace('-plugin', ''))) {
@@ -300,35 +310,34 @@ class Manager extends node_events_1.EventEmitter {
                 continue;
             }
             const lyricsPlugin = targetNode.plugins.get(pluginName);
-            if (lyricsPlugin && lyricsPlugin.getLyricsForCurrentTrack || lyricsPlugin.getLyricsForTrack || lyricsPlugin.getLyricsByVideoId) {
+            if (lyricsPlugin && (lyricsPlugin.getLyricsForCurrentTrack || lyricsPlugin.getLyricsForTrack || lyricsPlugin.getLyricsByVideoId)) {
                 try {
                     let resultLyrics = null;
                     if (player && guildId) {
-                        let lyrics = await lyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
-                        if ((!lyrics || !lyrics.lines || lyrics.lines.length === 0) && pluginName === 'lyrics') {
-                            this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found via getLyricsForCurrentTrack for guild ${guildId} with LyricsKtPlugin. Attempting static search.`);
-                            lyrics = await lyricsPlugin.getStaticLyricsForTrack(guildId);
+                        resultLyrics = await lyricsPlugin.getLyricsForCurrentTrack(guildId, skipTrackSource);
+                        if ((!resultLyrics || !resultLyrics.lines || resultLyrics.lines.length === 0) && lyricsPlugin.getStaticLyricsForTrack) {
+                            this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found for guild ${guildId} with ${pluginName}. Attempting static search.`);
+                            resultLyrics = await lyricsPlugin.getStaticLyricsForTrack(guildId);
                         }
-                        resultLyrics = lyrics;
                     }
                     else if (pluginName === 'lavalyrics-plugin' && encodedTrack) {
                         resultLyrics = await lyricsPlugin.getLyricsForTrack(encodedTrack, skipTrackSource);
                     }
-                    else if (pluginName === 'lyrics') {
-                        if (videoId) {
-                            resultLyrics = await lyricsPlugin.getLyricsByVideoId(videoId);
-                        }
-                        else if (encodedTrack) {
-                            const trackInfo = (0, index_1.decodeTrack)(encodedTrack);
-                            if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube') {
-                                resultLyrics = await lyricsPlugin.getLyricsByVideoId(trackInfo.info.identifier);
-                            }
+                    else if (videoId) {
+                        resultLyrics = await lyricsPlugin.getLyricsByVideoId(videoId);
+                    }
+                    else if (encodedTrack) {
+                        const trackInfo = (0, index_1.decodeTrack)(encodedTrack);
+                        if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube' && lyricsPlugin.getLyricsByVideoId) {
+                            resultLyrics = await lyricsPlugin.getLyricsByVideoId(trackInfo.info.identifier);
                         }
                     }
-                    if (cacheKey && resultLyrics) {
-                        this.lyricsResultCache.set(cacheKey, resultLyrics);
+                    if (resultLyrics && (resultLyrics.text || (resultLyrics.lines && resultLyrics.lines.length > 0))) {
+                        if (cacheKey && resultLyrics) {
+                            this.lyricsResultCache.set(cacheKey, resultLyrics);
+                        }
+                        return resultLyrics;
                     }
-                    return resultLyrics;
                 }
                 catch (e) {
                     this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics with ${pluginName}: ${e.message}`);
@@ -340,7 +349,7 @@ class Manager extends node_events_1.EventEmitter {
     async searchLyrics(options) {
         (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > searchLyrics > Options is required");
         (0, index_1.validateProperty)(options.query, (value) => typeof value === "string", "(Moonlink.js) - Manager > searchLyrics > Query is required");
-        const { query, provider, node: preferredNode } = options;
+        const { query, provider, node: preferredNode, source } = options;
         const pluginsToTry = [];
         if (provider === 'lavalyrics') {
             pluginsToTry.push('lavalyrics-plugin');
@@ -348,8 +357,11 @@ class Manager extends node_events_1.EventEmitter {
         else if (provider === 'lyrics') {
             pluginsToTry.push('lyrics');
         }
+        else if (provider === 'java-lyrics-plugin') {
+            pluginsToTry.push('java-lyrics-plugin');
+        }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
         }
         for (const pluginName of pluginsToTry) {
             const capability = pluginName;
@@ -363,7 +375,7 @@ class Manager extends node_events_1.EventEmitter {
             const lyricsPlugin = targetNode.plugins.get(pluginName);
             if (lyricsPlugin && lyricsPlugin.search) {
                 try {
-                    return await lyricsPlugin.search(query);
+                    return await lyricsPlugin.search(query, source);
                 }
                 catch (e) {
                     this.emit("debug", `Moonlink.js > searchLyrics > Failed to search lyrics with ${pluginName}: ${e.message}`);
@@ -385,8 +397,11 @@ class Manager extends node_events_1.EventEmitter {
         else if (provider === 'lyrics') {
             pluginsToTry.push('lyrics');
         }
+        else if (provider === 'java-lyrics-plugin') {
+            pluginsToTry.push('java-lyrics-plugin');
+        }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
         }
         for (const pluginName of pluginsToTry) {
             const capability = pluginName.replace('-plugin', '');
@@ -422,8 +437,11 @@ class Manager extends node_events_1.EventEmitter {
         else if (provider === 'lyrics') {
             pluginsToTry.push('lyrics');
         }
+        else if (provider === 'java-lyrics-plugin') {
+            pluginsToTry.push('java-lyrics-plugin');
+        }
         else {
-            pluginsToTry.push('lavalyrics-plugin', 'lyrics');
+            pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
         }
         for (const pluginName of pluginsToTry) {
             const capability = pluginName.replace('-plugin', '');
