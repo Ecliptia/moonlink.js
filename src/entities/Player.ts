@@ -12,6 +12,7 @@ import {
   validateProperty,
   isVoiceStateAttempt,
   decodeTrack,
+  isSourceBlacklisted,
 } from "../../index";
 
 export class Player {
@@ -182,11 +183,17 @@ export class Player {
     if (!options.encoded && !this.queue.size) return false;
     await isVoiceStateAttempt(this);
 
+    let positionToStart = options.position ?? 0;
+
     if (options.encoded) {
       const decodedTrack = decodeTrack(options.encoded);
       this.current = new Track(decodedTrack, options.requestedBy);
     } else {
-      this.current = this.queue.shift();
+      const trackFromQueue = this.queue.shift();
+      if (trackFromQueue) {
+        this.current = trackFromQueue;
+        positionToStart = options.position ?? trackFromQueue.position ?? 0;
+      }
     }
 
     if (typeof options.requestedBy === "string" || typeof this.current?.requestedBy === "string") {
@@ -197,18 +204,27 @@ export class Player {
       return false;
     }
 
-    // Intelligent node selection and fallback logic
+    if (isSourceBlacklisted(this.manager, this.current.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Track from blacklisted source (${this.current.sourceName}) detected for guild ${this.guildId}. Skipping.`);
+      this.manager.emit("trackBlacklisted", this, this.current);
+      if (this.queue.size > 0) {
+        return this.play();
+      } else {
+        this.current = null;
+        this.playing = false;
+        return false;
+      }
+    }
+
     let targetNode: Node = this.node;
     if (this.current) {
       const requiredCapability = this.current.sourceName ? `search:${this.current.sourceName}` : undefined;
 
-      // 1. Check if current node is suitable
       if (requiredCapability && (!this.node.connected || !this.node.capabilities.has(requiredCapability))) {
         this.manager.emit("debug", `Moonlink.js > Player > Current node ${this.node.identifier} not suitable for source ${this.current.sourceName}.`);
 
         let foundNode: Node | undefined;
 
-        // 2. Prioritize originNodeIdentifier
         if (this.current.origin) {
           foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability, this.current.origin);
           if (foundNode) {
@@ -216,7 +232,6 @@ export class Player {
           }
         }
 
-        // 3. If not found, find best node with capability
         if (!foundNode && requiredCapability) {
           foundNode = this.manager.nodes.getNodeWithCapability(requiredCapability);
           if (foundNode) {
@@ -224,7 +239,6 @@ export class Player {
           }
         }
 
-        // 4. Fallback to generic search if no suitable node found
         if (!foundNode) {
           this.manager.emit("debug", `Moonlink.js > Player > No suitable node found for source ${this.current.sourceName}. Attempting generic search fallback.`);
           const searchResult = await this.manager.search({
@@ -248,7 +262,6 @@ export class Player {
           }
         }
 
-        // Transfer if a new suitable node was found
         if (foundNode && foundNode.identifier !== this.node.identifier) {
           this.manager.emit("debug", `Moonlink.js > Player > Transferring player to new suitable node: ${foundNode.identifier}`);
           try {
@@ -271,7 +284,6 @@ export class Player {
     });
 
     this.set("isBackPlay", options.isBackPlay ?? false);
-
     targetNode.rest.update({
       guildId: this.guildId,
       data: {
@@ -279,7 +291,7 @@ export class Player {
           encoded: this.current.encoded,
           userData: options.requestedBy ?? this.current?.requestedBy,
         },
-        position: options.position ?? this.current.position ?? 0,
+        position: positionToStart,
         endTime: options.endTime,
         volume: this.volume,
       },
@@ -324,6 +336,10 @@ export class Player {
           uri += `?language=${(options.options as any).language}`;
         }
         break;
+      case 'skybot':
+        capability = "search:speak";
+        uri = `${options.text}`;
+        break;
       default:
         this.manager.emit("debug", `Moonlink.js > Player#speak - Unsupported TTS provider: ${provider}`);
         return false;
@@ -352,7 +368,7 @@ export class Player {
 
         if (trackToResume) {
           const clonedTrackToResume = new Track(trackToResume.raw(), trackToResume.requestedBy);
-          clonedTrackToResume.position = trackToResume.position;
+          clonedTrackToResume.setPosition(Number(trackToResume.position));
           this.queue.unshift(clonedTrackToResume);
         }
 
@@ -382,11 +398,23 @@ export class Player {
     const lastTrack = this.previous.pop();
     if (!lastTrack) return false;
 
+    let trackToPlay = lastTrack;
+    while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from previous tracks.`);
+      this.manager.emit("trackBlacklisted", this, trackToPlay);
+      trackToPlay = this.previous.pop();
+    }
+
+    if (!trackToPlay) {
+      this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found in previous tracks.`);
+      return false;
+    }
+
     if (this.current) {
       this.queue.unshift(this.current);
     }
 
-    this.current = lastTrack;
+    this.current = trackToPlay;
     await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy, isBackPlay: true });
 
     this.manager.emit("playerTriggeredBack", this, lastTrack);
@@ -494,26 +522,37 @@ export class Player {
       return false;
     }
 
+    let trackToPlay: Track | undefined;
     if (position !== undefined) {
       validateProperty(
         position,
         (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1,
         "Moonlink.js > Player#skip - position not a number or out of range"
       );
+      trackToPlay = this.queue.get(position);
+      if (!trackToPlay) return false;
+      this.queue.remove(position);
+    } else {
+      trackToPlay = this.queue.shift();
+    }
+
+    while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
+      this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
+      this.manager.emit("trackBlacklisted", this, trackToPlay);
+      trackToPlay = this.queue.shift();
+    }
+
+    if (!trackToPlay) {
+      this.current = null;
+      this.playing = false;
+      this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found after skipping.`);
+      return false;
     }
 
     const oldTrack = this.current;
-    if (position !== undefined) {
-      const trackToSkipTo = this.queue.get(position);
-      if (!trackToSkipTo) return false;
+    this.current = trackToPlay;
 
-      this.queue.remove(position);
-      this.current = trackToSkipTo;
-
-      await this.play({ encoded: this.current.encoded });
-    } else {
-      await this.play();
-    }
+    await this.play({ encoded: this.current.encoded });
 
     this.manager.emit("playerTriggeredSkip", this, oldTrack, this.current, position ?? 0);
     return true;

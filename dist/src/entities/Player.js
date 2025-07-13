@@ -132,18 +132,35 @@ class Player {
         if (!options.encoded && !this.queue.size)
             return false;
         await (0, index_1.isVoiceStateAttempt)(this);
+        let positionToStart = options.position ?? 0;
         if (options.encoded) {
             const decodedTrack = (0, index_1.decodeTrack)(options.encoded);
             this.current = new index_1.Track(decodedTrack, options.requestedBy);
         }
         else {
-            this.current = this.queue.shift();
+            const trackFromQueue = this.queue.shift();
+            if (trackFromQueue) {
+                this.current = trackFromQueue;
+                positionToStart = options.position ?? trackFromQueue.position ?? 0;
+            }
         }
         if (typeof options.requestedBy === "string" || typeof this.current?.requestedBy === "string") {
             this.current.setRequester({ id: options.requestedBy ?? this.current?.requestedBy });
         }
         if (this.current?.pluginInfo?.MoonlinkInternal && !(await this.current.resolve())) {
             return false;
+        }
+        if ((0, index_1.isSourceBlacklisted)(this.manager, this.current.sourceName)) {
+            this.manager.emit("debug", `Moonlink.js > Player > Track from blacklisted source (${this.current.sourceName}) detected for guild ${this.guildId}. Skipping.`);
+            this.manager.emit("trackBlacklisted", this, this.current);
+            if (this.queue.size > 0) {
+                return this.play();
+            }
+            else {
+                this.current = null;
+                this.playing = false;
+                return false;
+            }
         }
         let targetNode = this.node;
         if (this.current) {
@@ -215,7 +232,7 @@ class Player {
                     encoded: this.current.encoded,
                     userData: options.requestedBy ?? this.current?.requestedBy,
                 },
-                position: options.position ?? this.current.position ?? 0,
+                position: positionToStart,
                 endTime: options.endTime,
                 volume: this.volume,
             },
@@ -257,6 +274,10 @@ class Player {
                     uri += `?language=${options.options.language}`;
                 }
                 break;
+            case 'skybot':
+                capability = "search:speak";
+                uri = `${options.text}`;
+                break;
             default:
                 this.manager.emit("debug", `Moonlink.js > Player#speak - Unsupported TTS provider: ${provider}`);
                 return false;
@@ -282,7 +303,7 @@ class Player {
                 const trackToResume = this.current;
                 if (trackToResume) {
                     const clonedTrackToResume = new index_1.Track(trackToResume.raw(), trackToResume.requestedBy);
-                    clonedTrackToResume.position = trackToResume.position;
+                    clonedTrackToResume.setPosition(Number(trackToResume.position));
                     this.queue.unshift(clonedTrackToResume);
                 }
                 this.queue.unshift(ttsTrack);
@@ -311,10 +332,20 @@ class Player {
         const lastTrack = this.previous.pop();
         if (!lastTrack)
             return false;
+        let trackToPlay = lastTrack;
+        while (trackToPlay && (0, index_1.isSourceBlacklisted)(this.manager, trackToPlay.sourceName)) {
+            this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from previous tracks.`);
+            this.manager.emit("trackBlacklisted", this, trackToPlay);
+            trackToPlay = this.previous.pop();
+        }
+        if (!trackToPlay) {
+            this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found in previous tracks.`);
+            return false;
+        }
         if (this.current) {
             this.queue.unshift(this.current);
         }
-        this.current = lastTrack;
+        this.current = trackToPlay;
         await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy, isBackPlay: true });
         this.manager.emit("playerTriggeredBack", this, lastTrack);
         return true;
@@ -406,21 +437,31 @@ class Player {
             }
             return false;
         }
+        let trackToPlay;
         if (position !== undefined) {
             (0, index_1.validateProperty)(position, (value) => typeof value === "number" && !isNaN(value) && value >= 0 && value <= this.queue.size - 1, "Moonlink.js > Player#skip - position not a number or out of range");
-        }
-        const oldTrack = this.current;
-        if (position !== undefined) {
-            const trackToSkipTo = this.queue.get(position);
-            if (!trackToSkipTo)
+            trackToPlay = this.queue.get(position);
+            if (!trackToPlay)
                 return false;
             this.queue.remove(position);
-            this.current = trackToSkipTo;
-            await this.play({ encoded: this.current.encoded });
         }
         else {
-            await this.play();
+            trackToPlay = this.queue.shift();
         }
+        while (trackToPlay && (0, index_1.isSourceBlacklisted)(this.manager, trackToPlay.sourceName)) {
+            this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
+            this.manager.emit("trackBlacklisted", this, trackToPlay);
+            trackToPlay = this.queue.shift();
+        }
+        if (!trackToPlay) {
+            this.current = null;
+            this.playing = false;
+            this.manager.emit("debug", `Moonlink.js > Player > No non-blacklisted tracks found after skipping.`);
+            return false;
+        }
+        const oldTrack = this.current;
+        this.current = trackToPlay;
+        await this.play({ encoded: this.current.encoded });
         this.manager.emit("playerTriggeredSkip", this, oldTrack, this.current, position ?? 0);
         return true;
     }
