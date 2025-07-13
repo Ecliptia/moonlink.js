@@ -58,6 +58,7 @@ export interface IEvents {
     sourceClear: () => void;
     nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
     playerSpeak: (player: Player, text: string, options?: ISpeakOptions) => void;
+    trackBlacklisted: (player: Player, track: Track) => void;
     segmentsLoaded: (player: Player, segments: ISegment[]) => void;
     segmentSkipped: (player: Player, segment: ISegment) => void;
     chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
@@ -155,6 +156,7 @@ export interface IOptionsManager {
     nodeHealthCheckInterval?: number;
     defaultPlayer?: IPlayerConfig;
     enableSourceFallback?: boolean;
+    blacklistedSources?: string[];
     defaultSponsorBlockCategories?: string[];
 }
 export interface IPlayerConfig {
@@ -415,7 +417,7 @@ export interface ISegment {
 }
 export interface ISpeakOptions {
     text: string;
-    provider?: 'flowery' | 'google';
+    provider?: 'flowery' | 'google' | 'skybot';
     options?: IFloweryTTSOptions | {
         language?: string;
     };
