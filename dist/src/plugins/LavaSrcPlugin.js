@@ -13,7 +13,7 @@ class LavaSrcPlugin extends AbstractPlugin_1.AbstractPlugin {
         "search:yandexmusic",
         "search:ymrec",
         "search:flowerytts",
-        "search:youtube",
+        "search:ytseach",
         "search:vkmusic",
         "search:vkrec",
         "search:tidal",
