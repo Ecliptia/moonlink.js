@@ -15,6 +15,168 @@ authors:
     target: _blank
 ---
 
+## Version v4.44.04 (Current)
+
+### Fixed Issues
+- `fix: update player state logic during play trigger`
+- `fix: improve player reconstruction and state updates`
+- `fix: update player reconstruction and state handling`
+- `fix: refine live lyrics scheduling and debug logging`
+- `fix: improve live lyrics scheduling logic`
+- `fix: update YouTube plugin capabilities list`
+- `fix: correct YouTube search identifier in LavaSrcPlugin`
+- `fix: remove unnecessary semicolon in SponsorBlockPlugin`
+- `fix: update bot node configuration`
+- `fix: Update property validation to ensure correct type checks for guildId, voiceChannelId, and textChannelId in PlayerManager`
+- `fix: improve validation logic for position in skip and seek methods`
+- `fix: update validation logic in Player class methods`
+
+### Refactors
+- `refactor: update JavaLyricsPlugin source map compression`
+- `refactor: remove `originNodeIdentifier` from typings`
+- `refactor: optimize structure mapping and sourcemap generation`
+- `refactor: simplify YouTubePlugin lifecycle methods`
+- `refactor: improve debug logging in PluginManager`
+- `refactor: simplify LavaSrcPlugin lifecycle methods`
+- `refactor: remove deprecated Database class`
+
+### New Features
+- `feat: add LavaDSPXPlugin to extend plugin support`
+- `feat: extend YouTube plugin capabilities`
+- `feat: add new audio filter interfaces`
+- `feat: add support for new audio filters and validations`
+- `feat: add advanced audio filters with LavaDSPX support`
+- `feat: implement JavaLavaLyricsPlugin for advanced lyrics handling`
+- `feat: implement JavaLyricsPlugin for enhanced lyrics support`
+- `feat: integrate track end handling for lyrics plugin`
+- `feat: extend provider support for lyrics operations`
+- `feat: improve live lyrics subscription handling`
+- `feat: enhance live lyrics subscription display`
+- `feat: add lyrics cache to Manager for performance`
+- `feat: enhance static lyrics retrieval and fallback`
+- `feat: implement LyricsKtPlugin for lyrics management`
+- `feat: add provider support for lyrics subscription`
+- `feat: improve lyrics handling with provider support`
+- `feat: enhance lyrics management and search flexibility`
+- `feat: enhance lyrics command functionality`
+- `feat: enhance lyrics response mapping and handling`
+- `feat: extend ILavaLyricsObject definition`
+- `feat: extend search source types and add direct sources`
+- `feat: add new track properties and methods`
+- `feat: improve queue handling with blacklist integration`
+- `feat: improve player handling and blacklist integration`
+- `feat: add blacklist track removal during player resume`
+- `feat: add blacklist tracking and Skybot provider support`
+- `feat: extend partialTrack for position info`
+- `feat: add Speak command and extend Skybot capabilities`
+- `feat: add SkybotPlugin for extended bot capabilities`
+- `feat: add LavaLyricsPlugin for lyrics support`
+- `feat: add commands for live lyrics subscription`
+- `feat: add POST method to Rest API client`
+- `feat: add lyrics management methods to Player`
+- `feat: integrate LavaLyrics plugin event handling`
+- `feat: add lyrics subscription and retrieval methods`
+- `feat: enhance lyrics retrieval and handling logic`
+- `feat: add LavaLyrics typings for lyrics integration`
+- `feat: add LavaSearchPlugin for advanced search functionality`
+- `feat: enhance SearchResult with LavaSearch fields`
+- `feat: enhance music search with LavaSearch support`
+- `feat: add LavaSearch method to Manager typings`
+- `feat: expand typings to support LavaSearch results`
+- `feat: implement SponsorBlock plugin`
+- `feat: add SponsorBlock and chapter navigation commands`
+- `feat: add chapter-related fields and refactor origin handling`
+- `feat: add REST methods for GET, PUT, and DELETE`
+- `feat: improve PluginManager debug logging for plugins`
+- `feat: enhance Player with TTS, chapter, and SponsorBlock features`
+- `feat: add chapter display to now playing embed`
+- `feat: introduce TTS improvements, chapters, and SponsorBlock API`
+- `feat: add SponsorBlock plugin event handling`
+- `feat: add chapter and segment support in player typings`
+- `feat: enhance TTS query handling in Rest entity`
+- `feat: enhance TTS support with multi-provider flexibility`
+- `feat: update playerSpeak and introduce ISpeakOptions`
+- `feat: add GoogleCloudTTSPlugin for TTS support`
+- `feat(spotify): add clientId and clientSecret options for Spotify API authentication`
+- `feat: reintroduce Database with WAL and snapshot support`
+- `feat: add YouTubePlugin for YouTube search support`
+- `feat: add LavaSrcPlugin for extended search support`
+- `feat: introduce PluginManager for plugin registration`
+- `feat: add AbstractPlugin class for plugin definition`
+- `feat: extend search sources and partial track properties`
+- `feat: add originNodeIdentifier to Track entity`
+- `feat: improve node selection and add FloweryTTS support`
+- `feat: enhance Node validation and add capability-based node selection`
+- `feat: enhance node plugin and autoplay functionality`
+- `feat: improve plugin management and refactor search logic`
+- `feat: add playerSpeak event and FloweryTTS options`
+- `feat: add PluginManager support to exports`
+
+### Chore
+- `chore: update version and User-Agent headers`
+- `chore: clean up comments and minor formatting in lyrics command`
+- `chore: remove redundant comments in lyrics command`
+- `chore: remove redundant comments from LavaLyricsPlugin`
+- `chore: remove debug console statements in SearchResult`
+- `chore: regenerate NodeManager.js sourcemap`
+- `chore: update sourcemap for Manager.js`
+- `chore: update sourcemap for Manager.js`
+- `chore: update sourcemap for Manager.js`
+- `chore: remove unused token URL`
+- `chore: remove unnecessary newline at EOF in Utils.ts`
+- `chore: update source maps for Track.js`
+- `chore: remove unnecessary newline at EOF in PlayerManager.ts`
+- `chore: bump version in package-lock.json`
+- `chore: included the built code`
+
+## Version v4.28.32 -> v4.28.34
+
+### New Features
+- `feat: add WebSocket type definitions and bump version`
+- `feat: add WebSocket client implementation`
+
+## Version v.4.6.18 -> v4.28.32
+
+### Fixed Issues
+- `fix: correct source map generation for Spotify`
+- `fix: improve PlayerManager validation and error handling`
+- `fix: correct WebSocket initialization in Listen entity`
+- `fix: improve error handling and debug logs in Deezer API`
+- `fix: improve error handling and add debug logs in Database`
+- `fix: remove unused `nodeRaw` event listener`
+
+### Refactors
+- `refactor: enhance Player entity with readonly properties, refinements, and private methods`
+- `refactor: simplify `player.previous` logic and add debug logging in Node entity`
+- `refactor: remove `previousInArray` logic and add debug logging in Node entity`
+- `refactor: remove unused `previousInArray` property from interfaces`
+
+### New Features
+- `feat: add retry logic to makeRequest function`
+- `feat: extend type definitions with enums and new type`
+- `feat: add support for YouTube thumbnail retrieval`
+- `feat: improve loadFolder method with async and error handling`
+- `feat: enhance Queue with sorting, range, and deduplication`
+- `feat: enhance Player with history, looping, and events`
+- `feat: improve NodeManager with health checks and node sorting`
+- `feat: enhance Node with improved state management`
+- `feat: enhance Manager with config validation and source fallback`
+- `feat: add WebSocket service to Listen entity`
+- `feat: extend event typings and configuration fields`
+- `feat: emit `filtersUpdate` event on update`
+- `feat: emit `filtersUpdate` event on filter modifications`
+- `feat: implement Write-Ahead Logging (WAL) for Database persistence and improved performance`
+- `feat: enhance Spotify and utility functionalities`
+
+### Chore
+- `chore: update `User-Agent` and bump package version`
+- `chore: update package versions and cleanup dependencies`
+- `chore: update .npmignore to exclude tests directory`
+- `chore: update utils API icon to `lucide:tool-case` in documentation`
+- `chore: update bot settings to include `disableNativeSources` configuration`
+- `chore: update Player.js.map file to reflect latest mappings`
+- `chore: update Manager.js.map file to reflect latest mappings`
+
 ## Version v4.6.18 (Current)
 
 ### Fixed Issues
