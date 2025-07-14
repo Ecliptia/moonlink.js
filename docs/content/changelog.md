@@ -3,15 +3,10 @@ title: Changelog
 description: "Changelog for Moonlink.js"
 icon: 'lucide:code-2'
 authors:
-  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmF2YXRhci5jb20vYXZhdGFyL2E2YTk0NWFhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
+  - avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmF0YXIuY29tL2F2YXRhci9hNmE5NDVhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
     name: Lucas Morais Rodrigues
     username: 1Lucas1apk
     to: https://github.com/1Lucas1apk
-    target: _blank
-  - avatar: https://avatars.githubusercontent.com/u/1?v=4 # Placeholder for Gemini's avatar
-    name: Gemini CLI
-    username: gemini-cli
-    to: https://github.com/google-gemini # Placeholder for a relevant link
     target: _blank
 ---
 
