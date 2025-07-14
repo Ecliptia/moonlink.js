@@ -1,65 +1,285 @@
 ---
-title: Home
+title: Moonlink.js | The Definitive Library for Discord Music Bots with Node.js
 navigation: false
+description: Build powerful Discord music bots with Moonlink.js, a feature-rich and flexible library for Node.js and Lavalink. Offers advanced queue management, audio filters, and integration with Spotify, Deezer, and more.
 ---
 <div align="center">
-<img src="https://moonlink.js.org/moonlink_banner.png">
+<img src="https://moonlink.js.org/moonlink_banner.png" alt="Moonlink.js Banner">
 </div>
 
 ::alert{type="warning" icon="lucide:triangle-alert"}
-  Documentation is being `rewritten` and updated, it may take a while...
+Our documentation is being **rewritten and improved**. We appreciate your patience!
 ::
 ::alert{type="note" icon="lucide:pencil"}
-  Use only on `nodejs` versions above `v22.x.x`
+**Heads up:** Only use with `nodejs` version `v18.x.x` or higher.
 ::
 
 ::hero
 ---
 announcement:
-  title: 'Release v4.6.18'
+  title: 'New Release v4.44.4'
   icon: '🎉'
-  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.4.36
+  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.44.4
   target: _blank
 actions:
-  - name: Get Started
-    to: /getting-started/introduction
-    leftIcon: lucide:arrow-up-right
-  - name: GitHub
-    variant: outline
-    to: https://github.com/Ecliptia/moonlink.js/
-    leftIcon: 'lucide:github'
-mobileRight: 'top'
+- name: Get Started
+  to: /getting-started/introduction
+  leftIcon: lucide:arrow-up-right
+- name: GitHub
+  variant: outline
+  to: https://github.com/Ecliptia/moonlink.js/
+  leftIcon: 'lucide:github'
+  mobileRight: 'top'
 ---
 
 #title
-Imagine a Music Application...
+Imagine the Perfect Music Bot...
 
 #description
-Moonlink.js (Reimagined Version) - Envision a sonic adventure where imagination knows no bounds, wrapped in the magical spirit of the festivities. 
+**Moonlink.js (Reimagined Version)** — A sonic adventure where your imagination is the only limit. Designed to be powerful, flexible, and intuitive, Moonlink.js is the ideal tool for creating unforgettable music bots on Discord.
 ::
 
 # Features
-> - `Queue Management`: Queue is integrated with a local database, to retrieve data if necessary
+> - `Queue Management`: Queue is integrated with a local database, to retrieve data if necessary.
 > - `Audio Filters`: Apply various audio filters.
 > - `Auto Resume`: Automatically resumes playing after a disconnect.
 > - `Logging`: Logging options with log file support.
 > - `Node Management`: Management of different Lavalink nodes.
 > - `Filters Management`: Various audio filters like Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, Channel Mix, and LowPass.
 > - `Player Management`: Manage player configurations and states.
-> - `Structure`: Allowing you to extend classes by complementing your own functionalities
+> - `Plugin Management`: Lavalink plugin support.
+> - `Structure`: Allows you to extend classes by complementing with your own functionalities.
 
-## Exemple
+## What's New ✨
+
+From `v4.6.18` to `v4.44.04`, Moonlink.js has evolved. We've added features, improvements, and refactors to supercharge your music bot development.
+
+### New Features 🚀
+::card-group
+  ::card
+  --- 
+  title: Lyrics Integration
+  icon: lucide:file-text
+  description: Full-fledged lyrics management with plugins (LavaLyrics, JavaLyrics) and methods to fetch, display, and sync lyrics in real-time.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Advanced Audio Filters (LavaDSPX)
+  icon: lucide:sliders
+  description: Explore new sound dimensions with DSP filters like HighPass, Normalization, and Echo, powered by the LavaDSPX plugin.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Powerful Search with LavaSearch
+  icon: lucide:search
+  description: Take your bot's search to the next level. Find albums, artists, playlists, and tracks with precision using the LavaSearchPlugin.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: SponsorBlock Integration
+  icon: lucide:shield-check
+  description: Automatically skip sponsored segments in YouTube videos, ensuring an uninterrupted listening experience for your users.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Text-to-Speech (TTS)
+  icon: lucide:megaphone
+  description: Give your bot a voice! Use the `Player.speak` method with various providers to convert text to audio for innovative interactions.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Track History
+  icon: lucide:history
+  description: Allow users to navigate through previously played songs with the new `Player.back()` method, accessing the player's history.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Total Queue Control
+  icon: lucide:list-ordered
+  description: New methods for flawless queue management, including duplicate removal, sorting, moving, and much more.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Node Health Checks
+  icon: lucide:heart-pulse
+  description: The `NodeManager` now performs periodic health checks and automatically migrates players from unstable nodes, ensuring stability.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Source Blacklisting
+  icon: lucide:ban
+  description: Gain full control over allowed music sources by blocking those you don't want with the `blacklistedSources` option.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Modular Plugin System
+  icon: lucide:puzzle
+  description: A flexible and extensible plugin architecture with `PluginManager` and `AbstractPlugin` for you to customize Moonlink as you wish.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Custom WebSocket Client
+  icon: lucide:message-circle
+  description: A new WebSocket client implementation for greater control and reliability in communication with Lavalink.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Track Chapters
+  icon: lucide:book-open
+  description: Full support for chapters in long tracks, with the `player.skipChapter()` method for easy and intuitive navigation.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Improved Spotify & Deezer Sources
+  icon: lucide:music
+  description: Enhanced native integration, authentication, and error handling for a more robust experience with Spotify and Deezer.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: General Utilities
+  icon: lucide:tool
+  description: New functions like `makeRequest` with retry logic and `isSourceBlacklisted` for better control and debugging of your bot.
+  ---
+  ::
+::
+
+### Refactors & Improvements 🛠️
+::card-group
+  ::card
+  --- 
+  title: Database Refactor
+  icon: lucide:database
+  description: A complete rewrite of the database to use Write-Ahead Logging (WAL), resulting in greater data persistence and performance.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Deprecated Player Methods
+  icon: lucide:alert-triangle
+  description: Direct Manager methods have been deprecated in favor of `manager.players`, promoting a cleaner and more organized API.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: UUID Generation
+  icon: lucide:key
+  description: The `generateShortUUID` function has been renamed to `generateUUID` for greater clarity and consistency across the codebase.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Player State Management
+  icon: lucide:activity
+  description: More robust handling of the player state, with improved reconnection attempts and skipping of blacklisted tracks.
+  ---
+  ::
+
+  ::card
+  --- 
+  title: Node State Management
+  icon: lucide:server
+  description: Introduction of the `NodeState` enum for clearer, more explicit, and reliable node status tracking.
+  ---
+  ::
+::
+
+## Harnessing the Power of Lavalink Plugins
+Moonlink.js harnesses the power of the extensive Lavalink plugin ecosystem to offer advanced, cutting-edge features. These plugins allow for immense customization and extension of your music bot's capabilities. Many of the standout features in Moonlink.js are made possible by these powerful additions.
+
+::alert{type="info" icon="lucide:book-marked"}
+  You can explore the full list of plugins and their features in the [official Lavalink documentation](https://lavalink.dev/plugins.html).
+::
+
+::card-group
+  ::card
+  ---
+  title: LavaSrc Plugin
+  icon: lucide:radio
+  description: Adds support for Spotify, Apple Music, and Deezer (with native playback), allowing your bot to play music from the most popular streaming services.
+  ---
+  ::
+
+  ::card
+  ---
+  title: LavaSearch Plugin
+  icon: lucide:search-check
+  description: Provides advanced search to find albums, artists, playlists, and tracks with precision, enhancing the user experience.
+  ---
+  ::
+
+  ::card
+  ---
+  title: LavaDSPX Plugin
+  icon: lucide:equalizer
+  description: Unleash creative audio effects with a suite of additional filters like HighPass and Normalization, offering unique listening tools.
+  ---
+  ::
+
+  ::card
+  ---
+  title: SponsorBlock Plugin
+  icon: lucide:skip-forward
+  description: Automatically skips sponsored segments in YouTube videos, providing a seamless and uninterrupted listening experience.
+  ---
+  ::
+
+  ::card
+  ---
+  title: Lyrics Plugins
+  icon: lucide:mic-vocal
+  description: Moonlink.js supports various lyrics plugins like LavaLyrics, Lyrics.kt, and others, allowing you to fetch and display synchronized lyrics in real-time.
+  ---
+  ::
+
+  ::card
+  ---
+  title: Text-to-Speech (TTS) Plugins
+  icon: lucide:audio-lines
+  description: Give your bot a voice! Through plugins like Google Cloud TTS, DuncteBot's free TTS, and Flowery TTS (via LavaSrc), your bot can convert text to audio.
+  ---
+  ::
+::
+
+## Practical Example
 
 ::alert{type="example" icon="lucide:test-tube"}
-  An example of a very simple bot application is our [testBot](https://github.com/Ecliptia/moonlink.js/tree/v4/testBot)
+  Check out a simple and functional bot example in our repository: [testBot](https://github.com/Ecliptia/moonlink.js/tree/v4/testBot)
 ::
 
 ::alert{type="note" icon="lucide:pencil"}
-  [List of open-source applications](/bot-community) to inspire you
+  [/bot-community](https://www.google.com/search?q=/bot-community)
 ::
 
-
-## Need help
+## Need Help?
 ::hero-alt
 ---
 announcement:
@@ -73,28 +293,28 @@ actions:
 ---
 
 #title
-Having problems or questions?
+Questions or Problems?
 
 #description
-Get in touch by these means: joining the discord support server
+Get in touch with us! The best way to get help is by joining our support server on Discord.
 ::
 
-## Found Bugs?
+## Found a Bug?
 
-<p>You found bugs and want to report the problem, create an issue on github, and we will look into it as soon as possible to fix the problem</p>
+<p>If you found a bug and want to report it, please create an "Issue" on our GitHub. We will look into it as soon as possible to fix the problem.</p>
 <br>
 
 ::button-link{left-icon="lucide:github" to="https://github.com/Ecliptia/moonlink.js/issues" target="_blank"}
-  Github Issue
+  Report Bug on GitHub
 ::
 
-
-<p>Do you want to contribute by fixing this problem? Or do you want to help by adding a feature? create a pull request, this way you will be registering your name in the package code lines (gitlens shows the names of the people who modified the code)</p>
+<p>Want to contribute by fixing the problem or adding a new feature? Send a "Pull Request"! Your name will be forever registered in the project's code.</p>
 <br>
 
 ::button-link{left-icon="lucide:github" to="https://github.com/Ecliptia/moonlink.js/pulls" target="_blank"}
-  Github Pull Request
+  Submit a Pull Request
 ::
+
 ## Used By
 ::card
 ---
@@ -103,10 +323,10 @@ icon-size: 26
 horizontal: true
 ---
 #title
-list of discord bot applications that use moonlink.js
+Discord Bots that Use and Trust Moonlink.js
 
 #description
-for dissemination purposes
+A showcase for our amazing community
 
 #content
 ::team-card-group
@@ -115,7 +335,7 @@ for dissemination purposes
   avatar: https://s3.galaxybot.app/media/brand/GalaxyBot.png
   center: false
   name: GalaxyBot
-  title: "Used by 48k+ guilds; Team: https://galaxybot.app/en/team"
+  title: "Used by over 48k guilds; Team: galaxybot.app"
   links:
     - icon: lucide:bot
       to: https://galaxybot.app/go/invite
@@ -168,7 +388,7 @@ for dissemination purposes
 
 #footer
   ::alert{type="note" icon="lucide:pencil"}
-  If you want to add your application, join the discord server, or open a pull request at `docs/content/index.md`
+  Want to add your bot to the list? Join our Discord or open a Pull Request at `docs/content/index.md`.
   ::
 ::
 
@@ -179,7 +399,7 @@ for dissemination purposes
   center: false
   avatar: https://www.npmjs.com/npm-avatar/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXJVUkwiOiJodHRwczovL3MuZ3JhdmF0YXIuY29tL2F2YXRhci9hNmE5NDVhYjJiNzk1MjcyNzVjN2IwMWEyNWM1YzQ2NT9zaXplPTQ5NiZkZWZhdWx0PXJldHJvIn0.5hP6oyShhR-UWUi6KF-lA0cWmE_BJjvIFAwkYCGEZNo
   name: Lucas Morais (1Lucas1apk)
-  title: Project maintainer
+  title: Project Maintainer
   links:
     - icon: lucide:github
       to: https://github.com/1Lucas1apk
@@ -192,10 +412,10 @@ for dissemination purposes
   center: false
   avatar: https://cdn.discordapp.com/avatars/882757043142950974/271a0e7071979f875f5c670096adf821.png?size=2048
   name: MotoG
-  title: Creator and Designer
+  title: Creator & Designer
   links:
     - icon: lucide:github
-      to: https://github.com/Moto6507
+      to: https://github.com/MotoG507
   ---
   ::
   ::team-card
@@ -203,7 +423,7 @@ for dissemination purposes
   center: false
   avatar: https://cdn.discordapp.com/avatars/336885637934481409/371faca58eb88781b922d4967b91fab4.png?size=2048
   name: xotakfr
-  title: Tester and Bug Hunter
+  title: Tester & Bug Hunter
   links:
     - icon: lucide:github
       to: https://github.com/xotakfr
@@ -214,7 +434,7 @@ for dissemination purposes
   center: false
   avatar: https://images-ext-1.discordapp.net/external/EzD_6L_K28EMUN8RwQhssNUaZEyVN1H3dG6VIHczPvc/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/389709853511122944/cd8fa0420ae13e16f5bfd87340da35d8.png?format=webp&quality=lossless&width=810&height=810
   name: iamforster
-  title: Tester and Bug Hunter
+  title: Tester & Bug Hunter
   ---
   ::
   ::team-card
@@ -222,7 +442,7 @@ for dissemination purposes
   center: false
   avatar: https://avatars.githubusercontent.com/u/50148901?s=60&v=4
   name: Comicallybad
-  title: Fixed bugs
+  title: Bug Fixes
   links:
     - icon: lucide:github
       to: https://github.com/comicallybad
@@ -233,7 +453,7 @@ for dissemination purposes
   center: false
   avatar: https://avatars.githubusercontent.com/u/88549470?s=60&v=4
   name: PiscesXD
-  title: Gave feature ideas, added, fixed bugs, and sponsored
+  title: Ideas, Features, Fixes & Sponsor
   links:
     - icon: lucide:github
       to: https://github.com/PiscesXD
@@ -242,10 +462,48 @@ for dissemination purposes
 ::
 
 ::alert{type="note" icon="lucide:pencil"}
-  Will contribute to the v4 version of moonlink.js
+  Join us and contribute to the v4 version of moonlink.js!
 ::
 ::alert{type="success" icon="lucide:lightbulb"}
-  And we thank everyone who joins the server and reports bugs, thus also contributing to making the project increasingly stable, and pleasing other developers
+  We thank everyone who joins the server and reports bugs, thus helping to make the project increasingly stable and amazing for the developer community.
 ::
 
+## amidst the hive 🐝
+<div style="font-style: italic; text-align: center; margin-top: 2rem; margin-bottom: 2rem; padding: 1rem; border-left: 3px solid #ccc;">
+<p>i feel out of place<br>
+amidst the beehive…<br>
+they look at me<br>
+with disapproval in their eyes —<br>
+as if they could see<br>
+the secrets of my heart.</p>
 
+<p>they say i am a rebel<br>
+for not serving —<br>
+with devotion —<br>
+the queen bee.</p>
+
+<p>but if i serve,<br>
+what good will it do,<br>
+if it is not what my soul<br>
+has chosen to love?</p>
+
+<p>i wish i could fly,<br>
+free among the garden flowers,<br>
+without worrying about returning —<br>
+to the place i no longer know how to inhabit.</p>
+
+<p>but i believe that one day,<br>
+i will break this prison,<br>
+and i will finally be able to fly<br>
+wherever i want —<br>
+with my own wings and<br>
+my own direction.</p>
+</div>
+<p style="text-align: right; margin-right: 1rem;">
+  <strong>— <a href="https://www.instagram.com/geovanazlw" target="_blank" rel="noopener noreferrer">Geo</a></strong>
+</p>
+
+<div style="text-align: center; margin-top: 3rem; margin-bottom: 3rem;">
+<p style="font-size: 1.1rem; font-style: italic;">With Love, 💕</p>
+<p style="font-size: 1.3rem; font-weight: bold;">The Ecliptia Team 😊</p>
+</div>
