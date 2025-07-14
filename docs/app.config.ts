@@ -2,7 +2,15 @@ export default defineAppConfig({
   shadcnDocs: {
     site: {
       name: 'Moonlink.js',
-      description: '',
+      description: 'Moonlink.js 🌙🌟 is a stable and feature-rich Lavalink client for Node.js, designed to make building Discord music bots easier 🎵. With an intuitive and easy-to-use API, it provides seamless integration with the Lavalink server, allowing you to manage and control audio playback efficiently and at scale 🚀🎧.',
+      ogImage: '/moonlink_banner.png',
+      ogImageComponent: 'ShadcnDocs',
+      ogImageColor: 'dark',
+      umami: {
+        enable: true,
+        src: 'https://cloud.umami.is/script.js',
+        dataWebsiteId: 'be3420a0-c56d-485c-b350-9bf105bd8463',
+      },
     },
     theme: {
       customizable: true,
