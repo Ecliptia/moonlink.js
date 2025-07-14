@@ -415,7 +415,7 @@ A showcase for our amazing community
   title: Creator & Designer
   links:
     - icon: lucide:github
-      to: https://github.com/MotoG507
+      to: https://github.com/Moto65075
   ---
   ::
   ::team-card
