@@ -402,34 +402,35 @@ export class Manager extends EventEmitter {
         }
     }
 
-    let targetNode: Node | undefined;
-    let guildId: string | undefined;
+    const capabilityMap = {
+      lavalyrics: 'lavalyrics-plugin',
+      lyrics: 'lyrics',
+      'java-lyrics-plugin': 'java-lyrics-plugin',
+    };
 
-    if (player) {
-      targetNode = player.node;
-      guildId = player.guildId;
-    } else if (provider === 'lavalyrics') {
-      targetNode = this.nodes.getNodeWithCapability("lavalyrics");
-    } else if (provider === 'lyrics') {
-      targetNode = this.nodes.getNodeWithCapability("lyrics");
-    } else if (provider === 'java-lyrics-plugin') {
-        targetNode = this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    } else if (encodedTrack) {
-      targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    } else if (videoId) {
-      targetNode = this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    }
+    const fallbackPlugins = Object.values(capabilityMap);
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-       pluginsToTry.push('java-lyrics-plugin', 'lavalyrics-plugin', 'lyrics');
-    }
+    const capabilitiesToTry = player
+      ? []
+      : capabilityMap[provider]
+        ? [capabilityMap[provider].replace('-plugin', '')]
+        : encodedTrack
+          ? Object.keys(capabilityMap)
+          : videoId
+            ? Object.keys(capabilityMap).slice(1)
+            : [];
+
+    const targetNode = player?.node
+      ?? capabilitiesToTry
+        .map(cap => this.nodes.getNodeWithCapability(cap))
+        .find(Boolean);
+
+    const guildId = player?.guildId;
+
+    const pluginsToTry = capabilityMap[provider]
+      ? [capabilityMap[provider]]
+      : fallbackPlugins;
+
 
     for (const pluginName of pluginsToTry) {
       if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(pluginName.replace('-plugin', ''))) {
@@ -491,16 +492,10 @@ export class Manager extends EventEmitter {
 
     const { query, provider, node: preferredNode, source } = options;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName
@@ -540,16 +535,10 @@ export class Manager extends EventEmitter {
     const player = this.players.get(guildId);
     if (!player) return;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName.replace('-plugin', '');
@@ -585,16 +574,10 @@ export class Manager extends EventEmitter {
     const player = this.players.get(guildId);
     if (!player) return;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName.replace('-plugin', '');
