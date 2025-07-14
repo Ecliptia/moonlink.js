@@ -28,15 +28,25 @@ module.exports = {
     const player = client.manager.players.get(message.guild.id);
 
     let query = null;
-    let provider = "lyrics";
+    let provider = null;
 
+    // Parse arguments
     const providerIndex = args.indexOf("--provider");
     if (providerIndex !== -1 && args.length > providerIndex + 1) {
-      provider = args[providerIndex + 2];
+      provider = args[providerIndex + 1];
       args.splice(providerIndex, 2);
     }
     query = args.join(" ");
     if (query === "") query = null;
+
+    // Map provider names to match plugin names in Manager
+    if (provider === "lyricskt") {
+      provider = "lyrics";
+    } else if (provider === "lavalyrics") {
+      provider = "lavalyrics";
+    } else {
+      provider = "java-lyrics-plugin"; // Default provider if not specified or invalid
+    }
 
     let lyrics = null;
     let title = "";
@@ -49,12 +59,13 @@ module.exports = {
 
     try {
       if (query) {
+        // Search for lyrics by query
         const searchResults = await client.manager.searchLyrics({
           query: query,
           provider: provider,
         });
-        console.log(searchResults);
-        if (!searchResults || searchResults.length === 0) {
+
+        if (!searchResults || searchResults.length === 0 || searchResults.error) {
           loadingMsg.edit({
             embeds: [
               new EmbedBuilder()
@@ -81,15 +92,17 @@ module.exports = {
         }
 
         if (!foundLyrics) {
-          lyrics = await client.manager.getLyrics({
-            query: query,
-            provider: provider,
+          loadingMsg.edit({
+            embeds: [
+              new EmbedBuilder()
+                .setDescription(`${config.emojis.error} No lyrics found for \`${query}\``)
+                .setColor(config.colors.error),
+            ],
           });
-          if (lyrics && (lyrics.text || (lyrics.lines && lyrics.lines.length > 0))) {
-            title = `Lyrics for ${query}`;
-          }
+          return;
         }
       } else {
+        // Get lyrics for currently playing song
         if (!player || !player.current) {
           loadingMsg.edit({
             embeds: [
@@ -107,6 +120,7 @@ module.exports = {
         title = `Lyrics for ${player.current.title}`;
       }
 
+      // Check if lyrics were found
       if (!lyrics || (!lyrics.text && (!lyrics.lines || lyrics.lines.length === 0))) {
         loadingMsg.edit({
           embeds: [
@@ -125,6 +139,7 @@ module.exports = {
         lyricsContent = lyrics.text;
       }
 
+      // Split lyrics into chunks for Discord embed limits
       const chunks = [];
       for (let i = 0; i < lyricsContent.length; i += 4000) {
         chunks.push(lyricsContent.substring(i, i + 4000));
