@@ -410,7 +410,7 @@ A showcase for our amazing community
   ::team-card
   ---
   center: false
-  avatar: https://cdn.discordapp.com/avatars/882757043142950974/271a0e7071979f875f5c670096adf821.png?size=2048
+  avatar: https://cdn.discordapp.com/avatars/882757043142950974/652c890e45a0c01b8daec3510b51596a.png?size=2048
   name: MotoG
   title: Creator & Designer
   links:
