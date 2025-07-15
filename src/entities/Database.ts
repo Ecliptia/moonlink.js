@@ -25,7 +25,7 @@ export class Database {
     this.manager = manager;
     this.disabled = Boolean(manager.options.disableDatabase && !manager.options.resume);
     this.compactionIntervalMs = 60000;
-    this.dir = path.resolve(__dirname, "../datastore");
+    this.dir = manager.options.database?.path ?? path.resolve(__dirname, "../datastore");
     this.snapshotPath = path.join(this.dir, `data.${manager.options.clientId}.json`);
     this.logPath = path.join(this.dir, `data.${manager.options.clientId}.wal`);
 

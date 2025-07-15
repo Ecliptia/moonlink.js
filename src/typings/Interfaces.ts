@@ -183,6 +183,9 @@ export interface IOptionsManager {
   enableSourceFallback?: boolean;
   blacklistedSources?: string[];
   defaultSponsorBlockCategories?: string[];
+  database?: {
+    path?: string;
+  }
 }
 
 export interface IPlayerConfig {
