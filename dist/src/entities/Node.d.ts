@@ -35,7 +35,7 @@ export declare class Node {
     constructor(manager: Manager, config: INode);
     get address(): string;
     setState(state: NodeState): void;
-    connect(): void;
+    connect(): Promise<void>;
     reconnect(): void;
     protected open(): void;
     protected close(event: {
