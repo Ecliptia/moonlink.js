@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseManager = void 0;
 const LocalDB_1 = require("../database/LocalDB");
 const MemoryDB_1 = require("../database/MemoryDB");
+const MongooseDB_1 = require("../database/MongooseDB");
 class DatabaseManager {
     provider;
     manager;
@@ -11,6 +12,9 @@ class DatabaseManager {
         const dbConfig = this.manager.options.database;
         if (typeof dbConfig?.provider === 'function') {
             this.provider = new dbConfig.provider();
+        }
+        else if (dbConfig?.provider === 'mongoose') {
+            this.provider = new MongooseDB_1.MongooseDB();
         }
         else if (dbConfig?.provider === 'memory') {
             this.provider = new MemoryDB_1.MemoryDB();
@@ -22,23 +26,23 @@ class DatabaseManager {
     async init() {
         await this.provider.init(this.manager);
     }
-    set(key, value) {
-        this.provider.set(key, value);
+    async set(key, value) {
+        await this.provider.set(key, value);
     }
-    get(key) {
-        return this.provider.get(key);
+    async get(key) {
+        return await this.provider.get(key);
     }
-    remove(key) {
-        return this.provider.remove(key);
+    async remove(key) {
+        return await this.provider.remove(key);
     }
-    has(key) {
-        return this.provider.has(key);
+    async has(key) {
+        return await this.provider.has(key);
     }
-    keys() {
-        return this.provider.keys();
+    async keys() {
+        return await this.provider.keys();
     }
-    clear() {
-        this.provider.clear();
+    async clear() {
+        await this.provider.clear();
     }
     async shutdown() {
         await this.provider.shutdown();

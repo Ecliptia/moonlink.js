@@ -2,6 +2,7 @@ import { Manager } from "../core/Manager";
 import { AbstractDatabase } from "../database/AbstractDatabase";
 import { LocalDB } from "../database/LocalDB";
 import { MemoryDB } from "../database/MemoryDB";
+import { MongooseDB } from "../database/MongooseDB";
 
 export class DatabaseManager {
   public provider: AbstractDatabase;
@@ -13,6 +14,8 @@ export class DatabaseManager {
 
     if (typeof dbConfig?.provider === 'function') {
       this.provider = new dbConfig.provider();
+    } else if (dbConfig?.provider === 'mongoose') {
+      this.provider = new MongooseDB();
     } else if (dbConfig?.provider === 'memory') {
       this.provider = new MemoryDB();
     } else {
@@ -24,28 +27,28 @@ export class DatabaseManager {
     await this.provider.init(this.manager);
   }
 
-  public set(key: string, value: any): void {
-    this.provider.set(key, value);
+  public async set(key: string, value: any): Promise<void> {
+    await this.provider.set(key, value);
   }
 
-  public get<T>(key: string): T | undefined {
-    return this.provider.get(key);
+  public async get<T>(key: string): Promise<T | undefined> {
+    return await this.provider.get(key);
   }
 
-  public remove(key: string): boolean {
-    return this.provider.remove(key);
+  public async remove(key: string): Promise<boolean> {
+    return await this.provider.remove(key);
   }
 
-  public has(key: string): boolean {
-    return this.provider.has(key);
+  public async has(key: string): Promise<boolean> {
+    return await this.provider.has(key);
   }
 
-  public keys(): string[] {
-    return this.provider.keys();
+  public async keys(): Promise<string[]> {
+    return await this.provider.keys();
   }
 
-  public clear(): void {
-    this.provider.clear();
+  public async clear(): Promise<void> {
+    await this.provider.clear();
   }
 
   public async shutdown(): Promise<void> {

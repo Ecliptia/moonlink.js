@@ -5,11 +5,11 @@ export declare class DatabaseManager {
     private manager;
     constructor(manager: Manager);
     init(): Promise<void>;
-    set(key: string, value: any): void;
-    get<T>(key: string): T | undefined;
-    remove(key: string): boolean;
-    has(key: string): boolean;
-    keys(): string[];
-    clear(): void;
+    set(key: string, value: any): Promise<void>;
+    get<T>(key: string): Promise<T | undefined>;
+    remove(key: string): Promise<boolean>;
+    has(key: string): Promise<boolean>;
+    keys(): Promise<string[]>;
+    clear(): Promise<void>;
     shutdown(): Promise<void>;
 }
