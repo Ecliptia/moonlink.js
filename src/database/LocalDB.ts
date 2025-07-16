@@ -157,7 +157,7 @@ export class LocalDB extends AbstractDatabase {
     }
   }
 
-  public set<T>(key: string, value: T, log: boolean = true): void {
+  public async set<T>(key: string, value: T, log: boolean = true): Promise<void> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const keys = key.split('.');
@@ -188,7 +188,7 @@ export class LocalDB extends AbstractDatabase {
     }
   }
 
-  public get<T>(key: string): T | undefined {
+  public async get<T>(key: string): Promise<T | undefined> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const parts = key.split('.');
@@ -203,11 +203,11 @@ export class LocalDB extends AbstractDatabase {
     return value as T;
   }
 
-  public has(key: string): boolean {
-    return this.get(key) !== undefined;
+  public async has(key: string): Promise<boolean> {
+    return (await this.get(key)) !== undefined;
   }
 
-  public remove(key: string, log: boolean = true): boolean {
+  public async remove(key: string, log: boolean = true): Promise<boolean> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const keys = key.split('.');
@@ -232,7 +232,7 @@ export class LocalDB extends AbstractDatabase {
     return existed;
   }
 
-  public keys(): string[] {
+  public async keys(): Promise<string[]> {
     const allKeys: string[] = [];
     const recurse = (obj: AnyObject, prefix: string) => {
       for (const key in obj) {
@@ -250,14 +250,14 @@ export class LocalDB extends AbstractDatabase {
     return allKeys;
   }
 
-  public clear(): void {
+  public async clear(): Promise<void> {
     this.store = {};
     this.walBuffer = [];
     if (this.walStream) {
-      this.walStream.end(() => {
-        fs.promises.writeFile(this.logPath, '').then(() => this.openWALStream());
-      });
+      await new Promise<void>(resolve => this.walStream!.end(resolve));
+      this.walStream = undefined;
     }
+    await fs.promises.writeFile(this.logPath, '');
   }
 
   private async compact(): Promise<void> {
