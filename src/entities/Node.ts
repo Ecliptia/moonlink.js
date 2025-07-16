@@ -322,7 +322,7 @@ export class Node {
             if (queue?.tracks) {
               const tracks = queue.tracks.map((track: string) => new Track(decodeTrack(track)));
 
-              this.manager.database.delete(`queues.${guildId}`);
+              this.manager.database.remove(`queues.${guildId}`);
 
               for (const track of tracks) {
                 reconstructedPlayer.queue.add(track);
