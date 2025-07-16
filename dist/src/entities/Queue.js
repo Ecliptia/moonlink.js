@@ -11,7 +11,7 @@ class Queue {
         this.player = player;
     }
     tracks = [];
-    add(track) {
+    async add(track) {
         const tracksToAdd = Array.isArray(track) ? track : [track];
         const filteredTracks = tracksToAdd.filter(t => {
             if (this.player.manager.options.blacklistedSources && this.player.manager.options.blacklistedSources.includes(t.sourceName)) {
@@ -24,7 +24,7 @@ class Queue {
         if (filteredTracks.length === 0)
             return true;
         this.tracks.push(...filteredTracks);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueAdd", this.player, filteredTracks);
         return true;
     }
@@ -34,47 +34,47 @@ class Queue {
     has(track) {
         return this.tracks.includes(track);
     }
-    remove(position) {
+    async remove(position) {
         const removed = this.tracks.splice(position, 1);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueRemove", this.player, removed[0]);
         return true;
     }
-    shift() {
+    async shift() {
         let track = this.tracks.shift();
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         if (track) {
             this.player.manager.emit("queueRemove", this.player, track);
         }
         return track;
     }
-    unshift(track) {
+    async unshift(track) {
         this.tracks.unshift(track);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueAdd", this.player, track);
         return true;
     }
-    pop() {
+    async pop() {
         let tracks = this.tracks.pop();
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         if (tracks) {
             this.player.manager.emit("queueRemove", this.player, tracks);
         }
         return tracks;
     }
-    clear() {
+    async clear() {
         const clearedTracks = [...this.tracks];
         this.tracks = [];
-        this.database.remove(`queues.${this.guildId}`);
+        await this.database.remove(`queues.${this.guildId}`);
         this.player.manager.emit("queueRemove", this.player, clearedTracks);
         return true;
     }
-    shuffle() {
+    async shuffle() {
         this.tracks = this.tracks.sort(() => Math.random() - 0.5);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
-    removeDuplicates() {
+    async removeDuplicates() {
         if (this.tracks.length < 2)
             return false;
         const uniqueTracks = [];
@@ -89,10 +89,10 @@ class Queue {
             return false;
         }
         this.tracks = uniqueTracks;
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
-    removeBlacklistedTracks() {
+    async removeBlacklistedTracks() {
         if (!this.player.manager.options.blacklistedSources || this.player.manager.options.blacklistedSources.length === 0) {
             return false;
         }
@@ -106,30 +106,30 @@ class Queue {
             return true;
         });
         if (this.tracks.length < initialSize) {
-            this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+            await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
             return true;
         }
         return false;
     }
-    sortByTitle() {
+    async sortByTitle() {
         if (this.tracks.length < 2)
             return false;
         this.tracks.sort((a, b) => a.title.localeCompare(b.title));
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
-    sortByAuthor() {
+    async sortByAuthor() {
         if (this.tracks.length < 2)
             return false;
         this.tracks.sort((a, b) => a.author.localeCompare(b.author));
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
-    sortByDuration() {
+    async sortByDuration() {
         if (this.tracks.length < 2)
             return false;
         this.tracks.sort((a, b) => a.duration - b.duration);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
     get size() {
@@ -155,15 +155,15 @@ class Queue {
         return this.tracks.find(t => t.identifier === query ||
             t.title.toLowerCase().includes(searchTerm));
     }
-    move(from, to) {
+    async move(from, to) {
         if (from < 0 || to < 0 || from >= this.tracks.length || to >= this.tracks.length)
             return false;
         const track = this.tracks.splice(from, 1)[0];
         this.tracks.splice(to, 0, track);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
-    moveRange(fromIndex, toIndex, count) {
+    async moveRange(fromIndex, toIndex, count) {
         if (fromIndex < 0 || fromIndex >= this.tracks.length ||
             toIndex < 0 || toIndex > this.tracks.length ||
             count <= 0 || fromIndex + count > this.tracks.length) {
@@ -171,21 +171,21 @@ class Queue {
         }
         const tracksToMove = this.tracks.splice(fromIndex, count);
         this.tracks.splice(toIndex, 0, ...tracksToMove);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueMoveRange", this.player, tracksToMove, fromIndex, toIndex);
         return true;
     }
-    removeRange(startIndex, endIndex) {
+    async removeRange(startIndex, endIndex) {
         if (startIndex < 0 || startIndex >= this.tracks.length ||
             endIndex < startIndex || endIndex >= this.tracks.length) {
             return false;
         }
         const removedTracks = this.tracks.splice(startIndex, endIndex - startIndex + 1);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueRemoveRange", this.player, removedTracks, startIndex, endIndex);
         return true;
     }
-    duplicate(index, count = 1) {
+    async duplicate(index, count = 1) {
         if (index < 0 || index >= this.tracks.length || count <= 0) {
             return false;
         }
@@ -195,17 +195,17 @@ class Queue {
             duplicatedTracks.push(trackToDuplicate);
         }
         this.tracks.splice(index + 1, 0, ...duplicatedTracks);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         this.player.manager.emit("queueDuplicate", this.player, duplicatedTracks, index);
         return true;
     }
-    jump(index) {
+    async jump(index) {
         if (index < 0 || index >= this.tracks.length)
             return false;
         if (index === 0)
             return true;
         const tracksToSkip = this.tracks.splice(0, index);
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
     slice(start, end) {
@@ -214,9 +214,9 @@ class Queue {
     filter(predicate) {
         return this.tracks.filter(predicate);
     }
-    reverse() {
+    async reverse() {
         this.tracks.reverse();
-        this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+        await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
         return true;
     }
     get position() {
