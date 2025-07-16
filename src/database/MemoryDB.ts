@@ -6,27 +6,27 @@ export class MemoryDB extends AbstractDatabase {
 
   public async init(manager: Manager): Promise<void> {}
 
-  public set(key: string, value: any): void {
+  public async set(key: string, value: any): Promise<void> {
     this.store.set(key, value);
   }
 
-  public get<T>(key: string): T | undefined {
+  public async get<T>(key: string): Promise<T | undefined> {
     return this.store.get(key);
   }
 
-  public remove(key: string): boolean {
+  public async remove(key: string): Promise<boolean> {
     return this.store.delete(key);
   }
 
-  public has(key: string): boolean {
+  public async has(key: string): Promise<boolean> {
     return this.store.has(key);
   }
 
-  public keys(): string[] {
+  public async keys(): Promise<string[]> {
     return [...this.store.keys()];
   }
 
-  public clear(): void {
+  public async clear(): Promise<void> {
     this.store.clear();
   }
 

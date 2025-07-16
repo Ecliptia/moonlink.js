@@ -5,22 +5,22 @@ const AbstractDatabase_1 = require("./AbstractDatabase");
 class MemoryDB extends AbstractDatabase_1.AbstractDatabase {
     store = new Map();
     async init(manager) { }
-    set(key, value) {
+    async set(key, value) {
         this.store.set(key, value);
     }
-    get(key) {
+    async get(key) {
         return this.store.get(key);
     }
-    remove(key) {
+    async remove(key) {
         return this.store.delete(key);
     }
-    has(key) {
+    async has(key) {
         return this.store.has(key);
     }
-    keys() {
+    async keys() {
         return [...this.store.keys()];
     }
-    clear() {
+    async clear() {
         this.store.clear();
     }
     async shutdown() { }
