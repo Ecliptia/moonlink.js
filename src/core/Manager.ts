@@ -12,7 +12,7 @@ import {
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
 import { Log,
   Structure,
-  Database,
+  DatabaseManager,
   NodeManager,
   PlayerManager,
   SourceManager,
@@ -50,7 +50,7 @@ export class Manager extends EventEmitter {
   public nodes: NodeManager;
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
-  public database: Database;
+  public database: DatabaseManager;
   public sources: SourceManager;
   public pluginManager: PluginManager;
   private lyricsResultCache: Map<string, ILavaLyricsObject | null> = new Map();
@@ -85,7 +85,6 @@ export class Manager extends EventEmitter {
       sortPlayersByRegion: false,
       resume: false,
       autoResume: false,
-      disableDatabase: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
@@ -117,7 +116,8 @@ export class Manager extends EventEmitter {
       }
       Structure.manager = this;
       this.options.clientId = clientId;
-      this.database = await (Structure.get("Database")).create(this);
+      this.database = new (Structure.get("DatabaseManager"))(this);
+      await this.database.init();
       this.sources = new (Structure.get("SourceManager"))(this);
       this.nodes.init();
       this.initialize = true;

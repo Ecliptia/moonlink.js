@@ -41,7 +41,6 @@ class Manager extends node_events_1.EventEmitter {
             sortPlayersByRegion: false,
             resume: false,
             autoResume: false,
-            disableDatabase: false,
             ...config.options,
         };
         this.nodes = new (index_1.Structure.get("NodeManager"))(this, config.nodes);
@@ -68,7 +67,8 @@ class Manager extends node_events_1.EventEmitter {
             }
             index_1.Structure.manager = this;
             this.options.clientId = clientId;
-            this.database = await (index_1.Structure.get("Database")).create(this);
+            this.database = new (index_1.Structure.get("DatabaseManager"))(this);
+            await this.database.init();
             this.sources = new (index_1.Structure.get("SourceManager"))(this);
             this.nodes.init();
             this.initialize = true;
