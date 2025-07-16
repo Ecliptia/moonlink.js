@@ -184,9 +184,12 @@ export interface IOptionsManager {
   blacklistedSources?: string[];
   defaultSponsorBlockCategories?: string[];
   database?: {
-    provider?: 'local' | 'memory' | (new () => AbstractDatabase);
+    provider?: 'local' | 'memory' | 'mongoose' | (new () => AbstractDatabase);
     options?: {
       path?: string;
+      mongoose?: {
+        connectionString: string;
+      };
     };
   }
 }
