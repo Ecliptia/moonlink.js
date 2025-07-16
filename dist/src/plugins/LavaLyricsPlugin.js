@@ -4,7 +4,7 @@ exports.LavaLyricsPlugin = void 0;
 const AbstractPlugin_1 = require("./AbstractPlugin");
 class LavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
     name = "lavalyrics-plugin";
-    capabilities = ["lavalyrics"];
+    capabilities = ["lavalyrics", "lavalyrics-plugin"];
     node;
     lyricsCallbacks = new Map();
     load(node) {

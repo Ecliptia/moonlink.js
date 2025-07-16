@@ -62,10 +62,10 @@ class Node {
         this.state = state;
         this.manager.emit("nodeStateChange", this, oldState, state);
     }
-    connect() {
+    async connect() {
         this.setState(types_1.NodeState.CONNECTING);
         this.manager.emit("debug", `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`);
-        let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
+        let sessionId = await this.manager.database.get(`nodes.${this.uuid}.sessionId`);
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.options.clientId,
@@ -169,7 +169,7 @@ class Node {
                 this.info = await this.rest.getInfo();
                 this.version = this.info.version;
                 this.resumed = payload.resumed;
-                this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+                await this.manager.database.set(`nodes.${this.uuid}`, { sessionId: this.sessionId });
                 this.manager.pluginManager.updateNodePlugins(this);
                 if (this.manager.options.resume) {
                     this.rest.patch(`sessions/${this.sessionId}`, {
@@ -190,9 +190,9 @@ class Node {
                         " players from node " +
                         this.uuid +
                         ".");
-                    await this.getPlayers().forEach(player => {
+                    await this.getPlayers().forEach(async (player) => {
                         player.playing = true;
-                        player.restart();
+                        await player.restart();
                     });
                     this.manager.emit("debug", "Moonlink.js > Node > Auto-resumed " +
                         this.getPlayersCount +
@@ -209,8 +209,8 @@ class Node {
                     }
                     for (const playerInfo of players) {
                         const guildId = playerInfo.guildId;
-                        const storage = this.manager.database.get(`players.${guildId}`);
-                        const queue = this.manager.database.get(`queues.${guildId}`);
+                        const storage = await this.manager.database.get(`players.${guildId}`);
+                        const queue = await this.manager.database.get(`queues.${guildId}`);
                         const current = storage?.current;
                         if (!storage) {
                             this.manager.emit("debug", `Moonlink.js > Node > No stored data found for player ${guildId}, skipping resume.`);
@@ -236,11 +236,13 @@ class Node {
                             reconstructedPlayer.current = new index_1.Track((0, index_1.decodeTrack)(current.encoded));
                         }
                         else {
+                            reconstructedPlayer.playing = false;
+                            reconstructedPlayer.paused = true;
                             this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
                         }
                         if (queue?.tracks) {
                             const tracks = queue.tracks.map((track) => new index_1.Track((0, index_1.decodeTrack)(track)));
-                            this.manager.database.delete(`queues.${guildId}`);
+                            await this.manager.database.remove(`queues.${guildId}`);
                             for (const track of tracks) {
                                 reconstructedPlayer.queue.add(track);
                             }
@@ -262,8 +264,9 @@ class Node {
                 if (!player.current)
                     return;
                 player.connected = payload.state.connected;
-                player.paused = payload.state.paused ?? false;
-                player.playing = player.connected && !payload.state.paused && player.current !== null;
+                if (!player.paused)
+                    player.paused = payload.state.paused ?? false;
+                player.playing = player.connected && !player.paused && player.current !== null;
                 player.current.position = payload.state.position;
                 player.current.time = payload.state.time;
                 player.ping = payload.state.ping;

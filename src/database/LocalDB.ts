@@ -1,3 +1,4 @@
+import { AbstractDatabase } from "./AbstractDatabase";
 import { Manager } from "../../index";
 import fs, { createWriteStream, WriteStream } from "fs";
 import path from "path";
@@ -5,9 +6,8 @@ import path from "path";
 type AnyObject = Record<string, any>;
 type Operation = { op: 'set' | 'delete'; key: string; value?: unknown };
 
-export class Database {
+export class LocalDB extends AbstractDatabase {
   private store: AnyObject = {};
-  private disabled: boolean;
   private dir: string;
   private snapshotPath: string;
   private logPath: string;
@@ -21,26 +21,15 @@ export class Database {
   private walFlushInterval?: NodeJS.Timeout;
   private readonly walFlushIntervalMs: number = 500;
 
-  private constructor(manager: Manager) {
+  public async init(manager: Manager): Promise<void> {
     this.manager = manager;
-    this.disabled = Boolean(manager.options.disableDatabase && !manager.options.resume);
     this.compactionIntervalMs = 60000;
-    this.dir = manager.options.database?.path ?? path.resolve(__dirname, "../datastore");
+    this.dir = manager.options.database?.options?.path ?? path.resolve(__dirname, "../datastore");
     this.snapshotPath = path.join(this.dir, `data.${manager.options.clientId}.json`);
     this.logPath = path.join(this.dir, `data.${manager.options.clientId}.wal`);
 
-    this.manager.emit("debug", `Moonlink.js > Database > Mode set to ${this.disabled ? "MEMORY" : "WAL"}`);
-  }
+    this.manager.emit("debug", `Moonlink.js > Database > Mode set to WAL`);
 
-  public static async create(manager: Manager): Promise<Database> {
-    const db = new Database(manager);
-    if (!db.disabled) {
-      await db.init();
-    }
-    return db;
-  }
-
-  private async init(): Promise<void> {
     await fs.promises.mkdir(this.dir, { recursive: true });
     await this.loadSnapshot();
     await this.replayWAL();
@@ -80,7 +69,7 @@ export class Database {
   }
 
   private _flushWALBuffer(): void {
-    if (this.disabled || !this.walStream || this.walBuffer.length === 0) {
+    if (!this.walStream || this.walBuffer.length === 0) {
       return;
     }
     try {
@@ -88,7 +77,7 @@ export class Database {
       this.walStream.write(dataToWrite, (err) => {
         if (err) {
           this.manager.emit("debug", `Moonlink.js > Database > Failed to write to WAL stream: ${err.message}`);
-          this.disabled = true;
+
         }
       });
       this.walBuffer = [];
@@ -107,7 +96,7 @@ export class Database {
       if (err.code === 'ENOENT') {
         await fs.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch((writeErr) => {
           this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial snapshot file: ${writeErr.message}`);
-          this.disabled = true;
+
         });
       } else {
         this.manager.emit("debug", `Moonlink.js > Database > Failed to load snapshot: ${err.message}`);
@@ -123,7 +112,7 @@ export class Database {
       if (err.code === 'ENOENT') {
         await fs.promises.writeFile(this.logPath, '').catch((writeErr) => {
           this.manager.emit("debug", `Moonlink.js > Database > Failed to write initial WAL file: ${writeErr.message}`);
-          this.disabled = true;
+
         });
       } else {
         this.manager.emit("debug", `Moonlink.js > Database > Failed to replay WAL: ${err.message}`);
@@ -140,27 +129,25 @@ export class Database {
       if (entry.op === 'set') {
         this.set(entry.key, entry.value, false);
       } else if (entry.op === 'delete') {
-        this.delete(entry.key, false);
+        this.remove(entry.key, false);
       }
     }
   }
 
   private openWALStream(): void {
-    if (this.disabled) return;
+
     try {
       this.walStream = createWriteStream(this.logPath, { flags: 'a' });
       this.walStream.on('error', (err) => {
         this.manager.emit("debug", `Moonlink.js > Database > WAL stream error: ${err.message}`);
-        this.disabled = true;
       });
     } catch (err: any) {
       this.manager.emit("debug", `Moonlink.js > Database > Failed to open WAL stream: ${err.message}`);
-      this.disabled = true;
     }
   }
 
   private appendLog(op: 'set' | 'delete', key: string, value?: unknown): void {
-    if (this.disabled) return;
+
 
     const entry: Operation = { op, key, value };
     this.walBuffer.push(entry);
@@ -170,7 +157,7 @@ export class Database {
     }
   }
 
-  public set<T>(key: string, value: T, log: boolean = true): void {
+  public async set<T>(key: string, value: T, log: boolean = true): Promise<void> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const keys = key.split('.');
@@ -201,7 +188,7 @@ export class Database {
     }
   }
 
-  public get<T>(key: string): T | undefined {
+  public async get<T>(key: string): Promise<T | undefined> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const parts = key.split('.');
@@ -216,7 +203,11 @@ export class Database {
     return value as T;
   }
 
-  public delete(key: string, log: boolean = true): boolean {
+  public async has(key: string): Promise<boolean> {
+    return (await this.get(key)) !== undefined;
+  }
+
+  public async remove(key: string, log: boolean = true): Promise<boolean> {
     if (!key) throw new Error("Key cannot be empty.");
 
     const keys = key.split('.');
@@ -241,7 +232,7 @@ export class Database {
     return existed;
   }
 
-  public keys(): string[] {
+  public async keys(): Promise<string[]> {
     const allKeys: string[] = [];
     const recurse = (obj: AnyObject, prefix: string) => {
       for (const key in obj) {
@@ -259,18 +250,18 @@ export class Database {
     return allKeys;
   }
 
-  public clear(): void {
+  public async clear(): Promise<void> {
     this.store = {};
     this.walBuffer = [];
-    if (this.walStream && !this.disabled) {
-      this.walStream.end(() => {
-        fs.promises.writeFile(this.logPath, '').then(() => this.openWALStream());
-      });
+    if (this.walStream) {
+      await new Promise<void>(resolve => this.walStream!.end(resolve));
+      this.walStream = undefined;
     }
+    await fs.promises.writeFile(this.logPath, '');
   }
 
   private async compact(): Promise<void> {
-    if (this.disabled) return;
+
 
     this._flushWALBuffer();
 
@@ -287,11 +278,8 @@ export class Database {
       await fs.promises.writeFile(this.logPath, '', 'utf-8');
     } catch (err: any) {
       this.manager.emit("debug", `Moonlink.js > Database > Failed to compact database: ${err.message}`);
-      this.disabled = true;
     } finally {
-      if (!this.disabled) {
-        this.openWALStream();
-      }
+      this.openWALStream();
     }
   }
 
@@ -299,9 +287,7 @@ export class Database {
     if (this.compactionTimer) clearInterval(this.compactionTimer);
     if (this.walFlushInterval) clearInterval(this.walFlushInterval);
 
-    if (!this.disabled) {
-      await this.compact();
-    }
+    await this.compact();
 
     if (this.walStream) {
       await new Promise<void>(resolve => this.walStream!.end(resolve));

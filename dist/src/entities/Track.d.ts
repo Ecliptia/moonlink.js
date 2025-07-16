@@ -19,7 +19,7 @@ export declare class Track {
     chapters?: IChapter[];
     currentChapterIndex?: number;
     private isPartial;
-    constructor(trackData: ITrack, requester?: Object);
+    constructor(trackData: ITrack, requester?: Object | string);
     private createPropertySetters;
     setPosition(position: number): void;
     setTime(time: number): void;

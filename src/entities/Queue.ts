@@ -1,6 +1,6 @@
-import { Database, Player, Structure, Track, isSourceBlacklisted } from "../../index";
+import { DatabaseManager, Player, Structure, Track, isSourceBlacklisted } from "../../index";
 export class Queue {
-  public database: Database;
+  public database: DatabaseManager;
   public guildId: string;
   public player: Player;
   constructor(player: Player) {
@@ -10,7 +10,7 @@ export class Queue {
   }
   public tracks: Track[] = [];
 
-  public add(track: Track | Track[]): boolean {
+  public async add(track: Track | Track[]): Promise<boolean> {
     const tracksToAdd = Array.isArray(track) ? track : [track];
     const filteredTracks = tracksToAdd.filter(t => {
       if (this.player.manager.options.blacklistedSources && this.player.manager.options.blacklistedSources.includes(t.sourceName)) {
@@ -25,7 +25,7 @@ export class Queue {
 
     this.tracks.push(...filteredTracks);
     
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueAdd", this.player, filteredTracks);
     return true;
   }
@@ -35,48 +35,48 @@ export class Queue {
   public has(track: Track): boolean {
     return this.tracks.includes(track);
   }
-  public remove(position: number): boolean {
+  public async remove(position: number): Promise<boolean> {
     const removed = this.tracks.splice(position, 1);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueRemove", this.player, removed[0]);
     return true;
   }
-  public shift(): Track {
+  public async shift(): Promise<Track> {
     let track = this.tracks.shift();
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     if (track) {
       this.player.manager.emit("queueRemove", this.player, track);
     }
     return track;
   }
-  public unshift(track: Track): boolean {
+  public async unshift(track: Track): Promise<boolean> {
     this.tracks.unshift(track);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueAdd", this.player, track);
     return true;
   }
-  public pop(): Track {
+  public async pop(): Promise<Track> {
     let tracks = this.tracks.pop();
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     if (tracks) {
       this.player.manager.emit("queueRemove", this.player, tracks);
     }
     return tracks;
   }
-  public clear(): boolean {
+  public async clear(): Promise<boolean> {
     const clearedTracks = [...this.tracks];
     this.tracks = [];
-    this.database.delete(`queues.${this.guildId}`);
+    await this.database.remove(`queues.${this.guildId}`);
     this.player.manager.emit("queueRemove", this.player, clearedTracks);
     return true;
   }
-  public shuffle(): boolean {
+  public async shuffle(): Promise<boolean> {
     this.tracks = this.tracks.sort(() => Math.random() - 0.5);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
 
-  public removeDuplicates(): boolean {
+  public async removeDuplicates(): Promise<boolean> {
     if (this.tracks.length < 2) return false;
 
     const uniqueTracks: Track[] = [];
@@ -94,11 +94,11 @@ export class Queue {
     }
 
     this.tracks = uniqueTracks;
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
 
-  public removeBlacklistedTracks(): boolean {
+  public async removeBlacklistedTracks(): Promise<boolean> {
     if (!this.player.manager.options.blacklistedSources || this.player.manager.options.blacklistedSources.length === 0) {
       return false;
     }
@@ -114,30 +114,30 @@ export class Queue {
     });
 
     if (this.tracks.length < initialSize) {
-      this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+      await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
       return true;
     }
     return false;
   }
 
-  public sortByTitle(): boolean {
+  public async sortByTitle(): Promise<boolean> {
     if (this.tracks.length < 2) return false;
     this.tracks.sort((a, b) => a.title.localeCompare(b.title));
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
 
-  public sortByAuthor(): boolean {
+  public async sortByAuthor(): Promise<boolean> {
     if (this.tracks.length < 2) return false;
     this.tracks.sort((a, b) => a.author.localeCompare(b.author));
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
 
-  public sortByDuration(): boolean {
+  public async sortByDuration(): Promise<boolean> {
     if (this.tracks.length < 2) return false;
     this.tracks.sort((a, b) => a.duration - b.duration);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
   public get size(): number {
@@ -165,16 +165,16 @@ export class Queue {
       t.title.toLowerCase().includes(searchTerm)
     );
   }
-  public move(from: number, to: number): boolean {
+  public async move(from: number, to: number): Promise<boolean> {
     if (from < 0 || to < 0 || from >= this.tracks.length || to >= this.tracks.length) return false;
     
     const track = this.tracks.splice(from, 1)[0];
     this.tracks.splice(to, 0, track);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
 
-  public moveRange(fromIndex: number, toIndex: number, count: number): boolean {
+  public async moveRange(fromIndex: number, toIndex: number, count: number): Promise<boolean> {
     if (fromIndex < 0 || fromIndex >= this.tracks.length ||
         toIndex < 0 || toIndex > this.tracks.length ||
         count <= 0 || fromIndex + count > this.tracks.length) {
@@ -183,24 +183,24 @@ export class Queue {
 
     const tracksToMove = this.tracks.splice(fromIndex, count);
     this.tracks.splice(toIndex, 0, ...tracksToMove);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueMoveRange", this.player, tracksToMove, fromIndex, toIndex);
     return true;
   }
 
-  public removeRange(startIndex: number, endIndex: number): boolean {
+  public async removeRange(startIndex: number, endIndex: number): Promise<boolean> {
     if (startIndex < 0 || startIndex >= this.tracks.length ||
         endIndex < startIndex || endIndex >= this.tracks.length) {
       return false;
     }
 
     const removedTracks = this.tracks.splice(startIndex, endIndex - startIndex + 1);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueRemoveRange", this.player, removedTracks, startIndex, endIndex);
     return true;
   }
 
-  public duplicate(index: number, count: number = 1): boolean {
+  public async duplicate(index: number, count: number = 1): Promise<boolean> {
     if (index < 0 || index >= this.tracks.length || count <= 0) {
       return false;
     }
@@ -212,18 +212,18 @@ export class Queue {
     }
 
     this.tracks.splice(index + 1, 0, ...duplicatedTracks);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     this.player.manager.emit("queueDuplicate", this.player, duplicatedTracks, index);
     return true;
   }
 
-  public jump(index: number): boolean {
+  public async jump(index: number): Promise<boolean> {
     if (index < 0 || index >= this.tracks.length) return false;
 
     if (index === 0) return true;
 
     const tracksToSkip = this.tracks.splice(0, index);
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
   public slice(start: number, end?: number): Track[] {
@@ -232,9 +232,9 @@ export class Queue {
   public filter(predicate: (track: Track) => boolean): Track[] {
     return this.tracks.filter(predicate);
   }
-  public reverse(): boolean {
+  public async reverse(): Promise<boolean> {
     this.tracks.reverse();
-    this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
+    await this.database.set(`queues.${this.guildId}`, { tracks: this.tracks.map(info => info.encoded) });
     return true;
   }
   public get position(): number {

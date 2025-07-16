@@ -4,7 +4,7 @@ exports.JavaLyricsPlugin = void 0;
 const AbstractPlugin_1 = require("./AbstractPlugin");
 class JavaLyricsPlugin extends AbstractPlugin_1.AbstractPlugin {
     name = "java-lyrics-plugin";
-    capabilities = ["java-lyrics"];
+    capabilities = ["java-lyrics", 'java-lyrics-plugin'];
     node;
     lyricsCallbacks = new Map();
     lyricsCache = new Map();

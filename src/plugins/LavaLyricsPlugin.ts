@@ -4,7 +4,7 @@ import { ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 
 export class LavaLyricsPlugin extends AbstractPlugin {
     public name: string = "lavalyrics-plugin";
-    public readonly capabilities: string[] = ["lavalyrics"];
+    public readonly capabilities: string[] = ["lavalyrics", "lavalyrics-plugin"];
     public node: Node;
     private lyricsCallbacks: Map<string, (line: ILavaLyricsLine) => void> = new Map();
 
