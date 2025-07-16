@@ -65,7 +65,7 @@ class Queue {
     clear() {
         const clearedTracks = [...this.tracks];
         this.tracks = [];
-        this.database.delete(`queues.${this.guildId}`);
+        this.database.remove(`queues.${this.guildId}`);
         this.player.manager.emit("queueRemove", this.player, clearedTracks);
         return true;
     }
