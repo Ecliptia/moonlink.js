@@ -71,13 +71,24 @@ export class PluginManager {
   }
 
   public updateNodePlugins(node: Node): void {
-    if (!node.info || !node.info.plugins) {
-      this.manager.emit("debug", `Moonlink.js > PluginManager > Node ${node.identifier} has no plugin info to update.`);
+    if (!node.info) {
+      this.manager.emit("debug", `Moonlink.js > PluginManager > Node ${node.identifier} has no info to update.`);
       return;
     }
 
+    const lavalinkPlugins = node.info.plugins || [];
+
+    if (node.info.sourceManagers && Array.isArray(node.info.sourceManagers)) {
+      for (const sourceManager of node.info.sourceManagers) {
+        const capability = `search:${sourceManager}`;
+        if (!node.capabilities.has(capability)) {
+          node.capabilities.add(capability);
+        }
+      }
+    }
+
     for (const [pluginName, pluginInstance] of node.plugins.entries()) {
-      const lavalinkPlugin = node.info.plugins.find((p: any) => p.name === pluginName);
+      const lavalinkPlugin = lavalinkPlugins.find((p: any) => p.name === pluginName);
       if (!lavalinkPlugin) {
         this.manager.emit("debug", `Moonlink.js > PluginManager > Unloading plugin ${pluginName} from node ${node.identifier} (no longer reported by Lavalink).`);
         pluginInstance.unload(node);
@@ -86,7 +97,7 @@ export class PluginManager {
       }
     }
 
-    for (const lavalinkPlugin of node.info.plugins) {
+    for (const lavalinkPlugin of lavalinkPlugins) {
       this._processPlugin(node, lavalinkPlugin);
     }
   }
