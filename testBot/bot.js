@@ -30,6 +30,7 @@ client.manager = new Manager({
     disableNativeSources: true,
     resume: true,
     autoResume: true,
+    database: { provider: "local" }
   },
   sendPayload: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
