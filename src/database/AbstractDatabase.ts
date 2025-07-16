@@ -2,11 +2,11 @@ import { Manager } from "../../index";
 
 export abstract class AbstractDatabase {
   public abstract init(manager: Manager): Promise<void>;
-  public abstract set(key: string, value: any): void;
-  public abstract get<T>(key: string): T | undefined;
-  public abstract has(key: string): boolean;
-  public abstract keys(): string[];
-  public abstract remove(key: string): boolean;
-  public abstract clear(): void;
+  public abstract set(key: string, value: any): Promise<void>;
+  public abstract get<T>(key: string): Promise<T | undefined>;
+  public abstract has(key: string): Promise<boolean>;
+  public abstract keys(): Promise<string[]>;
+  public abstract remove(key: string): Promise<boolean>;
+  public abstract clear(): Promise<void>;
   public abstract shutdown(): Promise<void>;
 }
