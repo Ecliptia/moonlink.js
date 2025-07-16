@@ -138,7 +138,7 @@ class Player {
             this.current = new index_1.Track(decodedTrack, options.requestedBy);
         }
         else {
-            const trackFromQueue = this.queue.shift();
+            const trackFromQueue = await this.queue.shift();
             if (trackFromQueue) {
                 if (trackFromQueue instanceof index_1.Track) {
                     this.current = trackFromQueue;
@@ -453,12 +453,12 @@ class Player {
             this.queue.remove(position);
         }
         else {
-            trackToPlay = this.queue.shift();
+            trackToPlay = await this.queue.shift();
         }
         while (trackToPlay && (0, index_1.isSourceBlacklisted)(this.manager, trackToPlay.sourceName)) {
             this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
             this.manager.emit("trackBlacklisted", this, trackToPlay);
-            trackToPlay = this.queue.shift();
+            trackToPlay = await this.queue.shift();
         }
         if (!trackToPlay) {
             this.current = null;
@@ -585,9 +585,9 @@ class Player {
             return plugin.deleteCategories(this.guildId);
         }
     }
-    updateData(path, data) {
+    async updateData(path, data) {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-        this.manager.database.set(dbPath, data);
+        await this.manager.database.set(dbPath, data);
     }
     getHistory(limit) {
         if (limit === undefined) {

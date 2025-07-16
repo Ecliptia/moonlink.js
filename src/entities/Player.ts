@@ -189,7 +189,7 @@ export class Player {
       const decodedTrack = decodeTrack(options.encoded);
       this.current = new Track(decodedTrack, options.requestedBy);
     } else {
-      const trackFromQueue = this.queue.shift();
+      const trackFromQueue = await this.queue.shift();
       if (trackFromQueue) {
         if (trackFromQueue instanceof Track) {
           this.current = trackFromQueue;
@@ -538,13 +538,13 @@ export class Player {
       if (!trackToPlay) return false;
       this.queue.remove(position);
     } else {
-      trackToPlay = this.queue.shift();
+      trackToPlay = await this.queue.shift();
     }
 
     while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
       this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
       this.manager.emit("trackBlacklisted", this, trackToPlay);
-      trackToPlay = this.queue.shift();
+      trackToPlay = await this.queue.shift();
     }
 
     if (!trackToPlay) {
@@ -718,9 +718,9 @@ export class Player {
     }
   }
 
-  private updateData<T>(path?: string, data?: T): void {
+  private async updateData<T>(path?: string, data?: T): Promise<void> {
     const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-    this.manager.database.set(dbPath, data);
+    await this.manager.database.set(dbPath, data);
   }
 
   public getHistory(limit?: number): Track[] {
