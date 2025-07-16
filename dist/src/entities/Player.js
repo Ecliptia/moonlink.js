@@ -181,7 +181,7 @@ class Player {
                     }
                 }
                 if (!foundNode) {
-                    this.manager.emit("debug", `Moonlink.js > Player > No suitable node found for source ${this.current.sourceName}. Attempting generic search fallback.`);
+                    this.manager.emit("debug", `Moonlink.js > Player > No node with support for source '${this.current.sourceName}' was found. Attempting a fallback search on the default source.`);
                     const searchResult = await this.manager.search({
                         query: `${this.current.title} ${this.current.author}`,
                         source: this.manager.options.defaultPlatformSearch,
