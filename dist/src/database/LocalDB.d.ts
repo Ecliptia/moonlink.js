@@ -1,0 +1,32 @@
+import { AbstractDatabase } from "./AbstractDatabase";
+import { Manager } from "../../index";
+export declare class LocalDB extends AbstractDatabase {
+    private store;
+    private dir;
+    private snapshotPath;
+    private logPath;
+    private walStream?;
+    private compactionIntervalMs;
+    private compactionTimer?;
+    private manager;
+    private walBuffer;
+    private readonly walBufferMaxSize;
+    private walFlushInterval?;
+    private readonly walFlushIntervalMs;
+    init(manager: Manager): Promise<void>;
+    private _serializeEntry;
+    private _deserializeEntry;
+    private _flushWALBuffer;
+    private loadSnapshot;
+    private replayWAL;
+    private openWALStream;
+    private appendLog;
+    set<T>(key: string, value: T, log?: boolean): void;
+    get<T>(key: string): T | undefined;
+    has(key: string): boolean;
+    remove(key: string, log?: boolean): boolean;
+    keys(): string[];
+    clear(): void;
+    private compact;
+    shutdown(): Promise<void>;
+}
