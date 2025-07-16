@@ -172,7 +172,7 @@ export class Manager extends EventEmitter {
             : this.nodes.getNodeWithCapability(capability);
 
           if (!targetNode || !targetNode.connected) {
-            this.emit("debug", `Moonlink.js > Search > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
+            this.emit("debug", `Moonlink.js > Search > No node with support for source '${sourceName}' was found. Attempting to use a generic node; the search may fail.`);
             targetNode = this.nodes.sortByUsage("players");
             if (!targetNode || !targetNode.connected) {
               this.emit("debug", `Moonlink.js > Search > No connected node available to handle the request.`);
