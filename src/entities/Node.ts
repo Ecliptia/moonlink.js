@@ -73,14 +73,14 @@ export class Node {
     this.state = state;
     this.manager.emit("nodeStateChange", this, oldState, state);
   }
-  public connect(): void {
+  public async connect(): Promise<void> {
     this.setState(NodeState.CONNECTING);
     this.manager.emit(
       "debug",
       `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`
     );
 
-    let sessionId = this.manager.database.get(`nodes.${this.uuid}.sessionId`);
+        let sessionId = await this.manager.database.get(`nodes.${this.uuid}.sessionId`);
     let headers = {
       Authorization: this.password,
       "User-Id": this.manager.options.clientId,
@@ -226,7 +226,7 @@ export class Node {
         this.info = await this.rest.getInfo();
         this.version = this.info.version;
         this.resumed = payload.resumed;
-        this.manager.database.set(`nodes.${this.uuid}.sessionId`, this.sessionId);
+        await this.manager.database.set(`nodes.${this.uuid}`, { sessionId: this.sessionId });
         this.manager.pluginManager.updateNodePlugins(this);
 
         if (this.manager.options.resume) {
@@ -256,9 +256,9 @@ export class Node {
               "."
           );
 
-          await this.getPlayers().forEach(player => {
+          await this.getPlayers().forEach(async(player) => {
             player.playing = true;
-            player.restart();
+            await player.restart();
           });
 
           this.manager.emit(
@@ -281,8 +281,8 @@ export class Node {
 
           for (const playerInfo of players) {
             const guildId = playerInfo.guildId;
-            const storage: any = this.manager.database.get(`players.${guildId}`);
-            const queue: any = this.manager.database.get(`queues.${guildId}`);
+            const storage: any = await this.manager.database.get(`players.${guildId}`);
+            const queue: any = await this.manager.database.get(`queues.${guildId}`);
             const current = storage?.current;
 
             if (!storage) {
@@ -311,10 +311,11 @@ export class Node {
 
             reconstructedPlayer.playing = playerInfo.paused === false;
             reconstructedPlayer.paused = playerInfo.paused ?? false;
-
             if (current) {
                 reconstructedPlayer.current = new Track(decodeTrack(current.encoded));
             } else {
+                reconstructedPlayer.playing = false
+                reconstructedPlayer.paused = true
                 this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
             }
 
@@ -322,7 +323,7 @@ export class Node {
             if (queue?.tracks) {
               const tracks = queue.tracks.map((track: string) => new Track(decodeTrack(track)));
 
-              this.manager.database.remove(`queues.${guildId}`);
+              await this.manager.database.remove(`queues.${guildId}`);
 
               for (const track of tracks) {
                 reconstructedPlayer.queue.add(track);
