@@ -348,8 +348,8 @@ export class Node {
         if (!player) return;
         if (!player.current) return;
         player.connected = payload.state.connected;
-        player.paused = payload.state.paused ?? false;
-        player.playing = player.connected && !payload.state.paused && player.current !== null;
+        if (!player.paused) player.paused = payload.state.paused ?? false;
+        player.playing = player.connected && !player.paused && player.current !== null;
         player.current.position = payload.state.position;
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;
