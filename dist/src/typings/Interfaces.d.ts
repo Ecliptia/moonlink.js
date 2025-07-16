@@ -1,4 +1,5 @@
-import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult, Database } from "../../index";
+import { AbstractDatabase } from "../database/AbstractDatabase";
+import { Plugin, Node, Rest, Player, Queue, Track, Filters, Lyrics, Listen, PlayerManager, NodeManager, SearchResult, DatabaseManager } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTrackProperties, NodeState } from "./types";
 export interface IEvents {
     autoLeaved: (player: Player, track: Track) => void;
@@ -134,7 +135,6 @@ export interface IOptionsManager {
     autoResume?: boolean;
     resume?: boolean;
     partialTrack?: TPartialTrackProperties[];
-    disableDatabase?: boolean;
     disableNativeSources?: boolean;
     blacklisteSources?: string[];
     enabledSources?: string[];
@@ -159,7 +159,10 @@ export interface IOptionsManager {
     blacklistedSources?: string[];
     defaultSponsorBlockCategories?: string[];
     database?: {
-        path?: string;
+        provider?: 'local' | 'memory' | (new () => AbstractDatabase);
+        options?: {
+            path?: string;
+        };
     };
 }
 export interface IPlayerConfig {
@@ -331,7 +334,7 @@ export interface LowPass {
     smoothing?: number;
 }
 export interface Extendable {
-    Database: typeof Database;
+    DatabaseManager: typeof DatabaseManager;
     Node: typeof Node;
     Rest: typeof Rest;
     Player: typeof Player;
