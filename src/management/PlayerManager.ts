@@ -70,8 +70,8 @@ export class PlayerManager {
     if (!this.has(guildId)) return;
     await this.get(guildId).node.rest.destroy(guildId);
     this.cache.delete(guildId);
-    this.manager.database.delete(`players.${guildId}`);
-    this.manager.database.delete(`queues.${guildId}`);
+    await this.manager.database.remove(`players.${guildId}`);
+    await this.manager.database.remove(`queues.${guildId}`);
 
     this.manager.emit(
       "debug",

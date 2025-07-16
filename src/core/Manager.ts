@@ -12,7 +12,7 @@ import {
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
 import { Log,
   Structure,
-  Database,
+  DatabaseManager,
   NodeManager,
   PlayerManager,
   SourceManager,
@@ -50,7 +50,7 @@ export class Manager extends EventEmitter {
   public nodes: NodeManager;
   public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
   public version: string = require("../../index").version;
-  public database: Database;
+  public database: DatabaseManager;
   public sources: SourceManager;
   public pluginManager: PluginManager;
   private lyricsResultCache: Map<string, ILavaLyricsObject | null> = new Map();
@@ -85,7 +85,6 @@ export class Manager extends EventEmitter {
       sortPlayersByRegion: false,
       resume: false,
       autoResume: false,
-      disableDatabase: false,
       ...config.options,
     };
     this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
@@ -117,7 +116,8 @@ export class Manager extends EventEmitter {
       }
       Structure.manager = this;
       this.options.clientId = clientId;
-      this.database = await (Structure.get("Database")).create(this);
+      this.database = new (Structure.get("DatabaseManager"))(this);
+      await this.database.init();
       this.sources = new (Structure.get("SourceManager"))(this);
       this.nodes.init();
       this.initialize = true;
@@ -172,7 +172,7 @@ export class Manager extends EventEmitter {
             : this.nodes.getNodeWithCapability(capability);
 
           if (!targetNode || !targetNode.connected) {
-            this.emit("debug", `Moonlink.js > Search > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
+            this.emit("debug", `Moonlink.js > Search > No node with support for source '${sourceName}' was found. Attempting to use a generic node; the search may fail.`);
             targetNode = this.nodes.sortByUsage("players");
             if (!targetNode || !targetNode.connected) {
               this.emit("debug", `Moonlink.js > Search > No connected node available to handle the request.`);
@@ -402,34 +402,35 @@ export class Manager extends EventEmitter {
         }
     }
 
-    let targetNode: Node | undefined;
-    let guildId: string | undefined;
+    const capabilityMap = {
+      lavalyrics: 'lavalyrics-plugin',
+      lyrics: 'lyrics',
+      'java-lyrics-plugin': 'java-lyrics-plugin',
+    };
 
-    if (player) {
-      targetNode = player.node;
-      guildId = player.guildId;
-    } else if (provider === 'lavalyrics') {
-      targetNode = this.nodes.getNodeWithCapability("lavalyrics");
-    } else if (provider === 'lyrics') {
-      targetNode = this.nodes.getNodeWithCapability("lyrics");
-    } else if (provider === 'java-lyrics-plugin') {
-        targetNode = this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    } else if (encodedTrack) {
-      targetNode = this.nodes.getNodeWithCapability("lavalyrics") || this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    } else if (videoId) {
-      targetNode = this.nodes.getNodeWithCapability("lyrics") || this.nodes.getNodeWithCapability("java-lyrics-plugin");
-    }
+    const fallbackPlugins = Object.values(capabilityMap);
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-       pluginsToTry.push('java-lyrics-plugin', 'lavalyrics-plugin', 'lyrics');
-    }
+    const capabilitiesToTry = player
+      ? []
+      : capabilityMap[provider]
+        ? [capabilityMap[provider].replace('-plugin', '')]
+        : encodedTrack
+          ? Object.keys(capabilityMap)
+          : videoId
+            ? Object.keys(capabilityMap).slice(1)
+            : [];
+
+    const targetNode = player?.node
+      ?? capabilitiesToTry
+        .map(cap => this.nodes.getNodeWithCapability(cap))
+        .find(Boolean);
+
+    const guildId = player?.guildId;
+
+    const pluginsToTry = capabilityMap[provider]
+      ? [capabilityMap[provider]]
+      : fallbackPlugins;
+
 
     for (const pluginName of pluginsToTry) {
       if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(pluginName.replace('-plugin', ''))) {
@@ -491,16 +492,10 @@ export class Manager extends EventEmitter {
 
     const { query, provider, node: preferredNode, source } = options;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName
@@ -540,16 +535,10 @@ export class Manager extends EventEmitter {
     const player = this.players.get(guildId);
     if (!player) return;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName.replace('-plugin', '');
@@ -585,16 +574,10 @@ export class Manager extends EventEmitter {
     const player = this.players.get(guildId);
     if (!player) return;
 
-    const pluginsToTry = [];
-    if (provider === 'lavalyrics') {
-      pluginsToTry.push('lavalyrics-plugin');
-    } else if (provider === 'lyrics') {
-      pluginsToTry.push('lyrics');
-    } else if (provider === 'java-lyrics-plugin') {
-        pluginsToTry.push('java-lyrics-plugin');
-    } else {
-      pluginsToTry.push('lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin');
-    }
+    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
+    const pluginsToTry = validPlugins.includes(provider)
+      ? [provider]
+      : validPlugins;
 
     for (const pluginName of pluginsToTry) {
       const capability = pluginName.replace('-plugin', '');

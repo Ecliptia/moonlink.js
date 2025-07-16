@@ -1,3 +1,4 @@
+import { AbstractDatabase } from "../database/AbstractDatabase";
 import {
   Plugin,
   Node,
@@ -11,7 +12,7 @@ import {
   PlayerManager,
   NodeManager,
   SearchResult,
-  Database,
+  DatabaseManager,
 } from "../../index";
 import { TLoadResultType, TPlayerLoop, TSortTypeNode, TTrackEndType, TPartialTrackProperties, NodeState } from "./types";
 export interface IEvents {
@@ -159,7 +160,6 @@ export interface IOptionsManager {
   autoResume?: boolean;
   resume?: boolean;
   partialTrack?: TPartialTrackProperties[];
-  disableDatabase?: boolean;
   disableNativeSources?: boolean;
   blacklisteSources?: string[];
   enabledSources?: string[];
@@ -184,7 +184,13 @@ export interface IOptionsManager {
   blacklistedSources?: string[];
   defaultSponsorBlockCategories?: string[];
   database?: {
-    path?: string;
+    provider?: 'local' | 'memory' | 'mongoose' | (new () => AbstractDatabase);
+    options?: {
+      path?: string;
+      mongoose?: {
+        connectionString: string;
+      };
+    };
   }
 }
 
@@ -382,7 +388,7 @@ export interface LowPass {
 }
 
 export interface Extendable {
-  Database: typeof Database;
+  DatabaseManager: typeof DatabaseManager;
   Node: typeof Node;
   Rest: typeof Rest;
   Player: typeof Player;

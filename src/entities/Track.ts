@@ -23,17 +23,17 @@ export class Track {
   public currentChapterIndex?: number = -1;
   private isPartial: boolean = false;
 
-  constructor(trackData: ITrack, requester?: Object) {
+  constructor(trackData: ITrack, requester?: Object | string) {
     const manager = Structure.getManager();
     const partialTrackOptions = manager?.options?.partialTrack;
-    
+
     this.encoded = trackData.encoded;
     this.title = trackData.info.title;
     this.author = trackData.info.author;
     this.pluginInfo = trackData.pluginInfo ?? {};
-    
+
     const trackProps = this.createPropertySetters(trackData.info);
-    
+
     if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
       this.isPartial = true;
       partialTrackOptions.forEach(prop => {
@@ -45,7 +45,7 @@ export class Track {
 
     this.origin = trackData.origin;
 
-    if (requester) this.requestedBy = requester;
+    if (requester) this.requestedBy = typeof requester === 'string' ? { id: requester } : requester;
 
     Object.keys(this).forEach(key => {
       if (this[key] === undefined) {
@@ -81,9 +81,9 @@ export class Track {
   }
 
   public setRequester(requester: Object | string): void {
-    this.requestedBy = requester;
+    this.requestedBy = typeof requester === 'string' ? { id: requester } : requester;
   }
-  
+
   public async resolve(): Promise<boolean> {
     if (this.pluginInfo.MoonlinkInternal) {
       let track = await Structure.getManager().search({
@@ -130,24 +130,24 @@ export class Track {
   }): Promise<Track> {
     const manager = Structure.getManager();
     if (!manager) throw new Error("Manager is not initialized");
-    
+
     const search = await manager.search({
       query: `${options.title} ${options.author}`,
       source: options.source || manager.options.defaultPlatformSearch
     });
-    
+
     if (search.tracks.length) {
       if (search.tracks.length === 1) return search.tracks[0];
-      
+
       if (options.duration) {
-        return search.tracks.reduce((prev, curr) => 
+        return search.tracks.reduce((prev, curr) =>
           Math.abs(curr.duration - options.duration) < Math.abs(prev.duration - options.duration) ? curr : prev
         );
       }
-      
+
       return search.tracks[0];
     }
-    
+
     return null;
   }
 }

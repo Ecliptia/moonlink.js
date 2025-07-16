@@ -189,15 +189,16 @@ export class Player {
       const decodedTrack = decodeTrack(options.encoded);
       this.current = new Track(decodedTrack, options.requestedBy);
     } else {
-      const trackFromQueue = this.queue.shift();
+      const trackFromQueue = await this.queue.shift();
       if (trackFromQueue) {
-        this.current = trackFromQueue;
+        if (trackFromQueue instanceof Track) {
+          this.current = trackFromQueue;
+        } else {
+          this.current = new Track(decodeTrack((trackFromQueue as any).encoded), (trackFromQueue as any).requestedBy);
+        }
         positionToStart = options.position ?? trackFromQueue.position ?? 0;
+        this.current.setRequester(options.requestedBy ?? trackFromQueue.requestedBy);
       }
-    }
-
-    if (typeof options.requestedBy === "string" || typeof this.current?.requestedBy === "string") {
-      this.current.setRequester({ id: options.requestedBy ?? this.current?.requestedBy });
     }
 
     if (this.current?.pluginInfo?.MoonlinkInternal && !(await this.current.resolve())) {
@@ -240,7 +241,7 @@ export class Player {
         }
 
         if (!foundNode) {
-          this.manager.emit("debug", `Moonlink.js > Player > No suitable node found for source ${this.current.sourceName}. Attempting generic search fallback.`);
+          this.manager.emit("debug", `Moonlink.js > Player > No node with support for source '${this.current.sourceName}' was found. Attempting a fallback search on the default source.`);
           const searchResult = await this.manager.search({
             query: `${this.current.title} ${this.current.author}`,
             source: this.manager.options.defaultPlatformSearch,
@@ -289,7 +290,9 @@ export class Player {
       data: {
         track: {
           encoded: this.current.encoded,
-          userData: options.requestedBy ?? this.current?.requestedBy,
+          userData: typeof (options.requestedBy ?? this.current?.requestedBy) === 'string'
+            ? { id: options.requestedBy ?? this.current?.requestedBy }
+            : options.requestedBy ?? this.current?.requestedBy,
         },
         position: positionToStart,
         endTime: options.endTime,
@@ -535,13 +538,13 @@ export class Player {
       if (!trackToPlay) return false;
       this.queue.remove(position);
     } else {
-      trackToPlay = this.queue.shift();
+      trackToPlay = await this.queue.shift();
     }
 
     while (trackToPlay && isSourceBlacklisted(this.manager, trackToPlay.sourceName)) {
       this.manager.emit("debug", `Moonlink.js > Player > Skipping blacklisted track (${trackToPlay.sourceName}) from queue.`);
       this.manager.emit("trackBlacklisted", this, trackToPlay);
-      trackToPlay = this.queue.shift();
+      trackToPlay = await this.queue.shift();
     }
 
     if (!trackToPlay) {
@@ -554,7 +557,7 @@ export class Player {
     const oldTrack = this.current;
     this.current = trackToPlay;
 
-    await this.play({ encoded: this.current.encoded });
+    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
 
     this.manager.emit("playerTriggeredSkip", this, oldTrack, this.current, position ?? 0);
     return true;
@@ -715,9 +718,9 @@ export class Player {
     }
   }
 
-  private updateData<T>(path?: string, data?: T): void {
+  private async updateData<T>(path?: string, data?: T): Promise<void> {
     const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-    this.manager.database.set(dbPath, data);
+    await this.manager.database.set(dbPath, data);
   }
 
   public getHistory(limit?: number): Track[] {

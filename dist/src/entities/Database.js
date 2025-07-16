@@ -57,7 +57,7 @@ class Database {
         this.manager = manager;
         this.disabled = Boolean(manager.options.disableDatabase && !manager.options.resume);
         this.compactionIntervalMs = 60000;
-        this.dir = path_1.default.resolve(__dirname, "../datastore");
+        this.dir = manager.options.database?.path ?? path_1.default.resolve(__dirname, "../datastore");
         this.snapshotPath = path_1.default.join(this.dir, `data.${manager.options.clientId}.json`);
         this.logPath = path_1.default.join(this.dir, `data.${manager.options.clientId}.wal`);
         this.manager.emit("debug", `Moonlink.js > Database > Mode set to ${this.disabled ? "MEMORY" : "WAL"}`);

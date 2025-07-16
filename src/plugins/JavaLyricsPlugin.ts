@@ -6,7 +6,7 @@ import { Player } from "../entities/Player";
 
 export class JavaLyricsPlugin extends AbstractPlugin {
     public name: string = "java-lyrics-plugin";
-    public readonly capabilities: string[] = ["java-lyrics"];
+    public readonly capabilities: string[] = ["java-lyrics", 'java-lyrics-plugin'];
     public node: Node;
     private lyricsCallbacks: Map<string, (line: ILavaLyricsLine) => void> = new Map();
     private lyricsCache: Map<string, ILavaLyricsObject> = new Map();

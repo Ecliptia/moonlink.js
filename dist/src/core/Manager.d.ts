@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { IEvents, IConfigManager, IOptionsManager, IPlayerConfig, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
 import { TSearchSources } from "../typings/types";
-import { Database, NodeManager, PlayerManager, SourceManager, Player, SearchResult, PluginManager } from "../../index";
+import { DatabaseManager, NodeManager, PlayerManager, SourceManager, Player, SearchResult, PluginManager } from "../../index";
 export declare interface Manager {
     on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
     once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
@@ -15,7 +15,7 @@ export declare class Manager extends EventEmitter {
     nodes: NodeManager;
     players: PlayerManager;
     version: string;
-    database: Database;
+    database: DatabaseManager;
     sources: SourceManager;
     pluginManager: PluginManager;
     private lyricsResultCache;
