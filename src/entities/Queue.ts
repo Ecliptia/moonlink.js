@@ -1,6 +1,6 @@
-import { Database, Player, Structure, Track, isSourceBlacklisted } from "../../index";
+import { DatabaseManager, Player, Structure, Track, isSourceBlacklisted } from "../../index";
 export class Queue {
-  public database: Database;
+  public database: DatabaseManager;
   public guildId: string;
   public player: Player;
   constructor(player: Player) {
@@ -66,7 +66,7 @@ export class Queue {
   public clear(): boolean {
     const clearedTracks = [...this.tracks];
     this.tracks = [];
-    this.database.delete(`queues.${this.guildId}`);
+    this.database.remove(`queues.${this.guildId}`);
     this.player.manager.emit("queueRemove", this.player, clearedTracks);
     return true;
   }

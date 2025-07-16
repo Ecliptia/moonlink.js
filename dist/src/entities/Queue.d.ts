@@ -1,6 +1,6 @@
-import { Database, Player, Track } from "../../index";
+import { DatabaseManager, Player, Track } from "../../index";
 export declare class Queue {
-    database: Database;
+    database: DatabaseManager;
     guildId: string;
     player: Player;
     constructor(player: Player);
