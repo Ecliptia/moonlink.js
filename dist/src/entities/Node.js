@@ -240,7 +240,7 @@ class Node {
                         }
                         if (queue?.tracks) {
                             const tracks = queue.tracks.map((track) => new index_1.Track((0, index_1.decodeTrack)(track)));
-                            this.manager.database.delete(`queues.${guildId}`);
+                            this.manager.database.remove(`queues.${guildId}`);
                             for (const track of tracks) {
                                 reconstructedPlayer.queue.add(track);
                             }
