@@ -42,7 +42,7 @@ class Track {
         }
         this.origin = trackData.origin;
         if (requester)
-            this.requestedBy = requester;
+            this.requestedBy = typeof requester === 'string' ? { id: requester } : requester;
         Object.keys(this).forEach(key => {
             if (this[key] === undefined) {
                 delete this[key];
@@ -72,7 +72,7 @@ class Track {
         this.chapters = chapters;
     }
     setRequester(requester) {
-        this.requestedBy = requester;
+        this.requestedBy = typeof requester === 'string' ? { id: requester } : requester;
     }
     async resolve() {
         if (this.pluginInfo.MoonlinkInternal) {
