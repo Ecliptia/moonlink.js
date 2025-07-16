@@ -193,11 +193,8 @@ export class Player {
       if (trackFromQueue) {
         this.current = trackFromQueue;
         positionToStart = options.position ?? trackFromQueue.position ?? 0;
+        this.current.setRequester(options.requestedBy ?? trackFromQueue.requestedBy);
       }
-    }
-
-    if (typeof options.requestedBy === "string" || typeof this.current?.requestedBy === "string") {
-      this.current.setRequester({ id: options.requestedBy ?? this.current?.requestedBy });
     }
 
     if (this.current?.pluginInfo?.MoonlinkInternal && !(await this.current.resolve())) {
@@ -289,7 +286,9 @@ export class Player {
       data: {
         track: {
           encoded: this.current.encoded,
-          userData: options.requestedBy ?? this.current?.requestedBy,
+          userData: typeof (options.requestedBy ?? this.current?.requestedBy) === 'string'
+            ? { id: options.requestedBy ?? this.current?.requestedBy }
+            : options.requestedBy ?? this.current?.requestedBy,
         },
         position: positionToStart,
         endTime: options.endTime,
@@ -554,7 +553,7 @@ export class Player {
     const oldTrack = this.current;
     this.current = trackToPlay;
 
-    await this.play({ encoded: this.current.encoded });
+    await this.play({ encoded: this.current.encoded, requestedBy: this.current.requestedBy });
 
     this.manager.emit("playerTriggeredSkip", this, oldTrack, this.current, position ?? 0);
     return true;
