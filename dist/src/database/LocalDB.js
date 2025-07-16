@@ -180,7 +180,7 @@ class LocalDB extends AbstractDatabase_1.AbstractDatabase {
             this._flushWALBuffer();
         }
     }
-    set(key, value, log = true) {
+    async set(key, value, log = true) {
         if (!key)
             throw new Error("Key cannot be empty.");
         const keys = key.split('.');
@@ -205,7 +205,7 @@ class LocalDB extends AbstractDatabase_1.AbstractDatabase {
             this.appendLog('set', key, value);
         }
     }
-    get(key) {
+    async get(key) {
         if (!key)
             throw new Error("Key cannot be empty.");
         const parts = key.split('.');
@@ -218,10 +218,10 @@ class LocalDB extends AbstractDatabase_1.AbstractDatabase {
         }
         return value;
     }
-    has(key) {
-        return this.get(key) !== undefined;
+    async has(key) {
+        return (await this.get(key)) !== undefined;
     }
-    remove(key, log = true) {
+    async remove(key, log = true) {
         if (!key)
             throw new Error("Key cannot be empty.");
         const keys = key.split('.');
@@ -242,7 +242,7 @@ class LocalDB extends AbstractDatabase_1.AbstractDatabase {
         }
         return existed;
     }
-    keys() {
+    async keys() {
         const allKeys = [];
         const recurse = (obj, prefix) => {
             for (const key in obj) {
@@ -260,14 +260,14 @@ class LocalDB extends AbstractDatabase_1.AbstractDatabase {
         recurse(this.store, '');
         return allKeys;
     }
-    clear() {
+    async clear() {
         this.store = {};
         this.walBuffer = [];
         if (this.walStream) {
-            this.walStream.end(() => {
-                fs_1.default.promises.writeFile(this.logPath, '').then(() => this.openWALStream());
-            });
+            await new Promise(resolve => this.walStream.end(resolve));
+            this.walStream = undefined;
         }
+        await fs_1.default.promises.writeFile(this.logPath, '');
     }
     async compact() {
         this._flushWALBuffer();

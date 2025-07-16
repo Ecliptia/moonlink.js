@@ -21,12 +21,12 @@ export declare class LocalDB extends AbstractDatabase {
     private replayWAL;
     private openWALStream;
     private appendLog;
-    set<T>(key: string, value: T, log?: boolean): void;
-    get<T>(key: string): T | undefined;
-    has(key: string): boolean;
-    remove(key: string, log?: boolean): boolean;
-    keys(): string[];
-    clear(): void;
+    set<T>(key: string, value: T, log?: boolean): Promise<void>;
+    get<T>(key: string): Promise<T | undefined>;
+    has(key: string): Promise<boolean>;
+    remove(key: string, log?: boolean): Promise<boolean>;
+    keys(): Promise<string[]>;
+    clear(): Promise<void>;
     private compact;
     shutdown(): Promise<void>;
 }
