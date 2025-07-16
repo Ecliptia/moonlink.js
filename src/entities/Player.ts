@@ -191,7 +191,11 @@ export class Player {
     } else {
       const trackFromQueue = this.queue.shift();
       if (trackFromQueue) {
-        this.current = trackFromQueue;
+        if (trackFromQueue instanceof Track) {
+          this.current = trackFromQueue;
+        } else {
+          this.current = new Track(decodeTrack((trackFromQueue as any).encoded), (trackFromQueue as any).requestedBy);
+        }
         positionToStart = options.position ?? trackFromQueue.position ?? 0;
         this.current.setRequester(options.requestedBy ?? trackFromQueue.requestedBy);
       }

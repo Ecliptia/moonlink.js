@@ -140,7 +140,12 @@ class Player {
         else {
             const trackFromQueue = this.queue.shift();
             if (trackFromQueue) {
-                this.current = trackFromQueue;
+                if (trackFromQueue instanceof index_1.Track) {
+                    this.current = trackFromQueue;
+                }
+                else {
+                    this.current = new index_1.Track((0, index_1.decodeTrack)(trackFromQueue.encoded), trackFromQueue.requestedBy);
+                }
                 positionToStart = options.position ?? trackFromQueue.position ?? 0;
                 this.current.setRequester(options.requestedBy ?? trackFromQueue.requestedBy);
             }
