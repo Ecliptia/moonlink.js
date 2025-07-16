@@ -33,7 +33,7 @@ module.exports = {
     const serverCount = client.guilds.cache.size;
     const userCount = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
     const channelCount = client.channels.cache.size;
-    const playerCount = client.manager.players.cache.size;
+    const playerCount = client.manager.players.all.size;
     
     const embed = new EmbedBuilder()
       .setTitle(`${config.emojis.info} Bot Information`)
