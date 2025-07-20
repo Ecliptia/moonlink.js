@@ -267,7 +267,9 @@ class Node {
                 if (!player.paused)
                     player.paused = payload.state.paused ?? false;
                 player.playing = player.connected && !player.paused && player.current !== null;
-                player.current.position = payload.state.position;
+                if (payload.state.position > 0 || player.current.position === 0) {
+                    player.current.position = payload.state.position;
+                }
                 player.current.time = payload.state.time;
                 player.ping = payload.state.ping;
                 this.manager.emit("playerUpdate", player, player.current, payload);
@@ -300,6 +302,7 @@ class Node {
                     case "TrackStartEvent":
                         player.playing = true;
                         player.paused = false;
+                        player.current.position = payload.track.info?.position || 0;
                         this.manager.emit("trackStart", player, player.current);
                         this.manager.emit("debug", "Moonlink.js > Player " +
                             player.guildId +
