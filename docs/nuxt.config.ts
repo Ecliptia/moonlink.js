@@ -1,6 +1,6 @@
 // nuxt.config.ts
 export default defineNuxtConfig({
-  ssr: false,
+  ssr: true,
   devtools: { enabled: true },
   extends: ['shadcn-docs-nuxt'],
   i18n: {
@@ -8,4 +8,7 @@ export default defineNuxtConfig({
     locales: [{ code: 'en', name: 'English', language: 'en-US' }],
   },
   compatibilityDate: '2024-07-06',
+  nitro: {
+    preset: 'netlify'
+  }
 })
