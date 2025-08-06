@@ -138,6 +138,7 @@ export interface IOptionsManager {
     disableNativeSources?: boolean;
     blacklisteSources?: string[];
     enabledSources?: string[];
+    playlistLoadLimit?: number;
     spotify?: {
         clientId?: string;
         clientSecret?: string;

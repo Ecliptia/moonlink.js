@@ -134,6 +134,7 @@ export class Manager extends EventEmitter {
     node?: string;
     requester?: unknown;
     fallbackSources?: TSearchSources[];
+    limit?: number;
   }): Promise<SearchResult> {
     validateProperty(
       options,
@@ -146,7 +147,7 @@ export class Manager extends EventEmitter {
       "(Moonlink.js) - Manager > Search > Query is required"
     );
 
-    const { query, source, node: preferredNode, requester, fallbackSources } = options;
+    const { query, source, node: preferredNode, requester, fallbackSources, limit } = options;
     const initialSource = source ?? this.options.defaultPlatformSearch;
     const sourcesToTry = this.options.enableSourceFallback ? [initialSource, ...(fallbackSources || [])] : [initialSource];
 
@@ -186,6 +187,12 @@ export class Manager extends EventEmitter {
 
         if (result && result.loadType !== "empty" && result.loadType !== "error") {
           result.tracks = result.tracks.filter(track => !isSourceBlacklisted(this, track.sourceName));
+          const max = limit ?? this.options.playlistLoadLimit;
+
+          if (max && result.tracks.length > max) {
+            result.tracks = result.tracks.slice(0, max);
+          }
+
           if (result.tracks.length === 0) {
             result.loadType = "empty";
           }

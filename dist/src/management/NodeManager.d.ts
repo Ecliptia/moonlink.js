@@ -11,7 +11,9 @@ export declare class NodeManager {
     add(node: INode): void;
     remove(identifier: string): void;
     get(identifier: string | number): Node | undefined;
+    getConnected(): Node[];
     get best(): Node | undefined;
+    hasConnected(): boolean;
     getNodeWithCapability(capability: string, preferredNodeIdentifier?: string): Node | undefined;
     getBestNodeForTrack(track: Track): Node | undefined;
     sortByUsage(sortType: TSortTypeNode, region?: string): Node | undefined;

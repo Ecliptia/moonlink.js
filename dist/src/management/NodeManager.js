@@ -107,11 +107,17 @@ class NodeManager {
         }
         return this.cache.get(identifier);
     }
+    getConnected() {
+        return [...this.cache.values()].filter(node => node.connected);
+    }
     get best() {
         return this.sortByUsage("players");
     }
+    hasConnected() {
+        return [...this.cache.values()].some(node => node.connected);
+    }
     getNodeWithCapability(capability, preferredNodeIdentifier) {
-        let nodes = [...this.cache.values()].filter(node => node.connected && node.capabilities.has(capability));
+        let nodes = this.getConnected().filter(node => node.capabilities.has(capability));
         if (preferredNodeIdentifier) {
             const preferredNode = nodes.find(node => node.identifier === preferredNodeIdentifier);
             if (preferredNode) {
@@ -145,7 +151,7 @@ class NodeManager {
         return this.best;
     }
     sortByUsage(sortType, region) {
-        let nodes = [...this.cache.values()].filter(node => node.connected === true);
+        let nodes = this.getConnected();
         if (!nodes.length) {
             this.manager.emit("debug", "(Moonlink.js) - Node > No available nodes");
             return undefined;

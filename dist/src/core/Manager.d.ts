@@ -27,6 +27,7 @@ export declare class Manager extends EventEmitter {
         node?: string;
         requester?: unknown;
         fallbackSources?: TSearchSources[];
+        limit?: number;
     }): Promise<SearchResult>;
     lavaSearch(options: {
         query: string;
