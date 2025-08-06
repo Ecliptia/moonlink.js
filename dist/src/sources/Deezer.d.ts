@@ -9,8 +9,12 @@ export default class Deezer implements ISource {
     match(query: string): boolean;
     private init;
     private apiRequest;
-    search(query: string): Promise<any>;
-    load(query: string): Promise<any>;
+    search(query: string, options?: {
+        limit?: number;
+    }): Promise<any>;
+    load(query: string, options?: {
+        limit?: number;
+    }): Promise<any>;
     private buildTrack;
     resolve(query: string): Promise<any>;
 }

@@ -103,8 +103,8 @@ class Spotify {
             pluginInfo: { MoonlinkInternal: true, needsStream: true },
         };
     }
-    async search(query) {
-        const limit = this.manager.options.spotify?.limitLoadSearch ?? 20;
+    async search(query, options) {
+        const limit = options?.limit ?? this.manager.options.spotify?.limitLoadSearch ?? 20;
         const data = await this.apiRequest(`/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`);
         if (!data || data.error) {
             this.manager.emit('debug', `Moonlink.js > Spotify > Search failed: ${data?.error?.message}`);
@@ -137,7 +137,7 @@ class Spotify {
             },
         };
     }
-    async load(rawUrl) {
+    async load(rawUrl, options) {
         const normalized = rawUrl
             .replace(/open\.spotify\.com\/intl-[^/]+\//, 'open.spotify.com/')
             .split('?')[0];
@@ -166,7 +166,7 @@ class Spotify {
                     return { loadType: 'error', data: { message: 'Artist not found.' } };
                 }
                 let tracks = topTracks.tracks.map((t) => this.buildTrack(t));
-                const max = this.manager.options.spotify?.limitLoadArtist;
+                const max = options?.limit ?? this.manager.options.spotify?.limitLoadArtist;
                 if (max != null)
                     tracks = tracks.slice(0, max);
                 return {
@@ -185,9 +185,9 @@ class Spotify {
                     ? data.tracks.items.map((i) => i.track)
                     : data.tracks.items;
                 items = items.filter(Boolean);
-                const max = link.type === 'playlist'
-                    ? this.manager.options.spotify?.limitLoadPlaylist
-                    : this.manager.options.spotify?.limitLoadAlbum;
+                const max = options?.limit ?? (link.type === 'playlist'
+                    ? this.manager.options.spotify?.limitLoadPlaylist ?? this.manager.options.playlistLoadLimit
+                    : this.manager.options.spotify?.limitLoadAlbum ?? this.manager.options.playlistLoadLimit);
                 if (max != null)
                     items = items.slice(0, max);
                 const tracks = items.map((item) => this.buildTrack(item, item.external_urls.spotify));

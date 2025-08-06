@@ -83,7 +83,7 @@ class Manager extends node_events_1.EventEmitter {
     async search(options) {
         (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > Search > Options is required");
         (0, index_1.validateProperty)(options.query, (value) => typeof value === "string", "(Moonlink.js) - Manager > Search > Query is required");
-        const { query, source, node: preferredNode, requester, fallbackSources } = options;
+        const { query, source, node: preferredNode, requester, fallbackSources, limit } = options;
         const initialSource = source ?? this.options.defaultPlatformSearch;
         const sourcesToTry = this.options.enableSourceFallback ? [initialSource, ...(fallbackSources || [])] : [initialSource];
         for (const sourceName of sourcesToTry) {
@@ -120,6 +120,10 @@ class Manager extends node_events_1.EventEmitter {
                 }
                 if (result && result.loadType !== "empty" && result.loadType !== "error") {
                     result.tracks = result.tracks.filter(track => !(0, index_1.isSourceBlacklisted)(this, track.sourceName));
+                    const max = limit ?? this.options.playlistLoadLimit;
+                    if (max && result.tracks.length > max) {
+                        result.tracks = result.tracks.slice(0, max);
+                    }
                     if (result.tracks.length === 0) {
                         result.loadType = "empty";
                     }

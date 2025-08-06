@@ -119,12 +119,21 @@ export class NodeManager {
     }
     return this.cache.get(identifier);
   }
+
+  public getConnected(): Node[] {
+    return [...this.cache.values()].filter(node => node.connected);
+  }
+
   public get best(): Node | undefined {
     return this.sortByUsage("players");
   }
 
+  public hasConnected(): boolean {
+    return [...this.cache.values()].some(node => node.connected);
+  }
+
   public getNodeWithCapability(capability: string, preferredNodeIdentifier?: string): Node | undefined {
-    let nodes = [...this.cache.values()].filter(node => node.connected && node.capabilities.has(capability));
+    let nodes = this.getConnected().filter(node => node.capabilities.has(capability));
 
     if (preferredNodeIdentifier) {
       const preferredNode = nodes.find(node => node.identifier === preferredNodeIdentifier);
@@ -165,7 +174,7 @@ export class NodeManager {
   }
 
   public sortByUsage(sortType: TSortTypeNode, region?: string): Node | undefined {
-    let nodes = [...this.cache.values()].filter(node => node.connected === true);
+    let nodes = this.getConnected();
     if (!nodes.length) {
       this.manager.emit("debug", "(Moonlink.js) - Node > No available nodes");
       return undefined;

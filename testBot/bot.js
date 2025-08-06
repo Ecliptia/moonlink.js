@@ -11,8 +11,8 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 3000,
-      password: "123",
+      port: 2333,
+      password: "yeah",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -27,11 +27,15 @@ client.manager = new Manager({
       path: "moonlink.log",
     },
     partialTrack: ["url", "duration", "artworkUrl", "sourceName", "identifier", "position"],
-    disableNativeSources: true,
     resume: true,
     autoResume: true,
     database: {
       provider: "local",
+    },
+    playlistLoadLimit: 3,
+    spotify: {
+      clientId: "c5a8160518fd4293b09f9bce0fcda0f0",
+      clientSecret: "3871150b7e13430db154cadb86277b02",
     }
   },
   sendPayload: (guildId, payload) => {
