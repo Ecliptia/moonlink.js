@@ -5,7 +5,7 @@ description: Build powerful Discord music bots with Moonlink.js, a feature-rich 
 ---
 <div style="display: flex; justify-content: center;">
 
-![Moonlink](https://moonlink.js.org/moonlink_banner.png){lifted}
+![Moonlink](https://moonlink.js.org/public/moonlink_banner.png){lifted}
 
 </div>
 
