@@ -147,6 +147,8 @@ export interface IOptionsManager {
         limitLoadArtist?: number;
         limitLoadSearch?: number;
         limitLoadRecommendations?: number;
+        limitLoadPlaylistPage?: number;
+        limitLoadAlbumPage?: number;
     };
     deezer?: {
         maxSearchResults?: number;
