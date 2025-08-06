@@ -392,7 +392,9 @@ A showcase for our amazing community
   ::
 ::
 
-## Contributors
+## Meet the Team
+
+### Development Team & Collaborators
 ::team-card-group
   ::team-card
   ---
@@ -421,31 +423,46 @@ A showcase for our amazing community
   ::team-card
   ---
   center: false
+  avatar: https://avatars.githubusercontent.com/u/50148901?s=60&v=4
+  name: Comicallybad
+  title: Collaborator & Developer
+  links:
+    - icon: lucide:github
+      to: https://github.com/comicallybad
+  ---
+  ::
+  ::team-card
+  ---
+  center: false
+  avatar: https://avatars.githubusercontent.com/u/76094069?v=4
+  name: UnschooledGamer
+  title: Collaborator
+  links:
+    - icon: lucide:github
+      to: https://github.com/UnschooledGamer
+  ---
+  ::
+  ::team-card
+  ---
+  center: false
   avatar: https://cdn.discordapp.com/avatars/336885637934481409/371faca58eb88781b922d4967b91fab4.png?size=2048
   name: xotakfr
-  title: Tester & Bug Hunter
+  title: Collaborator
   links:
     - icon: lucide:github
       to: https://github.com/xotakfr
   ---
   ::
+::
+
+### Our Amazing Contributors
+::team-card-group
   ::team-card
   ---
   center: false
   avatar: https://images-ext-1.discordapp.net/external/EzD_6L_K28EMUN8RwQhssNUaZEyVN1H3dG6VIHczPvc/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/389709853511122944/cd8fa0420ae13e16f5bfd87340da35d8.png?format=webp&quality=lossless&width=810&height=810
   name: iamforster
   title: Tester & Bug Hunter
-  ---
-  ::
-  ::team-card
-  ---
-  center: false
-  avatar: https://avatars.githubusercontent.com/u/50148901?s=60&v=4
-  name: Comicallybad
-  title: Bug Fixes
-  links:
-    - icon: lucide:github
-      to: https://github.com/comicallybad
   ---
   ::
   ::team-card
