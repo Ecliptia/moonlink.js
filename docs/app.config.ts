@@ -2,7 +2,8 @@ export default defineAppConfig({
   shadcnDocs: {
     site: {
       name: 'Moonlink.js',
-      description: 'Moonlink.js 🌙🌟 is a stable and feature-rich Lavalink client for Node.js, designed to make building Discord music bots easier 🎵. With an intuitive and easy-to-use API, it provides seamless integration with the Lavalink server, allowing you to manage and control audio playback efficiently and at scale 🚀🎧.',
+      description:
+        'Moonlink.js 🌙🌟 is a stable and feature-rich Lavalink client for Node.js, designed to make building Discord music bots easier 🎵. With an intuitive and easy-to-use API, it provides seamless integration with the Lavalink server, allowing you to manage and control audio playback efficiently and at scale 🚀🎧.',
       ogImage: '/moonlink_banner.png',
       ogImageComponent: 'ShadcnDocs',
       ogImageColor: 'dark',
@@ -19,17 +20,25 @@ export default defineAppConfig({
     },
     header: {
       title: 'Moonlink.js',
+      showTitle: true,
       darkModeToggle: true,
+      languageSwitcher: {
+        enable: true,
+        triggerType: 'icon',
+        dropdownType: 'select',
+      },
       logo: {
-        light: '/logo.svg',
+        light: '/favicon.svg', // usa do template base
         dark: '/logo.svg',
       },
       nav: [],
-      links: [{
-        icon: 'lucide:github',
-        to: 'https://github.com/Ecliptia/moonlink.js',
-        target: '_blank',
-      }],
+      links: [
+        {
+          icon: 'lucide:github',
+          to: 'https://github.com/Ecliptia/moonlink.js',
+          target: '_blank',
+        },
+      ],
     },
     aside: {
       useLevel: true,
@@ -41,26 +50,31 @@ export default defineAppConfig({
     },
     footer: {
       credits: 'Copyright © 2025',
-      links: [{
-        icon: 'lucide:github',
-        to: 'https://github.com/Ecliptia/moonlink.js',
-        target: '_blank',
-      }],
+      links: [
+        {
+          icon: 'lucide:github',
+          to: 'https://github.com/Ecliptia/moonlink.js',
+          target: '_blank',
+        },
+      ],
     },
     toc: {
       enable: true,
       title: 'On This Page',
-      links: [{
-        title: 'Star on GitHub',
-        icon: 'lucide:star',
-        to: 'https://github.com/Ecliptia/moonlink.js',
-        target: '_blank',
-      }, {
-        title: 'Create Issues',
-        icon: 'lucide:circle-dot',
-        to: 'https://github.com/Ecliptia/moonlink.js/issues',
-        target: '_blank',
-      }],
+      links: [
+        {
+          title: 'Star on GitHub',
+          icon: 'lucide:star',
+          to: 'https://github.com/Ecliptia/moonlink.js',
+          target: '_blank',
+        },
+        {
+          title: 'Create Issues',
+          icon: 'lucide:circle-dot',
+          to: 'https://github.com/Ecliptia/moonlink.js/issues',
+          target: '_blank',
+        },
+      ],
     },
     search: {
       enable: true,
@@ -74,5 +88,5 @@ export default defineAppConfig({
       target: '_blank',
       border: true,
     },
-  }
+  },
 });

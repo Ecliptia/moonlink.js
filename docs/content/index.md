@@ -3,8 +3,10 @@ title: Moonlink.js | The Definitive Library for Discord Music Bots with Node.js
 navigation: false
 description: Build powerful Discord music bots with Moonlink.js, a feature-rich and flexible library for Node.js and Lavalink. Offers advanced queue management, audio filters, and integration with Spotify, Deezer, and more.
 ---
-<div align="center">
-<img src="https://moonlink.js.org/moonlink_banner.png" alt="Moonlink.js Banner">
+<div style="display: flex; justify-content: center;">
+
+![Moonlink](https://moonlink.js.org/moonlink_banner.png){lifted}
+
 </div>
 
 ::alert{type="warning" icon="lucide:triangle-alert"}
