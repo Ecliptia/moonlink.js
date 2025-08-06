@@ -177,7 +177,10 @@ class Spotify {
             case 'album':
             case 'playlist': {
                 const base = link.type === 'album' ? 'albums' : 'playlists';
-                const data = await this.apiRequest(`/${base}/${link.id}`);
+                const pageLimit = link.type === 'playlist'
+                    ? this.manager.options.spotify?.limitLoadPlaylistPage ?? 100
+                    : this.manager.options.spotify?.limitLoadAlbumPage ?? 50;
+                const data = await this.apiRequest(`/${base}/${link.id}?limit=${pageLimit}`);
                 if (!data || data.error) {
                     return { loadType: 'error', data: { message: `${link.type} not found.` } };
                 }
