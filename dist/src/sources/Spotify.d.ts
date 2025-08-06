@@ -11,12 +11,16 @@ export default class Spotify implements ISource {
     private initTokens;
     private apiRequest;
     private buildTrack;
-    search(query: string): Promise<{
+    search(query: string, options?: {
+        limit?: number;
+    }): Promise<{
         loadType: string;
         data: any;
     }>;
     private recommendations;
-    load(rawUrl: string): Promise<{
+    load(rawUrl: string, options?: {
+        limit?: number;
+    }): Promise<{
         loadType: string;
         data: any;
     }>;

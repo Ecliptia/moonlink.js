@@ -57,16 +57,17 @@ class Deezer {
             return null;
         }
     }
-    async search(query) {
+    async search(query, options) {
         const q = query.startsWith('dzsearch:') ? query.slice(9).trim() : query;
-        const params = new url_1.URLSearchParams({ q, limit: String(this.manager.options.deezer?.maxSearchResults ?? 20) });
+        const limit = options?.limit ?? this.manager.options.deezer?.maxSearchResults ?? 20;
+        const params = new url_1.URLSearchParams({ q, limit: String(limit) });
         const data = await this.apiRequest(`/search?${params}`);
         if (!data?.data?.length)
             return { loadType: 'empty', data: {} };
         const tracks = data.data.map((t) => this.buildTrack(t));
         return { loadType: 'search', data: tracks };
     }
-    async load(query) {
+    async load(query, options) {
         const shortLink = /^(?:https?:\/\/)?dzr\.page\.link\/[\w-]+$/;
         if (shortLink.test(query)) {
             const urlToFetch = query.startsWith('http') ? query : `https://${query}`;
@@ -83,7 +84,8 @@ class Deezer {
         }
         if (type === 'artist') {
             const artist = await this.apiRequest(`/artist/${id}`);
-            const top = await this.apiRequest(`/artist/${id}/top?limit=${this.manager.options.deezer?.maxArtistTracks ?? 20}`);
+            const limit = options?.limit ?? this.manager.options.deezer?.maxArtistTracks ?? 20;
+            const top = await this.apiRequest(`/artist/${id}/top?limit=${limit}`);
             const tracks = top.data.map((t) => this.buildTrack(t));
             return { loadType: 'playlist', data: { info: { name: artist.name, selectedTrack: 0 }, tracks } };
         }
@@ -91,8 +93,9 @@ class Deezer {
         const col = await this.apiRequest(path);
         const items = col.tracks.data;
         const limitKey = type === 'album' ? 'maxAlbumTracks' : 'maxPlaylistTracks';
-        const slice = typeof this.manager.options.deezer?.[limitKey] === 'number'
-            ? items.slice(0, this.manager.options.deezer[limitKey])
+        const limit = options?.limit ?? this.manager.options.deezer?.[limitKey] ?? this.manager.options.playlistLoadLimit;
+        const slice = typeof limit === 'number'
+            ? items.slice(0, limit)
             : items;
         const tracks = slice.map((t) => this.buildTrack(t));
         return { loadType: 'playlist', data: { info: { name: col.title, selectedTrack: 0 }, tracks } };

@@ -126,8 +126,8 @@ export default class Spotify implements ISource {
     };
   }
 
-  public async search(query: string) {
-    const limit = this.manager.options.spotify?.limitLoadSearch ?? 20;
+  public async search(query: string, options?: { limit?: number }) {
+    const limit = options?.limit ?? this.manager.options.spotify?.limitLoadSearch ?? 20;
     const data = await this.apiRequest(
       `/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`
     );
@@ -170,7 +170,7 @@ export default class Spotify implements ISource {
     };
   }
 
-  public async load(rawUrl: string) {
+  public async load(rawUrl: string, options?: { limit?: number }) {
     const normalized = rawUrl
       .replace(/open\.spotify\.com\/intl-[^/]+\//, 'open.spotify.com/')
       .split('?')[0];
@@ -205,7 +205,7 @@ export default class Spotify implements ISource {
         }
 
         let tracks = topTracks.tracks.map((t: any) => this.buildTrack(t));
-        const max = this.manager.options.spotify?.limitLoadArtist;
+        const max = options?.limit ?? this.manager.options.spotify?.limitLoadArtist;
         if (max != null) tracks = tracks.slice(0, max);
 
         return {
@@ -229,9 +229,9 @@ export default class Spotify implements ISource {
         items = items.filter(Boolean);
 
         const max =
-          link.type === 'playlist'
-            ? this.manager.options.spotify?.limitLoadPlaylist
-            : this.manager.options.spotify?.limitLoadAlbum;
+          options?.limit ?? (link.type === 'playlist'
+            ? this.manager.options.spotify?.limitLoadPlaylist ?? this.manager.options.playlistLoadLimit
+            : this.manager.options.spotify?.limitLoadAlbum ?? this.manager.options.playlistLoadLimit);
         if (max != null) items = items.slice(0, max);
 
         const tracks = items.map((item: any) => this.buildTrack(item, item.external_urls.spotify));

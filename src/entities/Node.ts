@@ -80,7 +80,7 @@ export class Node {
       `Moonlink.js > Node > Connect > Attempting connection to ${this.identifier} (${this.host}:${this.port}) UUID: ${this.uuid}`
     );
 
-        let sessionId = await this.manager.database.get(`nodes.${this.uuid}.sessionId`);
+    let sessionId = await this.manager.database.get(`nodes.${this.uuid}.sessionId`);
     let headers = {
       Authorization: this.password,
       "User-Id": this.manager.options.clientId,
@@ -106,8 +106,7 @@ export class Node {
 
     this.manager.emit(
       "debug",
-      `Moonlink.js > Node (${
-        this.identifier ? this.identifier : this.address
+      `Moonlink.js > Node (${this.identifier ? this.identifier : this.address
       }) is ready for attempting to connect.`
     );
     this.manager.emit("nodeCreate", this);
@@ -119,13 +118,13 @@ export class Node {
   }
   public reconnect(): void {
     this.setState(NodeState.CONNECTING);
-    const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000); 
-    
+    const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
+
     this.manager.emit(
       "debug",
-      `Moonlink.js > Node (${this.identifier}) attempting to reconnect in ${delay/1000}s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount})`
+      `Moonlink.js > Node (${this.identifier}) attempting to reconnect in ${delay / 1000}s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount})`
     );
-    
+
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       this.connect();
@@ -145,12 +144,12 @@ export class Node {
         this.manager.emit(
           "debug",
           "Moonlink.js > Node > Moving " +
-            this.getPlayersCount +
-            "players from node " +
-            this.uuid +
-            " to node " +
-            node.uuid +
-            "."
+          this.getPlayersCount +
+          "players from node " +
+          this.uuid +
+          " to node " +
+          node.uuid +
+          "."
         );
         this.getPlayers().forEach(player => {
           player.transferNode(node);
@@ -160,8 +159,7 @@ export class Node {
 
     this.manager.emit(
       "debug",
-      `Moonlink.js > Node (${
-        this.identifier ? this.identifier : this.address
+      `Moonlink.js > Node (${this.identifier ? this.identifier : this.address
       }) is attempting to reconnect.`
     );
     this.manager.emit("nodeReconnect", this);
@@ -203,8 +201,7 @@ export class Node {
     }
     this.manager.emit(
       "debug",
-      `Moonlink.js > Node (${
-        this.identifier ? this.identifier : this.address
+      `Moonlink.js > Node (${this.identifier ? this.identifier : this.address
       }) has disconnected with code ${code} and reason ${reason}.`
     );
 
@@ -250,13 +247,13 @@ export class Node {
           this.manager.emit(
             "debug",
             "Moonlink.js > Node > Auto-resuming " +
-              this.getPlayersCount +
-              " players from node " +
-              this.uuid +
-              "."
+            this.getPlayersCount +
+            " players from node " +
+            this.uuid +
+            "."
           );
 
-          await this.getPlayers().forEach(async(player) => {
+          await this.getPlayers().forEach(async (player) => {
             player.playing = true;
             await player.restart();
           });
@@ -264,10 +261,10 @@ export class Node {
           this.manager.emit(
             "debug",
             "Moonlink.js > Node > Auto-resumed " +
-              this.getPlayersCount +
-              " players from node " +
-              this.uuid +
-              "."
+            this.getPlayersCount +
+            " players from node " +
+            this.uuid +
+            "."
           );
           this.manager.emit("nodeAutoResumed", this, this.getPlayers());
         }
@@ -298,8 +295,8 @@ export class Node {
             });
 
             if (!reconstructedPlayer) {
-                this.manager.emit("debug", `Moonlink.js > Node > Failed to create player instance for ${guildId}, skipping resume.`);
-                continue;
+              this.manager.emit("debug", `Moonlink.js > Node > Failed to create player instance for ${guildId}, skipping resume.`);
+              continue;
             }
 
             this.manager.emit("playerResuming", reconstructedPlayer);
@@ -312,11 +309,11 @@ export class Node {
             reconstructedPlayer.playing = playerInfo.paused === false;
             reconstructedPlayer.paused = playerInfo.paused ?? false;
             if (current) {
-                reconstructedPlayer.current = new Track(decodeTrack(current.encoded));
+              reconstructedPlayer.current = new Track(decodeTrack(current.encoded));
             } else {
-                reconstructedPlayer.playing = false
-                reconstructedPlayer.paused = true
-                this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
+              reconstructedPlayer.playing = false
+              reconstructedPlayer.paused = true
+              this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
             }
 
 
@@ -350,7 +347,9 @@ export class Node {
         player.connected = payload.state.connected;
         if (!player.paused) player.paused = payload.state.paused ?? false;
         player.playing = player.connected && !player.paused && player.current !== null;
-        player.current.position = payload.state.position;
+        if (payload.state.position > 0 || player.current.position === 0) {
+          player.current.position = payload.state.position;
+        }
         player.current.time = payload.state.time;
         player.ping = payload.state.ping;
 
@@ -360,14 +359,14 @@ export class Node {
           this.manager.emit(
             "debug",
             "Moonlink.js > Player " +
-              player.guildId +
-              " has been updated with position " +
-              payload.state.position +
-              " and time " +
-              payload.state.time +
-              " and ping " +
-              payload.state.ping +
-              "ms."
+            player.guildId +
+            " has been updated with position " +
+            payload.state.position +
+            " and time " +
+            payload.state.time +
+            " and ping " +
+            payload.state.ping +
+            "ms."
           );
           player.set("sendPlayerUpdateDebug", true);
         }
@@ -375,12 +374,12 @@ export class Node {
       case "event": {
         const sponsorBlockPlugin = this.plugins.get("sponsorblock-plugin");
         if (sponsorBlockPlugin && (sponsorBlockPlugin as any).handleEvent) {
-            (sponsorBlockPlugin as any).handleEvent(this, payload);
+          (sponsorBlockPlugin as any).handleEvent(this, payload);
         }
 
         const lavaLyricsPlugin = this.plugins.get("lavalyrics-plugin");
         if (lavaLyricsPlugin && (lavaLyricsPlugin as any).handleEvent) {
-            (lavaLyricsPlugin as any).handleEvent(this, payload);
+          (lavaLyricsPlugin as any).handleEvent(this, payload);
         }
 
         let player = this.manager.getPlayer(payload.guildId);
@@ -390,14 +389,15 @@ export class Node {
           case "TrackStartEvent":
             player.playing = true;
             player.paused = false;
+            player.current.position = payload.track.info?.position || 0;
 
             this.manager.emit("trackStart", player, player.current);
             this.manager.emit(
               "debug",
               "Moonlink.js > Player " +
-                player.guildId +
-                " has started the track: " +
-                player.current.title
+              player.guildId +
+              " has started the track: " +
+              player.current.title
             );
 
             if (player.get("attemptingToReconnect")) {
@@ -405,10 +405,10 @@ export class Node {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has successfully reconnected to the node " +
-                  this.uuid +
-                  "."
+                player.guildId +
+                " has successfully reconnected to the node " +
+                this.uuid +
+                "."
               );
             }
             break;
@@ -417,11 +417,11 @@ export class Node {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has ended the track for reason " +
-                  payload.reason +
-                  ". But the current track is null. " +
-                  player.current?.encoded
+                player.guildId +
+                " has ended the track for reason " +
+                payload.reason +
+                ". But the current track is null. " +
+                player.current?.encoded
               );
             let track: Track = new (Structure.get("Track"))(
               { ...payload.track },
@@ -440,21 +440,21 @@ export class Node {
 
             const lyricsPlugin = this.plugins.get("lyrics");
             if (lyricsPlugin && (lyricsPlugin as any).onTrackEnd) {
-                (lyricsPlugin as any).onTrackEnd(player);
+              (lyricsPlugin as any).onTrackEnd(player);
             }
 
             this.manager.emit("trackEnd", player, player.current, payload.reason, payload);
-            
+
             if (player.destroyed) {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has been destroyed. No need to process the end of the track."
+                player.guildId +
+                " has been destroyed. No need to process the end of the track."
               );
               return;
             }
-            
+
             if (["loadFailed", "cleanup"].includes(payload.reason)) {
               if (player.queue.size) {
                 player.play();
@@ -465,10 +465,10 @@ export class Node {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has ended the track for reason " +
-                  payload.reason +
-                  "."
+                player.guildId +
+                " has ended the track for reason " +
+                payload.reason +
+                "."
               );
               return;
             }
@@ -530,8 +530,8 @@ export class Node {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has been destroyed because of autoLeave."
+                player.guildId +
+                " has been destroyed because of autoLeave."
               );
               return;
             }
@@ -544,8 +544,8 @@ export class Node {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
-                  player.guildId +
-                  " has been cleared because of empty queue."
+                player.guildId +
+                " has been cleared because of empty queue."
               );
             }
             break;
@@ -555,10 +555,10 @@ export class Node {
             this.manager.emit(
               "debug",
               "Moonlink.js > Player " +
-                player.guildId +
-                " has been stuck for " +
-                payload.thresholdMs +
-                "ms."
+              player.guildId +
+              " has been stuck for " +
+              payload.thresholdMs +
+              "ms."
             );
             break;
           }
@@ -567,9 +567,9 @@ export class Node {
             this.manager.emit(
               "debug",
               "Moonlink.js > Player " +
-                player.guildId +
-                " has an exception: " +
-                JSON.stringify(payload.exception)
+              player.guildId +
+              " has an exception: " +
+              JSON.stringify(payload.exception)
             );
             break;
           }
@@ -584,18 +584,18 @@ export class Node {
             this.manager.emit(
               "debug",
               "Moonlink.js > Player " +
-                player.guildId +
-                " has been closed with code " +
-                payload.code +
-                " and reason " +
-                payload.reason
+              player.guildId +
+              " has been closed with code " +
+              payload.code +
+              " and reason " +
+              payload.reason
             );
 
             if (player.playing && player.queue.size > 0) {
               if (player.get("attemptingToReconnect") ?? (0 as number) < 6) {
                 await player.connect({});
                 await player.restart();
-                
+
                 this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is web socket closed and attempting to reconnect.");
                 this.manager.emit("playerReconnect", player, "webSocketClosed");
 
@@ -604,10 +604,10 @@ export class Node {
                 player.destroy("webSocketClosed");
                 this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has been destroyed because of too many failed attempts to reconnect.");
               }
-            break;
+              break;
+            }
           }
         }
-      }
 
         break;
       }
@@ -709,7 +709,7 @@ export class Node {
     this.socket.close();
     this.destroyed = true;
   }
-  
+
   public getSystemStats(): { cpuLoad: number; memoryUsage: number } {
     if (!this.stats) return { cpuLoad: 0, memoryUsage: 0 };
     return {
@@ -717,21 +717,21 @@ export class Node {
       memoryUsage: this.stats.memory ? this.stats.memory.used : 0
     };
   }
-  
+
   public isOverloaded(cpuThreshold: number = 80, memoryThreshold: number = 80): boolean {
     const stats = this.getSystemStats();
     return stats.cpuLoad > cpuThreshold || stats.memoryUsage > memoryThreshold;
   }
-  
+
   public async migrateAllPlayers(targetNode?: Node): Promise<void> {
     if (!this.getPlayersCount) return;
-    
+
     const destination = targetNode || this.manager.nodes.sortByUsage(this.manager.options.sortTypeNode || "players")[0];
     if (!destination) {
       this.manager.emit('debug', 'Moonlink.js > Node > No nodes available for migration');
       return;
     }
-    
+
     for (const player of this.getPlayers()) {
       try {
         await player.transferNode(destination);
@@ -753,7 +753,7 @@ export class Node {
   public get getPlayersCount() {
     return this.getPlayers().length;
   }
-  
+
   public async getNodeStatus(timeout: number = 2000): Promise<{
     identifier: string;
     connected: boolean;
@@ -781,7 +781,7 @@ export class Node {
       cpuLoad: this.stats.cpu.systemLoad,
       memoryUsage: this.stats.memory.used
     } : { cpuLoad: 0, memoryUsage: 0 };
-    
+
     const isNodeOverloaded = cpuLoad > 80 || memoryUsage > 80;
     const needsRestart = isNodeOverloaded || this.reconnectAttempts > 3;
 
@@ -801,7 +801,7 @@ export class Node {
       responding = false;
       performance = 'poor';
     }
-    
+
     return {
       identifier: this.identifier,
       connected: this.connected,
