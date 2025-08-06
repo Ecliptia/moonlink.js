@@ -11,8 +11,8 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 2333,
-      password: "yeah",
+      port: 3000,
+      password: "123",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
       secure: false,
@@ -31,12 +31,7 @@ client.manager = new Manager({
     resume: true,
     autoResume: true,
     database: {
-      provider: "mongoose",
-      options: {
-        mongoose: {
-          connectionString: process.env["MONGODB"],
-        }
-      }
+      provider: "local",
     }
   },
   sendPayload: (guildId, payload) => {

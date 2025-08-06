@@ -26,7 +26,7 @@ export class SearchResult {
     this.query = options.query;
     this.source = options.source || "unknown";
 
-    if (req.albums || req.artists || req.playlists || req.texts) {
+    if (req?.albums || req?.artists || req?.playlists || req?.texts) {
       this.isLavaSearchResult = true;
       this.loadType = "search";
 
