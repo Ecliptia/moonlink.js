@@ -217,7 +217,12 @@ export default class Spotify implements ISource {
       case 'album':
       case 'playlist': {
         const base = link.type === 'album' ? 'albums' : 'playlists';
-        const data = await this.apiRequest(`/${base}/${link.id}`);
+        const pageLimit = 
+          link.type === 'playlist'
+            ? this.manager.options.spotify?.limitLoadPlaylistPage ?? 100
+            : this.manager.options.spotify?.limitLoadAlbumPage ?? 50;
+
+        const data = await this.apiRequest(`/${base}/${link.id}?limit=${pageLimit}`);
         if (!data || data.error) {
           return { loadType: 'error', data: { message: `${link.type} not found.` } };
         }
@@ -228,14 +233,35 @@ export default class Spotify implements ISource {
             : data.tracks.items;
         items = items.filter(Boolean);
 
+        let next = data.tracks.next;
         const max =
-          options?.limit ?? (link.type === 'playlist'
-            ? this.manager.options.spotify?.limitLoadPlaylist ?? this.manager.options.playlistLoadLimit
-            : this.manager.options.spotify?.limitLoadAlbum ?? this.manager.options.playlistLoadLimit);
+          options?.limit ??
+          (link.type === 'playlist'
+            ? this.manager.options.spotify?.limitLoadPlaylist ??
+              this.manager.options.playlistLoadLimit
+            : this.manager.options.spotify?.limitLoadAlbum ??
+              this.manager.options.playlistLoadLimit);
+
+        while (next && (!max || items.length < max)) {
+          const nextPage = await this.apiRequest(next);
+          if (!nextPage || nextPage.error) break;
+          const newItems =
+            link.type === 'playlist'
+              ? nextPage.items.map((i: any) => i.track)
+              : nextPage.items;
+          items.push(...newItems.filter(Boolean));
+          next = nextPage.next;
+        }
+
         if (max != null) items = items.slice(0, max);
 
-        const tracks = items.map((item: any) => this.buildTrack(item, item.external_urls.spotify));
-        return { loadType: 'playlist', data: { info: { name: data.name, selectedTrack: 0 }, tracks } };
+        const tracks = items.map((item: any) =>
+          this.buildTrack(item, item.external_urls?.spotify)
+        );
+        return {
+          loadType: 'playlist',
+          data: { info: { name: data.name, selectedTrack: 0 }, tracks },
+        };
       }
 
       default:
@@ -245,10 +271,10 @@ export default class Spotify implements ISource {
 
   private getLinkType(url: string): { type: string; id: string } | null {
     const regex: Record<string, RegExp> = {
-      track: /open\.spotify\.com\/(?:intl-[^/]+\/)?track\/(\w+)/,
-      album: /open\.spotify\.com\/(?:intl-[^/]+\/)?album\/(\w+)/,
-      playlist: /open\.spotify\.com\/(?:intl-[^/]+\/)?playlist\/(\w+)/,
-      artist: /open\.spotify\.com\/(?:intl-[^/]+\/)?artist\/(\w+)/,
+      track: /(?:open\.spotify\.com\/(?:intl-[^/]+\/)?track\/|spotify:track:)(\w+)/,
+      album: /(?:open\.spotify\.com\/(?:intl-[^/]+\/)?album\/|spotify:album:)(\w+)/,
+      playlist: /(?:open\.spotify\.com\/(?:intl-[^/]+\/)?playlist\/|spotify:playlist:)(\w+)/,
+      artist: /(?:open\.spotify\.com\/(?:intl-[^/]+\/)?artist\/|spotify:artist:)(\w+)/,
     };
 
     for (const type in regex) {

@@ -32,7 +32,7 @@ client.manager = new Manager({
     database: {
       provider: "local",
     },
-    playlistLoadLimit: 3,
+    playlistLoadLimit: 2000,
     spotify: {
       clientId: "c5a8160518fd4293b09f9bce0fcda0f0",
       clientSecret: "3871150b7e13430db154cadb86277b02",
