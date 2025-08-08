@@ -196,6 +196,7 @@ List of official plugins available for Moonlink.js.
 | [`SkybotPlugin`](/api/plugins/skybot-plugin) | Provides additional search capabilities for various direct sources. | N/A |
 | [`SponsorBlockPlugin`](/api/plugins/sponsor-block-plugin) | Provides SponsorBlock integration for skipping sponsored segments in YouTube videos. | N/A |
 | [`YouTubePlugin`](/api/plugins/youtube-plugin) | Provides YouTube search capabilities. | N/A |
+| **Native Sources** | For documentation on native source integrations (e.g., Spotify, Deezer), please refer to the [Sources section](/api/sources). | N/A |
 
 ::alert{type="info" icon="lucide:info"}
 moonlink does not yet have official plugins, nor plugins created by the community.

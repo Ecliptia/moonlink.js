@@ -9,9 +9,6 @@ description: Build powerful Discord music bots with Moonlink.js, a feature-rich 
 
 </div>
 
-::alert{type="warning" icon="lucide:triangle-alert"}
-Our documentation is being **rewritten and improved**. We appreciate your patience!
-::
 ::alert{type="note" icon="lucide:pencil"}
 **Heads up:** Only use with `nodejs` version `v18.x.x` or higher.
 ::
@@ -19,9 +16,9 @@ Our documentation is being **rewritten and improved**. We appreciate your patien
 ::hero
 ---
 announcement:
-  title: 'New Release v4.44.4'
+  title: 'New Release v4.60.4'
   icon: '🎉'
-  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.44.4
+  to: https://github.com/Ecliptia/moonlink.js/releases/tag/v4.60.4
   target: _blank
 actions:
 - name: Get Started
@@ -226,7 +223,7 @@ Moonlink.js harnesses the power of the extensive Lavalink plugin ecosystem to of
   ---
   title: LavaSrc Plugin
   icon: lucide:radio
-  description: Adds support for Spotify, Apple Music, and Deezer (with native playback), allowing your bot to play music from the most popular streaming services.
+  description: Adds **Lavalink-side** support for Spotify, Apple Music, and Deezer, allowing your bot to play music from the most popular streaming services via your Lavalink server.
   ---
   ::
 
@@ -275,10 +272,6 @@ Moonlink.js harnesses the power of the extensive Lavalink plugin ecosystem to of
 
 ::alert{type="example" icon="lucide:test-tube"}
   Check out a simple and functional bot example in our repository: [testBot](https://github.com/Ecliptia/moonlink.js/tree/v4/testBot)
-::
-
-::alert{type="note" icon="lucide:pencil"}
-  [/bot-community](https://www.google.com/search?q=/bot-community)
 ::
 
 ## Need Help?
@@ -376,7 +369,7 @@ A showcase for our amazing community
   ---
   ::
   ::team-card
-  ---
+  --- 
   avatar: https://github.com/khouwdevin/stalker-discord/raw/master/images/spy.png
   center: false
   name: stalker-discord
