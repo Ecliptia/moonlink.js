@@ -97,6 +97,7 @@ class Node {
         if (this.getPlayersCount > 0) {
             this.getPlayers().forEach(player => {
                 player.playing = false;
+                player.connected = false;
             });
         }
         if (this.getPlayersCount > 0 && this.manager.options.movePlayersOnReconnect) {
@@ -190,16 +191,16 @@ class Node {
                         " players from node " +
                         this.uuid +
                         ".");
-                    await this.getPlayers().forEach(async (player) => {
-                        player.playing = true;
+                    const playersToResume = this.getPlayers();
+                    for (const player of playersToResume) {
                         await player.restart();
-                    });
+                    }
                     this.manager.emit("debug", "Moonlink.js > Node > Auto-resumed " +
-                        this.getPlayersCount +
+                        playersToResume.length +
                         " players from node " +
                         this.uuid +
                         ".");
-                    this.manager.emit("nodeAutoResumed", this, this.getPlayers());
+                    this.manager.emit("nodeAutoResumed", this, playersToResume);
                 }
                 if (this.manager.options.resume && this.resumed) {
                     const players = await this.rest.getPlayers(this.sessionId);

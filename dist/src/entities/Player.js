@@ -118,7 +118,7 @@ class Player {
             self_deaf: options.setDeaf ?? false,
         });
         this.manager.emit("playerConnected", this);
-        return (this.connected = true);
+        return true;
     }
     disconnect() {
         if (!this.connected)
@@ -131,7 +131,8 @@ class Player {
     async play(options = {}) {
         if (!options.encoded && !this.queue.size)
             return false;
-        await (0, index_1.isVoiceStateAttempt)(this);
+        if (!(await (0, index_1.isVoiceStateAttempt)(this)))
+            return false;
         let positionToStart = options.position ?? 0;
         if (options.encoded) {
             const decodedTrack = (0, index_1.decodeTrack)(options.encoded);

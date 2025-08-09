@@ -160,7 +160,7 @@ export class Player {
       self_deaf: options.setDeaf ?? false,
     });
     this.manager.emit("playerConnected", this);
-    return (this.connected = true);
+    return true;
   }
 
   public disconnect(): boolean {
@@ -181,7 +181,7 @@ export class Player {
     } = {}
   ): Promise<boolean> {
     if (!options.encoded && !this.queue.size) return false;
-    await isVoiceStateAttempt(this);
+    if (!(await isVoiceStateAttempt(this))) return false;
 
     let positionToStart = options.position ?? 0;
 

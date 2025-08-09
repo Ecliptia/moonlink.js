@@ -318,6 +318,7 @@ export class Manager extends EventEmitter {
 
     this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
     await this.attemptConnection(player.guildId);
+    player.connected = true;
     this.emit("playerReady", player);
   }
 
