@@ -27,6 +27,7 @@ class Player {
     data = {};
     filters;
     healthCheckTimeout = null;
+    isResuming = false;
     _listen;
     _lyrics;
     constructor(manager, config) {

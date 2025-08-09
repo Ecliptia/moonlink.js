@@ -26,6 +26,7 @@ export declare class Player {
     readonly data: Record<string, unknown>;
     readonly filters: Filters;
     healthCheckTimeout: NodeJS.Timeout | null;
+    isResuming: boolean;
     private _listen;
     private _lyrics;
     constructor(manager: Manager, config: IPlayerConfig);

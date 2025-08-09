@@ -193,6 +193,7 @@ class Node {
                         ".");
                     const playersToResume = this.getPlayers();
                     for (const player of playersToResume) {
+                        player.isResuming = true;
                         await player.restart();
                     }
                     this.manager.emit("debug", "Moonlink.js > Node > Auto-resumed " +
@@ -227,6 +228,7 @@ class Node {
                             continue;
                         }
                         this.manager.emit("playerResuming", reconstructedPlayer);
+                        reconstructedPlayer.isResuming = true;
                         reconstructedPlayer.connect({
                             setDeaf: false,
                             setMute: false,
@@ -322,6 +324,7 @@ class Node {
                                 this.uuid +
                                 ".");
                         }
+                        player.isResuming = false;
                         break;
                     case "TrackEndEvent":
                         if (!player.current)
@@ -446,10 +449,16 @@ class Node {
                         break;
                     }
                     case "WebSocketClosedEvent": {
+                        if (player.isResuming) {
+                            this.manager.emit("debug", `Ignoring WebSocketClosedEvent for player ${player.guildId} because it is resuming.`);
+                            break;
+                        }
                         this.manager.emit("socketClosed", player, payload.code, payload.reason, payload.byRemote);
                         this.manager.emit("debug", `Player ${player.guildId} voice websocket closed with code ${payload.code}.`);
-                        const nonRetriableCodes = [4001, 4002, 4003, 4004, 4005, 4006, 4009, 4012, 4014, 4016, 4020, 4021, 4022];
-                        if (nonRetriableCodes.includes(payload.code)) {
+                        const fatalCodes = [4004, 4014, 4021, 4022];
+                        const clientErrorCodes = [4001, 4002, 4003, 4005, 4012, 4016, 4020];
+                        if (fatalCodes.includes(payload.code) || clientErrorCodes.includes(payload.code)) {
+                            this.manager.emit("debug", `Received fatal/unrecoverable close code ${payload.code}. Destroying player.`);
                             player.destroy(`voiceSocketClosed:${payload.code}`);
                             break;
                         }
@@ -462,6 +471,7 @@ class Node {
                                 setTimeout(() => player.restart(), 2500);
                             }
                             else {
+                                this.manager.emit("debug", `Player ${player.guildId} exceeded reconnect attempts. Destroying player.`);
                                 player.destroy("reconnectFailed");
                             }
                         }
