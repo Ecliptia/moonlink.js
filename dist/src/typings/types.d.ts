@@ -21,6 +21,6 @@ export type TLoadResultType = "track" | "playlist" | "search" | "empty" | "error
 export type TLoadResultNodeLinkType = "short" | "album" | "artist" | "playlist" | "station" | "podcast" | "podcast";
 export type TSortTypeNode = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "random";
 export type TPlayerLoop = "off" | "track" | "queue";
-export type TTrackEndType = "queueEnd" | "loadFailed" | "stopped" | "replaced" | "cleanup" | "finished";
+export type TTrackEndType = "queueEnd" | "loadFailed" | "stopped" | "replaced" | "cleanup" | "finished" | "stale";
 export type TPartialTrackProperties = "url" | "duration" | "position" | "identifier" | "isSeekable" | "isStream" | "artworkUrl" | "isrc" | "sourceName";
 export type YoutubeThumbnailQuality = "default" | "hqdefault" | "mqdefault" | "sddefault" | "maxresdefault";

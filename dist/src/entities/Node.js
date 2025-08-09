@@ -270,10 +270,14 @@ class Node {
                 player.playing = player.connected && !player.paused && player.current !== null;
                 if (payload.state.position > 0 || player.current.position === 0) {
                     player.current.position = payload.state.position;
+                    player.saveCurrentPosition(payload.state.position);
                 }
                 player.current.time = payload.state.time;
                 player.ping = payload.state.ping;
                 this.manager.emit("playerUpdate", player, player.current, payload);
+                if (player.playing) {
+                    player.scheduleHealthCheck();
+                }
                 if (!player.get("sendPlayerUpdateDebug")) {
                     this.manager.emit("debug", "Moonlink.js > Player " +
                         player.guildId +
@@ -304,6 +308,7 @@ class Node {
                         player.playing = true;
                         player.paused = false;
                         player.current.position = payload.track.info?.position || 0;
+                        this.manager.clearLyricsCacheForGuild(player.guildId);
                         this.manager.emit("trackStart", player, player.current);
                         this.manager.emit("debug", "Moonlink.js > Player " +
                             player.guildId +
@@ -329,6 +334,7 @@ class Node {
                         let track = new (index_1.Structure.get("Track"))({ ...payload.track }, player.current?.requestedBy);
                         player.playing = false;
                         player.paused = false;
+                        player.clearHealthCheck();
                         player.set("sendPlayerUpdateDebug", false);
                         if (!player.get("isBackPlay")) {
                             player.previous.push(track);
@@ -441,26 +447,25 @@ class Node {
                     }
                     case "WebSocketClosedEvent": {
                         this.manager.emit("socketClosed", player, payload.code, payload.reason, payload.byRemote);
-                        this.manager.emit("debug", "Moonlink.js > Player " +
-                            player.guildId +
-                            " has been closed with code " +
-                            payload.code +
-                            " and reason " +
-                            payload.reason);
-                        if (player.playing && player.queue.size > 0) {
-                            if (player.get("attemptingToReconnect") ?? 0 < 6) {
-                                await player.connect({});
-                                await player.restart();
-                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " is web socket closed and attempting to reconnect.");
-                                this.manager.emit("playerReconnect", player, "webSocketClosed");
-                                player.set("attemptingToReconnect", (player.get("attemptingToReconnect") ?? 0) + 1);
-                            }
-                            else {
-                                player.destroy("webSocketClosed");
-                                this.manager.emit("debug", "Moonlink.js > Player " + player.guildId + " has been destroyed because of too many failed attempts to reconnect.");
-                            }
+                        this.manager.emit("debug", `Player ${player.guildId} voice websocket closed with code ${payload.code}.`);
+                        const nonRetriableCodes = [4001, 4002, 4003, 4004, 4005, 4006, 4009, 4012, 4014, 4016, 4020, 4021, 4022];
+                        if (nonRetriableCodes.includes(payload.code)) {
+                            player.destroy(`voiceSocketClosed:${payload.code}`);
                             break;
                         }
+                        if (player.playing) {
+                            const maxRetries = 5;
+                            const currentRetries = (player.get("attemptingToReconnect") ?? 0);
+                            if (currentRetries < maxRetries) {
+                                player.set("attemptingToReconnect", currentRetries + 1);
+                                this.manager.emit("playerReconnect", player, "voiceSocketClosed");
+                                setTimeout(() => player.restart(), 2500);
+                            }
+                            else {
+                                player.destroy("reconnectFailed");
+                            }
+                        }
+                        break;
                     }
                 }
                 break;
