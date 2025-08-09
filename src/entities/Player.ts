@@ -40,6 +40,7 @@ export class Player {
   public readonly data: Record<string, unknown> = {};
   public readonly filters: Filters;
   public healthCheckTimeout: NodeJS.Timeout | null = null;
+  public isResuming: boolean = false;
 
   private _listen: Listen;
   private _lyrics: Lyrics;
