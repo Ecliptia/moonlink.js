@@ -277,9 +277,9 @@ export class Manager extends EventEmitter {
     if (!player.voiceState) player.voiceState = {};
 
     if (packet.t === "VOICE_SERVER_UPDATE") {
-      this._handleVoiceServerUpdate(packet, player);
+      await this._handleVoiceServerUpdate(packet, player);
     } else if (packet.t === "VOICE_STATE_UPDATE") {
-      this._handleVoiceStateUpdate(packet, player);
+      await this._handleVoiceStateUpdate(packet, player);
     }
   }
 
@@ -322,7 +322,7 @@ export class Manager extends EventEmitter {
     this.emit("playerReady", player);
   }
 
-  private _handleVoiceStateUpdate(packet: any, player: Player): void {
+  private async _handleVoiceStateUpdate(packet: any, player: Player): Promise<void> {
     if (packet.d.user_id !== this.options.clientId) return;
 
     if (!packet.d.channel_id) {
@@ -348,7 +348,8 @@ export class Manager extends EventEmitter {
     player.voiceState.sessionId = packet.d.session_id;
 
     this.emit("debug", `Moonlink.js > Received voice state update for guild ${player.guildId}`);
-    this.attemptConnection(player.guildId);
+    await this.attemptConnection(player.guildId);
+    player.connected = true;
     this.emit("playerReady", player);
   }
 
@@ -479,6 +480,14 @@ export class Manager extends EventEmitter {
       }
     }
     return null;
+  }
+
+  public clearLyricsCacheForGuild(guildId: string): void {
+    for (const key of this.lyricsResultCache.keys()) {
+      if (key.startsWith(guildId)) {
+        this.lyricsResultCache.delete(key);
+      }
+    }
   }
 
   public async searchLyrics(options: {

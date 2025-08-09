@@ -1,4 +1,4 @@
-import { IPlayerConfig, IVoiceState, ISpeakOptions, IChapter, ILavaLyricsObject, ILavaLyricsLine } from "../typings/Interfaces";
+import { IPlayerConfig, IVoiceState, ISpeakOptions, IChapter, ILavaLyricsObject, ILavaLyricsLine, IRESTGetPlayers } from "../typings/Interfaces";
 import { TPlayerLoop } from "../typings/types";
 import {
   Lyrics,
@@ -39,6 +39,7 @@ export class Player {
   public node: Node;
   public readonly data: Record<string, unknown> = {};
   public readonly filters: Filters;
+  public healthCheckTimeout: NodeJS.Timeout | null = null;
 
   private _listen: Listen;
   private _lyrics: Lyrics;
@@ -152,6 +153,10 @@ export class Player {
   }
 
   public connect(options: { setMute?: boolean; setDeaf?: boolean } = {}): boolean {
+    if (!this.voiceChannelId) {
+      this.manager.emit("debug", "Moonlink.js > Player#connect - Cannot connect without a voiceChannelId. Please set it before connecting.");
+      return false;
+    }
     this.manager.emit("playerConnecting", this);
     this.voiceState.attempt = false;
     this._sendVoiceUpdate({
@@ -451,24 +456,22 @@ export class Player {
     );
 
     const targetNode = typeof node === "string" ? this.manager.nodes.get(node) : node;
-    if (!targetNode) return false;
+    if (!targetNode || !targetNode.connected || targetNode.identifier === this.node.identifier) {
+      return false;
+    }
 
     const oldNode = this.node;
+    this.manager.emit("debug", `Transferring player ${this.guildId} from ${oldNode.identifier} to ${targetNode.identifier}.`);
+
+    try {
+      await this.node.rest.destroy(this.guildId);
+    } catch (e) {
+      this.manager.emit("debug", `Error destroying player on old node during transfer: ${e.message}`);
+    }
+    
     this.node = targetNode;
 
-    if (this.current || this.queue.size) {
-      if (this.current) {
-        await this.play({
-          encoded: this.current.encoded,
-          requestedBy: this.current.requestedBy,
-          position: this.current.position,
-        });
-      } else {
-        await this.connect();
-      }
-    } else {
-      await this.connect();
-    }
+    await this.restart();
 
     this.manager.emit("playerSwitchedNode", this, oldNode, targetNode);
     return true;
@@ -514,6 +517,7 @@ export class Player {
       this.queue.clear();
     }
 
+    this.clearHealthCheck();
     this.playing = false;
     this.manager.emit("playerTriggeredStop", this);
     return true;
@@ -674,6 +678,7 @@ export class Player {
 
     this.disconnect();
     this.queue.clear();
+    this.clearHealthCheck();
     this.manager.players.delete(this.guildId);
     this.manager.emit("playerDestroyed", this, reason);
 
@@ -723,6 +728,17 @@ export class Player {
     await this.manager.database.set(dbPath, data);
   }
 
+  private lastPositionSaveTime: number = 0;
+  private positionSaveThrottle: number = 5000;
+
+  public async saveCurrentPosition(position: number): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastPositionSaveTime > this.positionSaveThrottle) {
+        await this.updateData("current.position", position);
+        this.lastPositionSaveTime = now;
+    }
+  }
+
   public getHistory(limit?: number): Track[] {
     if (limit === undefined) {
       return [...this.previous];
@@ -752,5 +768,102 @@ export class Player {
       query,
       provider,
     });
+  }
+
+  public clearHealthCheck(): void {
+    if (this.healthCheckTimeout) {
+      clearTimeout(this.healthCheckTimeout);
+      this.healthCheckTimeout = null;
+    }
+  }
+
+  public scheduleHealthCheck(): void {
+    this.clearHealthCheck();
+
+    const timeout = this.manager.options.playerHealthCheck?.stalePlayerTimeout ?? 20000;
+    if (timeout <= 0) return;
+
+    this.healthCheckTimeout = setTimeout(() => {
+      this.checkHealth();
+    }, timeout);
+  }
+
+  public async checkHealth(): Promise<void> {
+    if (!this.playing || !this.current) return this.clearHealthCheck();
+
+    this.manager.emit("playerStale", this);
+
+    let serverState: IRESTGetPlayers;
+    try {
+      serverState = await this.node.rest.getPlayer(this.node.sessionId, this.guildId);
+    } catch (e) {
+      this.manager.emit("debug", `Health check failed for ${this.guildId}: Node unresponsive. Attempting to transfer.`);
+      const newNode = this.manager.nodes.sortByUsage("players");
+      if (newNode && newNode.identifier !== this.node.identifier) {
+        await this.transferNode(newNode);
+      } else {
+        this.manager.emit("debug", `Health check failed for ${this.guildId}: No other nodes available.`);
+        this.destroy("unresponsiveNode");
+      }
+      return;
+    }
+
+    if (!serverState || !serverState.track) {
+      this.manager.emit("debug", `Health check for ${this.guildId}: Player/track gone on server. Treating as track end.`);
+      this.handleTrackEnd();
+      return;
+    }
+
+    if (serverState.track.encoded !== this.current.encoded) {
+      this.manager.emit("debug", `Health check for ${this.guildId}: Track de-sync. Trusting server.`);
+      this.current = new Track(serverState.track);
+      this.playing = !serverState.paused;
+      this.paused = serverState.paused;
+      this.manager.emit("playerStateSync", this, serverState);
+      if (this.playing) this.scheduleHealthCheck();
+      return;
+    }
+
+    this.manager.emit("debug", `Health check for ${this.guildId}: Nudging stuck track.`);
+    this.current.position = serverState.state.position;
+    this.paused = serverState.paused;
+    this.playing = !this.paused;
+
+    await this.node.rest.update({
+      guildId: this.guildId,
+      data: {
+        track: { encoded: this.current.encoded },
+        position: this.current.position,
+      },
+    });
+
+    if (this.playing) {
+      this.scheduleHealthCheck();
+    }
+  }
+
+  private async handleTrackEnd(): Promise<void> {
+    const oldTrack = this.current;
+    this.manager.emit("trackEnd", this, oldTrack, "stale");
+
+    if (this.loop === "track") {
+      this.play({ encoded: oldTrack.encoded, requestedBy: oldTrack.requestedBy });
+      return;
+    }
+
+    if (this.loop === "queue") {
+      this.queue.add(oldTrack);
+    }
+
+    if (this.queue.size > 0) {
+      this.current = null;
+      this.play();
+      return;
+    }
+
+    this.current = null;
+    this.playing = false;
+    this.clearHealthCheck();
+    this.manager.emit("queueEnd", this, oldTrack);
   }
 }

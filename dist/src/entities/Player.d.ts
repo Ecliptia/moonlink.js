@@ -25,6 +25,7 @@ export declare class Player {
     node: Node;
     readonly data: Record<string, unknown>;
     readonly filters: Filters;
+    healthCheckTimeout: NodeJS.Timeout | null;
     private _listen;
     private _lyrics;
     constructor(manager: Manager, config: IPlayerConfig);
@@ -75,9 +76,16 @@ export declare class Player {
     setSponsorBlockCategories(categories: string[]): Promise<void>;
     clearSponsorBlockCategories(): Promise<void>;
     private updateData;
+    private lastPositionSaveTime;
+    private positionSaveThrottle;
+    saveCurrentPosition(position: number): Promise<void>;
     getHistory(limit?: number): Track[];
     getLyrics(encodedTrack?: string, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<ILavaLyricsObject | null>;
     subscribeLyrics(callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
     unsubscribeLyrics(provider?: 'lavalyrics' | 'lyrics'): Promise<void>;
     searchLyrics(query: string, provider?: 'lavalyrics' | 'lyrics'): Promise<any[] | null>;
+    clearHealthCheck(): void;
+    scheduleHealthCheck(): void;
+    checkHealth(): Promise<void>;
+    private handleTrackEnd;
 }

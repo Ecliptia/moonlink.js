@@ -64,6 +64,8 @@ export interface IEvents {
     segmentSkipped: (player: Player, segment: ISegment) => void;
     chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
     chapterStarted: (player: Player, chapter: IChapter) => void;
+    playerStale: (player: Player) => void;
+    playerStateSync: (player: Player, serverState: IRESTGetPlayers) => void;
 }
 export interface IChapter {
     name: string;
@@ -169,6 +171,9 @@ export interface IOptionsManager {
                 connectionString: string;
             };
         };
+    };
+    playerHealthCheck?: {
+        stalePlayerTimeout?: number;
     };
 }
 export interface IPlayerConfig {
@@ -353,12 +358,18 @@ export interface Extendable {
     NodeManager: typeof NodeManager;
     SearchResult: typeof SearchResult;
 }
+export interface IPlayerState {
+    time: number;
+    position: number;
+    connected: boolean;
+    ping: number;
+}
 export interface IRESTGetPlayers {
     guildId: string;
     track: ITrack;
     volume: number;
     paused: boolean;
-    state: Object;
+    state: IPlayerState;
     voice: IVoiceState;
     filters: Object;
 }
