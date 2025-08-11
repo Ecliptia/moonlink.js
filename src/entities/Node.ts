@@ -42,6 +42,7 @@ export class Node {
   public state: NodeState = NodeState.DISCONNECTED;
   public capabilities: Set<string> = new Set();
   public plugins: Map<string, AbstractPlugin> = new Map();
+
   constructor(manager: Manager, config: INode) {
     this.setState = this.setState.bind(this);
     this.manager = manager;
@@ -68,11 +69,13 @@ export class Node {
   public get address(): string {
     return `${this.host}:${this.port}`;
   }
+
   public setState(state: NodeState): void {
     const oldState = this.state;
     this.state = state;
     this.manager.emit("nodeStateChange", this, oldState, state);
   }
+
   public async connect(): Promise<void> {
     this.setState(NodeState.CONNECTING);
     this.manager.emit(
@@ -116,6 +119,7 @@ export class Node {
       `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`
     );
   }
+
   public reconnect(): void {
     this.setState(NodeState.CONNECTING);
     const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
@@ -165,6 +169,7 @@ export class Node {
     );
     this.manager.emit("nodeReconnect", this);
   }
+
   protected open(): void {
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     this.connected = true;
@@ -179,12 +184,15 @@ export class Node {
       this.manager.pluginManager.loadPluginsForNode(this, this.info.plugins);
     }
   }
+
   protected close(event: { code: number, reason: string }): void {
     this.manager.pluginManager.unloadPluginsForNode(this);
     const { code, reason } = event;
     if (this.connected) this.connected = false;
 
-    this.socket.close();
+    if (this.socket) {
+      this.socket.close();
+    }
 
     if (this.retryAmount > this.reconnectAttempts) {
       this.reconnect();
@@ -209,6 +217,7 @@ export class Node {
     this.setState(NodeState.DISCONNECTED);
     this.manager.emit("nodeDisconnect", this, code, reason);
   }
+
   protected async message({ data }): Promise<void> {
     let payload;
     try {
@@ -229,10 +238,8 @@ export class Node {
 
         if (this.manager.options.resume) {
           this.rest.patch(`sessions/${this.sessionId}`, {
-            data: {
-              resuming: this.manager.options.resume,
-              timeout: this.resumeTimeout,
-            },
+            resuming: this.manager.options.resume,
+            timeout: this.resumeTimeout,
           });
           this.manager.emit("debug", "Moonlink.js > Node > Resuming node " + this.uuid + ".");
           this.setState(NodeState.RESUMING);
@@ -424,16 +431,16 @@ export class Node {
             player.isResuming = false;
             break;
           case "TrackEndEvent":
-            if (!player.current)
+            if (!player.current) {
               this.manager.emit(
                 "debug",
                 "Moonlink.js > Player " +
                 player.guildId +
                 " has ended the track for reason " +
                 payload.reason +
-                ". But the current track is null. " +
-                player.current?.encoded
+                ". But the current track is null."
               );
+            }
             let track: Track = new (Structure.get("Track"))(
               { ...payload.track },
               player.current?.requestedBy
@@ -605,12 +612,12 @@ export class Node {
               `Player ${player.guildId} voice websocket closed with code ${payload.code}.`
             );
 
-            const fatalCodes = [4004, 4014, 4021, 4022];
+            const fatalCodes = [4004, 4021, 4022];
             const clientErrorCodes = [4001, 4002, 4003, 4005, 4012, 4016, 4020];
 
             if (fatalCodes.includes(payload.code) || clientErrorCodes.includes(payload.code)) {
               this.manager.emit("debug", `Received fatal/unrecoverable close code ${payload.code}. Destroying player.`);
-              player.destroy(`voiceSocketClosed:${payload.code}`);
+              player.destroy();
               break;
             }
 
@@ -625,7 +632,7 @@ export class Node {
                 setTimeout(() => player.restart(), 2500);
               } else {
                 this.manager.emit("debug", `Player ${player.guildId} exceeded reconnect attempts. Destroying player.`);
-                player.destroy("reconnectFailed");
+                player.destroy();
               }
             }
             break;
@@ -636,6 +643,7 @@ export class Node {
       }
     }
   }
+
   private async _handleAutoplay(player: Player, reason: string): Promise<boolean> {
     let uri: string | undefined;
     let prefix: string | undefined;
@@ -701,7 +709,7 @@ export class Node {
 
     const res = await this.manager.search({ query: uri, source: prefix });
 
-    if (!res || !res.tracks || ["loadFailed", "cleanup"].includes(res.loadType)) {
+    if (!res || !res.tracks || res.tracks.length === 0 || ["loadFailed", "cleanup"].includes(res.loadType)) {
       this.manager.emit(
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`
@@ -725,12 +733,16 @@ export class Node {
       );
       return false;
     }
+  }
 
   protected error({ error }): void {
     this.manager.emit("nodeError", this, error);
   }
+
   public destroy(): void {
-    this.socket.close();
+    if(this.socket) {
+      this.socket.close();
+    }
     this.destroyed = true;
   }
 
@@ -771,9 +783,11 @@ export class Node {
       }
     }
   }
+
   public getPlayers() {
     return this.manager.players.all.filter(player => player.node.uuid === this.uuid);
   }
+
   public get getPlayersCount() {
     return this.getPlayers().length;
   }
@@ -816,7 +830,7 @@ export class Node {
       const start = Date.now();
       await Promise.race([
         this.rest.getVersion(),
-        new Promise((_, reject) => setTimeout(() => reject(), timeout))
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
       ]);
       responding = true;
       const responseTime = Date.now() - start;
@@ -849,6 +863,4 @@ export class Node {
       }
     };
   }
-
-  
 }

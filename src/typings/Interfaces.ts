@@ -90,6 +90,12 @@ export interface IEvents {
   playerStale: (player: Player) => void;
   trackStale: (player: Player, track: Track) => void;
   playerStateSync: (player: Player, serverState: IRESTGetPlayers) => void;
+  playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
+  playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
+  playerSuppressChange: (player: Player, suppress: boolean) => void;
+  playerVoiceJoin: (player: Player, userId: string) => void;
+  playerVoiceLeave: (player: Player, userId: string) => void;
+  voiceSessionChanged: (player: Player, oldSessionId: string | boolean, sessionId: string) => void;
 }
 
 export interface IChapter {
@@ -220,6 +226,11 @@ export interface IVoiceState {
   sessionId?: string;
   endpoint?: string;
   attempt?: boolean;
+  self_mute?: boolean;
+  self_deaf?: boolean;
+  mute?: boolean;
+  deaf?: boolean;
+  suppress?: boolean;
 }
 
 export interface IRESTOptions {

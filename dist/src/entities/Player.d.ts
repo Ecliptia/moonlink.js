@@ -88,5 +88,4 @@ export declare class Player {
     clearHealthCheck(): void;
     scheduleHealthCheck(): void;
     checkHealth(): Promise<void>;
-    private handleTrackEnd;
 }
