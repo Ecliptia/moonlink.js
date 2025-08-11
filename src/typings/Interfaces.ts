@@ -88,6 +88,7 @@ export interface IEvents {
   chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
   chapterStarted: (player: Player, chapter: IChapter) => void;
   playerStale: (player: Player) => void;
+  trackStale: (player: Player, track: Track) => void;
   playerStateSync: (player: Player, serverState: IRESTGetPlayers) => void;
 }
 
