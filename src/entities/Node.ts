@@ -531,7 +531,10 @@ export class Node {
               return;
             }
             if (player.autoPlay) {
-              await this._handleAutoplay(player, payload.reason);
+              const autoplayed = await this._handleAutoplay(player, payload.reason);
+              if (autoplayed) {
+                return;
+              }
             }
             if (player.autoLeave) {
               player.destroy();
@@ -633,7 +636,7 @@ export class Node {
       }
     }
   }
-  private async _handleAutoplay(player: Player, reason: string): Promise<void> {
+  private async _handleAutoplay(player: Player, reason: string): Promise<boolean> {
     let uri: string | undefined;
     let prefix: string | undefined;
 
@@ -642,7 +645,7 @@ export class Node {
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay failed: no current track, sourceName or identifier`
       );
-      return;
+      return false;
     }
 
     const source = player.current.sourceName.toLowerCase();
@@ -685,7 +688,7 @@ export class Node {
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay failed: no valid URI for source ${player.current.sourceName}`
       );
-      return;
+      return false;
     }
 
     if (reason === "stopped") {
@@ -693,7 +696,7 @@ export class Node {
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay payload reason stopped`
       );
-      return;
+      return false;
     }
 
     const res = await this.manager.search({ query: uri, source: prefix });
@@ -703,7 +706,7 @@ export class Node {
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay payload is error loadType`
       );
-      return;
+      return false;
     }
 
     const randomTrack = res.tracks[Math.floor(Math.random() * res.tracks.length)];
@@ -714,13 +717,14 @@ export class Node {
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplaying track ${randomTrack.title}`
       );
+      return true;
     } else {
       this.manager.emit(
         "debug",
         `Moonlink.js > Player ${player.guildId} is autoplay failed: no random track found`
       );
+      return false;
     }
-  }
 
   protected error({ error }): void {
     this.manager.emit("nodeError", this, error);
@@ -845,4 +849,6 @@ export class Node {
       }
     };
   }
+
+  
 }
