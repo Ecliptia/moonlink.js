@@ -443,6 +443,7 @@ class Player {
         if (!this.queue.size) {
             if (this.autoPlay) {
                 await this.stop();
+                return true;
             }
             return false;
         }
@@ -645,7 +646,6 @@ class Player {
     async checkHealth() {
         if (!this.playing || !this.current)
             return this.clearHealthCheck();
-        this.manager.emit("playerStale", this);
         let serverState;
         try {
             serverState = await this.node.rest.getPlayer(this.node.sessionId, this.guildId);
@@ -664,7 +664,21 @@ class Player {
         }
         if (!serverState || !serverState.track) {
             this.manager.emit("debug", `Health check for ${this.guildId}: Player/track gone on server. Treating as track end.`);
-            this.handleTrackEnd();
+            this.manager.emit("trackStale", this, this.current);
+            if (this.previous.length > 0) {
+                const resumedPrevious = await this.back();
+                if (resumedPrevious) {
+                    this.manager.emit("debug", `Health check for ${this.guildId}: Resumed previous track.`);
+                    return;
+                }
+            }
+            const skipped = await this.skip();
+            if (skipped) {
+                this.manager.emit("debug", `Health check for ${this.guildId}: Skipped to next track.`);
+                return;
+            }
+            this.stop();
+            this.manager.emit("debug", `Health check for ${this.guildId}: Stopped player due to stale track and empty queue.`);
             return;
         }
         if (serverState.track.encoded !== this.current.encoded) {
@@ -673,44 +687,14 @@ class Player {
             this.playing = !serverState.paused;
             this.paused = serverState.paused;
             this.manager.emit("playerStateSync", this, serverState);
-            if (this.playing)
-                this.scheduleHealthCheck();
+            await this.play({ encoded: this.current.encoded, position: serverState.state.position });
             return;
         }
         this.manager.emit("debug", `Health check for ${this.guildId}: Nudging stuck track.`);
         this.current.position = serverState.state.position;
         this.paused = serverState.paused;
         this.playing = !this.paused;
-        await this.node.rest.update({
-            guildId: this.guildId,
-            data: {
-                track: { encoded: this.current.encoded },
-                position: this.current.position,
-            },
-        });
-        if (this.playing) {
-            this.scheduleHealthCheck();
-        }
-    }
-    async handleTrackEnd() {
-        const oldTrack = this.current;
-        this.manager.emit("trackEnd", this, oldTrack, "stale");
-        if (this.loop === "track") {
-            this.play({ encoded: oldTrack.encoded, requestedBy: oldTrack.requestedBy });
-            return;
-        }
-        if (this.loop === "queue") {
-            this.queue.add(oldTrack);
-        }
-        if (this.queue.size > 0) {
-            this.current = null;
-            this.play();
-            return;
-        }
-        this.current = null;
-        this.playing = false;
-        this.clearHealthCheck();
-        this.manager.emit("queueEnd", this, oldTrack);
+        await this.play({ encoded: this.current.encoded, position: this.current.position });
     }
 }
 exports.Player = Player;
