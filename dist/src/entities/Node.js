@@ -78,10 +78,12 @@ class Node {
         this.socket = new WebSocket_1.default(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
         });
-        this.socket.addEventListener("open", this.open.bind(this), { once: true });
-        this.socket.addEventListener("close", this.close.bind(this), { once: true });
-        this.socket.addEventListener("message", this.message.bind(this));
-        this.socket.addEventListener("error", this.error.bind(this));
+        this.socket.once("open", this.open.bind(this));
+        this.socket.once("close", this.close.bind(this));
+        this.socket.on("message", this.message.bind(this));
+        this.socket.on("error", this.error.bind(this));
+        this.socket.on("debug", (message) => this.manager.emit("debug", `Moonlink.js > Node (${this.identifier}) > ${message}`));
+        this.socket.on("warn", (message) => this.manager.emit("debug", `[WARN] Moonlink.js > Node (${this.identifier}) > ${message}`));
         this.manager.emit("debug", `Moonlink.js > Node (${this.identifier ? this.identifier : this.address}) is ready for attempting to connect.`);
         this.manager.emit("nodeCreate", this);
         this.manager.emit("debug", `Moonlink.js > Node > Connect > WebSocket handlers attached to ${this.identifier}`);
