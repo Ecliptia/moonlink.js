@@ -4,22 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(docs): update Moonlink banner image URL in index.md">
-      <change afterPath="$PROJECT_DIR$/.idea/discord.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/1.getting-started/4.basic-setup.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/1.getting-started/4.basic-setup.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/1.getting-started/5.creating-a-music-bot.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/1.getting-started/5.creating-a-music-bot.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/1.getting-started/6.music-commands.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/1.getting-started/6.music-commands.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/1.manager.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/1.manager.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/2.player.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/2.player.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/3.filters.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/3.filters.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/9.plugins.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/plugins/abstract-plugin.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/_dir.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/_dir.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/plugins/deezer-source.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/sources/deezer-source.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/4.api/plugins/spotify-source.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/4.api/sources/spotify-source.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/5.interfaces/1.interfaces.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/5.interfaces/1.interfaces.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/content/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/content/index.md" afterDir="false" />
+    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/WebSocket.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/WebSocket.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testBot/denoBot/bot.js" beforeDir="false" afterPath="$PROJECT_DIR$/testBot/denoBot/bot.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +67,7 @@
       <recent name="C:\Users\1luca\Desktop\moonlink.js\docs\content\4.api" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dev">
+  <component name="RunManager" selected="npm.start">
     <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/docs/package.json" />
       <command value="run" />
@@ -99,8 +90,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="npm.dev" />
         <item itemvalue="npm.start" />
+        <item itemvalue="npm.dev" />
       </list>
     </recent_temporary>
   </component>
@@ -126,6 +117,9 @@
       <workItem from="1754505620707" duration="41000" />
       <workItem from="1754521334252" duration="121000" />
       <workItem from="1754659861110" duration="1736000" />
+      <workItem from="1754934004533" duration="4178000" />
+      <workItem from="1757090921471" duration="1124000" />
+      <workItem from="1757129200393" duration="376000" />
     </task>
     <task id="LOCAL-00001" summary="chore: update optional chaining in `SearchResult` and adjust bot test configurations&#10;&#10;**Details:**&#10;- Added optional chaining to `req` properties in `SearchResult` to improve null-safety.&#10;- Updated test bot configurations:&#10;  - Changed bot connection port to 3000 and password to placeholder.&#10;  - Switched database provider from `mongoose` to `local`.&#10;- Bumped version in `package-lock.json` to 4.52.2.">
       <option name="closed" value="true" />
@@ -287,7 +281,39 @@
       <option name="project" value="LOCAL" />
       <updated>1754521428381</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd` method logic.">
+      <option name="closed" value="true" />
+      <created>1754934048210</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934048210</updated>
+    </task>
+    <task id="LOCAL-00022" summary="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections.">
+      <option name="closed" value="true" />
+      <created>1754934208380</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934208380</updated>
+    </task>
+    <task id="LOCAL-00023" summary="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections.">
+      <option name="closed" value="true" />
+      <created>1754934214523</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934214523</updated>
+    </task>
+    <task id="LOCAL-00024" summary="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior.">
+      <option name="closed" value="true" />
+      <created>1754943411039</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1754943411039</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -310,7 +336,11 @@
     <MESSAGE value="chore(docs): update nuxt.config formatting and remove unused SSR/Nitro config" />
     <MESSAGE value="fix(docs): update image URL for Moonlink banner in index.md" />
     <MESSAGE value="fix(docs): update Moonlink banner image URL in index.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix(docs): update Moonlink banner image URL in index.md" />
+    <MESSAGE value="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd" />
+    <MESSAGE value="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd` method logic." />
+    <MESSAGE value="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections." />
+    <MESSAGE value="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior." />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -17,6 +17,7 @@ class WebSocket extends events_1.EventEmitter {
     buffer = Buffer.alloc(0);
     fragmentedPayload = [];
     fragmentedOpCode = null;
+    MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
     constructor(url, options) {
         super();
         this.url = new url_1.URL(url);
@@ -27,22 +28,30 @@ class WebSocket extends events_1.EventEmitter {
         const key = (0, crypto_1.randomBytes)(16).toString('base64');
         const protocol = this.url.protocol === 'wss:' ? https_1.default : http_1.default;
         const port = this.url.port || (this.url.protocol === 'wss:' ? 443 : 80);
+        const baseHeaders = {
+            'Connection': 'Upgrade',
+            'Upgrade': 'websocket',
+            'Sec-WebSocket-Version': '13',
+            'Sec-WebSocket-Key': key,
+        };
+        const allowedExtraHeaders = ['authorization', 'user-id', 'client-name'];
+        for (const [h, v] of Object.entries(this.headers)) {
+            if (allowedExtraHeaders.includes(h.toLowerCase())) {
+                baseHeaders[h] = v;
+            }
+        }
         const options = {
-            port: port,
+            port,
             host: this.url.hostname,
-            headers: {
-                'Connection': 'Upgrade',
-                'Upgrade': 'websocket',
-                'Sec-WebSocket-Version': '13',
-                'Sec-WebSocket-Key': key,
-                ...this.headers
-            },
+            headers: baseHeaders,
             path: this.url.pathname + this.url.search,
             timeout: 10000,
         };
         this.socket = protocol.request(options);
         this.socket.on('upgrade', (res, socket, head) => {
-            const expectedKey = (0, crypto_1.createHash)('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+            const expectedKey = (0, crypto_1.createHash)('sha1')
+                .update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')
+                .digest('base64');
             if (res.headers['sec-websocket-accept'] !== expectedKey) {
                 socket.destroy();
                 this.emit('error', { error: new Error('Invalid Sec-WebSocket-Accept header') });
@@ -107,6 +116,11 @@ class WebSocket extends events_1.EventEmitter {
                 payloadLength = Number(this.buffer.readBigUInt64BE(offset));
                 offset += 8;
             }
+            if (payloadLength > this.MAX_PAYLOAD_SIZE) {
+                this.emit('error', { error: new Error(`Payload too large: ${payloadLength}`) });
+                this.close(1009, 'Message too big');
+                return;
+            }
             if (this.buffer.length < offset + payloadLength) {
                 break;
             }
@@ -116,16 +130,14 @@ class WebSocket extends events_1.EventEmitter {
         }
     }
     handleFrame(opCode, payload, fin) {
-        if (opCode > 0x7) {
-            if (!fin || payload.length > 125) {
-                this.close(1002, 'Protocol Error');
-                return;
-            }
+        if (opCode > 0xA) {
+            this.close(1002, 'Unknown opcode');
+            return;
         }
         switch (opCode) {
             case 0x0:
                 if (this.fragmentedOpCode === null) {
-                    this.close(1002, 'Protocol Error');
+                    this.close(1002, 'Unexpected continuation frame');
                     return;
                 }
                 this.fragmentedPayload.push(payload);
@@ -139,7 +151,7 @@ class WebSocket extends events_1.EventEmitter {
             case 0x1:
             case 0x2:
                 if (this.fragmentedOpCode !== null) {
-                    this.close(1002, 'Protocol Error');
+                    this.close(1002, 'New data frame before finishing fragmented one');
                     return;
                 }
                 if (!fin) {
@@ -162,9 +174,6 @@ class WebSocket extends events_1.EventEmitter {
                 break;
             case 0xA:
                 this.emit('pong');
-                break;
-            default:
-                this.close(1002, 'Protocol Error');
                 break;
         }
     }

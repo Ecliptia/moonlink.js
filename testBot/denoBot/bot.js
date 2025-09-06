@@ -17,12 +17,12 @@ client.manager = new Manager({
   nodes: [
     {
       host: "localhost",
-      port: 2333,
+      port: 3000,
       password: "youshallnotpass",
       region: ["brazil"],
       identifier: "MAIN",
       secure: false,
-      pathVersion: "v4"
+      pathVersion: "v1"
     }
   ],
   options: {
