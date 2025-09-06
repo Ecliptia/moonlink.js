@@ -23,9 +23,7 @@ class WebSocket extends node_events_1.EventEmitter {
         super();
         this.url = new node_url_1.URL(url);
         this.headers = options?.headers || {};
-        console.log(typeof Bun !== "undefined");
         if (isBun) {
-            console.log("Using Bun");
             this.connectBun();
         }
         else {

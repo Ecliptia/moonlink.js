@@ -4,20 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(Utils): update `http` import to use explicit Node.js namespace&#10;&#10;- Changed `http` import to `node:http` for consistency with Node.js module resolution and better clarity.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/entities/Listen.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/entities/Listen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/entities/Listen.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/entities/Listen.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/entities/Node.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/entities/Node.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/entities/Node.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/entities/Node.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/entities/Listen.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/Listen.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/entities/Node.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/Node.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/WebSocket.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/WebSocket.ts" afterDir="false" />
-    </list>
+    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -126,7 +113,7 @@
       <workItem from="1754934004533" duration="4178000" />
       <workItem from="1757090921471" duration="1124000" />
       <workItem from="1757129200393" duration="376000" />
-      <workItem from="1757182181150" duration="3440000" />
+      <workItem from="1757182181150" duration="3780000" />
     </task>
     <task id="LOCAL-00001" summary="chore: update optional chaining in `SearchResult` and adjust bot test configurations&#10;&#10;**Details:**&#10;- Added optional chaining to `req` properties in `SearchResult` to improve null-safety.&#10;- Updated test bot configurations:&#10;  - Changed bot connection port to 3000 and password to placeholder.&#10;  - Switched database provider from `mongoose` to `local`.&#10;- Bumped version in `package-lock.json` to 4.52.2.">
       <option name="closed" value="true" />
@@ -344,7 +331,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757183420346</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class.">
+      <option name="closed" value="true" />
+      <created>1757185765889</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1757185765890</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -375,7 +370,8 @@
     <MESSAGE value="fix(WebSocket): update `EventEmitter` import to use explicit Node.js namespace&#10;&#10;- Adjusted `EventEmitter` import to use `node:events` for better clarity and Node.js compatibility." />
     <MESSAGE value="feat(Utils): add `isValidDiscordId` utility function&#10;&#10;- Introduced `isValidDiscordId` to validate Discord IDs for enhanced input verification." />
     <MESSAGE value="fix(Utils): update `http` import to use explicit Node.js namespace&#10;&#10;- Changed `http` import to `node:http` for consistency with Node.js module resolution and better clarity." />
-    <option name="LAST_COMMIT_MESSAGE" value="fix(Utils): update `http` import to use explicit Node.js namespace&#10;&#10;- Changed `http` import to `node:http` for consistency with Node.js module resolution and better clarity." />
+    <MESSAGE value="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
