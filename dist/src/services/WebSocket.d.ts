@@ -8,6 +8,7 @@ export default class WebSocket extends EventEmitter {
     private buffer;
     private fragmentedPayload;
     private fragmentedOpCode;
+    private readonly MAX_PAYLOAD_SIZE;
     constructor(url: string, options?: {
         headers?: Record<string, string>;
     });
