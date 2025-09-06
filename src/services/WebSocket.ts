@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
-import { randomBytes, createHash } from 'crypto';
-import http from 'http';
-import https from 'https';
-import { URL } from 'url';
+import { EventEmitter } from 'node:events';
+import { randomBytes, createHash } from 'node:crypto';
+import http from 'node:http';
+import https from 'node:https';
+import { URL } from 'node:url';
 
 export default class WebSocket extends EventEmitter {
     private url: URL;

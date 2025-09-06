@@ -3,12 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const events_1 = require("events");
-const crypto_1 = require("crypto");
-const http_1 = __importDefault(require("http"));
-const https_1 = __importDefault(require("https"));
-const url_1 = require("url");
-class WebSocket extends events_1.EventEmitter {
+const node_events_1 = require("node:events");
+const node_crypto_1 = require("node:crypto");
+const node_http_1 = __importDefault(require("node:http"));
+const node_https_1 = __importDefault(require("node:https"));
+const node_url_1 = require("node:url");
+class WebSocket extends node_events_1.EventEmitter {
     url;
     headers;
     socket = null;
@@ -20,13 +20,13 @@ class WebSocket extends events_1.EventEmitter {
     MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
     constructor(url, options) {
         super();
-        this.url = new url_1.URL(url);
+        this.url = new node_url_1.URL(url);
         this.headers = options?.headers || {};
         this.connect();
     }
     connect() {
-        const key = (0, crypto_1.randomBytes)(16).toString('base64');
-        const protocol = this.url.protocol === 'wss:' ? https_1.default : http_1.default;
+        const key = (0, node_crypto_1.randomBytes)(16).toString('base64');
+        const protocol = this.url.protocol === 'wss:' ? node_https_1.default : node_http_1.default;
         const port = this.url.port || (this.url.protocol === 'wss:' ? 443 : 80);
         const baseHeaders = {
             'Connection': 'Upgrade',
@@ -49,7 +49,7 @@ class WebSocket extends events_1.EventEmitter {
         };
         this.socket = protocol.request(options);
         this.socket.on('upgrade', (res, socket, head) => {
-            const expectedKey = (0, crypto_1.createHash)('sha1')
+            const expectedKey = (0, node_crypto_1.createHash)('sha1')
                 .update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')
                 .digest('base64');
             if (res.headers['sec-websocket-accept'] !== expectedKey) {
@@ -226,7 +226,7 @@ class WebSocket extends events_1.EventEmitter {
         else {
             header[1] = 0x80 | payloadLength;
         }
-        const mask = (0, crypto_1.randomBytes)(4);
+        const mask = (0, node_crypto_1.randomBytes)(4);
         mask.copy(header, headerLength - 4);
         const maskedPayload = Buffer.alloc(payloadLength);
         for (let i = 0; i < payloadLength; i++) {

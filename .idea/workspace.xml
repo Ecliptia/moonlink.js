@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior.">
+    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="feat(WebSocket): introduce `MAX_PAYLOAD_SIZE` constant for improved payload handling&#10;&#10;- Added a `MAX_PAYLOAD_SIZE` constant to the WebSocket service, allowing better control over payload limits.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/src/services/WebSocket.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/services/WebSocket.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/WebSocket.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testBot/denoBot/bot.js" beforeDir="false" afterPath="$PROJECT_DIR$/testBot/denoBot/bot.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,6 +116,7 @@
       <workItem from="1754934004533" duration="4178000" />
       <workItem from="1757090921471" duration="1124000" />
       <workItem from="1757129200393" duration="376000" />
+      <workItem from="1757182181150" duration="175000" />
     </task>
     <task id="LOCAL-00001" summary="chore: update optional chaining in `SearchResult` and adjust bot test configurations&#10;&#10;**Details:**&#10;- Added optional chaining to `req` properties in `SearchResult` to improve null-safety.&#10;- Updated test bot configurations:&#10;  - Changed bot connection port to 3000 and password to placeholder.&#10;  - Switched database provider from `mongoose` to `local`.&#10;- Bumped version in `package-lock.json` to 4.52.2.">
       <option name="closed" value="true" />
