@@ -10,7 +10,8 @@ import {
   INode
 } from "../typings/Interfaces";
 import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
-import { Log,
+import {
+  Log,
   Structure,
   DatabaseManager,
   NodeManager,
@@ -22,7 +23,9 @@ import { Log,
   PluginManager,
   Node,
   isSourceBlacklisted,
-  decodeTrack } from "../../index";
+  decodeTrack,
+  isValidDiscordId,
+} from "../../index";
 
 import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
 import { YouTubePlugin } from "../plugins/YouTubePlugin";
@@ -106,6 +109,9 @@ export class Manager extends EventEmitter {
 
   public async init(clientId: string): Promise<void> {
     if (this.initialize) return;
+    if (!isValidDiscordId(clientId)) {
+      throw new Error("Moonlink.js > Invalid clientId: must be a valid Discord snowflake (17-20 digits).");
+    }
     try {
       if (this.options.logFile?.log) {
         validateProperty(

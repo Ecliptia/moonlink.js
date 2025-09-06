@@ -60,6 +60,9 @@ class Manager extends node_events_1.EventEmitter {
     async init(clientId) {
         if (this.initialize)
             return;
+        if (!(0, index_1.isValidDiscordId)(clientId)) {
+            throw new Error("Moonlink.js > Invalid clientId: must be a valid Discord snowflake (17-20 digits).");
+        }
         try {
             if (this.options.logFile?.log) {
                 (0, index_1.validateProperty)(this.options.logFile?.path, value => typeof value === "string", "Moonlink.js > Options > A path to save the log was not provided");

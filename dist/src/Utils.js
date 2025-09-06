@@ -14,6 +14,7 @@ exports.makeRequest = makeRequest;
 exports.compareVersions = compareVersions;
 exports.stringifyWithReplacer = stringifyWithReplacer;
 exports.isSourceBlacklisted = isSourceBlacklisted;
+exports.isValidDiscordId = isValidDiscordId;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
@@ -299,5 +300,8 @@ function isSourceBlacklisted(manager, sourceName) {
         return false;
     }
     return manager.options.blacklistedSources.includes(sourceName);
+}
+function isValidDiscordId(id) {
+    return typeof id === "string" && /^\d{17,20}$/.test(id);
 }
 //# sourceMappingURL=Utils.js.map
