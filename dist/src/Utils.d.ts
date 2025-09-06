@@ -35,3 +35,4 @@ export declare class Plugin {
     unload(manager: any): void;
 }
 export declare function isSourceBlacklisted(manager: any, sourceName: string): boolean;
+export declare function isValidDiscordId(id: string): boolean;

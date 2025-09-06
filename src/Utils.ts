@@ -330,3 +330,7 @@ export function isSourceBlacklisted(manager: any, sourceName: string): boolean {
   }
   return manager.options.blacklistedSources.includes(sourceName);
 }
+
+export function isValidDiscordId(id: string): boolean {
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
+}
