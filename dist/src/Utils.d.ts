@@ -1,4 +1,4 @@
-import http from "http";
+import http from "node:http";
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 export declare const structures: Record<string, any>;
 export declare const sources: {

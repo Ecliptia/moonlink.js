@@ -15,12 +15,12 @@ exports.compareVersions = compareVersions;
 exports.stringifyWithReplacer = stringifyWithReplacer;
 exports.isSourceBlacklisted = isSourceBlacklisted;
 exports.isValidDiscordId = isValidDiscordId;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const crypto_1 = require("crypto");
-const http_1 = __importDefault(require("http"));
-const https_1 = __importDefault(require("https"));
-const zlib_1 = __importDefault(require("zlib"));
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
+const node_crypto_1 = require("node:crypto");
+const node_http_1 = __importDefault(require("node:http"));
+const node_https_1 = __importDefault(require("node:https"));
+const node_zlib_1 = __importDefault(require("node:zlib"));
 exports.structures = {};
 exports.sources = {
     youtube: "ytsearch",
@@ -162,18 +162,18 @@ function encodeTrack(track) {
 }
 function generateUUID(host, port) {
     const data = `${host}:${port}`;
-    const hash = (0, crypto_1.createHash)("sha256").update(data).digest("hex");
+    const hash = (0, node_crypto_1.createHash)("sha256").update(data).digest("hex");
     return hash;
 }
 function Log(message, LogPath) {
     const timestamp = new Date().toISOString();
     const logmessage = `[${timestamp}] ${message}\n`;
-    const logpath = path_1.default.resolve(LogPath);
-    fs_1.default.exists(logpath, (exists) => {
+    const logpath = node_path_1.default.resolve(LogPath);
+    node_fs_1.default.exists(logpath, (exists) => {
         if (!exists) {
             try {
-                fs_1.default.mkdirSync(path_1.default.dirname(logpath), { recursive: true });
-                fs_1.default.writeFileSync(logpath, "");
+                node_fs_1.default.mkdirSync(node_path_1.default.dirname(logpath), { recursive: true });
+                node_fs_1.default.writeFileSync(logpath, "");
             }
             catch (error) {
                 console.error("Failed to create log file:", error);
@@ -181,7 +181,7 @@ function Log(message, LogPath) {
             }
         }
         try {
-            fs_1.default.appendFileSync(logpath, logmessage);
+            node_fs_1.default.appendFileSync(logpath, logmessage);
         }
         catch (error) {
             console.error("Failed to append to log file:", error);
@@ -193,20 +193,20 @@ async function makeRequest(url, options, timeout = 10000, retries = 3, retryDela
         try {
             return await new Promise((resolve) => {
                 const urlObject = new URL(url);
-                const transport = urlObject.protocol === "https:" ? https_1.default : http_1.default;
+                const transport = urlObject.protocol === "https:" ? node_https_1.default : node_http_1.default;
                 options.headers = options.headers || {};
                 options.headers["Accept-Encoding"] = "gzip, deflate, br";
                 const req = transport.request(url, options, (res) => {
                     let stream = res;
                     const encoding = res.headers["content-encoding"];
                     if (encoding === "gzip") {
-                        stream = res.pipe(zlib_1.default.createGunzip());
+                        stream = res.pipe(node_zlib_1.default.createGunzip());
                     }
                     else if (encoding === "deflate") {
-                        stream = res.pipe(zlib_1.default.createInflate());
+                        stream = res.pipe(node_zlib_1.default.createInflate());
                     }
                     else if (encoding === "br") {
-                        stream = res.pipe(zlib_1.default.createBrotliDecompress());
+                        stream = res.pipe(node_zlib_1.default.createBrotliDecompress());
                     }
                     const chunks = [];
                     stream.on("data", (chunk) => chunks.push(chunk));
