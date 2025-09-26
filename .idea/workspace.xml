@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="v4" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;1Lucas1apk&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Ecliptia/moonlink.js&quot;,
+    &quot;accountId&quot;: &quot;ac84a612-860d-4ba4-a325-2cde28e66c78&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="30QHy4uh7N7a4rlkFNz1wV4xjh5" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
+    &quot;npm.start.executor&quot;: &quot;Run&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\1luca\\Desktop\\moonlink.js\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\1luca\Desktop\moonlink.js\docs\content\4.api" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.start">
+    <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/docs/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="start" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.start" />
+        <item itemvalue="npm.dev" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-WS-251.27812.50" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f8116733-2a75-424a-9db5-f0cd0ee047bd" name="Changes" comment="" />
+      <created>1753553127766</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1753553127766</updated>
+      <workItem from="1753553128846" duration="359000" />
+      <workItem from="1753632865873" duration="7000" />
+      <workItem from="1754490265116" duration="4804000" />
+      <workItem from="1754495192368" duration="5320000" />
+      <workItem from="1754501453279" duration="3646000" />
+      <workItem from="1754505620707" duration="41000" />
+      <workItem from="1754521334252" duration="121000" />
+      <workItem from="1754659861110" duration="1736000" />
+      <workItem from="1754934004533" duration="4178000" />
+      <workItem from="1757090921471" duration="1124000" />
+      <workItem from="1757129200393" duration="376000" />
+      <workItem from="1757182181150" duration="3780000" />
+    </task>
+    <task id="LOCAL-00001" summary="chore: update optional chaining in `SearchResult` and adjust bot test configurations&#10;&#10;**Details:**&#10;- Added optional chaining to `req` properties in `SearchResult` to improve null-safety.&#10;- Updated test bot configurations:&#10;  - Changed bot connection port to 3000 and password to placeholder.&#10;  - Switched database provider from `mongoose` to `local`.&#10;- Bumped version in `package-lock.json` to 4.52.2.">
+      <option name="closed" value="true" />
+      <created>1754490340864</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1754490340864</updated>
+    </task>
+    <task id="LOCAL-00002" summary="refactor: optimize NodeManager connected node handling&#10;&#10;**Details:**&#10;- Added `getConnected` and `hasConnected` utility methods for clarity.&#10;- Updated `sortByUsage` and `getNodeWithCapability` to use the new `getConnected`.&#10;- Simplified logic for filtering connected nodes across methods.&#10;- Adjusted JavaScript distribution files and source maps.">
+      <option name="closed" value="true" />
+      <created>1754492678951</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754492678951</updated>
+    </task>
+    <task id="LOCAL-00003" summary="chore: bump package version to 4.60.4 and update User-Agent date&#10;&#10;**Details:**&#10;- Updated `package.json` version from `4.52.2` to `4.60.4`.&#10;- Adjusted `User-Agent` date to `06.08.2025` for consistency.&#10;- Synced changes across TypeScript and JavaScript distribution files.">
+      <option name="closed" value="true" />
+      <created>1754492821539</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1754492821539</updated>
+    </task>
+    <task id="LOCAL-00004" summary="docs: revamp team section in documentation&#10;&#10;**Details:**&#10;- Renamed &quot;Contributors&quot; to &quot;Meet the Team.&quot;&#10;- Added new sections &quot;Development Team &amp; Collaborators&quot; and &quot;Our Amazing Contributors.&quot;&#10;- Updated team member roles and added new collaborators.">
+      <option name="closed" value="true" />
+      <created>1754494306935</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1754494306935</updated>
+    </task>
+    <task id="LOCAL-00005" summary="docs: revamp team section in documentation&#10;&#10;**Details:**&#10;- Renamed &quot;Contributors&quot; to &quot;Meet the Team.&quot;&#10;- Added new sections &quot;Development Team &amp; Collaborators&quot; and &quot;Our Amazing Contributors.&quot;&#10;- Updated team member roles and added new collaborators.">
+      <option name="closed" value="true" />
+      <created>1754494317409</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1754494317409</updated>
+    </task>
+    <task id="LOCAL-00006" summary="chore: update Spotify.js source map for distribution consistency">
+      <option name="closed" value="true" />
+      <created>1754495399903</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1754495399903</updated>
+    </task>
+    <task id="LOCAL-00007" summary="chore: update Spotify.js source map for distribution consistency">
+      <option name="closed" value="true" />
+      <created>1754495408689</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1754495408689</updated>
+    </task>
+    <task id="LOCAL-00008" summary="chore: update Spotify.js source map for distribution consistency Introduced `limitLoadPlaylistPage` and `limitLoadAlbumPage` options in `Interfaces.ts`.&#10;- Updated Spotify API requests to use the new page limit configurations.">
+      <option name="closed" value="true" />
+      <created>1754496126897</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1754496126897</updated>
+    </task>
+    <task id="LOCAL-00009" summary="chore: update Spotify.js source map for distribution consistency">
+      <option name="closed" value="true" />
+      <created>1754496182005</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1754496182005</updated>
+    </task>
+    <task id="LOCAL-00010" summary="chore: update Spotify.js source map for distribution consistency">
+      <option name="closed" value="true" />
+      <created>1754500484362</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1754500484363</updated>
+    </task>
+    <task id="LOCAL-00011" summary="chore: update Spotify.js source map for distribution consistency">
+      <option name="closed" value="true" />
+      <created>1754500494102</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1754500494102</updated>
+    </task>
+    <task id="LOCAL-00012" summary="chore(docs): upgrade Nuxt dependency to v4.0.3">
+      <option name="closed" value="true" />
+      <created>1754502281148</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1754502281148</updated>
+    </task>
+    <task id="LOCAL-00013" summary="chore(docs): upgrade Nuxt dependency to v4.0.3">
+      <option name="closed" value="true" />
+      <created>1754502288520</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1754502288520</updated>
+    </task>
+    <task id="LOCAL-00014" summary="chore(docs): downgrade Nuxt to v3.17.6 and disable SSR">
+      <option name="closed" value="true" />
+      <created>1754503857467</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1754503857468</updated>
+    </task>
+    <task id="LOCAL-00015" summary="chore(docs): downgrade Nuxt to v3.17.6 and disable SSR">
+      <option name="closed" value="true" />
+      <created>1754503865606</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1754503865606</updated>
+    </task>
+    <task id="LOCAL-00016" summary="chore(docs): enable SSR and add Netlify preset to Nitro configuration">
+      <option name="closed" value="true" />
+      <created>1754504138282</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1754504138282</updated>
+    </task>
+    <task id="LOCAL-00017" summary="chore(docs): enable SSR and add Netlify preset to Nitro configuration">
+      <option name="closed" value="true" />
+      <created>1754504144899</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1754504144899</updated>
+    </task>
+    <task id="LOCAL-00018" summary="chore(docs): update nuxt.config formatting and remove unused SSR/Nitro config">
+      <option name="closed" value="true" />
+      <created>1754504985337</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1754504985337</updated>
+    </task>
+    <task id="LOCAL-00019" summary="fix(docs): update image URL for Moonlink banner in index.md">
+      <option name="closed" value="true" />
+      <created>1754505648640</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1754505648640</updated>
+    </task>
+    <task id="LOCAL-00020" summary="fix(docs): update Moonlink banner image URL in index.md">
+      <option name="closed" value="true" />
+      <created>1754521428379</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1754521428381</updated>
+    </task>
+    <task id="LOCAL-00021" summary="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd` method logic.">
+      <option name="closed" value="true" />
+      <created>1754934048210</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934048210</updated>
+    </task>
+    <task id="LOCAL-00022" summary="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections.">
+      <option name="closed" value="true" />
+      <created>1754934208380</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934208380</updated>
+    </task>
+    <task id="LOCAL-00023" summary="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections.">
+      <option name="closed" value="true" />
+      <created>1754934214523</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1754934214523</updated>
+    </task>
+    <task id="LOCAL-00024" summary="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior.">
+      <option name="closed" value="true" />
+      <created>1754943411039</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1754943411039</updated>
+    </task>
+    <task id="LOCAL-00025" summary="fix(WebSocket): update `EventEmitter` import to use explicit Node.js namespace&#10;&#10;- Adjusted `EventEmitter` import to use `node:events` for better clarity and Node.js compatibility.">
+      <option name="closed" value="true" />
+      <created>1757182389922</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1757182389922</updated>
+    </task>
+    <task id="LOCAL-00026" summary="feat(Utils): add `isValidDiscordId` utility function&#10;&#10;- Introduced `isValidDiscordId` to validate Discord IDs for enhanced input verification.">
+      <option name="closed" value="true" />
+      <created>1757183005922</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1757183005922</updated>
+    </task>
+    <task id="LOCAL-00027" summary="fix(Utils): update `http` import to use explicit Node.js namespace&#10;&#10;- Changed `http` import to `node:http` for consistency with Node.js module resolution and better clarity.">
+      <option name="closed" value="true" />
+      <created>1757183420346</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1757183420346</updated>
+    </task>
+    <task id="LOCAL-00028" summary="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class.">
+      <option name="closed" value="true" />
+      <created>1757185765889</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1757185765890</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="chore: update optional chaining in `SearchResult` and adjust bot test configurations&#10;&#10;**Details:**&#10;- Added optional chaining to `req` properties in `SearchResult` to improve null-safety.&#10;- Updated test bot configurations:&#10;  - Changed bot connection port to 3000 and password to placeholder.&#10;  - Switched database provider from `mongoose` to `local`.&#10;- Bumped version in `package-lock.json` to 4.52.2." />
+    <MESSAGE value="feat: add `limit` option to `search` method for track filtering&#10;&#10;**Details:**&#10;- Introduced support for `limit` in `search` options to cap the number of tracks returned.&#10;- Updated filtering logic to enforce track limits after blacklist checks.&#10;- Modified JavaScript distribution files to reflect changes." />
+    <MESSAGE value="refactor: optimize NodeManager connected node handling&#10;&#10;**Details:**&#10;- Added `getConnected` and `hasConnected` utility methods for clarity.&#10;- Updated `sortByUsage` and `getNodeWithCapability` to use the new `getConnected`.&#10;- Simplified logic for filtering connected nodes across methods.&#10;- Adjusted JavaScript distribution files and source maps." />
+    <MESSAGE value="chore: bump package version to 4.60.4 and update User-Agent date&#10;&#10;**Details:**&#10;- Updated `package.json` version from `4.52.2` to `4.60.4`.&#10;- Adjusted `User-Agent` date to `06.08.2025` for consistency.&#10;- Synced changes across TypeScript and JavaScript distribution files." />
+    <MESSAGE value="docs: revamp team section in documentation&#10;&#10;**Details:**&#10;- Renamed &quot;Contributors&quot; to &quot;Meet the Team.&quot;&#10;- Added new sections &quot;Development Team &amp; Collaborators&quot; and &quot;Our Amazing Contributors.&quot;&#10;- Updated team member roles and added new collaborators." />
+    <MESSAGE value="feat: add configurable page limits for Spotify album and playlist loading&#10;&#10;**Details:**&#10;-" />
+    <MESSAGE value="chore: update Spotify.js source map for distribution consistency Introduced `limitLoadPlaylistPage` and `limitLoadAlbumPage` options in `Interfaces.ts`.&#10;- Updated Spotify API requests to use the new page limit configurations." />
+    <MESSAGE value="chore: revamp documentation and update configurations&#10;&#10;- Updated Tailwind CSS structure and added `@config` for better organization.&#10;- Enhanced dark mode and global color variables for consistency.&#10;- Introduced i18n support with English as the default locale.&#10;- Improved `app.config.ts` with language switcher support and cleaner header/footer links.&#10;- Upgraded dependencies in `package.json` to newer versions.&#10;- Aligned project to use `shadcn-docs-nuxt-starter` template.&#10;- Replaced and optimized Moonlink banner in `/docs/content/index.md`." />
+    <MESSAGE value="chore: update Spotify.js source map for distribution consistency" />
+    <MESSAGE value="chore(docs): upgrade Nuxt dependency to v4.0.3" />
+    <MESSAGE value="chore(docs): downgrade Nuxt to v3.17.6 and update nuxt.config.ts configuration" />
+    <MESSAGE value="chore(docs): downgrade Nuxt to v3.17.6 and disable SSR" />
+    <MESSAGE value="chore(docs): enable SSR and add Netlify preset to Nitro configuration" />
+    <MESSAGE value="chore(docs): update nuxt.config formatting and remove unused SSR/Nitro config" />
+    <MESSAGE value="fix(docs): update image URL for Moonlink banner in index.md" />
+    <MESSAGE value="fix(docs): update Moonlink banner image URL in index.md" />
+    <MESSAGE value="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd" />
+    <MESSAGE value="fix(Node, Player): improve autoplay logic and handle stale tracks during health checks&#10;&#10;- Enhanced `_handleAutoplay` to return a boolean for better flow control.&#10;- Added `trackStale` event to manage stale track scenarios.&#10;- Improved player health check to handle track resumption, skipping, or stopping gracefully.&#10;- Removed redundant `handleTrackEnd` method logic." />
+    <MESSAGE value="feat(PlayerManager): add `autoJoin` method for streamlined player initialization&#10;&#10;- Introduced `autoJoin` to simplify player setup by handling voice and text channel assignments, including reconnections." />
+    <MESSAGE value="fix(Node, Manager, Player): improve voice state handling and enhance debug logs&#10;&#10;- Enhanced `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE` packet handling with additional validation and debugging.&#10;- Ensured players handle voice channel changes, disconnections, and session updates accurately.&#10;- Improved debug logs to track user actions and session transitions.&#10;- Fixed potential playback issues by enforcing proper self-mute and server-mute behavior." />
+    <MESSAGE value="feat(WebSocket): introduce `MAX_PAYLOAD_SIZE` constant for improved payload handling&#10;&#10;- Added a `MAX_PAYLOAD_SIZE` constant to the WebSocket service, allowing better control over payload limits." />
+    <MESSAGE value="fix(WebSocket): update `EventEmitter` import to use explicit Node.js namespace&#10;&#10;- Adjusted `EventEmitter` import to use `node:events` for better clarity and Node.js compatibility." />
+    <MESSAGE value="feat(Utils): add `isValidDiscordId` utility function&#10;&#10;- Introduced `isValidDiscordId` to validate Discord IDs for enhanced input verification." />
+    <MESSAGE value="fix(Utils): update `http` import to use explicit Node.js namespace&#10;&#10;- Changed `http` import to `node:http` for consistency with Node.js module resolution and better clarity." />
+    <MESSAGE value="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(WebSocket): update method naming and remove unused `addEventListener`&#10;&#10;- Renamed `connect` to `connectBun` and introduced `connectNode` for platform-specific implementation.&#10;- Removed the unused `addEventListener` method definition from the WebSocket class." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/entities/Track.ts</url>
+          <line>15</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/Utils.ts</url>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

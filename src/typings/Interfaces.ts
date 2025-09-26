@@ -87,6 +87,15 @@ export interface IEvents {
   segmentSkipped: (player: Player, segment: ISegment) => void;
   chaptersLoaded: (player: Player, chapters: IChapter[]) => void;
   chapterStarted: (player: Player, chapter: IChapter) => void;
+  playerStale: (player: Player) => void;
+  trackStale: (player: Player, track: Track) => void;
+  playerStateSync: (player: Player, serverState: IRESTGetPlayers) => void;
+  playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
+  playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
+  playerSuppressChange: (player: Player, suppress: boolean) => void;
+  playerVoiceJoin: (player: Player, userId: string) => void;
+  playerVoiceLeave: (player: Player, userId: string) => void;
+  voiceSessionChanged: (player: Player, oldSessionId: string | boolean, sessionId: string) => void;
 }
 
 export interface IChapter {
@@ -194,6 +203,9 @@ export interface IOptionsManager {
         connectionString: string;
       };
     };
+  };
+  playerHealthCheck?: {
+    stalePlayerTimeout?: number;
   }
 }
 
@@ -214,6 +226,11 @@ export interface IVoiceState {
   sessionId?: string;
   endpoint?: string;
   attempt?: boolean;
+  self_mute?: boolean;
+  self_deaf?: boolean;
+  mute?: boolean;
+  deaf?: boolean;
+  suppress?: boolean;
 }
 
 export interface IRESTOptions {
@@ -405,12 +422,19 @@ export interface Extendable {
   SearchResult: typeof SearchResult;
 }
 
+export interface IPlayerState {
+  time: number;
+  position: number;
+  connected: boolean;
+  ping: number;
+}
+
 export interface IRESTGetPlayers {
   guildId: string;
   track: ITrack;
   volume: number;
   paused: boolean;
-  state: Object;
+  state: IPlayerState;
   voice: IVoiceState;
   filters: Object;
 }

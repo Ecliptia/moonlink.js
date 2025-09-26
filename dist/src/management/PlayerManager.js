@@ -52,6 +52,24 @@ class PlayerManager {
         await this.manager.database.remove(`queues.${guildId}`);
         this.manager.emit("debug", "Moonlink.js - Player > Player for guildId " + guildId + " has been deleted");
     }
+    async autoJoin(options) {
+        const { voiceChannelId, textChannelId, guildId, ...rest } = options;
+        let player = this.get(guildId);
+        if (!player) {
+            player = this.create({ voiceChannelId, textChannelId, guildId, ...rest });
+            if (!player)
+                return undefined;
+        }
+        if (player.voiceChannelId !== voiceChannelId) {
+            player.setVoiceChannelId(voiceChannelId);
+        }
+        if (player.textChannelId !== textChannelId) {
+            player.setTextChannelId(textChannelId);
+        }
+        player.connect();
+        this.manager.emit("debug", `Moonlink.js - PlayerManager > autoJoin: Player for guildId ${guildId} is ready.`);
+        return player;
+    }
     get all() {
         return [...this.cache.values()];
     }

@@ -26,6 +26,8 @@ class Player {
     node;
     data = {};
     filters;
+    healthCheckTimeout = null;
+    isResuming = false;
     _listen;
     _lyrics;
     constructor(manager, config) {
@@ -110,6 +112,10 @@ class Player {
         return true;
     }
     connect(options = {}) {
+        if (!this.voiceChannelId) {
+            this.manager.emit("debug", "Moonlink.js > Player#connect - Cannot connect without a voiceChannelId. Please set it before connecting.");
+            return false;
+        }
         this.manager.emit("playerConnecting", this);
         this.voiceState.attempt = false;
         this._sendVoiceUpdate({
@@ -118,7 +124,7 @@ class Player {
             self_deaf: options.setDeaf ?? false,
         });
         this.manager.emit("playerConnected", this);
-        return (this.connected = true);
+        return true;
     }
     disconnect() {
         if (!this.connected)
@@ -131,7 +137,8 @@ class Player {
     async play(options = {}) {
         if (!options.encoded && !this.queue.size)
             return false;
-        await (0, index_1.isVoiceStateAttempt)(this);
+        if (!(await (0, index_1.isVoiceStateAttempt)(this)))
+            return false;
         let positionToStart = options.position ?? 0;
         if (options.encoded) {
             const decodedTrack = (0, index_1.decodeTrack)(options.encoded);
@@ -376,25 +383,19 @@ class Player {
     async transferNode(node) {
         (0, index_1.validateProperty)(node, (value) => (value instanceof index_1.Node || typeof value === "string"), "Moonlink.js > Player#transferNode - node is not a valid Node or string.");
         const targetNode = typeof node === "string" ? this.manager.nodes.get(node) : node;
-        if (!targetNode)
+        if (!targetNode || !targetNode.connected || targetNode.identifier === this.node.identifier) {
             return false;
+        }
         const oldNode = this.node;
+        this.manager.emit("debug", `Transferring player ${this.guildId} from ${oldNode.identifier} to ${targetNode.identifier}.`);
+        try {
+            await this.node.rest.destroy(this.guildId);
+        }
+        catch (e) {
+            this.manager.emit("debug", `Error destroying player on old node during transfer: ${e.message}`);
+        }
         this.node = targetNode;
-        if (this.current || this.queue.size) {
-            if (this.current) {
-                await this.play({
-                    encoded: this.current.encoded,
-                    requestedBy: this.current.requestedBy,
-                    position: this.current.position,
-                });
-            }
-            else {
-                await this.connect();
-            }
-        }
-        else {
-            await this.connect();
-        }
+        await this.restart();
         this.manager.emit("playerSwitchedNode", this, oldNode, targetNode);
         return true;
     }
@@ -433,6 +434,7 @@ class Player {
         else {
             this.queue.clear();
         }
+        this.clearHealthCheck();
         this.playing = false;
         this.manager.emit("playerTriggeredStop", this);
         return true;
@@ -441,6 +443,7 @@ class Player {
         if (!this.queue.size) {
             if (this.autoPlay) {
                 await this.stop();
+                return true;
             }
             return false;
         }
@@ -552,6 +555,7 @@ class Player {
             return true;
         this.disconnect();
         this.queue.clear();
+        this.clearHealthCheck();
         this.manager.players.delete(this.guildId);
         this.manager.emit("playerDestroyed", this, reason);
         return (this.destroyed = true);
@@ -589,6 +593,15 @@ class Player {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
         await this.manager.database.set(dbPath, data);
     }
+    lastPositionSaveTime = 0;
+    positionSaveThrottle = 5000;
+    async saveCurrentPosition(position) {
+        const now = Date.now();
+        if (now - this.lastPositionSaveTime > this.positionSaveThrottle) {
+            await this.updateData("current.position", position);
+            this.lastPositionSaveTime = now;
+        }
+    }
     getHistory(limit) {
         if (limit === undefined) {
             return [...this.previous];
@@ -614,6 +627,74 @@ class Player {
             query,
             provider,
         });
+    }
+    clearHealthCheck() {
+        if (this.healthCheckTimeout) {
+            clearTimeout(this.healthCheckTimeout);
+            this.healthCheckTimeout = null;
+        }
+    }
+    scheduleHealthCheck() {
+        this.clearHealthCheck();
+        const timeout = this.manager.options.playerHealthCheck?.stalePlayerTimeout ?? 20000;
+        if (timeout <= 0)
+            return;
+        this.healthCheckTimeout = setTimeout(() => {
+            this.checkHealth();
+        }, timeout);
+    }
+    async checkHealth() {
+        if (!this.playing || !this.current)
+            return this.clearHealthCheck();
+        let serverState;
+        try {
+            serverState = await this.node.rest.getPlayer(this.node.sessionId, this.guildId);
+        }
+        catch (e) {
+            this.manager.emit("debug", `Health check failed for ${this.guildId}: Node unresponsive. Attempting to transfer.`);
+            const newNode = this.manager.nodes.sortByUsage("players");
+            if (newNode && newNode.identifier !== this.node.identifier) {
+                await this.transferNode(newNode);
+            }
+            else {
+                this.manager.emit("debug", `Health check failed for ${this.guildId}: No other nodes available.`);
+                this.destroy("unresponsiveNode");
+            }
+            return;
+        }
+        if (!serverState || !serverState.track) {
+            this.manager.emit("debug", `Health check for ${this.guildId}: Player/track gone on server. Treating as track end.`);
+            this.manager.emit("trackStale", this, this.current);
+            if (this.previous.length > 0) {
+                const resumedPrevious = await this.back();
+                if (resumedPrevious) {
+                    this.manager.emit("debug", `Health check for ${this.guildId}: Resumed previous track.`);
+                    return;
+                }
+            }
+            const skipped = await this.skip();
+            if (skipped) {
+                this.manager.emit("debug", `Health check for ${this.guildId}: Skipped to next track.`);
+                return;
+            }
+            this.stop();
+            this.manager.emit("debug", `Health check for ${this.guildId}: Stopped player due to stale track and empty queue.`);
+            return;
+        }
+        if (serverState.track.encoded !== this.current.encoded) {
+            this.manager.emit("debug", `Health check for ${this.guildId}: Track de-sync. Trusting server.`);
+            this.current = new index_1.Track(serverState.track);
+            this.playing = !serverState.paused;
+            this.paused = serverState.paused;
+            this.manager.emit("playerStateSync", this, serverState);
+            await this.play({ encoded: this.current.encoded, position: serverState.state.position });
+            return;
+        }
+        this.manager.emit("debug", `Health check for ${this.guildId}: Nudging stuck track.`);
+        this.current.position = serverState.state.position;
+        this.paused = serverState.paused;
+        this.playing = !this.paused;
+        await this.play({ encoded: this.current.encoded, position: this.current.position });
     }
 }
 exports.Player = Player;
