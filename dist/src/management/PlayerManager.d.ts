@@ -8,6 +8,11 @@ export declare class PlayerManager {
     has(guildId: string): boolean;
     get(guildId: string): Player;
     delete(guildId: string): Promise<void>;
+    autoJoin(options: {
+        voiceChannelId: string;
+        textChannelId: string;
+        guildId: string;
+    } & Partial<IPlayerConfig>): Promise<Player | undefined>;
     get all(): Player[];
 }
 export declare function isVoiceStateAttempt(player: Player): Promise<boolean>;

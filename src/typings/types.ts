@@ -89,7 +89,8 @@ export type TTrackEndType =
   | "stopped"
   | "replaced"
   | "cleanup"
-  | "finished";
+  | "finished"
+  | "stale";
 
 export type TPartialTrackProperties =
   | "url"

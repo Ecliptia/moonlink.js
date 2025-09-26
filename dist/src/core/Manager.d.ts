@@ -47,6 +47,7 @@ export declare class Manager extends EventEmitter {
         skipTrackSource?: boolean;
         provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
     }): Promise<ILavaLyricsObject | null>;
+    clearLyricsCacheForGuild(guildId: string): void;
     searchLyrics(options: {
         query: string;
         provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';

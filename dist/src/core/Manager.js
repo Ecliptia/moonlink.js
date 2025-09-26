@@ -60,6 +60,9 @@ class Manager extends node_events_1.EventEmitter {
     async init(clientId) {
         if (this.initialize)
             return;
+        if (!(0, index_1.isValidDiscordId)(clientId)) {
+            throw new Error("Moonlink.js > Invalid clientId: must be a valid Discord snowflake (17-20 digits).");
+        }
         try {
             if (this.options.logFile?.log) {
                 (0, index_1.validateProperty)(this.options.logFile?.path, value => typeof value === "string", "Moonlink.js > Options > A path to save the log was not provided");
@@ -116,7 +119,10 @@ class Manager extends node_events_1.EventEmitter {
                         }
                     }
                     const data = await targetNode.rest.loadTracks(sourceName, query);
-                    result = new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+                    result = new (index_1.Structure.get("SearchResult"))(data, {
+                        ...options,
+                        originNodeIdentifier: targetNode.identifier
+                    });
                 }
                 if (result && result.loadType !== "empty" && result.loadType !== "error") {
                     result.tracks = result.tracks.filter(track => !(0, index_1.isSourceBlacklisted)(this, track.sourceName));
@@ -161,7 +167,10 @@ class Manager extends node_events_1.EventEmitter {
             const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
             if (lavaSearchPlugin && lavaSearchPlugin.search) {
                 const data = await lavaSearchPlugin.search(query, { source: initialSource, types });
-                const result = new (index_1.Structure.get("SearchResult"))(data, { ...options, originNodeIdentifier: targetNode.identifier });
+                const result = new (index_1.Structure.get("SearchResult"))(data, {
+                    ...options,
+                    originNodeIdentifier: targetNode.identifier
+                });
                 result.tracks = result.tracks.filter(track => !(0, index_1.isSourceBlacklisted)(this, track.sourceName));
                 if (result.tracks.length === 0) {
                     result.loadType = "empty";
@@ -179,20 +188,42 @@ class Manager extends node_events_1.EventEmitter {
         }
     }
     async packetUpdate(packet) {
+        if (!packet.t) {
+            this.emit("debug", `Moonlink.js > Manager > packetUpdate: Received packet without 't' property: ${JSON.stringify(packet)}`);
+            return;
+        }
+        if (packet.t === "CHANNEL_DELETE") {
+            const guildId = packet.d?.guild_id;
+            const channelId = packet.d?.id;
+            if (!guildId || !channelId) {
+                this.emit("debug", `Moonlink.js > Manager > packetUpdate: CHANNEL_DELETE packet missing guild_id or id: ${JSON.stringify(packet)}`);
+                return;
+            }
+            const player = this.players.get(guildId);
+            if (player && player.voiceChannelId === channelId) {
+                this.emit("debug", `Moonlink.js > Manager > packetUpdate: Voice channel ${channelId} for guild ${guildId} deleted. Destroying player.`);
+                player.destroy("channelDeleted");
+            }
+            return;
+        }
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
-        if (!packet.d.token && !packet.d.session_id)
+        if (!packet.d || (!packet.d.token && !packet.d.session_id)) {
+            this.emit("debug", `Moonlink.js > Manager > packetUpdate: Voice packet missing 'd' property or token/session_id: ${JSON.stringify(packet)}`);
             return;
+        }
         const player = this.players.get(packet.d.guild_id);
-        if (!player)
+        if (!player) {
+            this.emit("debug", `Moonlink.js > Manager > packetUpdate: No player found for guild ${packet.d.guild_id}`);
             return;
+        }
         if (!player.voiceState)
             player.voiceState = {};
         if (packet.t === "VOICE_SERVER_UPDATE") {
-            this._handleVoiceServerUpdate(packet, player);
+            await this._handleVoiceServerUpdate(packet, player);
         }
         else if (packet.t === "VOICE_STATE_UPDATE") {
-            this._handleVoiceStateUpdate(packet, player);
+            await this._handleVoiceStateUpdate(packet, player);
         }
     }
     async _handleVoiceServerUpdate(packet, player) {
@@ -216,29 +247,135 @@ class Manager extends node_events_1.EventEmitter {
         }
         this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
         await this.attemptConnection(player.guildId);
+        player.connected = true;
         this.emit("playerReady", player);
     }
-    _handleVoiceStateUpdate(packet, player) {
-        if (packet.d.user_id !== this.options.clientId)
+    async _handleVoiceStateUpdate(packet, player) {
+        if (!packet || packet.t !== "VOICE_STATE_UPDATE")
             return;
-        if (!packet.d.channel_id) {
+        const update = packet.d;
+        if (!update)
+            return;
+        if (update.user_id !== this.options.clientId) {
+            if (update.channel_id === player.voiceChannelId && update.channel_id !== null) {
+                this.emit("playerVoiceJoin", player, update.user_id);
+                this.emit("debug", `Moonlink.js > User ${update.user_id} joined voice channel ${update.channel_id} in guild ${player.guildId}`);
+            }
+            else if (update.channel_id === null && player.voiceChannelId !== null) {
+                this.emit("playerVoiceLeave", player, update.user_id);
+                this.emit("debug", `Moonlink.js > User ${update.user_id} left voice channel ${player.voiceChannelId} in guild ${player.guildId}`);
+            }
+            return;
+        }
+        const getOld = (key) => player.voiceState && player.voiceState[key] !== undefined ? player.voiceState[key] : null;
+        const oldChannelId = player.voiceChannelId;
+        const oldSessionId = getOld("sessionId");
+        const oldSelfMute = getOld("self_mute");
+        const oldSelfDeaf = getOld("self_deaf");
+        const oldMute = getOld("mute");
+        const oldDeaf = getOld("deaf");
+        const oldSuppress = getOld("suppress");
+        const disconnected = !update.channel_id;
+        if (disconnected) {
             player.connected = false;
             player.playing = false;
             player.voiceChannelId = null;
             player.voiceState = {};
             this.emit("playerDisconnected", player);
-            this.emit("debug", "Moonlink.js > Is disconnected from guild " + player.guildId);
-            return;
+            this.emit("debug", `Moonlink.js > Player ${player.guildId} disconnected from voice (previous channel: ${oldChannelId ?? "none"}).`);
         }
-        if (packet.d.channel_id !== player.voiceChannelId) {
-            this.emit("playerMoved", player, player.voiceChannelId, packet.d.channel_id);
-            this.emit("debug", `Moonlink.js > Moved to channel ${packet.d.channel_id} in guild ${player.guildId}`);
-            player.voiceChannelId = packet.d.channel_id;
+        const channelChanged = update.channel_id !== oldChannelId && !!update.channel_id;
+        if (channelChanged) {
+            this.emit("playerMoved", player, oldChannelId, update.channel_id);
+            this.emit("debug", `Moonlink.js > Player ${player.guildId} moved from ${oldChannelId ?? "none"} to ${update.channel_id} (session incoming: ${update.session_id ?? "none"})`);
+            player.voiceChannelId = update.channel_id;
         }
-        player.voiceState.sessionId = packet.d.session_id;
-        this.emit("debug", `Moonlink.js > Received voice state update for guild ${player.guildId}`);
-        this.attemptConnection(player.guildId);
-        this.emit("playerReady", player);
+        const sessionChanged = !channelChanged && oldSessionId && update.session_id && oldSessionId !== update.session_id;
+        if (sessionChanged) {
+            this.emit("voiceSessionChanged", player, oldSessionId, update.session_id);
+            this.emit("debug", `Moonlink.js > Session changed for guild ${player.guildId}: ${oldSessionId} -> ${update.session_id}`);
+        }
+        if (typeof update.self_mute === "boolean" && oldSelfMute !== update.self_mute) {
+            this.emit("playerMuteChange", player, update.self_mute, update.mute);
+            if (update.self_mute) {
+                this.emit("debug", `Moonlink.js > Player ${player.guildId} self-mute enabled (channel: ${player.voiceChannelId}). Pausing playback if playing.`);
+                if (!player.paused) {
+                    try {
+                        await player.pause();
+                    }
+                    catch (e) {
+                        this.emit("debug", `Moonlink.js > pause error: ${String(e)}`);
+                    }
+                }
+            }
+            else {
+                this.emit("debug", `Moonlink.js > Player ${player.guildId} self-mute disabled (channel: ${player.voiceChannelId}). Resuming if applicable.`);
+                if (!update.mute && player.paused && player.current) {
+                    try {
+                        await player.resume();
+                    }
+                    catch (e) {
+                        this.emit("debug", `Moonlink.js > resume error: ${String(e)}`);
+                    }
+                }
+            }
+        }
+        if (typeof update.mute === "boolean" && oldMute !== update.mute) {
+            this.emit("playerMuteChange", player, update.self_mute, update.mute);
+            if (update.mute) {
+                this.emit("debug", `Moonlink.js > Player ${player.guildId} server-mute enabled (channel: ${player.voiceChannelId}). Pausing playback.`);
+                if (!player.paused) {
+                    try {
+                        await player.pause();
+                    }
+                    catch (e) {
+                        this.emit("debug", `Moonlink.js > pause error: ${String(e)}`);
+                    }
+                }
+            }
+            else {
+                this.emit("debug", `Moonlink.js > Player ${player.guildId} server-mute disabled (channel: ${player.voiceChannelId}).`);
+                if (!update.self_mute && player.paused && player.current) {
+                    try {
+                        await player.resume();
+                    }
+                    catch (e) {
+                        this.emit("debug", `Moonlink.js > resume error: ${String(e)}`);
+                    }
+                }
+            }
+        }
+        if (typeof update.self_deaf === "boolean" && oldSelfDeaf !== update.self_deaf) {
+            this.emit("playerDeafChange", player, update.self_deaf, update.deaf);
+            this.emit("debug", `Moonlink.js > Player ${player.guildId} self-deaf changed to ${update.self_deaf} (channel: ${player.voiceChannelId})`);
+        }
+        if (typeof update.deaf === "boolean" && oldDeaf !== update.deaf) {
+            this.emit("playerDeafChange", player, update.self_deaf, update.deaf);
+            this.emit("debug", `Moonlink.js > Player ${player.guildId} server-deaf changed to ${update.deaf} (channel: ${player.voiceChannelId})`);
+        }
+        if (typeof update.suppress === "boolean" && oldSuppress !== update.suppress) {
+            this.emit("playerSuppressChange", player, update.suppress);
+            this.emit("debug", `Moonlink.js > Player ${player.guildId} suppress changed to ${update.suppress} (channel: ${player.voiceChannelId})`);
+        }
+        player.voiceState = {
+            sessionId: update.session_id ?? oldSessionId,
+            self_mute: update.self_mute,
+            self_deaf: update.self_deaf,
+            mute: update.mute,
+            deaf: update.deaf,
+            suppress: update.suppress
+        };
+        if ((channelChanged && !player.connected) || (sessionChanged && player.connected)) {
+            this.emit("debug", `Moonlink.js > Establishing voice connection for guild ${player.guildId} (channel: ${player.voiceChannelId ?? "none"}, session: ${player.voiceState.sessionId ?? "none"})`);
+            try {
+                await this.attemptConnection(player.guildId);
+                player.connected = true;
+                this.emit("playerReady", player);
+            }
+            catch (e) {
+                this.emit("debug", `Moonlink.js > attemptConnection failed for guild ${player.guildId}: ${String(e)}`);
+            }
+        }
     }
     async attemptConnection(guildId) {
         const player = this.players.get(guildId);
@@ -340,6 +477,13 @@ class Manager extends node_events_1.EventEmitter {
             }
         }
         return null;
+    }
+    clearLyricsCacheForGuild(guildId) {
+        for (const key of this.lyricsResultCache.keys()) {
+            if (key.startsWith(guildId)) {
+                this.lyricsResultCache.delete(key);
+            }
+        }
     }
     async searchLyrics(options) {
         (0, index_1.validateProperty)(options, (value) => value !== undefined, "(Moonlink.js) - Manager > searchLyrics > Options is required");

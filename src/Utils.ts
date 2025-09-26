@@ -1,9 +1,9 @@
-import fs from "fs";
-import path from "path";
-import { createHash } from "crypto";
-import http from "http";
-import https from "https";
-import zlib from "zlib";
+import fs from "node:fs";
+import path from "node:path";
+import { createHash } from "node:crypto";
+import http from "node:http";
+import https from "node:https";
+import zlib from "node:zlib";
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 
 export const structures: Record<string, any> = {};
@@ -329,4 +329,8 @@ export function isSourceBlacklisted(manager: any, sourceName: string): boolean {
     return false;
   }
   return manager.options.blacklistedSources.includes(sourceName);
+}
+
+export function isValidDiscordId(id: string): boolean {
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
 }

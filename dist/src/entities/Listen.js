@@ -24,7 +24,7 @@ class Listen {
             },
         });
         const listener = new events_1.EventEmitter();
-        this.voiceReceiverWs.addEventListener("message", ({ data }) => {
+        this.voiceReceiverWs.on("message", ({ data }) => {
             const payload = JSON.parse(data);
             switch (payload?.type) {
                 case "startSpeakingEvent": {
@@ -47,10 +47,10 @@ class Listen {
                 }
             }
         });
-        this.voiceReceiverWs.addEventListener("close", () => {
+        this.voiceReceiverWs.on("close", () => {
             listener.emit("close");
         });
-        this.voiceReceiverWs.addEventListener("error", error => {
+        this.voiceReceiverWs.on("error", error => {
             listener.emit("error", error);
         });
         return listener;

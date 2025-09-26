@@ -78,6 +78,34 @@ export class PlayerManager {
       "Moonlink.js - Player > Player for guildId " + guildId + " has been deleted"
     );
   }
+
+  public async autoJoin(options: { voiceChannelId: string; textChannelId: string; guildId: string } & Partial<IPlayerConfig>): Promise<Player | undefined> {
+    const { voiceChannelId, textChannelId, guildId, ...rest } = options;
+
+    let player = this.get(guildId);
+
+    if (!player) {
+      player = this.create({ voiceChannelId, textChannelId, guildId, ...rest });
+      if (!player) return undefined;
+    }
+
+    if (player.voiceChannelId !== voiceChannelId) {
+      player.setVoiceChannelId(voiceChannelId);
+    }
+    if (player.textChannelId !== textChannelId) {
+      player.setTextChannelId(textChannelId);
+    }
+
+    player.connect();
+
+    this.manager.emit(
+      "debug",
+      `Moonlink.js - PlayerManager > autoJoin: Player for guildId ${guildId} is ready.`
+    );
+
+    return player;
+  }
+
   public get all(): Player[] {
     return [...this.cache.values()];
   }

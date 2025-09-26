@@ -1,4 +1,4 @@
-import http from "http";
+import http from "node:http";
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 export declare const structures: Record<string, any>;
 export declare const sources: {
@@ -35,3 +35,4 @@ export declare class Plugin {
     unload(manager: any): void;
 }
 export declare function isSourceBlacklisted(manager: any, sourceName: string): boolean;
+export declare function isValidDiscordId(id: string): boolean;
