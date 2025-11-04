@@ -197,97 +197,176 @@ export function Log(message: string, LogPath: string): void {
     }
   });
 }
+
+/**
+ * Realiza uma requisição HTTP/HTTPS com suporte a retentativas, timeouts e redirecionamentos.
+ *
+ * @param initialUrl URL inicial da requisição.
+ * @param options Opções da requisição (node:http.RequestOptions).
+ * @param timeout Tempo limite da requisição em milissegundos.
+ * @param retries Número de retentativas em caso de falha.
+ * @param retryDelay Atraso inicial para a retentativa (cresce exponencialmente).
+ * @param maxRedirects Número máximo de redirecionamentos a seguir.
+ * @returns Uma Promise que resolve com o corpo da resposta (T) ou undefined em caso de falha.
+ */
 export async function makeRequest<T = any>(
-  url: string,
+  initialUrl: string,
   options: http.RequestOptions & { body?: any },
   timeout = 10000,
   retries = 3,
-  retryDelay = 1000
+  retryDelay = 1000,
+  maxRedirects = 5
 ): Promise<T | undefined> {
-  for (let i = 0; i <= retries; i++) {
+  let currentUrl = initialUrl;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return await new Promise((resolve) => {
-        const urlObject = new URL(url);
-        const transport = urlObject.protocol === "https:" ? https : http;
+      let redirectCount = 0;
 
-        options.headers = options.headers || {};
-        options.headers["Accept-Encoding"] = "gzip, deflate, br";
+      while (redirectCount <= maxRedirects) {
+        const result = await new Promise<T | { _redirect: string }>(
+          (resolve, reject) => {
+            const urlObject = new URL(currentUrl);
+            const transport = urlObject.protocol === "https:" ? https : http;
 
-        const req = transport.request(url, options, (res) => {
-          let stream: http.IncomingMessage | zlib.Gunzip | zlib.Inflate | zlib.BrotliDecompress = res;
-          const encoding = res.headers["content-encoding"];
+            const requestOptions: http.RequestOptions = {
+              ...options,
+              hostname: urlObject.hostname,
+              port: urlObject.port || (urlObject.protocol === "https:" ? 443 : 80),
+              path: urlObject.pathname + urlObject.search,
+              headers: {
+                ...options.headers,
+                "Accept-Encoding": "gzip, deflate, br",
+              },
+            };
+            delete requestOptions.headers["host"];
 
-          if (encoding === "gzip") {
-            stream = res.pipe(zlib.createGunzip());
-          } else if (encoding === "deflate") {
-            stream = res.pipe(zlib.createInflate());
-          } else if (encoding === "br") {
-            stream = res.pipe(zlib.createBrotliDecompress());
-          }
+            const req = transport.request(requestOptions, (res) => {
+              const { statusCode, headers } = res;
 
-          const chunks: Buffer[] = [];
-
-          stream.on("data", (chunk) => chunks.push(chunk));
-          stream.on("error", () => resolve(undefined));
-
-          stream.on("end", () => {
-            const body = Buffer.concat(chunks);
-            const contentType = res.headers["content-type"] || "";
-
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              if (body.length === 0) {
-                if (contentType.includes("application/json")) {
-                  return resolve({} as T);
-                }
-                return resolve("" as any);
+              if (
+                statusCode &&
+                (statusCode === 301 ||
+                  statusCode === 302 ||
+                  statusCode === 307 ||
+                  statusCode === 308) &&
+                headers.location
+              ) {
+                req.destroy();
+                return resolve({ _redirect: headers.location });
               }
 
-              try {
-                if (contentType.includes("application/json")) {
-                  return resolve(JSON.parse(body.toString()) as T);
-                }
-                return resolve(body.toString() as any as T);
-              } catch {
-                return resolve(undefined);
+              if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+                req.destroy();
+                return reject(
+                  new Error(`Server responded with status ${statusCode}`)
+                );
               }
+
+              let stream:
+                | http.IncomingMessage
+                | zlib.Gunzip
+                | zlib.Inflate
+                | zlib.BrotliDecompress = res;
+              const encoding = res.headers["content-encoding"];
+
+              if (encoding === "gzip") {
+                stream = res.pipe(zlib.createGunzip());
+              } else if (encoding === "deflate") {
+                stream = res.pipe(zlib.createInflate());
+              } else if (encoding === "br") {
+                stream = res.pipe(zlib.createBrotliDecompress());
+              }
+
+              const chunks: Buffer[] = [];
+              stream.on("data", (chunk) => chunks.push(chunk));
+              stream.on("error", (err) =>
+                reject(new Error(`Stream error: ${err.message}`))
+              );
+
+              stream.on("end", () => {
+                const body = Buffer.concat(chunks);
+                const contentType = res.headers["content-type"] || "";
+
+                if (body.length === 0) {
+                  if (contentType.includes("application/json")) {
+                    return resolve({} as T);
+                  }
+                  return resolve("" as any);
+                }
+
+                try {
+                  if (contentType.includes("application/json")) {
+                    return resolve(JSON.parse(body.toString()) as T);
+                  }
+                  return resolve(body.toString() as any as T);
+                } catch (err) {
+                  return reject(
+                    new Error(
+                      `Failed to parse response: ${(err as Error).message}`
+                    )
+                  );
+                }
+              });
+            });
+
+            req.on("error", (err) =>
+              reject(new Error(`Request error: ${err.message}`))
+            );
+            req.on("timeout", () => {
+              req.destroy();
+              reject(new Error("Request timed out"));
+            });
+
+            req.setTimeout(timeout);
+
+            if (options.body) {
+              const bodyData =
+                typeof options.body === "object" && options.body !== null
+                  ? JSON.stringify(options.body)
+                  : options.body.toString();
+
+              req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+              req.write(bodyData);
             }
 
-            resolve(undefined);
-          });
-        });
+            req.end();
+          }
+        );
 
-        req.on("error", () => resolve(undefined));
-
-        req.on("timeout", () => {
-          req.destroy();
-          resolve(undefined);
-        });
-
-        req.setTimeout(timeout);
-
-        if (options.body) {
-          const bodyData =
-            typeof options.body === "object" && options.body !== null
-              ? JSON.stringify(options.body)
-              : options.body.toString();
-
-          req.setHeader("Content-Length", Buffer.byteLength(bodyData));
-          req.write(bodyData);
+        if (
+          typeof result === "object" &&
+          result !== null &&
+          (result as any)._redirect
+        ) {
+          const newLocation = (result as any)._redirect;
+          currentUrl = new URL(newLocation, currentUrl).href;
+          redirectCount++;
+          continue;
         }
 
-        req.end();
-      });
+        return result as T;
+      }
+
+      throw new Error("Too many redirects");
     } catch (error) {
-      if (i < retries) {
-        await delay(retryDelay * Math.pow(2, i));
+      console.error(
+        `Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${
+          (error as Error).message
+        }`
+      );
+
+      if (attempt < retries) {
+        await delay(retryDelay * Math.pow(2, attempt));
+        currentUrl = initialUrl;
       } else {
         return undefined;
       }
     }
   }
+
   return undefined;
 }
-
 
 export function compareVersions(current: string, required: string): number {
   const curr = current.split(".").map(Number);

@@ -9,6 +9,8 @@ export default class WebSocket extends EventEmitter {
     private fragmentedPayload;
     private fragmentedOpCode;
     private readonly MAX_PAYLOAD_SIZE;
+    private redirectCount;
+    private readonly MAX_REDIRECTS;
     constructor(url: string, options?: {
         headers?: Record<string, string>;
     });

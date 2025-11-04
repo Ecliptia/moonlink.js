@@ -132,7 +132,7 @@ class Rest {
     async patch(path, data) {
         return (0, index_1.makeRequest)(`${this.url}/${path}`, {
             method: "PATCH",
-            body: (0, index_1.stringifyWithReplacer)(data.data),
+            body: (0, index_1.stringifyWithReplacer)(data),
             headers: this.defaultHeaders,
         });
     }

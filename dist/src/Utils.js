@@ -188,33 +188,58 @@ function Log(message, LogPath) {
         }
     });
 }
-async function makeRequest(url, options, timeout = 10000, retries = 3, retryDelay = 1000) {
-    for (let i = 0; i <= retries; i++) {
+async function makeRequest(initialUrl, options, timeout = 10000, retries = 3, retryDelay = 1000, maxRedirects = 5) {
+    let currentUrl = initialUrl;
+    for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-            return await new Promise((resolve) => {
-                const urlObject = new URL(url);
-                const transport = urlObject.protocol === "https:" ? node_https_1.default : node_http_1.default;
-                options.headers = options.headers || {};
-                options.headers["Accept-Encoding"] = "gzip, deflate, br";
-                const req = transport.request(url, options, (res) => {
-                    let stream = res;
-                    const encoding = res.headers["content-encoding"];
-                    if (encoding === "gzip") {
-                        stream = res.pipe(node_zlib_1.default.createGunzip());
-                    }
-                    else if (encoding === "deflate") {
-                        stream = res.pipe(node_zlib_1.default.createInflate());
-                    }
-                    else if (encoding === "br") {
-                        stream = res.pipe(node_zlib_1.default.createBrotliDecompress());
-                    }
-                    const chunks = [];
-                    stream.on("data", (chunk) => chunks.push(chunk));
-                    stream.on("error", () => resolve(undefined));
-                    stream.on("end", () => {
-                        const body = Buffer.concat(chunks);
-                        const contentType = res.headers["content-type"] || "";
-                        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            let redirectCount = 0;
+            while (redirectCount <= maxRedirects) {
+                const result = await new Promise((resolve, reject) => {
+                    const urlObject = new URL(currentUrl);
+                    const transport = urlObject.protocol === "https:" ? node_https_1.default : node_http_1.default;
+                    const requestOptions = {
+                        ...options,
+                        hostname: urlObject.hostname,
+                        port: urlObject.port || (urlObject.protocol === "https:" ? 443 : 80),
+                        path: urlObject.pathname + urlObject.search,
+                        headers: {
+                            ...options.headers,
+                            "Accept-Encoding": "gzip, deflate, br",
+                        },
+                    };
+                    delete requestOptions.headers["host"];
+                    const req = transport.request(requestOptions, (res) => {
+                        const { statusCode, headers } = res;
+                        if (statusCode &&
+                            (statusCode === 301 ||
+                                statusCode === 302 ||
+                                statusCode === 307 ||
+                                statusCode === 308) &&
+                            headers.location) {
+                            req.destroy();
+                            return resolve({ _redirect: headers.location });
+                        }
+                        if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+                            req.destroy();
+                            return reject(new Error(`Server responded with status ${statusCode}`));
+                        }
+                        let stream = res;
+                        const encoding = res.headers["content-encoding"];
+                        if (encoding === "gzip") {
+                            stream = res.pipe(node_zlib_1.default.createGunzip());
+                        }
+                        else if (encoding === "deflate") {
+                            stream = res.pipe(node_zlib_1.default.createInflate());
+                        }
+                        else if (encoding === "br") {
+                            stream = res.pipe(node_zlib_1.default.createBrotliDecompress());
+                        }
+                        const chunks = [];
+                        stream.on("data", (chunk) => chunks.push(chunk));
+                        stream.on("error", (err) => reject(new Error(`Stream error: ${err.message}`)));
+                        stream.on("end", () => {
+                            const body = Buffer.concat(chunks);
+                            const contentType = res.headers["content-type"] || "";
                             if (body.length === 0) {
                                 if (contentType.includes("application/json")) {
                                     return resolve({});
@@ -227,32 +252,43 @@ async function makeRequest(url, options, timeout = 10000, retries = 3, retryDela
                                 }
                                 return resolve(body.toString());
                             }
-                            catch {
-                                return resolve(undefined);
+                            catch (err) {
+                                return reject(new Error(`Failed to parse response: ${err.message}`));
                             }
-                        }
-                        resolve(undefined);
+                        });
                     });
+                    req.on("error", (err) => reject(new Error(`Request error: ${err.message}`)));
+                    req.on("timeout", () => {
+                        req.destroy();
+                        reject(new Error("Request timed out"));
+                    });
+                    req.setTimeout(timeout);
+                    if (options.body) {
+                        const bodyData = typeof options.body === "object" && options.body !== null
+                            ? JSON.stringify(options.body)
+                            : options.body.toString();
+                        req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+                        req.write(bodyData);
+                    }
+                    req.end();
                 });
-                req.on("error", () => resolve(undefined));
-                req.on("timeout", () => {
-                    req.destroy();
-                    resolve(undefined);
-                });
-                req.setTimeout(timeout);
-                if (options.body) {
-                    const bodyData = typeof options.body === "object" && options.body !== null
-                        ? JSON.stringify(options.body)
-                        : options.body.toString();
-                    req.setHeader("Content-Length", Buffer.byteLength(bodyData));
-                    req.write(bodyData);
+                if (typeof result === "object" &&
+                    result !== null &&
+                    result._redirect) {
+                    const newLocation = result._redirect;
+                    currentUrl = new URL(newLocation, currentUrl).href;
+                    redirectCount++;
+                    continue;
                 }
-                req.end();
-            });
+                return result;
+            }
+            throw new Error("Too many redirects");
         }
         catch (error) {
-            if (i < retries) {
-                await delay(retryDelay * Math.pow(2, i));
+            console.error(`Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${error.message}`);
+            if (attempt < retries) {
+                await delay(retryDelay * Math.pow(2, attempt));
+                currentUrl = initialUrl;
             }
             else {
                 return undefined;

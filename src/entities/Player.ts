@@ -840,7 +840,8 @@ export class Player {
       this.playing = !serverState.paused;
       this.paused = serverState.paused;
       this.manager.emit("playerStateSync", this, serverState);
-      await this.play({ encoded: this.current.encoded, position: serverState.state.position });
+      this.current.position = serverState.state.position;
+      await this.restart();
       return;
     }
 
@@ -849,6 +850,6 @@ export class Player {
     this.paused = serverState.paused;
     this.playing = !this.paused;
 
-    await this.play({ encoded: this.current.encoded, position: this.current.position });
+    await this.restart();
   }
 }

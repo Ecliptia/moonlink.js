@@ -19,10 +19,13 @@ class WebSocket extends node_events_1.EventEmitter {
     fragmentedPayload = [];
     fragmentedOpCode = null;
     MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
+    redirectCount = 0;
+    MAX_REDIRECTS = 5;
     constructor(url, options) {
         super();
         this.url = new node_url_1.URL(url);
         this.headers = options?.headers || {};
+        this.redirectCount = 0;
         if (isBun) {
             this.connectBun();
         }
@@ -66,9 +69,31 @@ class WebSocket extends node_events_1.EventEmitter {
         };
         this.socket = protocol.request(options);
         this.socket.on("response", (res) => {
-            if (res.statusCode !== 101) {
+            const { statusCode, headers } = res;
+            if (statusCode === 301 || statusCode === 302 || statusCode === 307 || statusCode === 308) {
+                if (this.redirectCount >= this.MAX_REDIRECTS) {
+                    this.socket?.destroy();
+                    this.emit("error", { error: new Error("Too many redirects") });
+                    this.emit("close", { code: 1006, reason: "Too many redirects" });
+                    return;
+                }
+                const newLocation = headers.location;
+                if (!newLocation) {
+                    this.socket?.destroy();
+                    this.emit("error", { error: new Error(`Redirect status ${statusCode} but no 'location' header`) });
+                    this.emit("close", { code: 1006, reason: "Invalid redirect response" });
+                    return;
+                }
                 this.socket?.destroy();
-                switch (res.statusCode) {
+                this.redirectCount++;
+                this.url = new node_url_1.URL(newLocation, this.url.href);
+                this.emit("debug", `Redirected to: ${this.url.toString()}`);
+                this.connectNode();
+                return;
+            }
+            if (statusCode !== 101) {
+                this.socket?.destroy();
+                switch (statusCode) {
                     case 401:
                         this.emit("debug", "Authentication failed, please check your credentials.");
                         break;
@@ -76,7 +101,7 @@ class WebSocket extends node_events_1.EventEmitter {
                         this.emit("debug", "Service unavailable, check your host and port.");
                         break;
                     default:
-                        this.emit("debug", `Unexpected status code: ${res.statusCode}`);
+                        this.emit("debug", `Unexpected status code: ${statusCode}`);
                 }
             }
         });
@@ -89,6 +114,7 @@ class WebSocket extends node_events_1.EventEmitter {
                 this.emit("error", { error: new Error("Invalid Sec-WebSocket-Accept header") });
                 return;
             }
+            this.redirectCount = 0;
             this.netSocket = socket;
             this.connected = true;
             this.buffer = head;
@@ -106,6 +132,7 @@ class WebSocket extends node_events_1.EventEmitter {
             }
             this.emit("error", { error: err });
             if (!this.connected) {
+                this.redirectCount = 0;
                 this.emit("close", { code: 1006, reason: err.message });
                 this.socket?.destroy();
                 this.socket = null;
@@ -114,6 +141,7 @@ class WebSocket extends node_events_1.EventEmitter {
         this.socket.on("timeout", () => {
             this.emit("error", { error: new Error("Connection timed out") });
             if (!this.connected) {
+                this.redirectCount = 0;
                 this.emit("close", { code: 1006, reason: "Connection timed out" });
                 this.socket?.destroy();
                 this.socket = null;
