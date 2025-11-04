@@ -142,7 +142,7 @@ export class Rest {
   public async patch(path: string, data: any): Promise<unknown> {
     return makeRequest(`${this.url}/${path}`, {
       method: "PATCH",
-      body: stringifyWithReplacer(data.data),
+      body: stringifyWithReplacer(data),
       headers: this.defaultHeaders,
     });
   }
