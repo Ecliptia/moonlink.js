@@ -10,12 +10,12 @@ const client = new Discord.Client({
 client.manager = new Manager({
   nodes: [
     {
-      host: "nodelink-production.up.railway.app",
-      port: 443,
-      password: "youshallnotpass",
+      host: "localhost",
+      port: 3000,
+      password: "123",
       region: ["us", "eu", "singapore", "sydney", "brazil", "hongkong", "russia"],
       identifier: "MAIN",
-      secure: true,
+      secure: false,
       pathVersion: "v4"
     }
   ],
