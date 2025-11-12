@@ -311,25 +311,15 @@ function compareVersions(current, required) {
 }
 function stringifyWithReplacer(obj) {
     const cache = new Set();
-    const replacer = (_key, value) => {
-        if (value === null) {
-            return undefined;
-        }
-        if (typeof value === 'bigint') {
-            return value.toString();
-        }
-        if (typeof value === 'object') {
+    return JSON.stringify(obj, (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
             if (cache.has(value)) {
                 return "[Circular Refs]";
             }
             cache.add(value);
         }
         return value;
-    };
-    if (obj === null || obj === undefined) {
-        return undefined;
-    }
-    return JSON.stringify(obj, replacer);
+    });
 }
 class Plugin {
     name;
