@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.WebSocket = void 0;
 const node_crypto_1 = require("node:crypto");
 const node_events_1 = require("node:events");
 const node_http_1 = __importDefault(require("node:http"));
@@ -18,7 +19,6 @@ class WebSocket extends node_events_1.EventEmitter {
     buffer = Buffer.alloc(0);
     fragmentedPayload = [];
     fragmentedOpCode = null;
-    MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
     redirectCount = 0;
     MAX_REDIRECTS = 5;
     constructor(url, options) {
@@ -37,10 +37,10 @@ class WebSocket extends node_events_1.EventEmitter {
         const ws = new globalThis.WebSocket(this.url.toString(), {
             headers: this.headers,
         });
-        ws.addEventListener("open", () => this.emit("open"));
-        ws.addEventListener("message", (msg) => this.emit("message", { data: msg.data }));
-        ws.addEventListener("close", (ev) => this.emit("close", { code: ev.code, reason: ev.reason }));
-        ws.addEventListener("error", (err) => this.emit("error", { error: err }));
+        ws.addEventListener("open", () => { return this.emit("open"); });
+        ws.addEventListener("message", (msg) => { return this.emit("message", { data: msg.data }); });
+        ws.addEventListener("close", (ev) => { return this.emit("close", { code: ev.code, reason: ev.reason }); });
+        ws.addEventListener("error", (err) => { return this.emit("error", { error: err }); });
         this.socket = ws;
         this.connected = true;
     }
@@ -54,7 +54,7 @@ class WebSocket extends node_events_1.EventEmitter {
             "Sec-WebSocket-Version": "13",
             "Sec-WebSocket-Key": key,
         };
-        const allowedExtraHeaders = ["authorization", "user-id", "client-name"];
+        const allowedExtraHeaders = ["authorization", "user-id", "client-name", "session-id"];
         for (const [header, value] of Object.entries(this.headers)) {
             if (allowedExtraHeaders.includes(header.toLowerCase())) {
                 baseHeaders[header] = value;
@@ -119,9 +119,9 @@ class WebSocket extends node_events_1.EventEmitter {
             this.connected = true;
             this.buffer = head;
             this.emit("open");
-            this.netSocket.on("data", (data) => this.handleData(data));
-            this.netSocket.on("close", () => this.handleClose(1006, "Connection closed abruptly"));
-            this.netSocket.on("error", (err) => this.emit("error", { error: err }));
+            this.netSocket.on("data", (data) => { return this.handleData(data); });
+            this.netSocket.on("close", () => { return this.handleClose(1006, "Connection closed abruptly"); });
+            this.netSocket.on("error", (err) => { return this.emit("error", { error: err }); });
         });
         this.socket.on("error", (err) => {
             if (this.url.protocol === "wss:" && this.url.hostname === "localhost") {
@@ -216,12 +216,6 @@ class WebSocket extends node_events_1.EventEmitter {
                 const reason = payload.length > 2 ? payload.slice(2).toString() : "";
                 this.handleClose(code, reason);
                 break;
-            case 0x9:
-                this.sendFrame(0xa, payload);
-                break;
-            case 0xa:
-                this.emit("pong");
-                break;
             default:
                 this.emit("error", { error: new Error(`Unsupported opcode: ${opcode}`) });
                 this.close(1002, "Unsupported opcode");
@@ -288,5 +282,5 @@ class WebSocket extends node_events_1.EventEmitter {
         this.handleClose(code, reason);
     }
 }
-exports.default = WebSocket;
+exports.WebSocket = WebSocket;
 //# sourceMappingURL=WebSocket.js.map

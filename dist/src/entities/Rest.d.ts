@@ -1,30 +1,14 @@
-import { Node } from "../../index";
-import { IRESTOptions, IRESTGetLyrics, IRESTGetPlayers } from "../typings/Interfaces";
+import { Node } from "./Node";
+import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers } from "../typings/interfaces";
 export declare class Rest {
-    node: Node;
-    url: string;
-    defaultHeaders: Record<string, string>;
+    private readonly node;
     constructor(node: Node);
-    loadTracks(source: string, query: string): Promise<any>;
-    update(data: IRESTOptions): Promise<unknown>;
-    destroy(guildId: string): Promise<unknown>;
-    getInfo(): Promise<unknown>;
-    getStats(): Promise<unknown>;
-    getVersion(): Promise<unknown>;
-    getLyrics(data: {
-        encoded: string;
-    }): Promise<IRESTGetLyrics>;
-    updateSession(sessionId: string, data: any): Promise<any>;
-    decodeTrack(encodedTrack: string): Promise<any>;
-    decodeTracks(encodedTracks: string[]): Promise<any>;
-    getPlayers(sessionId: string): Promise<IRESTGetPlayers>;
-    getPlayer(sessionId: string, guildId: string): Promise<any>;
-    getRoutePlannerStatus(): Promise<any>;
-    unmarkFailedAddress(address: string): Promise<any>;
-    unmarkAllFailedAddresses(): Promise<any>;
-    patch(path: string, data: any): Promise<unknown>;
-    get(path: string): Promise<unknown>;
-    put(path: string, data: any): Promise<unknown>;
-    post(path: string, data?: any): Promise<unknown>;
-    delete(path: string): Promise<unknown>;
+    get url(): string;
+    getPlayers(): Promise<IRESTGetPlayers[] | null>;
+    getPlayer(guildId: string): Promise<any | null>;
+    updatePlayer(guildId: string, data: any): Promise<any | null>;
+    destroyPlayer(guildId: string): Promise<void>;
+    loadTracks(identifier: string): Promise<IRESTLoadTracks>;
+    getLyrics(trackId: string): Promise<IRESTGetLyrics | null>;
+    updateSession(resuming: boolean, timeout: number): Promise<any | null>;
 }

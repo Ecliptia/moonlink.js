@@ -12,3 +12,5 @@ docs/node_modules
 docs/.nuxt
 docs/.output
 docs/.vscode
+datastore
+.idea

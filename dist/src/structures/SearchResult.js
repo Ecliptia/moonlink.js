@@ -1,80 +1,57 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchResult = void 0;
-const index_1 = require("../../index");
+const types_1 = require("../typings/types");
+const Track_1 = require("../entities/Track");
 class SearchResult {
-    query;
-    source;
-    tracks;
     loadType;
-    playlistInfo;
-    error;
-    albums;
-    artists;
-    playlists;
-    texts;
-    lavasearchPluginInfo;
-    isLavaSearchResult;
-    constructor(req, options) {
-        this.query = options.query;
-        this.source = options.source || "unknown";
-        if (req?.albums || req?.artists || req?.playlists || req?.texts) {
-            this.isLavaSearchResult = true;
-            this.loadType = "search";
-            if (req.tracks) {
-                this.tracks = req.tracks.map((data) => new index_1.Track(data, options.requester));
-            }
-            else {
-                this.tracks = [];
-            }
-            this.albums = req.albums;
-            this.artists = req.artists;
-            this.playlists = req.playlists;
-            this.texts = req.texts;
-            this.lavasearchPluginInfo = req.plugin;
-            if (this.tracks.length > 0 && !this.albums && !this.artists && !this.playlists && !this.texts) {
-                this.loadType = "track";
-            }
-            else if (this.playlists && this.playlists.length > 0) {
-                this.loadType = "playlist";
-                this.playlistInfo = this.playlists[0].info;
-            }
-        }
-        else {
-            this.isLavaSearchResult = false;
-            this.loadType = req.loadType;
-            this.tracks = this.resolveTracks(req, options.requester);
-        }
-        if (req.loadType === "error" || req.loadType === "empty") {
-            this.error = req.data;
-        }
-    }
-    resolveTracks(req, requester) {
-        let rawTracks = [];
-        switch (req.loadType) {
+    tracks;
+    playlistName;
+    exception;
+    constructor(response, requester) {
+        switch (response.loadType) {
             case "track":
-            case "short":
-                rawTracks = [req.data];
-                break;
-            case "search":
-                rawTracks = req.data;
+                this.loadType = types_1.LoadType.TRACK;
+                this.tracks = [new Track_1.Track(response.data, requester)];
                 break;
             case "playlist":
-                rawTracks = req.data.tracks;
-                this.playlistInfo = {
-                    duration: req.data.tracks.reduce((acc, cur) => acc + cur.info.length, 0),
-                    name: req.data.info.name,
-                    selectedTrack: req.data.info.selectedTrack,
-                };
+                this.loadType = types_1.LoadType.PLAYLIST;
+                this.tracks = response.data.tracks.map(track => new Track_1.Track(track, requester));
+                this.playlistName = response.data.info.name;
+                break;
+            case "search":
+                this.loadType = types_1.LoadType.SEARCH;
+                this.tracks = response.data.map(track => new Track_1.Track(track, requester));
+                break;
+            case "empty":
+                this.loadType = types_1.LoadType.EMPTY;
+                this.tracks = [];
+                break;
+            case "error":
+                this.loadType = types_1.LoadType.ERROR;
+                this.tracks = [];
+                this.exception = response.data;
+                break;
+            default:
+                this.loadType = types_1.LoadType.EMPTY;
+                this.tracks = [];
                 break;
         }
-        return rawTracks.map((data) => new index_1.Track(data, requester));
     }
-    getFirst() {
-        return this.tracks[0];
+    get isPlaylist() {
+        return this.loadType === types_1.LoadType.PLAYLIST;
     }
-    getTotalDuration() {
-        return this.tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
+    get isTrack() {
+        return this.loadType === types_1.LoadType.TRACK;
+    }
+    get isSearch() {
+        return this.loadType === types_1.LoadType.SEARCH;
+    }
+    get isEmpty() {
+        return this.loadType === types_1.LoadType.EMPTY;
+    }
+    get isError() {
+        return this.loadType === types_1.LoadType.ERROR;
     }
 }
 exports.SearchResult = SearchResult;

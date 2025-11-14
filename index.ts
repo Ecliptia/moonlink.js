@@ -1,28 +1,27 @@
-export const version: string = require("../package.json").version as string;
+import { Structure } from "./src/Util";
+import { Manager } from "./src/core/Manager";
+import { Node } from "./src/entities/Node";
+import { Player } from "./src/entities/Player";
+import { Queue } from "./src/entities/Queue";
+import { Rest } from "./src/entities/Rest";
+import { Filters } from "./src/entities/Filters";
+import { Track } from "./src/entities/Track";
+import { SearchResult } from "./src/structures/SearchResult";
+import { NodeManager } from "./src/managers/NodeManager";
+import { PlayerManager } from "./src/managers/PlayerManager";
+import { WebSocket } from "./src/services/WebSocket";
+import { Connectors } from "./src/connectors";
 
-export * from "./src/typings/Interfaces";
-export * from "./src/typings/types";
-export * from "./src/Utils";
-export * from "./src/core/Manager";
-export * from "./src/management/NodeManager";
-export * from "./src/management/PlayerManager";
-export * from "./src/management/PluginManager";
-export * from "./src/management/SourceManager";
-export * from "./src/structures/SearchResult";
-export * from "./src/management/DatabaseManager";
-export * from "./src/database/AbstractDatabase";
-export * from "./src/entities/Filters";
-export * from "./src/entities/Player";
-export * from "./src/entities/Node";
-export * from "./src/entities/Rest";
-export * from "./src/entities/Track";
-export * from "./src/entities/Queue";
-export * from "./src/entities/Listen";
-export * from "./src/entities/Lyrics";
+Structure.register("Node", Node);
+Structure.register("Player", Player);
+Structure.register("Queue", Queue);
+Structure.register("Rest", Rest);
+Structure.register("Filters", Filters);
+Structure.register("Track", Track);
+Structure.register("SearchResult", SearchResult);
+Structure.register("NodeManager", NodeManager);
+Structure.register("PlayerManager", PlayerManager);
+Structure.register("WebSocket", WebSocket);
 
-import { structures } from "./src/Utils";
-
-[["DatabaseManager","./src/management/DatabaseManager"],["NodeManager","./src/management/NodeManager"],["PlayerManager","./src/management/PlayerManager"],["PluginManager","./src/management/PluginManager"],["SearchResult","./src/structures/SearchResult"],
-["Player","./src/entities/Player"],["Queue","./src/entities/Queue"],["Node","./src/entities/Node"],
-["Rest","./src/entities/Rest"],["Filters","./src/entities/Filters"],["Track","./src/entities/Track"],
-["Lyrics","./src/entities/Lyrics"],["Listen","./src/entities/Listen"],["SourceManager", "./src/management/SourceManager"]].map(([n,p])=>structures[n]=require(p)[n]);
+export { Manager, Connectors };
+export default Manager;

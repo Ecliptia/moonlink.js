@@ -6,7 +6,7 @@ import { URL } from "node:url";
 
 const isBun = typeof process !== "undefined" && process.versions?.bun;
 
-export default class WebSocket extends EventEmitter {
+export class WebSocket extends EventEmitter {
     private url: URL;
     private headers: Record<string, string>;
     private socket: any = null;
@@ -15,8 +15,7 @@ export default class WebSocket extends EventEmitter {
     private buffer: Buffer = Buffer.alloc(0);
     private fragmentedPayload: Buffer[] = [];
     private fragmentedOpCode: number | null = null;
-    private readonly MAX_PAYLOAD_SIZE = 16 * 1024 * 1024; // 16 MB
-
+    
     private redirectCount: number = 0;
     private readonly MAX_REDIRECTS = 5;
 
@@ -38,10 +37,10 @@ export default class WebSocket extends EventEmitter {
             headers: this.headers,
         });
 
-        ws.addEventListener("open", () => this.emit("open"));
-        ws.addEventListener("message", (msg) => this.emit("message", { data: msg.data }));
-        ws.addEventListener("close", (ev) => this.emit("close", { code: ev.code, reason: ev.reason }));
-        ws.addEventListener("error", (err) => this.emit("error", { error: err }));
+        ws.addEventListener("open", () => { return this.emit("open"); });
+        ws.addEventListener("message", (msg) => { return this.emit("message", { data: msg.data }); });
+        ws.addEventListener("close", (ev) => { return this.emit("close", { code: ev.code, reason: ev.reason }); });
+        ws.addEventListener("error", (err) => { return this.emit("error", { error: err }); });
 
         this.socket = ws;
         this.connected = true;
@@ -59,7 +58,7 @@ export default class WebSocket extends EventEmitter {
             "Sec-WebSocket-Key": key,
         };
 
-        const allowedExtraHeaders = ["authorization", "user-id", "client-name"];
+        const allowedExtraHeaders = ["authorization", "user-id", "client-name", "session-id"];
         for (const [header, value] of Object.entries(this.headers)) {
             if (allowedExtraHeaders.includes(header.toLowerCase())) {
                 baseHeaders[header] = value;
@@ -137,9 +136,9 @@ export default class WebSocket extends EventEmitter {
             this.buffer = head;
             this.emit("open");
 
-            this.netSocket.on("data", (data: Buffer) => this.handleData(data));
-            this.netSocket.on("close", () => this.handleClose(1006, "Connection closed abruptly"));
-            this.netSocket.on("error", (err: Error) => this.emit("error", { error: err }));
+            this.netSocket.on("data", (data: Buffer) => { return this.handleData(data); });
+            this.netSocket.on("close", () => { return this.handleClose(1006, "Connection closed abruptly"); });
+            this.netSocket.on("error", (err: Error) => { return this.emit("error", { error: err }); });
         });
 
         this.socket.on("error", (err) => {
@@ -246,14 +245,6 @@ export default class WebSocket extends EventEmitter {
                 const code = payload.length >= 2 ? payload.readUInt16BE(0) : 1000;
                 const reason = payload.length > 2 ? payload.slice(2).toString() : "";
                 this.handleClose(code, reason);
-                break;
-
-            case 0x9:
-                this.sendFrame(0xa, payload);
-                break;
-
-            case 0xa:
-                this.emit("pong");
                 break;
 
             default:

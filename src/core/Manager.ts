@@ -1,787 +1,208 @@
-import { EventEmitter } from "node:events";
 import {
-  IEvents,
-  IVoiceState,
-  IConfigManager,
-  IOptionsManager,
-  IPlayerConfig,
-  ILavaLyricsObject,
-  ILavaLyricsLine,
-  INode
-} from "../typings/Interfaces";
-import { SearchSources, TSearchSources, TNativeSearchSources, TLavaSrcSearchSources } from "../typings/types";
-import {
-  Log,
-  Structure,
-  DatabaseManager,
-  NodeManager,
-  PlayerManager,
-  SourceManager,
-  Player,
-  validateProperty,
-  SearchResult,
-  PluginManager,
-  Node,
-  isSourceBlacklisted,
-  decodeTrack,
-  isValidDiscordId,
-} from "../../index";
+    IManagerEvents,
+    IManagerConfig,
+    IManagerOptionsConfig,
+    ISearchQuery,
+} from "../typings/interfaces";
+import { Structure, validate, EventEmitter, sources } from "../Util";
+import { PlayerManager } from "../managers/PlayerManager";
+import { Connector } from "../connectors/Connector";
+import { DatabaseManager } from "../managers/DatabaseManager";
 
-import { LavaSrcPlugin } from "../plugins/LavaSrcPlugin";
-import { YouTubePlugin } from "../plugins/YouTubePlugin";
-import { GoogleCloudTTSPlugin } from "../plugins/GoogleCloudTTSPlugin";
-import { SponsorBlockPlugin } from "../plugins/SponsorBlockPlugin";
-import { LavaLyricsPlugin } from "../plugins/LavaLyricsPlugin";
-import { LavaSearchPlugin } from "../plugins/LavaSearchPlugin";
-import { SkybotPlugin } from "../plugins/SkybotPlugin";
-import { LyricsKtPlugin } from "../plugins/LyricsKtPlugin";
-import { JavaLyricsPlugin } from "../plugins/JavaLyricsPlugin";
-import { JavaLavaLyricsPlugin } from "../plugins/JavaLavaLyricsPlugin";
-import { LavaDSPXPlugin } from "../plugins/LavaDSPXPlugin";
+export class Manager extends EventEmitter<IManagerEvents> {
+    public initialized: boolean = false;
+    public readonly options: IManagerOptionsConfig;
+    public send: (guildId: string, payload: any) => void;
+    public clientId: string;
+    public readonly nodes: any;
+    public readonly players: PlayerManager;
+    public readonly database: DatabaseManager;
+    private idleCheckInterval?: NodeJS.Timeout;
 
-export declare interface Manager {
-  on<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
-  once<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
-  emit<K extends keyof IEvents>(event: K, ...args: Parameters<IEvents[K]>): boolean;
-  off<K extends keyof IEvents>(event: K, listener: IEvents[K]): this;
-}
+    constructor(config: IManagerConfig) {
+        super();
 
-export class Manager extends EventEmitter {
-  public initialize: boolean = false;
-  public readonly options: IOptionsManager;
-  public readonly sendPayload: Function;
-  public nodes: NodeManager;
-  public players: PlayerManager = new (Structure.get("PlayerManager"))(this);
-  public version: string = require("../../index").version;
-  public database: DatabaseManager;
-  public sources: SourceManager;
-  public pluginManager: PluginManager;
-  private lyricsResultCache: Map<string, ILavaLyricsObject | null> = new Map();
+        validate(config, (value) => value != null, "Manager constructor requires a config object.");
+        validate(config.nodes, (value) => Array.isArray(value) && value.length > 0, "Manager config requires a non-empty nodes array.");
+        validate(config.options, (value) => value == null || (typeof value === "object" && !Array.isArray(value)), "Manager config 'options' must be a plain object if provided.");
 
-  constructor(config: IConfigManager) {
-    super();
+        this.send = config.send || null;
+        this.options = { 
+            clientName: "Moonlink.js",
+            resume: false,
+            resumeTimeout: 60,
+            autoResume: false,
+            playerAutoFailover: false,
+            movePlayersOnNodeDisconnect: false,
+            noReplace: false,
+            customFilters: {},
+            defaultPlayer: {
+                volume: 100,
+                autoPlay: false,
+                autoLeave: false,
+                selfDeaf: true,
+                selfMute: false,
+                loop: "off",
+                historySize: 10
+            },
+            voiceConnection: {
+                timeout: 15000,
+                maxReconnectAttempts: 3,
+                reconnectDelay: 5000,
+                autoReconnect: true
+            },
+            node: {
+                selectionStrategy: "leastLoad",
+                retryDelay: 30000,
+                retryAmount: 5,
+                sortByRegion: false,
+                avoidUnhealthyNodes: false,
+                maxCpuLoad: 80,
+                maxMemoryUsage: 90
+            },
+            search: {
+                defaultPlatform: "youtube",
+                resultLimit: 10,
+                playlistLoadLimit: 100
+            },
+            queue: {
+                maxSize: 1000,
+                allowDuplicates: true,
+                historyLimit: 10
+            },
+            sources: {
+                disabledSources: []
+            },
+            playerDestruction: {
+                autoDestroyOnIdle: false,
+                idleTimeout: 300000
+            },
+            trackHandling: {
+                autoSkipOnError: false,
+                skipStuckTracks: false,
+                trackStuckThreshold: 10000,
+                retryFailedTracks: false,
+                maxRetryAttempts: 3
+            },
+            ...config.options 
+        };
 
-    validateProperty(
-      config,
-      (value) => value !== undefined,
-      "Moonlink.js > Manager > Config is required."
-    );
+        Structure.setManager(this);
 
-    validateProperty(
-      config.sendPayload,
-      (value) => typeof value === "function",
-      "Moonlink.js > Manager > sendPayload function is required in config."
-    );
-
-    validateProperty(
-      config.nodes,
-      (value) => Array.isArray(value) && value.length > 0,
-      "Moonlink.js > Manager > At least one node is required in config.nodes."
-    );
-
-    this.sendPayload = config.sendPayload;
-    this.options = {
-      clientName: `Moonlink.js/${this.version} (https://github.com/Ecliptia/moonlink.js)`,
-      defaultPlatformSearch: SearchSources.YouTube,
-      NodeLinkFeatures: false,
-      logFile: { path: undefined, log: false },
-      movePlayersOnReconnect: false,
-      sortPlayersByRegion: false,
-      resume: false,
-      autoResume: false,
-      ...config.options,
-    };
-    this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
-    this.pluginManager = new (Structure.get("PluginManager"))(this);
-    //register plugins supported by client
-    this.pluginManager.registerPlugin(LavaSrcPlugin);
-    this.pluginManager.registerPlugin(YouTubePlugin);
-    this.pluginManager.registerPlugin(GoogleCloudTTSPlugin);
-    this.pluginManager.registerPlugin(SponsorBlockPlugin);
-    this.pluginManager.registerPlugin(LavaLyricsPlugin);
-    this.pluginManager.registerPlugin(LavaSearchPlugin);
-    this.pluginManager.registerPlugin(SkybotPlugin);
-    this.pluginManager.registerPlugin(LyricsKtPlugin);
-    this.pluginManager.registerPlugin(JavaLyricsPlugin);
-    this.pluginManager.registerPlugin(JavaLavaLyricsPlugin);
-    this.pluginManager.registerPlugin(LavaDSPXPlugin);
-  }
-
-  public async init(clientId: string): Promise<void> {
-    if (this.initialize) return;
-    if (!isValidDiscordId(clientId)) {
-      throw new Error("Moonlink.js > Invalid clientId: must be a valid Discord snowflake (17-20 digits).");
+        this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
+        this.players = new (Structure.get("PlayerManager"))(this);
+        this.database = new DatabaseManager(this.options.database || { provider: "lmdb", path: "./src/datastore" });
     }
-    try {
-      if (this.options.logFile?.log) {
-        validateProperty(
-          this.options.logFile?.path,
-          value => typeof value === "string",
-          "Moonlink.js > Options > A path to save the log was not provided"
-        );
-        this.on("debug", (message: string) => Log(message, this.options.logFile?.path));
-      }
-      Structure.manager = this;
-      this.options.clientId = clientId;
-      this.database = new (Structure.get("DatabaseManager"))(this);
-      await this.database.init();
-      this.sources = new (Structure.get("SourceManager"))(this);
-      this.nodes.init();
-      this.initialize = true;
-      this.emit("debug", "Moonlink.js > initialized with clientId(" + clientId + "), ready to go!");
-      this.emit("debug", "Moonlink.js > Version: " + this.version);
-      this.emit("debug", "Moonlink.js > environment: " + (typeof globalThis.Deno !== "undefined" ? "Deno" : typeof globalThis.bun !== "undefined" ? "Bun" : "Node.js") + "; version: " + (typeof globalThis.Deno !== "undefined" ? (globalThis as any).Deno.version.deno : typeof globalThis.bun !== "undefined" ? (globalThis as any).Bun.version : process.version));
-    } catch (e) {
-      this.emit("debug", `Moonlink.js > Failed to initialize: ${e.message}`);
+
+    public use(connector: Connector, client: any): this {
+        connector.setManager(this);
+        if (!this.send) this.send = connector.send.bind(connector);
+        connector.listen(client);
+        return this;
     }
-  }
 
-  public async search(options: {
-    query: string;
-    source?: TSearchSources;
-    node?: string;
-    requester?: unknown;
-    fallbackSources?: TSearchSources[];
-    limit?: number;
-  }): Promise<SearchResult> {
-    validateProperty(
-      options,
-      (value) => value !== undefined,
-      "(Moonlink.js) - Manager > Search > Options is required"
-    );
-    validateProperty(
-      options.query,
-      (value) => typeof value === "string",
-      "(Moonlink.js) - Manager > Search > Query is required"
-    );
+    public async init(clientId: string): Promise<this> {
+        if (this.initialized) return this;
 
-    const { query, source, node: preferredNode, requester, fallbackSources, limit } = options;
-    const initialSource = source ?? this.options.defaultPlatformSearch;
-    const sourcesToTry = this.options.enableSourceFallback ? [initialSource, ...(fallbackSources || [])] : [initialSource];
+        validate(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
+        this.clientId = clientId;
 
-    for (const sourceName of sourcesToTry) {
-      let result: SearchResult | undefined;
-      try {
-        const [matched, sourceMatched] = this.sources.isLinkMatch(query, sourceName);
+        this.nodes.init();
+        await this.players.loadPersistedPlayers();
+        
+        if (this.options.playerDestruction?.autoDestroyOnIdle) {
+            this.startIdleMonitoring();
+        }
+        
+        this.initialized = true;
+        this.emit("debug", `Moonlink.js > Manager >> Initialized. ClientId: ${this.clientId}`);
+        return this;
+    }
 
-        if (!this.options.disableNativeSources && matched) {
-          const nativeSource = this.sources.get(sourceMatched)!;
-          if (nativeSource) {
-            const data = await nativeSource.load(query, options);
-            result = new (Structure.get("SearchResult"))(data, options);
-          }
-        } else if (!this.options.disableNativeSources && this.sources.has(sourceName)) {
-          const nativeSource = this.sources.get(sourceName)!;
-          const data = await nativeSource.search(query, options);
-          result = new (Structure.get("SearchResult"))(data, options);
+    private startIdleMonitoring(): void {
+        const idleTimeout = this.options.playerDestruction?.idleTimeout ?? 300000;
+        
+        this.idleCheckInterval = setInterval(() => {
+            const now = Date.now();
+            for (const player of this.players.all) {
+                if (!player.playing && now - player.lastActivityTime >= idleTimeout) {
+                    this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
+                    player.destroy();
+                }
+            }
+        }, 60000);
+    }
+
+    public async search(options: ISearchQuery): Promise<any> {
+        validate(options, (o) => typeof o === "object", "Search > Search options must be an object.");
+        validate(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
+
+        let node;
+        if (options.node) {
+            node = this.nodes.nodes.get(options.node) || [...this.nodes.nodes.values()].find(n => n.identifier === options.node);
         } else {
-          const capability = `search:${sourceName}`;
-          let targetNode = preferredNode
-            ? this.nodes.get(preferredNode)
-            : this.nodes.getNodeWithCapability(capability);
-
-          if (!targetNode || !targetNode.connected) {
-            this.emit("debug", `Moonlink.js > Search > No node with support for source '${sourceName}' was found. Attempting to use a generic node; the search may fail.`);
-            targetNode = this.nodes.sortByUsage("players");
-            if (!targetNode || !targetNode.connected) {
-              this.emit("debug", `Moonlink.js > Search > No connected node available to handle the request.`);
-              continue;
-            }
-          }
-
-          const data = await targetNode.rest.loadTracks(sourceName, query);
-          result = new (Structure.get("SearchResult"))(data, {
-            ...options,
-            originNodeIdentifier: targetNode.identifier
-          });
+            node = this.nodes.leastUsedNode;
         }
 
-        if (result && result.loadType !== "empty" && result.loadType !== "error") {
-          result.tracks = result.tracks.filter(track => !isSourceBlacklisted(this, track.sourceName));
-          const max = limit ?? this.options.playlistLoadLimit;
-
-          if (max && result.tracks.length > max) {
-            result.tracks = result.tracks.slice(0, max);
-          }
-
-          if (result.tracks.length === 0) {
-            result.loadType = "empty";
-          }
-          return result;
+        if (!node) {
+            throw new Error("Moonlink.js > Search > No available nodes for searching, or the specified node was not found.");
         }
-      } catch (e: any) {
-        this.emit("debug", `Moonlink.js > Search > Failed to search with source ${sourceName}: ${e.message}`);
-      }
-    }
 
-    return new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
-  }
+        let identifier: string;
+        const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
 
-  public async lavaSearch(options: {
-    query: string;
-    source?: TSearchSources;
-    node?: string;
-    requester?: unknown;
-    types?: string;
-  }): Promise<SearchResult> {
-    validateProperty(
-      options,
-      (value) => value !== undefined,
-      "(Moonlink.js) - Manager > LavaSearch > Options is required"
-    );
-    validateProperty(
-      options.query,
-      (value) => typeof value === "string",
-      "(Moonlink.js) - Manager > LavaSearch > Query is required"
-    );
-
-    const { query, source, node: preferredNode, requester, types } = options;
-    const initialSource = source ?? this.options.defaultPlatformSearch;
-
-    const capability = `search:${initialSource}`;
-    let targetNode = preferredNode
-      ? this.nodes.get(preferredNode)
-      : this.nodes.getNodeWithCapability(capability);
-
-    if (!targetNode || !targetNode.connected) {
-      this.emit("debug", `Moonlink.js > LavaSearch > No connected node found with capability '${capability}'. Attempting to use any connected node.`);
-      targetNode = this.nodes.sortByUsage("players");
-      if (!targetNode || !targetNode.connected) {
-        this.emit("debug", `Moonlink.js > LavaSearch > No connected node available to handle the request.`);
-        return new (Structure.get("SearchResult"))({ loadType: "empty", data: {} }, options);
-      }
-    }
-
-    if (!targetNode.capabilities.has("lavasearch")) {
-      this.emit("debug", `Moonlink.js > LavaSearch > Node ${targetNode.identifier} does not support LavaSearch. Falling back to standard search.`);
-      return this.search(options);
-    }
-
-    try {
-      const lavaSearchPlugin = targetNode.plugins.get("lavasearch-plugin");
-      if (lavaSearchPlugin && (lavaSearchPlugin as any).search) {
-        const data = await (lavaSearchPlugin as any).search(query, { source: initialSource, types });
-        const result = new (Structure.get("SearchResult"))(data, {
-          ...options,
-          originNodeIdentifier: targetNode.identifier
-        });
-        result.tracks = result.tracks.filter(track => !isSourceBlacklisted(this, track.sourceName));
-        if (result.tracks.length === 0) {
-          result.loadType = "empty";
+        if (URL_REGEX.test(options.query)) {
+            identifier = options.query;
+        } else {
+            const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
+            const source = sources[options.source || defaultPlatform] || sources[defaultPlatform] || "ytsearch";
+            identifier = `${source}:${options.query}`;
         }
+
+        const res = await node.rest.loadTracks(identifier);
+        this.emit("debug", `Moonlink.js > Manager <- Search result for query "${options.query}". LoadType: ${res.loadType}`);
+        
+        const result = new (Structure.get("SearchResult"))(res, options.requester);
+        
+        if (this.options.sources?.disabledSources && this.options.sources.disabledSources.length > 0) {
+            result.tracks = result.tracks.filter(track => {
+                const isDisabled = this.options.sources.disabledSources.includes(track.sourceName);
+                if (isDisabled) {
+                    this.emit("debug", `Moonlink.js > Manager >> Filtered out track from disabled source: ${track.sourceName} - ${track.title}`);
+                }
+                return !isDisabled;
+            });
+        }
+        
         return result;
-      } else {
-        this.emit("debug", `Moonlink.js > LavaSearch > LavaSearchPlugin not found or does not have a search method on node ${targetNode.identifier}. Falling back to standard search.`);
-        return this.search(options);
-      }
-    } catch (e: any) {
-      this.emit("debug", `Moonlink.js > LavaSearch > Failed to perform LavaSearch: ${e.message}. Falling back to standard search.`);
-      return this.search(options);
-    }
-  }
-
-  public async packetUpdate(packet: any): Promise<void> {
-    if (!packet.t) {
-      this.emit("debug", `Moonlink.js > Manager > packetUpdate: Received packet without 't' property: ${JSON.stringify(packet)}`);
-      return;
     }
 
-    if (packet.t === "CHANNEL_DELETE") {
-      const guildId = packet.d?.guild_id;
-      const channelId = packet.d?.id;
-      if (!guildId || !channelId) {
-        this.emit("debug", `Moonlink.js > Manager > packetUpdate: CHANNEL_DELETE packet missing guild_id or id: ${JSON.stringify(packet)}`);
-        return;
-      }
+    public async packetUpdate(packet: any): Promise<void> {
+        if (!this.initialized || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
 
-      const player = this.players.get(guildId);
-      if (player && player.voiceChannelId === channelId) {
-        this.emit("debug", `Moonlink.js > Manager > packetUpdate: Voice channel ${channelId} for guild ${guildId} deleted. Destroying player.`);
-        player.destroy("channelDeleted");
-      }
-      return;
-    }
-
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
-
-    if (!packet.d || (!packet.d.token && !packet.d.session_id)) {
-      this.emit("debug", `Moonlink.js > Manager > packetUpdate: Voice packet missing 'd' property or token/session_id: ${JSON.stringify(packet)}`);
-      return;
-    }
-
-    const player = this.players.get(packet.d.guild_id);
-    if (!player) {
-      this.emit("debug", `Moonlink.js > Manager > packetUpdate: No player found for guild ${packet.d.guild_id}`);
-      return;
-    }
-
-    if (!player.voiceState) player.voiceState = {};
-
-    if (packet.t === "VOICE_SERVER_UPDATE") {
-      await this._handleVoiceServerUpdate(packet, player);
-    } else if (packet.t === "VOICE_STATE_UPDATE") {
-      await this._handleVoiceStateUpdate(packet, player);
-    }
-  }
-
-  private async _handleVoiceServerUpdate(packet: any, player: Player): Promise<void> {
-    player.voiceState.token = packet.d.token;
-    player.voiceState.endpoint = packet.d.endpoint;
-
-    if (packet.d.endpoint) {
-      const match = packet.d.endpoint.match(/^([a-z-]+)[0-9]*\.discord\.media/i);
-      if (match) {
-        const region = match[1];
-        player.region = region;
-        this.emit(
-          "debug",
-          `Moonlink.js > Updated region (${region}) for guild ${player.guildId}`
-        );
-        if (this.options.sortPlayersByRegion && !player.node.regions.includes(region)) {
-          let hasNode = [...this.nodes.cache.values()].some(node =>
-            node.regions.includes(region)
-          );
-          if (hasNode) {
-            let newNode = [...this.nodes.cache.values()].find(node =>
-              node.regions.includes(region)
-            );
-
-            this.emit(
-              "debug",
-              `Moonlink.js > Moved player from ${player.node.uuid} to ${newNode.uuid}`
-            );
-
-            player.node = newNode;
-          }
+        const player = this.players.get(packet.d.guild_id);
+        if (!player) {
+            this.emit("debug", `Moonlink.js > Manager <- Received packet for non-existent player. GuildId: ${packet.d.guild_id}, Packet Type: ${packet.t}`);
+            return;
         }
-      }
-    }
 
-    this.emit("debug", `Moonlink.js > Received voice server update for guild ${player.guildId}`);
-    await this.attemptConnection(player.guildId);
-    player.connected = true;
-    this.emit("playerReady", player);
-  }
-
-  private async _handleVoiceStateUpdate(packet: any, player: Player): Promise<void> {
-    if (!packet || packet.t !== "VOICE_STATE_UPDATE") return
-    const update = packet.d
-    if (!update) return
-
-    if (update.user_id !== this.options.clientId) {
-      if (update.channel_id === player.voiceChannelId && update.channel_id !== null) {
-        this.emit("playerVoiceJoin", player, update.user_id)
-        this.emit("debug", `Moonlink.js > User ${update.user_id} joined voice channel ${update.channel_id} in guild ${player.guildId}`)
-      } else if (update.channel_id === null && player.voiceChannelId !== null) {
-        this.emit("playerVoiceLeave", player, update.user_id)
-        this.emit("debug", `Moonlink.js > User ${update.user_id} left voice channel ${player.voiceChannelId} in guild ${player.guildId}`)
-      }
-      return
-    }
-
-    const getOld = (key: keyof Player["voiceState"]) =>
-      player.voiceState && player.voiceState[key] !== undefined ? player.voiceState[key] : null
-
-    const oldChannelId = player.voiceChannelId
-    const oldSessionId = getOld("sessionId")
-    const oldSelfMute = getOld("self_mute")
-    const oldSelfDeaf = getOld("self_deaf")
-    const oldMute = getOld("mute")
-    const oldDeaf = getOld("deaf")
-    const oldSuppress = getOld("suppress")
-
-    const disconnected = !update.channel_id
-
-    if (disconnected) {
-      player.connected = false
-      player.playing = false
-      player.voiceChannelId = null
-      player.voiceState = {}
-      this.emit("playerDisconnected", player)
-      this.emit("debug", `Moonlink.js > Player ${player.guildId} disconnected from voice (previous channel: ${oldChannelId ?? "none"}).`)
-    }
-
-    const channelChanged = update.channel_id !== oldChannelId && !!update.channel_id
-
-    if (channelChanged) {
-      this.emit("playerMoved", player, oldChannelId, update.channel_id)
-      this.emit("debug", `Moonlink.js > Player ${player.guildId} moved from ${oldChannelId ?? "none"} to ${update.channel_id} (session incoming: ${update.session_id ?? "none"})`)
-      player.voiceChannelId = update.channel_id
-    }
-
-    const sessionChanged = !channelChanged && oldSessionId && update.session_id && oldSessionId !== update.session_id
-    if (sessionChanged) {
-      this.emit("voiceSessionChanged", player, oldSessionId, update.session_id)
-      this.emit("debug", `Moonlink.js > Session changed for guild ${player.guildId}: ${oldSessionId} -> ${update.session_id}`)
-    }
-
-    if (typeof update.self_mute === "boolean" && oldSelfMute !== update.self_mute) {
-      this.emit("playerMuteChange", player, update.self_mute, update.mute)
-      if (update.self_mute) {
-        this.emit("debug", `Moonlink.js > Player ${player.guildId} self-mute enabled (channel: ${player.voiceChannelId}). Pausing playback if playing.`)
-        if (!player.paused) {
-          try {
-            await player.pause()
-          } catch (e) {
-            this.emit("debug", `Moonlink.js > pause error: ${String(e)}`)
-          }
+        switch (packet.t) {
+            case "VOICE_STATE_UPDATE":
+                if (packet.d.user_id !== this.clientId) return;
+                player.voiceState.sessionId = packet.d.session_id;
+                player.voiceChannelId = packet.d.channel_id;
+                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
+                break;
+            case "VOICE_SERVER_UPDATE":
+                player.voiceState.token = packet.d.token;
+                player.voiceState.endpoint = packet.d.endpoint;
+                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
+                break;
         }
-      } else {
-        this.emit("debug", `Moonlink.js > Player ${player.guildId} self-mute disabled (channel: ${player.voiceChannelId}). Resuming if applicable.`)
-        if (!update.mute && player.paused && player.current) {
-          try {
-            await player.resume()
-          } catch (e) {
-            this.emit("debug", `Moonlink.js > resume error: ${String(e)}`)
-          }
-        }
-      }
-    }
 
-    if (typeof update.mute === "boolean" && oldMute !== update.mute) {
-      this.emit("playerMuteChange", player, update.self_mute, update.mute)
-      if (update.mute) {
-        this.emit("debug", `Moonlink.js > Player ${player.guildId} server-mute enabled (channel: ${player.voiceChannelId}). Pausing playback.`)
-        if (!player.paused) {
-          try {
-            await player.pause()
-          } catch (e) {
-            this.emit("debug", `Moonlink.js > pause error: ${String(e)}`)
-          }
-        }
-      } else {
-        this.emit("debug", `Moonlink.js > Player ${player.guildId} server-mute disabled (channel: ${player.voiceChannelId}).`)
-        if (!update.self_mute && player.paused && player.current) {
-          try {
-            await player.resume()
-          } catch (e) {
-            this.emit("debug", `Moonlink.js > resume error: ${String(e)}`)
-          }
-        }
-      }
-    }
-
-    if (typeof update.self_deaf === "boolean" && oldSelfDeaf !== update.self_deaf) {
-      this.emit("playerDeafChange", player, update.self_deaf, update.deaf)
-      this.emit("debug", `Moonlink.js > Player ${player.guildId} self-deaf changed to ${update.self_deaf} (channel: ${player.voiceChannelId})`)
-    }
-
-    if (typeof update.deaf === "boolean" && oldDeaf !== update.deaf) {
-      this.emit("playerDeafChange", player, update.self_deaf, update.deaf)
-      this.emit("debug", `Moonlink.js > Player ${player.guildId} server-deaf changed to ${update.deaf} (channel: ${player.voiceChannelId})`)
-    }
-
-    if (typeof update.suppress === "boolean" && oldSuppress !== update.suppress) {
-      this.emit("playerSuppressChange", player, update.suppress)
-      this.emit("debug", `Moonlink.js > Player ${player.guildId} suppress changed to ${update.suppress} (channel: ${player.voiceChannelId})`)
-    }
-
-    player.voiceState = {
-      sessionId: update.session_id ?? oldSessionId,
-      self_mute: update.self_mute,
-      self_deaf: update.self_deaf,
-      mute: update.mute,
-      deaf: update.deaf,
-      suppress: update.suppress
-    }
-
-    if ((channelChanged && !player.connected) || (sessionChanged && player.connected)) {
-      this.emit("debug", `Moonlink.js > Establishing voice connection for guild ${player.guildId} (channel: ${player.voiceChannelId ?? "none"}, session: ${player.voiceState.sessionId ?? "none"})`)
-      try {
-        await this.attemptConnection(player.guildId)
-        player.connected = true
-        this.emit("playerReady", player)
-      } catch (e) {
-        this.emit("debug", `Moonlink.js > attemptConnection failed for guild ${player.guildId}: ${String(e)}`)
-      }
-    }
-  }
-
-  public async attemptConnection(guildId: string): Promise<boolean> {
-    const player = this.players.get(guildId);
-    if (!player) return;
-
-    const voiceState: IVoiceState = player.voiceState;
-
-    if (!voiceState.token || !voiceState.sessionId || !voiceState.endpoint) {
-      this.emit("debug", `Moonlink.js > Missing voice server data for guild ${guildId}, wait...`);
-      return false;
-    }
-
-    let attempts: any = await player.node.rest.update({
-      guildId,
-      data: {
-        voice: {
-          sessionId: voiceState.sessionId,
-          token: voiceState.token,
-          endpoint: voiceState.endpoint,
-        },
-      },
-    });
-
-    this.emit("playerConnecting", player);
-    this.emit(
-      "debug",
-      `Moonlink.js > Attempting to connect to ${
-        player.node.identifier ?? player.node.host
-      } for guild ${guildId}`
-    );
-
-    if (attempts) player.voiceState.attempt = true;
-    return true;
-  }
-
-  public async getLyrics(options: {
-    player?: Player;
-    encodedTrack?: string;
-    videoId?: string;
-    skipTrackSource?: boolean;
-    provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
-  }): Promise<ILavaLyricsObject | null> {
-    validateProperty(
-      options,
-      (value) => value !== undefined,
-      "(Moonlink.js) - Manager > getLyrics > Options is required"
-    );
-
-    const { player, encodedTrack, videoId, skipTrackSource, provider } = options;
-
-    let cacheKey: string | undefined;
-    if (player && player.current) {
-        cacheKey = `${player.guildId}-${player.current.encoded}`;
-        if (this.lyricsResultCache.has(cacheKey)) {
-            this.emit("debug", `Moonlink.js > getLyrics > Cache hit for guild ${player.guildId}`);
-            return this.lyricsResultCache.get(cacheKey)!;
+        if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
+            this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Verifying connection.`);
+            await this.players.verifyVoiceState(player);
         }
     }
-
-    const capabilityMap = {
-      lavalyrics: 'lavalyrics-plugin',
-      lyrics: 'lyrics',
-      'java-lyrics-plugin': 'java-lyrics-plugin',
-    };
-
-    const fallbackPlugins = Object.values(capabilityMap);
-
-    const capabilitiesToTry = player
-      ? []
-      : capabilityMap[provider]
-        ? [capabilityMap[provider].replace('-plugin', '')]
-        : encodedTrack
-          ? Object.keys(capabilityMap)
-          : videoId
-            ? Object.keys(capabilityMap).slice(1)
-            : [];
-
-    const targetNode = player?.node
-      ?? capabilitiesToTry
-        .map(cap => this.nodes.getNodeWithCapability(cap))
-        .find(Boolean);
-
-    const guildId = player?.guildId;
-
-    const pluginsToTry = capabilityMap[provider]
-      ? [capabilityMap[provider]]
-      : fallbackPlugins;
-
-
-    for (const pluginName of pluginsToTry) {
-      if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(pluginName.replace('-plugin', ''))) {
-        this.emit("debug", `Moonlink.js > getLyrics > No connected node with ${pluginName.replace('-plugin', '')} capability found.`);
-        continue;
-      }
-
-      const lyricsPlugin = targetNode.plugins.get(pluginName);
-      if (lyricsPlugin && ((lyricsPlugin as any).getLyricsForCurrentTrack || (lyricsPlugin as any).getLyricsForTrack || (lyricsPlugin as any).getLyricsByVideoId)) {
-        try {
-          let resultLyrics: ILavaLyricsObject | null = null;
-          if (player && guildId) {
-            resultLyrics = await (lyricsPlugin as any).getLyricsForCurrentTrack(guildId, skipTrackSource);
-             if ((!resultLyrics || !resultLyrics.lines || resultLyrics.lines.length === 0) && (lyricsPlugin as any).getStaticLyricsForTrack) {
-                this.emit("debug", `Moonlink.js > getLyrics > No timed lyrics found for guild ${guildId} with ${pluginName}. Attempting static search.`);
-                resultLyrics = await (lyricsPlugin as any).getStaticLyricsForTrack(guildId);
-            }
-          } else if (pluginName === 'lavalyrics-plugin' && encodedTrack) {
-            resultLyrics = await (lyricsPlugin as any).getLyricsForTrack(encodedTrack, skipTrackSource);
-          } else if (videoId) {
-            resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(videoId);
-          } else if (encodedTrack) {
-            const trackInfo = decodeTrack(encodedTrack);
-            if (trackInfo && trackInfo.info.identifier && trackInfo.info.sourceName === 'youtube' && (lyricsPlugin as any).getLyricsByVideoId) {
-              resultLyrics = await (lyricsPlugin as any).getLyricsByVideoId(trackInfo.info.identifier);
-            }
-          }
-
-          if (resultLyrics && (resultLyrics.text || (resultLyrics.lines && resultLyrics.lines.length > 0))) {
-              if (cacheKey && resultLyrics) {
-                  this.lyricsResultCache.set(cacheKey, resultLyrics);
-              }
-              return resultLyrics;
-          }
-        } catch (e: any) {
-          this.emit("debug", `Moonlink.js > getLyrics > Failed to fetch lyrics with ${pluginName}: ${e.message}`);
-        }
-      }
-    }
-    return null;
-  }
-
-  public clearLyricsCacheForGuild(guildId: string): void {
-    for (const key of this.lyricsResultCache.keys()) {
-      if (key.startsWith(guildId)) {
-        this.lyricsResultCache.delete(key);
-      }
-    }
-  }
-
-  public async searchLyrics(options: {
-    query: string;
-    provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin';
-    node?: string;
-    source?: string;
-  }): Promise<any[] | null> {
-    validateProperty(
-      options,
-      (value) => value !== undefined,
-      "(Moonlink.js) - Manager > searchLyrics > Options is required"
-    );
-    validateProperty(
-      options.query,
-      (value) => typeof value === "string",
-      "(Moonlink.js) - Manager > searchLyrics > Query is required"
-    );
-
-    const { query, provider, node: preferredNode, source } = options;
-
-    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
-    const pluginsToTry = validPlugins.includes(provider)
-      ? [provider]
-      : validPlugins;
-
-    for (const pluginName of pluginsToTry) {
-      const capability = pluginName
-      let targetNode = preferredNode
-        ? this.nodes.get(preferredNode)
-        : this.nodes.getNodeWithCapability(capability);
-
-      if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
-        this.emit("debug", `Moonlink.js > searchLyrics > No connected node found with capability '${capability}'.`);
-        continue;
-      }
-
-      const lyricsPlugin = targetNode.plugins.get(pluginName);
-      if (lyricsPlugin && (lyricsPlugin as any).search) {
-        try {
-          return await (lyricsPlugin as any).search(query, source);
-        } catch (e: any) {
-          this.emit("debug", `Moonlink.js > searchLyrics > Failed to search lyrics with ${pluginName}: ${e.message}`);
-        }
-      }
-    }
-    return null;
-  }
-
-  public async subscribeLyrics(guildId: string, callback: (line: ILavaLyricsLine) => void, skipTrackSource?: boolean, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void> {
-    validateProperty(
-      guildId,
-      (value) => typeof value === "string",
-      "(Moonlink.js) - Manager > subscribeLyrics > guildId is required and must be a string."
-    );
-    validateProperty(
-      callback,
-      (value) => typeof value === "function",
-      "(Moonlink.js) - Manager > subscribeLyrics > callback is required and must be a function."
-    );
-
-    const player = this.players.get(guildId);
-    if (!player) return;
-
-    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
-    const pluginsToTry = validPlugins.includes(provider)
-      ? [provider]
-      : validPlugins;
-
-    for (const pluginName of pluginsToTry) {
-      const capability = pluginName.replace('-plugin', '');
-      const targetNode = player.node;
-
-      if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
-        this.emit("debug", `Moonlink.js > subscribeLyrics > No connected node with ${capability} capability found for player ${guildId}.`);
-        continue;
-      }
-
-      const lyricsPlugin = targetNode.plugins.get(pluginName);
-      if (lyricsPlugin && (lyricsPlugin as any).subscribeToLiveLyrics && (lyricsPlugin as any).registerLyricsCallback) {
-        try {
-          (lyricsPlugin as any).registerLyricsCallback(guildId, callback);
-          await (lyricsPlugin as any).subscribeToLiveLyrics(guildId, skipTrackSource);
-          this.emit("debug", `Moonlink.js > subscribeLyrics > Subscribed to live lyrics for guild ${guildId} using ${pluginName}.`);
-          return;
-        } catch (e: any) {
-          this.emit("debug", `Moonlink.js > subscribeLyrics > Failed to subscribe with ${pluginName}: ${e.message}`);
-        }
-      }
-    }
-    this.emit("debug", `Moonlink.js > subscribeLyrics > No suitable plugin found to subscribe to live lyrics for guild ${guildId}.`);
-  }
-
-  public async unsubscribeLyrics(guildId: string, provider?: 'lavalyrics' | 'lyrics' | 'java-lyrics-plugin'): Promise<void> {
-    validateProperty(
-      guildId,
-      (value) => typeof value === "string",
-      "(Moonlink.js) - Manager > unsubscribeLyrics > guildId is required and must be a string."
-    );
-
-    const player = this.players.get(guildId);
-    if (!player) return;
-
-    const validPlugins = ['lavalyrics-plugin', 'lyrics', 'java-lyrics-plugin'];
-    const pluginsToTry = validPlugins.includes(provider)
-      ? [provider]
-      : validPlugins;
-
-    for (const pluginName of pluginsToTry) {
-      const capability = pluginName.replace('-plugin', '');
-      const targetNode = player.node;
-
-      if (!targetNode || !targetNode.connected || !targetNode.capabilities.has(capability)) {
-        this.emit("debug", `Moonlink.js > unsubscribeLyrics > No connected node with ${capability} capability found for player ${guildId}.`);
-        continue;
-      }
-
-      const lyricsPlugin = targetNode.plugins.get(pluginName);
-      if (lyricsPlugin && (lyricsPlugin as any).unsubscribeFromLiveLyrics && (lyricsPlugin as any).unregisterLyricsCallback) {
-        try {
-          (lyricsPlugin as any).unregisterLyricsCallback(guildId);
-          await (lyricsPlugin as any).unsubscribeFromLiveLyrics(guildId);
-          this.emit("debug", `Moonlink.js > unsubscribeLyrics > Unsubscribed from live lyrics for guild ${guildId} using ${pluginName}.`);
-          return;
-        } catch (e: any) {
-          this.emit("debug", `Moonlink.js > unsubscribeLyrics > Failed to unsubscribe with ${pluginName}: ${e.message}`);
-        }
-      }
-    }
-    this.emit("debug", `Moonlink.js > unsubscribeLyrics > No suitable plugin found to unsubscribe from live lyrics for guild ${guildId}.`);
-  }
-
-  public createPlayer(config: IPlayerConfig): Player {
-    return this.players.create(config);
-  }
-
-  public getPlayer(guildId: string): Player {
-    return this.players.get(guildId);
-  }
-
-  public hasPlayer(guildId: string): boolean {
-    return this.players.has(guildId);
-  }
-
-  public deletePlayer(guildId: string): boolean {
-    this.players.delete(guildId);
-    return true;
-  }
-
-  public getAllPlayers(): Map<string, Player> {
-    return this.players.cache;
-  }
 }

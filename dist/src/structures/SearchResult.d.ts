@@ -1,25 +1,18 @@
-import { IPlaylistInfo, Track, ILavaSearchAlbum, ILavaSearchArtist, ILavaSearchPlaylist, ILavaSearchText } from "../../index";
-export type LoadType = 'track' | 'search' | 'playlist' | 'error' | 'empty' | 'short';
-export interface SearchResultOptions {
-    query: string;
-    source?: string;
-    requester?: unknown;
-}
+import { IRESTLoadTracks } from "../typings/interfaces";
+import { LoadType } from "../typings/types";
+import { Track } from "../entities/Track";
 export declare class SearchResult {
-    query: string;
-    source: string;
-    tracks: Track[];
     loadType: LoadType;
-    playlistInfo: IPlaylistInfo;
-    error?: string;
-    albums?: ILavaSearchAlbum[];
-    artists?: ILavaSearchArtist[];
-    playlists?: ILavaSearchPlaylist[];
-    texts?: ILavaSearchText[];
-    lavasearchPluginInfo?: Object;
-    isLavaSearchResult?: boolean;
-    constructor(req: any, options: SearchResultOptions);
-    private resolveTracks;
-    getFirst(): Track | undefined;
-    getTotalDuration(): number;
+    tracks: Track[];
+    playlistName?: string;
+    exception?: {
+        message: string;
+        severity: string;
+    };
+    constructor(response: IRESTLoadTracks, requester?: any);
+    get isPlaylist(): boolean;
+    get isTrack(): boolean;
+    get isSearch(): boolean;
+    get isEmpty(): boolean;
+    get isError(): boolean;
 }
