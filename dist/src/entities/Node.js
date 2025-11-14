@@ -341,7 +341,8 @@ class Node {
         player.set("stuckCount", 0);
         player.set("exceptionCount", 0);
         player.isResuming = false;
-        this.manager.emit("trackStart", player, player.current);
+        const trackForEvent = new (Util_1.Structure.get("Track"))(payload.track, player.current?.requester);
+        this.manager.emit("trackStart", player, trackForEvent);
     }
     async handleTrackEnd(player, payload) {
         const { reason } = payload;

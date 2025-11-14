@@ -392,7 +392,8 @@ export class Node {
     player.set("exceptionCount", 0);
     player.isResuming = false;
     
-    this.manager.emit("trackStart", player, player.current);
+    const trackForEvent = new (Structure.get("Track"))(payload.track, player.current?.requester);
+    this.manager.emit("trackStart", player, trackForEvent);
   }
 
   private async handleTrackEnd(player: any, payload: any): Promise<void> {
