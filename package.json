@@ -1,8 +1,48 @@
 {
+  "name": "moonlink.js",
+  "version": "5.0.0-dev.1",
+  "description": "Moonlink.js — a new version, but seriously… does the leaf even fall? 🍃🌙",
+  "keywords": [
+    "bot",
+    "discord.js",
+    "moonlink",
+    "discord",
+    "easy",
+    "lavalink",
+    "music"
+  ],
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc"
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "node test-bot/index.js",
+    "prepare": "npm run build"
+  },
+  "homepage": "https://moonlink.js.org",
+  "bugs": {
+    "url": "https://github.com/Ecliptia/moonlink.js/issues",
+    "email": "1Lucas1apk@gmail.com"
+  },
+  "license": "Open Software License 3.0",
+  "contributors": [
+    "1Lucas1.apk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ecliptia/moonlink.js"
+  },
+  "engines": {
+    "node": ">=22.x.x"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
