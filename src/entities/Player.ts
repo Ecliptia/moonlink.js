@@ -186,7 +186,7 @@ export class Player {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Added track "${track.title}" to front of queue for guild ${this.guildId}`);
         }
 
-        if (this.queue.length === 0) {
+        if (this.queue.size === 0) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Queue is empty, cannot start playback for guild ${this.guildId}`);
             return false;
         }
@@ -308,7 +308,7 @@ export class Player {
             return played;
         }
 
-        if (!this.queue.length) {
+        if (!this.queue.size) {
             if (this.autoPlay) {
                 this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue empty, stopping player (autoPlay enabled) for guild ${this.guildId}`);
                 await this.stop();

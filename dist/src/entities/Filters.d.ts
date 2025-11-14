@@ -31,7 +31,6 @@ export declare class Filters implements IFilters {
     toggle(name: string): this;
     enableMultiple(names: string[]): this;
     disableMultiple(names: string[]): this;
-    disableAll(): this;
     private exists;
     private getFilter;
     setVolume(volume: number): this;
@@ -49,7 +48,7 @@ export declare class Filters implements IFilters {
     reset(): this;
     apply(): Promise<Player>;
     private mergeFilters;
-    private parseFFmpegString;
+    private parseString;
     private parseGain;
     private parseParam;
 }
