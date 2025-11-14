@@ -335,6 +335,8 @@ function createProgressBar(current, total, size = 20) {
     return `${progressText}${handle}${emptyProgressText}`;
 }
 
+manager.on('debug', console.log);
+
 async function sendPaginatedEmbed(interaction, title, tracks, isQueue) {
     const PAGE_SIZE = 10;
     const totalPages = Math.max(1, Math.ceil(tracks.length / PAGE_SIZE));
