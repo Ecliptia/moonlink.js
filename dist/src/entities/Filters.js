@@ -91,7 +91,7 @@ class Filters {
     loadGlobalFilters() {
         const globalFilters = this.player.manager.options.customFilters || {};
         for (const [name, value] of Object.entries(globalFilters)) {
-            const filter = typeof value === "string" ? this.parseFFmpegString(value) : value;
+            const filter = typeof value === "string" ? this.parseString(value) : value;
             this.customDefinitions.set(name, filter);
         }
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Loaded ${this.customDefinitions.size} global custom filters.`);
@@ -110,7 +110,7 @@ class Filters {
     }
     set(name, value) {
         (0, Util_1.validate)(name, n => typeof n === "string" && n.length > 0, "Filter name must be a non-empty string.");
-        const filter = typeof value === "string" ? this.parseFFmpegString(value) : value;
+        const filter = typeof value === "string" ? this.parseString(value) : value;
         this.customDefinitions.set(name, filter);
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Custom filter "${name}" defined.`);
         return this;
@@ -155,11 +155,6 @@ class Filters {
         for (const name of names) {
             this.disable(name);
         }
-        return this;
-    }
-    disableAll() {
-        this.activeFilters.clear();
-        this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters disabled.`);
         return this;
     }
     exists(name) {
@@ -279,7 +274,7 @@ class Filters {
         }
         return merged;
     }
-    parseFFmpegString(filterString) {
+    parseString(filterString) {
         const filters = {};
         const parts = filterString.split(",").map(p => p.trim());
         for (const part of parts) {
