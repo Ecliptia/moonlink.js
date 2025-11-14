@@ -1,166 +1,85 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = void 0;
-const index_1 = require("../../index");
+const Util_1 = require("../Util");
 class Rest {
     node;
-    url;
-    defaultHeaders;
     constructor(node) {
         this.node = node;
-        this.url = `http${this.node.secure ? "s" : ""}://${this.node.address}/${this.node.pathVersion}`;
-        this.defaultHeaders = {
-            Authorization: this.node.password,
-            Accept: "application/json",
-            "User-Agent": `Moonlink.js/${node.manager.version} (Malodorus/06.09.2025)`,
-            "Content-Type": "application/json",
-            "accept-encoding": "br, gzip, deflate"
-        };
     }
-    async loadTracks(source, query) {
-        return new Promise(async (resolve) => {
-            let identifier;
-            if (query.startsWith("http://") || query.startsWith("https://")) {
-                identifier = query;
+    get url() {
+        return `http${this.node.secure ? "s" : ""}://${this.node.host}:${this.node.port}`;
+    }
+    async getPlayers() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
             }
-            else if (source === "flowerytts" || source === "tts") {
-                identifier = query;
-            }
-            else {
-                identifier = `${index_1.sources[source] ?? source}:${query}`;
-            }
-            let params = new URLSearchParams({
-                identifier,
-            });
-            let request = await (0, index_1.makeRequest)(`${this.url}/loadtracks?${params}`, {
-                method: "GET",
-                headers: this.defaultHeaders,
-            });
-            return resolve(request);
         });
+        return res || null;
     }
-    async update(data) {
-        let request = await (0, index_1.makeRequest)(`${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`, {
+    async getPlayer(guildId) {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
+        return res || null;
+    }
+    async updatePlayer(guildId, data) {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "PATCH",
-            body: (0, index_1.stringifyWithReplacer)(data.data),
-            headers: this.defaultHeaders,
+            headers: {
+                "Authorization": this.node.password,
+                "Content-Type": "application/json"
+            },
+            body: data
         });
-        return request;
+        return res || null;
     }
-    async destroy(guildId) {
-        let request = await (0, index_1.makeRequest)(`${this.url}/sessions/${this.node.sessionId}/players/${guildId}`, {
+    async destroyPlayer(guildId) {
+        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "DELETE",
-            headers: this.defaultHeaders,
+            headers: {
+                "Authorization": this.node.password
+            }
         });
-        return request;
     }
-    getInfo() {
-        return (0, index_1.makeRequest)(`${this.url}/info`, {
+    async loadTracks(identifier) {
+        const params = new URLSearchParams();
+        params.append("identifier", identifier);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
-            headers: this.defaultHeaders,
+            headers: {
+                "Authorization": this.node.password
+            }
         });
+        return res || { loadType: "empty", data: {} };
     }
-    getStats() {
-        return (0, index_1.makeRequest)(`${this.url}/stats`, {
+    async getLyrics(trackId) {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/lyrics/${trackId}`, {
             method: "GET",
-            headers: this.defaultHeaders,
+            headers: {
+                "Authorization": this.node.password
+            }
         });
+        return res || null;
     }
-    getVersion() {
-        return (0, index_1.makeRequest)(`http${this.node.secure ? "s" : ""}://${this.node.address}/version`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    getLyrics(data) {
-        return (0, index_1.makeRequest)(`${this.url}/loadlyrics?encodedTrack=${encodeURIComponent(data.encoded)}`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async updateSession(sessionId, data) {
-        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}`, {
+    async updateSession(resuming, timeout) {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}`, {
             method: "PATCH",
-            body: (0, index_1.stringifyWithReplacer)(data),
-            headers: this.defaultHeaders,
+            headers: {
+                "Authorization": this.node.password,
+                "Content-Type": "application/json"
+            },
+            body: {
+                resuming,
+                timeout
+            }
         });
-    }
-    async decodeTrack(encodedTrack) {
-        return (0, index_1.makeRequest)(`${this.url}/decodetrack?encodedTrack=${encodeURIComponent(encodedTrack)}`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async decodeTracks(encodedTracks) {
-        return (0, index_1.makeRequest)(`${this.url}/decodetracks`, {
-            method: "POST",
-            body: (0, index_1.stringifyWithReplacer)(encodedTracks),
-            headers: this.defaultHeaders,
-        });
-    }
-    async getPlayers(sessionId) {
-        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}/players`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async getPlayer(sessionId, guildId) {
-        return (0, index_1.makeRequest)(`${this.url}/sessions/${sessionId}/players/${guildId}`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async getRoutePlannerStatus() {
-        return (0, index_1.makeRequest)(`${this.url}/routeplanner/status`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async unmarkFailedAddress(address) {
-        return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/address`, {
-            method: "POST",
-            body: (0, index_1.stringifyWithReplacer)({ address }),
-            headers: this.defaultHeaders,
-        });
-    }
-    async unmarkAllFailedAddresses() {
-        return (0, index_1.makeRequest)(`${this.url}/routeplanner/free/all`, {
-            method: "POST",
-            headers: this.defaultHeaders,
-        });
-    }
-    async patch(path, data) {
-        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
-            method: "PATCH",
-            body: (0, index_1.stringifyWithReplacer)(data),
-            headers: this.defaultHeaders,
-        });
-    }
-    async get(path) {
-        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
-            method: "GET",
-            headers: this.defaultHeaders,
-        });
-    }
-    async put(path, data) {
-        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
-            method: "PUT",
-            body: (0, index_1.stringifyWithReplacer)(data),
-            headers: this.defaultHeaders,
-        });
-    }
-    async post(path, data) {
-        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
-            method: "POST",
-            body: data ? (0, index_1.stringifyWithReplacer)(data) : undefined,
-            headers: this.defaultHeaders,
-        });
-    }
-    async delete(path) {
-        return (0, index_1.makeRequest)(`${this.url}/${path}`, {
-            method: "DELETE",
-            headers: this.defaultHeaders,
-        });
+        return res || null;
     }
 }
 exports.Rest = Rest;

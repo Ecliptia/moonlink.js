@@ -1,239 +1,406 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Filters = void 0;
-const index_1 = require("../../index");
+const Util_1 = require("../Util");
 class Filters {
+    volume;
+    equalizer;
+    karaoke;
+    timescale;
+    tremolo;
+    vibrato;
+    rotation;
+    distortion;
+    channelMix;
+    lowPass;
+    pluginFilters;
+    activeFilters = new Set();
+    customDefinitions = new Map();
     player;
-    manager;
-    rest;
-    filters;
+    static BUILTIN_FILTERS = {
+        "8d": { rotation: { rotationHz: 0.2 } },
+        "nightcore": { timescale: { speed: 1.2, pitch: 1.2, rate: 1 } },
+        "vaporwave": { timescale: { speed: 0.8, pitch: 0.8, rate: 1 } },
+        "chipmunk": { timescale: { speed: 1, pitch: 1.5, rate: 1 } },
+        "darthvader": { timescale: { speed: 1, pitch: 0.5, rate: 1 } },
+        "daycore": { timescale: { speed: 0.8, pitch: 0.8, rate: 1 } },
+        "double-time": { timescale: { speed: 1.5, pitch: 1, rate: 1 } },
+        "karaoke": { karaoke: { level: 1.0, monoLevel: 1.0, filterBand: 220.0, filterWidth: 100.0 } },
+        "soft": {
+            equalizer: [
+                { band: 0, gain: 0 }, { band: 1, gain: 0 }, { band: 2, gain: 0 },
+                { band: 3, gain: 0 }, { band: 4, gain: 0 }, { band: 5, gain: 0 },
+                { band: 6, gain: 0 }, { band: 7, gain: 0 }, { band: 8, gain: -0.25 },
+                { band: 9, gain: -0.25 }, { band: 10, gain: -0.25 }, { band: 11, gain: -0.25 },
+                { band: 12, gain: -0.25 }, { band: 13, gain: -0.25 }, { band: 14, gain: -0.25 }
+            ]
+        },
+        "pop": {
+            equalizer: [
+                { band: 0, gain: 0.65 }, { band: 1, gain: 0.45 }, { band: 2, gain: -0.45 },
+                { band: 3, gain: -0.65 }, { band: 4, gain: -0.35 }, { band: 5, gain: 0.45 },
+                { band: 6, gain: 0.55 }, { band: 7, gain: 0.6 }, { band: 8, gain: 0.6 },
+                { band: 9, gain: 0.6 }, { band: 10, gain: 0 }, { band: 11, gain: 0 },
+                { band: 12, gain: 0 }, { band: 13, gain: 0 }, { band: 14, gain: 0 }
+            ]
+        },
+        "treblebass": {
+            equalizer: [
+                { band: 0, gain: 0.6 }, { band: 1, gain: 0.67 }, { band: 2, gain: 0.67 },
+                { band: 3, gain: 0 }, { band: 4, gain: -0.5 }, { band: 5, gain: 0.15 },
+                { band: 6, gain: -0.45 }, { band: 7, gain: 0.23 }, { band: 8, gain: 0.35 },
+                { band: 9, gain: 0.45 }, { band: 10, gain: 0.55 }, { band: 11, gain: 0.6 },
+                { band: 12, gain: 0.55 }, { band: 13, gain: 0 }, { band: 14, gain: 0 }
+            ]
+        },
+        "bassboost-low": {
+            equalizer: [
+                { band: 0, gain: 0.2 }, { band: 1, gain: 0.15 }, { band: 2, gain: 0.1 },
+                { band: 3, gain: 0.05 }, { band: 4, gain: 0.0 }, { band: 5, gain: -0.05 },
+                { band: 6, gain: -0.1 }, { band: 7, gain: -0.1 }, { band: 8, gain: -0.1 },
+                { band: 9, gain: -0.1 }, { band: 10, gain: -0.1 }, { band: 11, gain: -0.1 },
+                { band: 12, gain: -0.1 }, { band: 13, gain: -0.1 }, { band: 14, gain: -0.1 }
+            ]
+        },
+        "bassboost-medium": {
+            equalizer: [
+                { band: 0, gain: 0.4 }, { band: 1, gain: 0.3 }, { band: 2, gain: 0.2 },
+                { band: 3, gain: 0.1 }, { band: 4, gain: 0.0 }, { band: 5, gain: -0.05 },
+                { band: 6, gain: -0.1 }, { band: 7, gain: -0.1 }, { band: 8, gain: -0.1 },
+                { band: 9, gain: -0.1 }, { band: 10, gain: -0.1 }, { band: 11, gain: -0.1 },
+                { band: 12, gain: -0.1 }, { band: 13, gain: -0.1 }, { band: 14, gain: -0.1 }
+            ]
+        },
+        "bassboost-high": {
+            equalizer: [
+                { band: 0, gain: 0.6 }, { band: 1, gain: 0.45 }, { band: 2, gain: 0.3 },
+                { band: 3, gain: 0.15 }, { band: 4, gain: 0.0 }, { band: 5, gain: -0.05 },
+                { band: 6, gain: -0.1 }, { band: 7, gain: -0.1 }, { band: 8, gain: -0.1 },
+                { band: 9, gain: -0.1 }, { band: 10, gain: -0.1 }, { band: 11, gain: -0.1 },
+                { band: 12, gain: -0.1 }, { band: 13, gain: -0.1 }, { band: 14, gain: -0.1 }
+            ]
+        },
+        "earrape": {
+            equalizer: Array.from({ length: 15 }, (_, i) => ({ band: i, gain: 0.25 }))
+        }
+    };
     constructor(player) {
         this.player = player;
-        this.rest = player.node.rest;
-        this.manager = player.manager;
-        this.filters = {
-            volume: player.get("Fvolume") || undefined,
-            equalizer: player.get("equalizer") || undefined,
-            karaoke: player.get("karaoke") || undefined,
-            timescale: player.get("timescale") || undefined,
-            tremolo: player.get("tremolo") || undefined,
-            vibrato: player.get("vibrato") || undefined,
-            rotation: player.get("rotation") || undefined,
-            distortion: player.get("distortion") || undefined,
-            channelMix: player.get("channelMix") || undefined,
-            lowPass: player.get("lowPass") || undefined,
-            highPass: player.get("highPass") || undefined,
-            lowPassDSPX: player.get("lowPassDSPX") || undefined,
-            normalization: player.get("normalization") || undefined,
-            echo: player.get("echo") || undefined,
-        };
+        this.loadGlobalFilters();
     }
-    setFilter(filterName, value) {
-        this.player.set(filterName, value);
-        this.filters[filterName] = value;
-        this.updateFiltersFromRest();
+    loadGlobalFilters() {
+        const globalFilters = this.player.manager.options.customFilters || {};
+        for (const [name, value] of Object.entries(globalFilters)) {
+            const filter = typeof value === "string" ? this.parseFFmpegString(value) : value;
+            this.customDefinitions.set(name, filter);
+        }
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> Loaded ${this.customDefinitions.size} global custom filters.`);
+    }
+    get available() {
+        return [...Object.keys(Filters.BUILTIN_FILTERS), ...this.customDefinitions.keys()];
+    }
+    get enabled() {
+        return [...this.activeFilters];
+    }
+    get active() {
+        return new Set(this.activeFilters);
+    }
+    list() {
+        return this.available;
+    }
+    set(name, value) {
+        (0, Util_1.validate)(name, n => typeof n === "string" && n.length > 0, "Filter name must be a non-empty string.");
+        const filter = typeof value === "string" ? this.parseFFmpegString(value) : value;
+        this.customDefinitions.set(name, filter);
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> Custom filter "${name}" defined.`);
         return this;
+    }
+    define(name, value) {
+        return this.set(name, value);
+    }
+    has(name) {
+        return this.activeFilters.has(name);
+    }
+    isActive(name) {
+        return this.activeFilters.has(name);
+    }
+    enable(name) {
+        if (!this.exists(name)) {
+            throw new Error(`Filter "${name}" does not exist. Available filters: ${this.available.join(", ")}`);
+        }
+        this.activeFilters.add(name);
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" enabled.`);
+        return this;
+    }
+    disable(name) {
+        this.activeFilters.delete(name);
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" disabled.`);
+        return this;
+    }
+    toggle(name) {
+        if (this.has(name)) {
+            return this.disable(name);
+        }
+        else {
+            return this.enable(name);
+        }
+    }
+    enableMultiple(names) {
+        for (const name of names) {
+            this.enable(name);
+        }
+        return this;
+    }
+    disableMultiple(names) {
+        for (const name of names) {
+            this.disable(name);
+        }
+        return this;
+    }
+    disableAll() {
+        this.activeFilters.clear();
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters disabled.`);
+        return this;
+    }
+    exists(name) {
+        return name in Filters.BUILTIN_FILTERS || this.customDefinitions.has(name);
+    }
+    getFilter(name) {
+        return Filters.BUILTIN_FILTERS[name] || this.customDefinitions.get(name);
     }
     setVolume(volume) {
-        (0, index_1.validateProperty)(volume, (value) => value === undefined || (typeof value === 'number' && value >= 0 && value <= 100), "Moonlink.js > Filters#setVolume - volume not a number or out of range");
-        return this.setFilter("volume", volume);
-    }
-    setEqualizer(equalizer) {
-        (0, index_1.validateProperty)(equalizer, (value) => {
-            if (value === undefined)
-                return true;
-            if (!Array.isArray(value))
-                return false;
-            return value.every(eq => typeof eq.band === 'number' &&
-                typeof eq.gain === 'number');
-        }, "Moonlink.js > Filters#setEqualizer - equalizer not an array of Equalizer objects or undefined");
-        return this.setFilter("equalizer", equalizer);
-    }
-    setKaraoke(karaoke) {
-        (0, index_1.validateProperty)(karaoke, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { level, monoLevel, filterBand, filterWidth } = value;
-            return ((level === undefined || typeof level === 'number') &&
-                (monoLevel === undefined || typeof monoLevel === 'number') &&
-                (filterBand === undefined || typeof filterBand === 'number') &&
-                (filterWidth === undefined || typeof filterWidth === 'number'));
-        }, "Moonlink.js > Filters#setKaraoke - karaoke not a valid Karaoke object or undefined");
-        return this.setFilter("karaoke", karaoke);
-    }
-    setTimescale(timescale) {
-        (0, index_1.validateProperty)(timescale, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { speed, pitch, rate } = value;
-            return ((speed === undefined || typeof speed === 'number') &&
-                (pitch === undefined || typeof pitch === 'number') &&
-                (rate === undefined || typeof rate === 'number'));
-        }, "Moonlink.js > Filters#setTimescale - timescale not a valid Timescale object or undefined");
-        return this.setFilter("timescale", timescale);
-    }
-    setTremolo(tremolo) {
-        (0, index_1.validateProperty)(tremolo, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { frequency, depth } = value;
-            return ((frequency === undefined || typeof frequency === 'number') &&
-                (depth === undefined || typeof depth === 'number'));
-        }, "Moonlink.js > Filters#setTremolo - tremolo not a valid Tremolo object or undefined");
-        return this.setFilter("tremolo", tremolo);
-    }
-    setVibrato(vibrato) {
-        (0, index_1.validateProperty)(vibrato, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { frequency, depth } = value;
-            return ((frequency === undefined || typeof frequency === 'number') &&
-                (depth === undefined || typeof depth === 'number'));
-        }, "Moonlink.js > Filters#setVibrato - vibrato not a valid Vibrato object or undefined");
-        return this.setFilter("vibrato", vibrato);
-    }
-    setRotation(rotation) {
-        (0, index_1.validateProperty)(rotation, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { rotationHz } = value;
-            return (rotationHz === undefined || typeof rotationHz === 'number');
-        }, "Moonlink.js > Filters#setRotation - rotation not a valid Rotation object or undefined");
-        return this.setFilter("rotation", rotation);
-    }
-    setDistortion(distortion) {
-        (0, index_1.validateProperty)(distortion, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { sinOffset, sinScale, cosOffset, cosScale, tanOffset, tanScale, offset, scale } = value;
-            return ((sinOffset === undefined || typeof sinOffset === 'number') &&
-                (sinScale === undefined || typeof sinScale === 'number') &&
-                (cosOffset === undefined || typeof cosOffset === 'number') &&
-                (cosScale === undefined || typeof cosScale === 'number') &&
-                (tanOffset === undefined || typeof tanOffset === 'number') &&
-                (tanScale === undefined || typeof tanScale === 'number') &&
-                (offset === undefined || typeof offset === 'number') &&
-                (scale === undefined || typeof scale === 'number'));
-        }, "Moonlink.js > Filters#setDistortion - distortion not a valid Distortion object or undefined");
-        return this.setFilter("distortion", distortion);
-    }
-    setChannelMix(channelMix) {
-        (0, index_1.validateProperty)(channelMix, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { leftToLeft, leftToRight, rightToLeft, rightToRight } = value;
-            return ((leftToLeft === undefined || typeof leftToLeft === 'number') &&
-                (leftToRight === undefined || typeof leftToRight === 'number') &&
-                (rightToLeft === undefined || typeof rightToLeft === 'number') &&
-                (rightToRight === undefined || typeof rightToRight === 'number'));
-        }, "Moonlink.js > Filters#setChannelMix - channelMix not a valid ChannelMix object or undefined");
-        return this.setFilter("channelMix", channelMix);
-    }
-    setLowPass(lowPass) {
-        (0, index_1.validateProperty)(lowPass, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { smoothing } = value;
-            return (smoothing === undefined || typeof smoothing === 'number');
-        }, "Moonlink.js > Filters#setLowPass - lowPass not a valid LowPass object or undefined");
-        return this.setFilter("lowPass", lowPass);
-    }
-    setHighPass(highPass) {
-        if (highPass !== undefined && !this.player.node.capabilities.has("lavadspx")) {
-            this.manager.emit("debug", `Moonlink.js > Filters#setHighPass - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
-            throw new Error("Node does not support LavaDSPX filters.");
-        }
-        (0, index_1.validateProperty)(highPass, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { cutoffFrequency, boostFactor } = value;
-            return ((cutoffFrequency === undefined || (typeof cutoffFrequency === 'number' && cutoffFrequency > 0)) &&
-                (boostFactor === undefined || (typeof boostFactor === 'number' && boostFactor > 0.0)));
-        }, "Moonlink.js > Filters#setHighPass - highPass not a valid HighPass object or undefined");
-        return this.setFilter("highPass", highPass);
-    }
-    setLowPassDSPX(lowPassDSPX) {
-        if (lowPassDSPX !== undefined && !this.player.node.capabilities.has("lavadspx")) {
-            this.manager.emit("debug", `Moonlink.js > Filters#setLowPassDSPX - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
-            throw new Error("Node does not support LavaDSPX filters.");
-        }
-        (0, index_1.validateProperty)(lowPassDSPX, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { cutoffFrequency, boostFactor } = value;
-            return ((cutoffFrequency === undefined || (typeof cutoffFrequency === 'number' && cutoffFrequency > 0)) &&
-                (boostFactor === undefined || (typeof boostFactor === 'number' && boostFactor > 0.0)));
-        }, "Moonlink.js > Filters#setLowPassDSPX - lowPassDSPX not a valid LowPassDSPX object or undefined");
-        return this.setFilter("lowPassDSPX", lowPassDSPX);
-    }
-    setNormalization(normalization) {
-        if (normalization !== undefined && !this.player.node.capabilities.has("lavadspx")) {
-            this.manager.emit("debug", `Moonlink.js > Filters#setNormalization - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
-            throw new Error("Node does not support LavaDSPX filters.");
-        }
-        (0, index_1.validateProperty)(normalization, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { maxAmplitude, adaptive } = value;
-            return ((maxAmplitude === undefined || (typeof maxAmplitude === 'number' && maxAmplitude >= 0.0 && maxAmplitude <= 1.0)) &&
-                (adaptive === undefined || typeof adaptive === 'boolean'));
-        }, "Moonlink.js > Filters#setNormalization - normalization not a valid Normalization object or undefined");
-        return this.setFilter("normalization", normalization);
-    }
-    setEcho(echo) {
-        if (echo !== undefined && !this.player.node.capabilities.has("lavadspx")) {
-            this.manager.emit("debug", `Moonlink.js > Filters#setEcho - Node ${this.player.node.identifier} does not support LavaDSPX filters.`);
-            throw new Error("Node does not support LavaDSPX filters.");
-        }
-        (0, index_1.validateProperty)(echo, (value) => {
-            if (value === undefined)
-                return true;
-            if (typeof value !== 'object')
-                return false;
-            const { echoLength, decay } = value;
-            return ((echoLength === undefined || (typeof echoLength === 'number' && echoLength > 0.0)) &&
-                (decay === undefined || (typeof decay === 'number' && decay >= 0.0 && decay <= 1.0)));
-        }, "Moonlink.js > Filters#setEcho - echo not a valid Echo object or undefined");
-        return this.setFilter("echo", echo);
-    }
-    resetFilters() {
-        Object.keys(this.filters).forEach(key => {
-            this.setFilter(key, undefined);
-        });
+        (0, Util_1.validate)(volume, v => typeof v === "number" && !isNaN(v), "Volume must be a number.");
+        this.volume = Math.max(0, Math.min(volume, 1000));
         return this;
     }
-    async updateFiltersFromRest() {
-        const dataToUpdate = {
-            guildId: this.player.guildId,
-            data: {
-                filters: this.filters
+    setEqualizer(bands) {
+        this.equalizer = bands;
+        return this;
+    }
+    setKaraoke(karaoke) {
+        this.karaoke = karaoke;
+        return this;
+    }
+    setTimescale(timescale) {
+        this.timescale = timescale;
+        return this;
+    }
+    setTremolo(tremolo) {
+        this.tremolo = tremolo;
+        return this;
+    }
+    setVibrato(vibrato) {
+        this.vibrato = vibrato;
+        return this;
+    }
+    setRotation(rotation) {
+        this.rotation = rotation;
+        return this;
+    }
+    setDistortion(distortion) {
+        this.distortion = distortion;
+        return this;
+    }
+    setChannelMix(channelMix) {
+        this.channelMix = channelMix;
+        return this;
+    }
+    setLowPass(lowPass) {
+        this.lowPass = lowPass;
+        return this;
+    }
+    setPluginFilters(filters) {
+        this.pluginFilters = filters;
+        return this;
+    }
+    clear() {
+        this.volume = undefined;
+        this.equalizer = undefined;
+        this.karaoke = undefined;
+        this.timescale = undefined;
+        this.tremolo = undefined;
+        this.vibrato = undefined;
+        this.rotation = undefined;
+        this.distortion = undefined;
+        this.channelMix = undefined;
+        this.lowPass = undefined;
+        this.pluginFilters = undefined;
+        this.activeFilters.clear();
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters cleared.`);
+        return this;
+    }
+    reset() {
+        return this.clear();
+    }
+    async apply() {
+        let payload = {};
+        for (const name of this.activeFilters) {
+            const filter = this.getFilter(name);
+            if (filter) {
+                payload = this.mergeFilters(payload, filter);
             }
+        }
+        const directFilters = {
+            volume: this.volume,
+            equalizer: this.equalizer,
+            karaoke: this.karaoke,
+            timescale: this.timescale,
+            tremolo: this.tremolo,
+            vibrato: this.vibrato,
+            rotation: this.rotation,
+            distortion: this.distortion,
+            channelMix: this.channelMix,
+            lowPass: this.lowPass,
+            pluginFilters: this.pluginFilters,
         };
-        await this.rest.update(dataToUpdate);
-        this.manager.emit("filtersUpdate", this.player, this);
-        return true;
+        for (const key in directFilters) {
+            if (directFilters[key] !== undefined) {
+                payload[key] = directFilters[key];
+            }
+        }
+        this.player.manager.emit("debug", `Moonlink.js > Filters >> Applying filters: ${JSON.stringify(payload)}`);
+        const updatedPlayer = await this.player.node.rest.updatePlayer(this.player.guildId, { filters: payload });
+        if (updatedPlayer) {
+            this.player.volume = updatedPlayer.volume;
+        }
+        return this.player;
+    }
+    mergeFilters(base, addon) {
+        const merged = { ...base };
+        for (const key in addon) {
+            if (addon[key] !== undefined) {
+                if (key === "equalizer" && base.equalizer) {
+                    merged.equalizer = [...base.equalizer, ...addon.equalizer];
+                }
+                else {
+                    merged[key] = addon[key];
+                }
+            }
+        }
+        return merged;
+    }
+    parseFFmpegString(filterString) {
+        const filters = {};
+        const parts = filterString.split(",").map(p => p.trim());
+        for (const part of parts) {
+            if (!part)
+                continue;
+            const [name, ...valueParts] = part.split("=");
+            const value = valueParts.join("=");
+            switch (name.toLowerCase()) {
+                case "bass": {
+                    const gain = this.parseGain(value);
+                    filters.equalizer = Array.from({ length: 6 }, (_, i) => ({ band: i, gain }));
+                    break;
+                }
+                case "treble": {
+                    const gain = this.parseGain(value);
+                    filters.equalizer = Array.from({ length: 6 }, (_, i) => ({ band: i + 7, gain }));
+                    break;
+                }
+                case "vibrato": {
+                    const frequency = this.parseParam(value, "f", 2);
+                    const depth = this.parseParam(value, "d", 0.5);
+                    filters.vibrato = {
+                        frequency: Math.max(0, Math.min(14, frequency)),
+                        depth: Math.max(0, Math.min(1, depth))
+                    };
+                    break;
+                }
+                case "tremolo": {
+                    const frequency = this.parseParam(value, "f", 2);
+                    const depth = this.parseParam(value, "d", 0.5);
+                    filters.tremolo = {
+                        frequency: Math.max(0, frequency),
+                        depth: Math.max(0, Math.min(1, depth))
+                    };
+                    break;
+                }
+                case "atempo":
+                case "speed": {
+                    const speed = parseFloat(value) || 1;
+                    filters.timescale = { ...filters.timescale, speed: Math.max(0.1, Math.min(3, speed)) };
+                    break;
+                }
+                case "pitch": {
+                    const pitch = parseFloat(value) || 1;
+                    filters.timescale = { ...filters.timescale, pitch: Math.max(0.1, Math.min(3, pitch)) };
+                    break;
+                }
+                case "rate": {
+                    const rate = parseFloat(value) || 1;
+                    filters.timescale = { ...filters.timescale, rate: Math.max(0.1, Math.min(3, rate)) };
+                    break;
+                }
+                case "rubberband": {
+                    const pitch = this.parseParam(value, "pitch", 1);
+                    filters.timescale = { ...filters.timescale, pitch: Math.max(0.1, Math.min(3, pitch)) };
+                    break;
+                }
+                case "rotation":
+                case "8d": {
+                    const rotationHz = parseFloat(value) || 0.2;
+                    filters.rotation = { rotationHz };
+                    break;
+                }
+                case "karaoke": {
+                    filters.karaoke = {
+                        level: this.parseParam(value, "level", 1.0),
+                        monoLevel: this.parseParam(value, "monoLevel", 1.0),
+                        filterBand: this.parseParam(value, "filterBand", 220.0),
+                        filterWidth: this.parseParam(value, "filterWidth", 100.0)
+                    };
+                    break;
+                }
+                case "lowpass": {
+                    const smoothing = parseFloat(value) || 20;
+                    filters.lowPass = { smoothing: Math.max(1, smoothing) };
+                    break;
+                }
+                case "channelmix": {
+                    filters.channelMix = {
+                        leftToLeft: this.parseParam(value, "leftToLeft", 1),
+                        leftToRight: this.parseParam(value, "leftToRight", 0),
+                        rightToLeft: this.parseParam(value, "rightToLeft", 0),
+                        rightToRight: this.parseParam(value, "rightToRight", 1)
+                    };
+                    break;
+                }
+                case "distortion": {
+                    filters.distortion = {
+                        sinOffset: this.parseParam(value, "sinOffset", 0),
+                        sinScale: this.parseParam(value, "sinScale", 1),
+                        cosOffset: this.parseParam(value, "cosOffset", 0),
+                        cosScale: this.parseParam(value, "cosScale", 1),
+                        tanOffset: this.parseParam(value, "tanOffset", 0),
+                        tanScale: this.parseParam(value, "tanScale", 1),
+                        offset: this.parseParam(value, "offset", 0),
+                        scale: this.parseParam(value, "scale", 1)
+                    };
+                    break;
+                }
+                default: {
+                    if (!filters.pluginFilters)
+                        filters.pluginFilters = {};
+                    filters.pluginFilters[name] = value || true;
+                    break;
+                }
+            }
+        }
+        return filters;
+    }
+    parseGain(value) {
+        const match = value.match(/g=(-?\d+\.?\d*)/);
+        if (match) {
+            const g = parseFloat(match[1]);
+            return Math.max(-0.25, Math.min(1.0, g * 0.05));
+        }
+        return 0;
+    }
+    parseParam(value, param, defaultValue) {
+        const regex = new RegExp(`${param}=(-?\\d+\\.?\\d*)`);
+        const match = value.match(regex);
+        return match ? parseFloat(match[1]) : defaultValue;
     }
 }
 exports.Filters = Filters;

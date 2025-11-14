@@ -1,54 +1,14 @@
 {
-  "name": "moonlink.js",
-  "version": "4.60.18",
-  "description": "Moonlink.js 🌙🌟 is a stable and feature-rich Lavalink client for Node.js, designed to make building Discord music bots easier 🎵. With an intuitive and easy-to-use API, it provides seamless integration with the Lavalink server, allowing you to manage and control audio playback efficiently and at scale 🚀🎧.",
-  "keywords": [
-    "bot",
-    "discord.js",
-    "moonlink",
-    "discord",
-    "easy",
-    "lavalink",
-    "music"
-  ],
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
-  },
   "scripts": {
-    "start": "npm run build && npm run test",
-    "build": "tsc",
-    "test": "node testBot/bot.js"
-  },
-  "homepage": "https://moonlink.js.org",
-  "bugs": {
-    "url": "https://github.com/Ecliptia/moonlink.js/issues",
-    "email": "1Lucas1apk@gmail.com"
-  },
-  "license": "Open Software License 3.0",
-  "contributors": [
-    "1Lucas1.apk"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Ecliptia/moonlink.js"
-  },
-  "engines": {
-    "node": ">=22.x.x"
+    "build": "tsc"
   },
   "devDependencies": {
-    "@types/node": "^22.10.5",
-    "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5",
-    "get-image-colors": "^4.0.1",
-    "mongoose": "^8.16.3",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.10.0",
+    "typescript": "^5.5.4"
   },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
+  "dependencies": {
+    "lmdb": "^3.4.4"
+  }
 }

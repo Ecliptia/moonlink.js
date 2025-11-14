@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-export default class WebSocket extends EventEmitter {
+export declare class WebSocket extends EventEmitter {
     private url;
     private headers;
     private socket;
@@ -8,7 +8,6 @@ export default class WebSocket extends EventEmitter {
     private buffer;
     private fragmentedPayload;
     private fragmentedOpCode;
-    private readonly MAX_PAYLOAD_SIZE;
     private redirectCount;
     private readonly MAX_REDIRECTS;
     constructor(url: string, options?: {

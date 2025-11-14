@@ -1,9 +1,0 @@
-{
-  "imports": {
-    "discord.js": "npm:discord.js",
-    "dotenv": "npm:dotenv",
-    "path": "node:path",
-    "fs": "node:fs",
-    "ws": "npm:ws@8.14.2"
-  }
-} 

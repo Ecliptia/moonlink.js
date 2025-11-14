@@ -1,94 +1,69 @@
-import { IPlaylistInfo, Track, ILavaSearchAlbum, ILavaSearchArtist, ILavaSearchPlaylist, ILavaSearchText, IRESTLoadTracks, ILavaSearchResultData } from "../../index";
-
-export type LoadType = 'track' | 'search' | 'playlist' | 'error' | 'empty' | 'short';
-
-export interface SearchResultOptions {
-  query: string;
-  source?: string;
-  requester?: unknown;
-}
+import { IRESTLoadTracks } from "../typings/interfaces";
+import { LoadType } from "../typings/types";
+import { Track } from "../entities/Track";
 
 export class SearchResult {
-  public query: string;
-  public source: string;
-  public tracks: Track[];
-  public loadType: LoadType;
-  public playlistInfo: IPlaylistInfo;
-  public error?: string;
-  public albums?: ILavaSearchAlbum[];
-  public artists?: ILavaSearchArtist[];
-  public playlists?: ILavaSearchPlaylist[];
-  public texts?: ILavaSearchText[];
-  public lavasearchPluginInfo?: Object;
-  public isLavaSearchResult?: boolean;
+    public loadType: LoadType;
+    public tracks: Track[];
+    public playlistName?: string;
+    public exception?: {
+        message: string;
+        severity: string;
+    };
 
-  constructor(req: any, options: SearchResultOptions) {
-    this.query = options.query;
-    this.source = options.source || "unknown";
+    constructor(response: IRESTLoadTracks, requester?: any) {
+        switch (response.loadType) {
+            case "track":
+                this.loadType = LoadType.TRACK;
+                this.tracks = [new Track(response.data, requester)];
+                break;
 
-    if (req?.albums || req?.artists || req?.playlists || req?.texts) {
-      this.isLavaSearchResult = true;
-      this.loadType = "search";
+            case "playlist":
+                this.loadType = LoadType.PLAYLIST;
+                this.tracks = response.data.tracks.map(track => new Track(track, requester));
+                this.playlistName = response.data.info.name;
+                break;
 
-      if (req.tracks) {
-        this.tracks = req.tracks.map((data) => new Track(data, options.requester));
-      } else {
-        this.tracks = [];
-      }
-      this.albums = req.albums;
-      this.artists = req.artists;
-      this.playlists = req.playlists;
-      this.texts = req.texts;
-      this.lavasearchPluginInfo = req.plugin;
-      if (this.tracks.length > 0 && !this.albums && !this.artists && !this.playlists && !this.texts) {
-        this.loadType = "track";
-      } else if (this.playlists && this.playlists.length > 0) {
-        this.loadType = "playlist";
-        this.playlistInfo = this.playlists[0].info;
-      }
+            case "search":
+                this.loadType = LoadType.SEARCH;
+                this.tracks = response.data.map(track => new Track(track, requester));
+                break;
 
-    } else {
-      this.isLavaSearchResult = false;
-      this.loadType = req.loadType;
-      this.tracks = this.resolveTracks(req, options.requester);
+            case "empty":
+                this.loadType = LoadType.EMPTY;
+                this.tracks = [];
+                break;
+
+            case "error":
+                this.loadType = LoadType.ERROR;
+                this.tracks = [];
+                this.exception = response.data;
+                break;
+            
+            default:
+                this.loadType = LoadType.EMPTY;
+                this.tracks = [];
+                break;
+        }
     }
 
-    if (req.loadType === "error" || req.loadType === "empty") {
-      this.error = req.data;
-    }
-  }
-
-  private resolveTracks(req: any, requester: unknown): Track[] {
-    let rawTracks: any[] = [];
-    switch (req.loadType) {
-      case "track":
-      case "short":
-        rawTracks = [req.data];
-        break;
-      case "search":
-        rawTracks = req.data;
-        break;
-      case "playlist":
-        rawTracks = req.data.tracks;
-        this.playlistInfo = {
-            duration: req.data.tracks.reduce(
-                (acc, cur) => acc + cur.info.length,
-                0,
-              ),
-            name: req.data.info.name,
-            selectedTrack: req.data.info.selectedTrack,
-        };
-        break;
+    public get isPlaylist(): boolean {
+        return this.loadType === LoadType.PLAYLIST;
     }
 
-    return rawTracks.map((data) => new Track(data, requester));
-  }
-  
-  public getFirst(): Track | undefined {
-    return this.tracks[0];
-  }
+    public get isTrack(): boolean {
+        return this.loadType === LoadType.TRACK;
+    }
 
-  public getTotalDuration(): number {
-    return this.tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
-  }
+    public get isSearch(): boolean {
+        return this.loadType === LoadType.SEARCH;
+    }
+
+    public get isEmpty(): boolean {
+        return this.loadType === LoadType.EMPTY;
+    }
+
+    public get isError(): boolean {
+        return this.loadType === LoadType.ERROR;
+    }
 }

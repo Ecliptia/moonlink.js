@@ -1,1 +1,0 @@
-{"version":3,"file":"GoogleCloudTTSPlugin.js","sourceRoot":"","sources":["../../../src/plugins/GoogleCloudTTSPlugin.ts"],"names":[],"mappings":";;;AAAA,qDAAkD;AAGlD,MAAa,oBAAqB,SAAQ,+BAAc;IAC7C,IAAI,GAAW,kBAAkB,CAAC;IAClC,YAAY,GAAa,CAAC,YAAY,CAAC,CAAC;IAExC,IAAI,CAAC,IAAU,IAAS,CAAC;IAEzB,MAAM,CAAC,IAAU,IAAS,CAAC;CACrC;AAPD,oDAOC"}
