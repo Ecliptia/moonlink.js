@@ -8,7 +8,7 @@ export class LMDBDatabase {
     private readonly dbPath: string;
 
     constructor(options: IDatabaseOptions) {
-        this.dbPath = options.path ? path.resolve(options.path) : path.join(process.cwd(), "src", "Datastore");
+        this.dbPath = options.path ? path.resolve(options.path) : path.join(process.cwd(), "src", "datastore");
        
         if (!fs.existsSync(this.dbPath)) {
             try {

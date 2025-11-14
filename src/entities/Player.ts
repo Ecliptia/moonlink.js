@@ -120,7 +120,7 @@ export class Player {
             this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated full player state for guild ${this.guildId}.`);
         } else {
             this.setNestedProperty(playerState, path, data);
-            this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated path '${path}' for guild ${this.guildId}. New value: ${JSON.stringify(data)}.`);
+            if (path != 'data') this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated path '${path}' for guild ${this.guildId}. New value: ${JSON.stringify(data)}.`);
         }
         await this.manager.database.set(`player-${this.guildId}`, playerState);
     }
