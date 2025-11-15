@@ -1,4 +1,4 @@
-import { IDatabaseOptions } from "../typings/interfaces";
+import { IDatabaseOptions } from "../typings/Interfaces";
 import { MemoryDatabase } from "../database/MemoryDatabase";
 import { LMDBDatabase } from "../database/LMDBDatabase";
 

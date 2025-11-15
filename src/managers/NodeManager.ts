@@ -1,5 +1,5 @@
 import { Manager } from "../core/Manager";
-import { IManagerNodeConfig } from "../typings/interfaces";
+import { IManagerNodeConfig } from "../typings/Interfaces";
 import { NodeSortStrategy } from "../typings/types";
 import { Structure, validate, generateUUID } from "../Util";
 

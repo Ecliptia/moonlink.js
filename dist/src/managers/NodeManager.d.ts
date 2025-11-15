@@ -1,5 +1,5 @@
 import { Manager } from "../core/Manager";
-import { IManagerNodeConfig } from "../typings/interfaces";
+import { IManagerNodeConfig } from "../typings/Interfaces";
 export declare class NodeManager {
     readonly manager: Manager;
     readonly nodes: Map<string, any>;

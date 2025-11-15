@@ -1,4 +1,4 @@
-import { ITrack } from "../typings/interfaces";
+import { ITrack } from "../typings/Interfaces";
 
 export class Track {
     public readonly encoded: string;

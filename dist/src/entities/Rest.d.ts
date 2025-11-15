@@ -1,5 +1,5 @@
 import { Node } from "./Node";
-import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/interfaces";
+import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 export declare class Rest {
     private readonly node;
     constructor(node: Node);

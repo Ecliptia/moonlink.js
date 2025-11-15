@@ -1,4 +1,4 @@
-import { IDatabaseOptions } from "../typings/interfaces";
+import { IDatabaseOptions } from "../typings/Interfaces";
 export declare class DatabaseManager {
     private database;
     constructor(options: IDatabaseOptions);

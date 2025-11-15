@@ -1,4 +1,4 @@
-import { IManagerNodeConfig, INodeStats } from "../typings/interfaces";
+import { IManagerNodeConfig, INodeStats } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import { Structure, generateUUID, stringifyWithReplacer } from "../Util";

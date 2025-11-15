@@ -1,4 +1,4 @@
-import { IRESTLoadTracks } from "../typings/interfaces";
+import { IRESTLoadTracks } from "../typings/Interfaces";
 import { LoadType } from "../typings/types";
 import { Track } from "../entities/Track";
 

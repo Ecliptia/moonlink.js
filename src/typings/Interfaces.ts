@@ -6,7 +6,6 @@ export interface IManagerEvents {
     nodeDisconnect: (node: any, code: number, reason: string) => void;
     nodeReady: (node: any, payload: any) => void;
     nodeError: (node: any, error: Error) => void;
-
     playerCreate: (player: any) => void;
     playerDestroy: (player: any) => void;
     playerSwitchedNode: (player: any, oldNode: any, newNode: any) => void;

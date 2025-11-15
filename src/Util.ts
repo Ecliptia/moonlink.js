@@ -5,7 +5,7 @@ import http from "node:http";
 import https from "node:https";
 import zlib from "node:zlib";
 import { URL } from "node:url"; 
-import type { ITrack, ITrackInfo } from "./typings/interfaces";
+import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 
 export const structures: Record<string, any> = {};
 

@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass } from "../typings/interfaces";
+import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass } from "../typings/Interfaces";
 import { validate } from "../Util";
 
 export class Filters implements IFilters {

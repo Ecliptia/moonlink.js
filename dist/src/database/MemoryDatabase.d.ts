@@ -1,4 +1,4 @@
-import { IDatabaseOptions } from "../typings/interfaces";
+import { IDatabaseOptions } from "../typings/Interfaces";
 export declare class MemoryDatabase {
     private readonly data;
     constructor(options: IDatabaseOptions);

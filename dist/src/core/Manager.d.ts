@@ -1,4 +1,4 @@
-import { IManagerEvents, IManagerConfig, IManagerOptionsConfig, ISearchQuery } from "../typings/interfaces";
+import { IManagerEvents, IManagerConfig, IManagerOptionsConfig, ISearchQuery } from "../typings/Interfaces";
 import { EventEmitter } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { Connector } from "../connectors/Connector";

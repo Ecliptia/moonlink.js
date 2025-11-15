@@ -1,5 +1,5 @@
 import http from "node:http";
-import type { ITrack, ITrackInfo } from "./typings/interfaces";
+import type { ITrack, ITrackInfo } from "./typings/Interfaces";
 export declare const structures: Record<string, any>;
 export declare abstract class Structure {
     static manager: any;
