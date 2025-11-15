@@ -139,8 +139,18 @@ class PlayerManager {
         return true;
     }
     async verifyVoiceState(player) {
-        this.manager.emit("debug", `Moonlink.js > PlayerManager -> Sending voice state to Lavalink for Guild: ${player.guildId}. VoiceState: ${JSON.stringify(player.voiceState)}`);
-        await player.node.rest.updatePlayer(player.guildId, { voice: player.voiceState });
+        this.manager.emit("debug", `Moonlink.js > PlayerManager -> Verifying voice state for Guild: ${player.guildId}.`);
+        if (player._lastVoiceState &&
+            player._lastVoiceState.sessionId === player.voiceState.sessionId &&
+            player._lastVoiceState.token === player.voiceState.token &&
+            player._lastVoiceState.endpoint === player.voiceState.endpoint) {
+            this.manager.emit("debug", `Moonlink.js > PlayerManager -> Voice state for Guild: ${player.guildId} is unchanged. Skipping update.`);
+        }
+        else {
+            this.manager.emit("debug", `Moonlink.js > PlayerManager -> Sending voice state to Lavalink for Guild: ${player.guildId}. VoiceState: ${JSON.stringify(player.voiceState)}`);
+            await player.node.rest.updatePlayer(player.guildId, { voice: player.voiceState });
+            player._lastVoiceState = { ...player.voiceState };
+        }
         for (let i = 0; i < 3; i++) {
             await (0, Util_1.delay)(500);
             const lavalinkPlayer = await player.node.rest.getPlayer(player.guildId);

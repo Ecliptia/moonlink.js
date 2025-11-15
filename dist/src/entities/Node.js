@@ -357,12 +357,20 @@ class Node {
         player.set("stuckCount", 0);
         player.set("exceptionCount", 0);
         player.isResuming = false;
-        const trackForEvent = new (Util_1.Structure.get("Track"))(payload.track, player.current?.requester);
+        const trackData = payload.track;
+        if (player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
+            trackData.userData = player.current.userData;
+        }
+        const trackForEvent = new (Util_1.Structure.get("Track"))(trackData, player.current?.requester);
         this.manager.emit("trackStart", player, trackForEvent);
     }
     async handleTrackEnd(player, payload) {
         const { reason } = payload;
-        const trackForEvent = new (Util_1.Structure.get("Track"))(payload.track, player.current?.requester);
+        const trackData = payload.track;
+        if (player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
+            trackData.userData = player.current.userData;
+        }
+        const trackForEvent = new (Util_1.Structure.get("Track"))(trackData, player.current?.requester);
         player.playing = false;
         player.paused = false;
         player.set("isBackPlay", false);
