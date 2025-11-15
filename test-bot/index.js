@@ -36,7 +36,7 @@ const manager = new Manager({
     nodes,
     options: {
         database: {
-            provider: "lmdb",
+            provider: "memory",
             path: "./database"
         },
         customFilters: {
