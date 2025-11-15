@@ -19,6 +19,7 @@ class Track {
     origin;
     pluginInfo;
     userData;
+    retries = 0;
     constructor(data, requester, origin) {
         this.encoded = data.encoded;
         this.title = data.info.title;

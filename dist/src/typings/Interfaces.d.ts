@@ -1,3 +1,4 @@
+import { NodeSortStrategy } from "./types";
 export interface IManagerEvents {
     debug: (message: string) => void;
     nodeStateChange: (node: any, oldState: any, newState: any) => void;
@@ -68,10 +69,9 @@ export interface IVoiceConnectionOptions {
     autoReconnect?: boolean;
 }
 export interface INodeOptions {
-    selectionStrategy?: "leastLoad" | "leastPlayers" | "random" | "priority";
+    selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;
     retryAmount?: number;
-    sortByRegion?: boolean;
     avoidUnhealthyNodes?: boolean;
     maxCpuLoad?: number;
     maxMemoryUsage?: number;
@@ -260,4 +260,28 @@ export interface IDatabaseOptions {
     path?: string;
     maxDbs?: number;
     compression?: boolean;
+}
+export type RoutePlannerType = "RotatingIpRoutePlanner" | "NanoIpRoutePlanner" | "RotatingNanoIpRoutePlanner" | "BalancingIpRoutePlanner";
+export type IpBlockType = "Inet4Address" | "Inet6Address";
+export interface IFailingAddress {
+    failingAddress: string;
+    failingTimestamp: number;
+    failingTime: string;
+}
+export interface IIpBlock {
+    type: IpBlockType;
+    size: string;
+}
+export interface IRoutePlannerDetails {
+    ipBlock: IIpBlock;
+    failingAddresses: IFailingAddress[];
+    rotateIndex?: string;
+    ipIndex?: string;
+    currentAddress?: string;
+    currentAddressIndex?: string;
+    blockIndex?: string;
+}
+export interface IRoutePlannerStatus {
+    class?: RoutePlannerType;
+    details?: IRoutePlannerDetails;
 }

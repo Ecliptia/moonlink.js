@@ -1,4 +1,4 @@
-export type NodeSortStrategy = "players" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "penalty" | "random";
+export type NodeSortStrategy = "players" | "leastPlayers" | "playingPlayers" | "memory" | "cpuLavalink" | "cpuSystem" | "uptime" | "penalty" | "random" | "leastLoad" | "priority";
 export declare enum NodeState {
     CONNECTING = 0,
     CONNECTED = 1,

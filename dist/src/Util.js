@@ -178,27 +178,18 @@ function generateUUID(host, port) {
 }
 function Log(message, LogPath) {
     const timestamp = new Date().toISOString();
-    const logmessage = `[${timestamp}] ${message}
-`;
-    const logpath = node_path_1.default.resolve(LogPath);
-    node_fs_1.default.exists(logpath, (exists) => {
-        if (!exists) {
-            try {
-                node_fs_1.default.mkdirSync(node_path_1.default.dirname(logpath), { recursive: true });
-                node_fs_1.default.writeFileSync(logpath, "");
-            }
-            catch (error) {
-                console.error("Failed to create log file:", error);
-                return;
-            }
+    const logMessage = `[${timestamp}] ${message}\n`;
+    try {
+        const logPathResolved = node_path_1.default.resolve(LogPath);
+        const logDir = node_path_1.default.dirname(logPathResolved);
+        if (!node_fs_1.default.existsSync(logDir)) {
+            node_fs_1.default.mkdirSync(logDir, { recursive: true });
         }
-        try {
-            node_fs_1.default.appendFileSync(logpath, logmessage);
-        }
-        catch (error) {
-            console.error("Failed to append to log file:", error);
-        }
-    });
+        node_fs_1.default.appendFileSync(logPathResolved, logMessage);
+    }
+    catch (error) {
+        console.error("Failed to write to log file:", error);
+    }
 }
 async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, retryDelay = 1000, maxRedirects = 5) {
     let currentUrl = initialUrl;
@@ -344,7 +335,7 @@ function isSourceBlacklisted(manager, sourceName) {
     return manager.options.blacklistedSources.includes(sourceName);
 }
 function isValidDiscordId(id) {
-    return typeof id === "string" && /^\\d{17,20}$/.test(id);
+    return typeof id === "string" && /^\d{17,20}$/.test(id);
 }
 class EventEmitter {
     parent;

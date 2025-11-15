@@ -14,7 +14,6 @@ export declare class Player {
     data: Record<string, unknown>;
     voiceChannelId: string;
     textChannelId: string;
-    region?: string;
     playing: boolean;
     paused: boolean;
     connected: boolean;
@@ -46,6 +45,7 @@ export declare class Player {
     play(options?: {
         track?: Track;
         position?: number;
+        noReplace?: boolean;
     }): Promise<boolean>;
     pause(): Promise<this>;
     resume(): Promise<this>;
