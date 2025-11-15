@@ -17,7 +17,6 @@ export class Player {
 
     public voiceChannelId: string;
     public textChannelId: string;
-    public region?: string;
     
     public playing: boolean = false;
     public paused: boolean = false;
@@ -176,13 +175,13 @@ export class Player {
         return this;
     }
 
-    public async play(options: { track?: Track; position?: number } = {}): Promise<boolean> {
+    public async play(options: { track?: Track; position?: number, noReplace?: boolean } = {}): Promise<boolean> {
+        this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
         this.updateActivity();
         const track = options.track;
         
         if (track) {
             this.queue.unshift(track);
-            await this.updateData("queue", this.queue.map(t => t.toJSON()));
             this.manager.emit("debug", `Moonlink.js > Player#play >> Added track "${track.title}" to front of queue for guild ${this.guildId}`);
         }
 
@@ -191,30 +190,24 @@ export class Player {
             return false;
         }
 
-        if (this.current && !this.get("isBackPlay")) {
-            this.previous.push(this.current);
-            const historyLimit = this.manager.options.queue?.historyLimit ?? this.historySize;
-            if (this.previous.length > historyLimit) {
-                this.previous.shift();
-            }
-            await this.updateData("previousTracks", this.previous.map(t => t.toJSON()));
-            this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${this.current.title}" to history for guild ${this.guildId}`);
-        }
-        this.set("isBackPlay", false);
-
+        const previousTrack = this.current;
         const nextTrack = this.queue.shift();
+
         if (!nextTrack || !nextTrack.encoded) {
-            this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}`);
+            this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}. Next track is ${JSON.stringify(nextTrack)}`);
+            if (nextTrack) this.queue.unshift(nextTrack); // Re-add if it was just invalid
             return false;
         }
-        this.manager.emit("debug", `Moonlink.js > Player#play >> Playing track "${nextTrack.title}" from queue for guild ${this.guildId}`);
         
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track ? nextTrack : new Track(nextTrack);
         this.current.position = options.position ?? 0;
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
 
-        this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}`);
+        const oldPlaying = this.playing;
+        const oldPaused = this.paused;
+        this.playing = true;
+        this.paused = false;
 
         const payload = {
             track: { 
@@ -223,19 +216,38 @@ export class Player {
             },
             position: this.current.position,
         };
+
+        this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
         
-        await this.node.rest.updatePlayer(this.guildId, payload);
-        this.manager.emit("debug", `Moonlink.js > Player#play >> Started playing track "${this.current.title}" for guild ${this.guildId}`);
-        
-        const oldPlaying = this.playing;
-        const oldPaused = this.paused;
-        this.playing = true;
-        this.paused = false;
-        await this.updateData("currentTrack", this.current.toJSON());
-        await this.updateData("queue", this.queue.map(t => t.toJSON()));
-        await this.updateData("playing", this.playing);
-        await this.updateData("paused", this.paused);
+        try {
+            await this.node.rest.updatePlayer(this.guildId, payload, options.noReplace ?? this.manager.options.noReplace);
+            this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
+        } catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Failed to send play request for guild ${this.guildId}. Reverting state. Error: ${(e as Error).message}`);
+            this.playing = oldPlaying;
+            this.paused = oldPaused;
+            this.current = previousTrack;
+            this.queue.unshift(nextTrack);
+            return false;
+        }
+
+        if (previousTrack && !this.get("isBackPlay")) {
+            this.previous.push(previousTrack);
+            const historyLimit = this.manager.options.queue?.historyLimit ?? this.historySize;
+            if (this.previous.length > historyLimit) {
+                this.previous.shift();
+            }
+            this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
+            this.updateData("previousTracks", this.previous.map(t => t.toJSON()));
+        }
+        this.set("isBackPlay", false);
+
+        this.updateData("currentTrack", this.current.toJSON());
+        this.updateData("queue", this.queue.map(t => t.toJSON()));
+        this.updateData("playing", this.playing);
+        this.updateData("paused", this.paused);
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
+        
         return true;
     }
 
@@ -547,12 +559,16 @@ export class Player {
         }
 
         const lastTrack = this.previous.pop();
-        if (!lastTrack) return false;
+        if (!lastTrack) {
+            this.manager.emit("debug", `Moonlink.js > Player#back >> Popped an invalid track from history for guild ${this.guildId}`);
+            return false;
+        }
 
         this.manager.emit("debug", `Moonlink.js > Player#back -> Going back to previous track "${lastTrack.title}" for guild ${this.guildId}`);
 
         if (this.current) {
             this.queue.unshift(this.current);
+            this.manager.emit("debug", `Moonlink.js > Player#back >> Pushed current track "${this.current.title}" to the front of the queue.`);
         }
 
         this.current = lastTrack;
@@ -562,14 +578,14 @@ export class Player {
             track: this.current, 
             position: 0 
         });
-        await this.updateData("currentTrack", this.current.toJSON());
-        await this.updateData("queue", this.queue.map(t => t.toJSON()));
-        await this.updateData("previousTracks", this.previous.map(t => t.toJSON()));
-        await this.updateData("playing", this.playing);
-        await this.updateData("paused", this.paused);
 
-        this.manager.emit("playerTriggeredBack", this, lastTrack);
-        this.manager.emit("debug", `Moonlink.js > Player#back >> Successfully went back for guild ${this.guildId}`);
+        if (played) {
+            this.manager.emit("playerTriggeredBack", this, lastTrack);
+            this.manager.emit("debug", `Moonlink.js > Player#back >> Successfully went back for guild ${this.guildId}`);
+        } else {
+            this.manager.emit("debug", `Moonlink.js > Player#back >> Failed to play previous track for guild ${this.guildId}.`);
+        }
+        
         return played;
     }
 }

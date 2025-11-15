@@ -18,6 +18,7 @@ export class Track {
     public origin?: string;
     public pluginInfo: Record<string, any>;
     public userData: Record<string, any>;
+    public retries: number = 0;
 
     constructor(data: ITrack, requester?: any, origin?: string) {
         this.encoded = data.encoded;

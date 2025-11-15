@@ -126,6 +126,22 @@ export class Node {
     this.connected = true;
     this.setState(NodeState.CONNECTED);
     this.manager.emit("debug", `Moonlink.js > Node <- Connected to ${this.identifier}.`);
+
+    try {
+        const nodeInfo = await this.rest.getInfo();
+        if (nodeInfo) {
+            this.info = nodeInfo;
+            this.version = nodeInfo.version?.semver;
+            
+            this.capabilities.clear();
+            for (const source of nodeInfo.sourceManagers) this.capabilities.add(`source:${source}`);
+            for (const filter of nodeInfo.filters) this.capabilities.add(`filter:${filter}`);
+            
+            this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} capabilities updated: ${[...this.capabilities].join(", ")}`);
+        }
+    } catch (error) {
+        this.manager.emit("debug", `Moonlink.js > Node >> Failed to get node info for ${this.identifier}. Error: ${error.message}`);
+    }
     
     if (this.manager.options.resume) {
         try {
@@ -412,6 +428,23 @@ export class Node {
       return;
     }
 
+    if (reason === "loadFailed") {
+        const trackHandling = this.manager.options.trackHandling;
+        const trackToRetry = player.current;
+
+        if (trackHandling?.retryFailedTracks && trackToRetry) {
+            const maxRetries = trackHandling.maxRetryAttempts ?? 3;
+            if (trackToRetry.retries < maxRetries) {
+                trackToRetry.retries++;
+                this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track failed to load. Retrying... (Attempt ${trackToRetry.retries}/${maxRetries}) for player ${player.guildId}.`);
+                player.queue.unshift(trackToRetry);
+                await player.play();
+                return;
+            }
+             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track failed to load after ${maxRetries} attempts for player ${player.guildId}.`);
+        }
+    }
+
     if (reason === "replaced" || reason === "stopped") {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track was ${reason}, skipping queue logic for player ${player.guildId}.`);
       return;
@@ -460,8 +493,13 @@ export class Node {
     const thresholdMs = payload.thresholdMs;
     
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackStuck >> Track stuck for player ${player.guildId}: "${track?.title}". Threshold: ${thresholdMs}ms. Payload: ${stringifyWithReplacer(payload)}.`);
-    
     this.manager.emit("trackStuck", player, track, thresholdMs, payload);
+
+    if (this.manager.options.trackHandling?.skipStuckTracks) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleTrackStuck >> 'skipStuckTracks' is true, skipping track for player ${player.guildId}.`);
+        await player.skip();
+        return;
+    }
 
     const stuckCount = (player.get("stuckCount") || 0) + 1;
     player.set("stuckCount", stuckCount);
@@ -498,8 +536,13 @@ export class Node {
     const exception = payload.exception;
     
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackException >> Track exception for player ${player.guildId}: "${track?.title}". Severity: ${exception.severity}. Message: ${exception.message}. Payload: ${stringifyWithReplacer(payload)}.`);
-    
     this.manager.emit("trackException", player, track, exception, payload);
+
+    if (this.manager.options.trackHandling?.autoSkipOnError) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleTrackException >> 'autoSkipOnError' is true, skipping track for player ${player.guildId}.`);
+        await player.skip();
+        return;
+    }
 
     const exceptionCount = (player.get("exceptionCount") || 0) + 1;
     player.set("exceptionCount", exceptionCount);
@@ -549,9 +592,7 @@ export class Node {
         return;
     }
 
-    const fatalCodes = [4004, 4014, 4015, 4021, 4022];
-    const clientErrorCodes = [4001, 4002, 4003, 4005, 4011, 4012, 4016];
-
+    const fatalCodes = [4004, 4014, 4015];
     if (fatalCodes.includes(code)) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Fatal close code ${code} for player ${player.guildId}, destroying player.`);
         this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
@@ -559,15 +600,15 @@ export class Node {
         return;
     }
 
-    if (clientErrorCodes.includes(code)) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Client error code ${code} for player ${player.guildId}, destroying player.`);
-        this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
+    const voiceOptions = this.manager.options.voiceConnection;
+    if (!voiceOptions?.autoReconnect) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect is disabled for player ${player.guildId}.`);
         player.destroy();
         return;
     }
 
     const reconnectAttempts = (player.get("wsReconnectAttempts") || 0) + 1;
-    const maxReconnectAttempts = 5;
+    const maxReconnectAttempts = voiceOptions.maxReconnectAttempts ?? 5;
 
     if (reconnectAttempts > maxReconnectAttempts) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Max reconnect attempts reached (${maxReconnectAttempts}) for player ${player.guildId}.`);
@@ -579,7 +620,7 @@ export class Node {
     player.set("wsReconnectAttempts", reconnectAttempts);
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Attempting reconnect ${reconnectAttempts}/${maxReconnectAttempts} for player ${player.guildId}.`);
 
-    const reconnectDelay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
+    const reconnectDelay = voiceOptions.reconnectDelay ?? 5000;
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Reconnect scheduled in ${reconnectDelay}ms for player ${player.guildId}.`);
 
     setTimeout(async () => {
@@ -589,18 +630,14 @@ export class Node {
         }
 
         try {
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 1: Disconnecting voice for player ${player.guildId}.`);
-            player.disconnect();
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Reconnecting voice for player ${player.guildId}.`);
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 1: Reconnecting voice for player ${player.guildId}.`);
             player.connect();
             
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const timeout = voiceOptions.timeout ?? 15000;
+            await new Promise(resolve => setTimeout(resolve, timeout));
 
             if (player.current) {
-                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 3: Restoring playback for player ${player.guildId} at position ${player.current.position}ms. Track: ${player.current.title}.`);
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Restoring playback for player ${player.guildId} at position ${player.current.position}ms. Track: ${player.current.title}.`);
                 
                 await player.play({
                     track: player.current,
@@ -610,7 +647,7 @@ export class Node {
                 this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Successfully reconnected and restored playback for player ${player.guildId}.`);
                 player.set("wsReconnectAttempts", 0);
             } else if (player.queue.size > 0) {
-                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 3: Starting queue playback for player ${player.guildId}. Queue size: ${player.queue.size}.`);
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Starting queue playback for player ${player.guildId}. Queue size: ${player.queue.size}.`);
                 
                 await player.play();
                 
@@ -747,14 +784,6 @@ export class Node {
         return;
     }
 
-    const targetNode = this.manager.nodes.findNode();
-    if (!targetNode || targetNode.uuid === this.uuid) {
-        this.manager.emit("debug", `Moonlink.js > Node >> No available target node for failover from ${this.identifier}.`);
-        return;
-    }
-
-    this.manager.emit("debug", `Moonlink.js > Node >> Starting failover of ${nodePlayersIndex.length} players from ${this.identifier} to ${targetNode.identifier}.`);
-
     for (const guildId of nodePlayersIndex) {
         try {
             const player = this.manager.players.get(guildId);
@@ -762,6 +791,14 @@ export class Node {
                 this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} not found in memory during failover.`);
                 continue;
             }
+
+            const targetNode = this.manager.nodes.findNode();
+            if (!targetNode || targetNode.uuid === this.uuid) {
+                this.manager.emit("debug", `Moonlink.js > Node >> No available target node for failover for player ${guildId} from ${this.identifier}.`);
+                continue;
+            }
+
+            this.manager.emit("debug", `Moonlink.js > Node >> Failing over player ${guildId} from ${this.identifier} to ${targetNode.identifier}.`);
 
             const oldNode = player.node;
             player.node = targetNode;
@@ -789,7 +826,7 @@ export class Node {
         }
     }
 
-    this.manager.emit("debug", `Moonlink.js > Node >> Failover completed from ${this.identifier} to ${targetNode.identifier}.`);
+    this.manager.emit("debug", `Moonlink.js > Node >> Failover completed for node ${this.identifier}.`);
   }
 
   public async destroy(): Promise<void> {

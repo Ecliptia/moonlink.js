@@ -55,7 +55,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
                 selectionStrategy: "leastLoad",
                 retryDelay: 30000,
                 retryAmount: 5,
-                sortByRegion: false,
                 avoidUnhealthyNodes: false,
                 maxCpuLoad: 80,
                 maxMemoryUsage: 90
@@ -125,7 +124,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
         this.idleCheckInterval = setInterval(() => {
             const now = Date.now();
             for (const player of this.players.all) {
-                if (!player.playing && now - player.lastActivityTime >= idleTimeout) {
+                if ((!player.playing || player.paused) && now - player.lastActivityTime >= idleTimeout) {
                     this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
                     player.destroy();
                 }
@@ -137,15 +136,9 @@ export class Manager extends EventEmitter<IManagerEvents> {
         validate(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         validate(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
 
-        let node;
-        if (options.node) {
-            node = this.nodes.nodes.get(options.node) || [...this.nodes.nodes.values()].find(n => n.identifier === options.node);
-        } else {
-            node = this.nodes.leastUsedNode;
-        }
-
+        const node = this.nodes.findNode();
         if (!node) {
-            throw new Error("Moonlink.js > Search > No available nodes for searching, or the specified node was not found.");
+            throw new Error("Moonlink.js > Search > No available nodes for searching.");
         }
 
         let identifier: string;
@@ -162,8 +155,12 @@ export class Manager extends EventEmitter<IManagerEvents> {
         const res = await node.rest.loadTracks(identifier);
         this.emit("debug", `Moonlink.js > Manager <- Search result for query "${options.query}". LoadType: ${res.loadType}`);
         
-        const result = new (Structure.get("SearchResult"))(res, options.requester);
+        const result = new (Structure.get("SearchResult"))(res, options.requester, this.options.search?.playlistLoadLimit);
         
+        if (result.loadType === "search") {
+            result.tracks = result.tracks.slice(0, this.options.search?.resultLimit ?? 10);
+        }
+
         if (this.options.sources?.disabledSources && this.options.sources.disabledSources.length > 0) {
             result.tracks = result.tracks.filter(track => {
                 const isDisabled = this.options.sources.disabledSources.includes(track.sourceName);
@@ -196,6 +193,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
             case "VOICE_SERVER_UPDATE":
                 player.voiceState.token = packet.d.token;
                 player.voiceState.endpoint = packet.d.endpoint;
+                player.voiceState.event = packet.d;
                 this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
                 break;
         }
