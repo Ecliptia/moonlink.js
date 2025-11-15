@@ -26,6 +26,7 @@ class Player {
     previous = [];
     historySize = 10;
     voiceState = {};
+    _lastVoiceState = null;
     selfDeaf;
     selfMute;
     lastActivityTime = Date.now();

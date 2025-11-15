@@ -408,13 +408,22 @@ export class Node {
     player.set("exceptionCount", 0);
     player.isResuming = false;
     
-    const trackForEvent = new (Structure.get("Track"))(payload.track, player.current?.requester);
+    const trackData = payload.track;
+    if (player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
+        trackData.userData = player.current.userData;
+    }
+
+    const trackForEvent = new (Structure.get("Track"))(trackData, player.current?.requester);
     this.manager.emit("trackStart", player, trackForEvent);
   }
 
   private async handleTrackEnd(player: any, payload: any): Promise<void> {
     const { reason } = payload;
-    const trackForEvent = new (Structure.get("Track"))(payload.track, player.current?.requester);
+    const trackData = payload.track;
+    if (player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
+        trackData.userData = player.current.userData;
+    }
+    const trackForEvent = new (Structure.get("Track"))(trackData, player.current?.requester);
 
     player.playing = false;
     player.paused = false;

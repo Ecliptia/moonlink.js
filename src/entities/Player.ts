@@ -34,6 +34,7 @@ export class Player {
     public historySize: number = 10;
     
     public voiceState: VoiceState = {} as VoiceState;
+    public _lastVoiceState: VoiceState | null = null;
     
     private readonly selfDeaf: boolean;
     private readonly selfMute: boolean;
