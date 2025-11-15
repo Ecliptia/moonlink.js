@@ -25,8 +25,7 @@
     "dev": "tsc --watch",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "node test-bot/index.js",
-    "prepare": "npm run build"
+    "test": "node test-bot/index.js"
   },
   "homepage": "https://moonlink.js.org",
   "bugs": {
