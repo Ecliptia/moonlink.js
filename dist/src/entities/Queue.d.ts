@@ -1,0 +1,37 @@
+import { Track } from "./Track";
+import type { Manager } from "../core/Manager";
+export declare class Queue {
+    private manager;
+    tracks: Track[];
+    constructor(manager: Manager);
+    get size(): number;
+    get first(): Track | undefined;
+    get last(): Track | undefined;
+    get isEmpty(): boolean;
+    get duration(): number;
+    get all(): Track[];
+    add(track: Track | Track[]): void;
+    get(position: number): Track | undefined;
+    has(track: Track): boolean;
+    remove(index?: number): Track | undefined;
+    shift(): Track | undefined;
+    unshift(track: Track): void;
+    pop(): Track | undefined;
+    clear(): void;
+    shuffle(): void;
+    removeDuplicates(): boolean;
+    sortByTitle(): void;
+    sortByAuthor(): void;
+    sortByDuration(): void;
+    find(query: string): Track | undefined;
+    move(from: number, to: number): boolean;
+    moveRange(fromIndex: number, toIndex: number, count: number): boolean;
+    removeRange(startIndex: number, endIndex: number): boolean;
+    duplicate(index: number, count?: number): boolean;
+    jump(index: number): boolean;
+    slice(start: number, end?: number): Track[];
+    filter(predicate: (track: Track) => boolean): Track[];
+    reverse(): void;
+    [Symbol.iterator](): Iterator<Track>;
+    map<U>(callback: (track: Track, index: number, array: Track[]) => U): U[];
+}
