@@ -11,7 +11,7 @@ export class SearchResult {
         severity: string;
     };
 
-    constructor(response: IRESTLoadTracks, requester?: any) {
+    constructor(response: IRESTLoadTracks, requester?: any, playlistLoadLimit?: number) {
         switch (response.loadType) {
             case "track":
                 this.loadType = LoadType.TRACK;
@@ -20,7 +20,9 @@ export class SearchResult {
 
             case "playlist":
                 this.loadType = LoadType.PLAYLIST;
-                this.tracks = response.data.tracks.map(track => new Track(track, requester));
+                this.tracks = response.data.tracks
+                    .slice(0, playlistLoadLimit)
+                    .map(track => new Track(track, requester));
                 this.playlistName = response.data.info.name;
                 break;
 

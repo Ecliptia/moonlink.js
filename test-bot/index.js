@@ -658,7 +658,6 @@ manager.on("queueEnd", async (player) => {
 
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    manager.init(client.user.id);
 });
 
 client.on("interactionCreate", async (interaction) => {

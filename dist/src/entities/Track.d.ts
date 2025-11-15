@@ -17,6 +17,7 @@ export declare class Track {
     origin?: string;
     pluginInfo: Record<string, any>;
     userData: Record<string, any>;
+    retries: number;
     constructor(data: ITrack, requester?: any, origin?: string);
     get thumbnail(): string | null;
     setRequester(requester: any): this;

@@ -1,12 +1,15 @@
 export type NodeSortStrategy =
     | "players"
+    | "leastPlayers"
     | "playingPlayers"
     | "memory"
     | "cpuLavalink"
     | "cpuSystem"
     | "uptime"
     | "penalty"
-    | "random";
+    | "random"
+    | "leastLoad"
+    | "priority";
 
 export enum NodeState {
     CONNECTING,

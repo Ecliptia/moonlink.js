@@ -28,8 +28,12 @@ class Rest {
         });
         return res || null;
     }
-    async updatePlayer(guildId, data) {
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
+    async updatePlayer(guildId, data, noReplace = false) {
+        const params = new URLSearchParams();
+        if (noReplace) {
+            params.append("noReplace", "true");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
             method: "PATCH",
             headers: {
                 "Authorization": this.node.password,
@@ -57,6 +61,79 @@ class Rest {
             }
         });
         return res || { loadType: "empty", data: {} };
+    }
+    async decodeTrack(encodedTrack) {
+        const params = new URLSearchParams();
+        params.append("encodedTrack", encodedTrack);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/decodetrack?${params}`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
+        return res || null;
+    }
+    async decodeTracks(encodedTracks) {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/decodetracks`, {
+            method: "POST",
+            headers: {
+                "Authorization": this.node.password,
+                "Content-Type": "application/json"
+            },
+            body: encodedTracks
+        });
+        return res || null;
+    }
+    async getInfo() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/info`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
+        return res || null;
+    }
+    async getVersion() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/version`, {
+            method: "GET"
+        });
+        return res || null;
+    }
+    async getStats() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/stats`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
+        return res || null;
+    }
+    async getRoutePlannerStatus() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/status`, {
+            method: "GET",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
+        return res || null;
+    }
+    async freeFailedAddress(address) {
+        await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/free/address`, {
+            method: "POST",
+            headers: {
+                "Authorization": this.node.password,
+                "Content-Type": "application/json"
+            },
+            body: { address }
+        });
+    }
+    async freeAllFailedAddresses() {
+        await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/free/all`, {
+            method: "POST",
+            headers: {
+                "Authorization": this.node.password
+            }
+        });
     }
     async getLyrics(trackId) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/lyrics/${trackId}`, {

@@ -9,7 +9,7 @@ export declare class SearchResult {
         message: string;
         severity: string;
     };
-    constructor(response: IRESTLoadTracks, requester?: any);
+    constructor(response: IRESTLoadTracks, requester?: any, playlistLoadLimit?: number);
     get isPlaylist(): boolean;
     get isTrack(): boolean;
     get isSearch(): boolean;

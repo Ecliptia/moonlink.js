@@ -46,7 +46,6 @@ class Manager extends Util_1.EventEmitter {
                 selectionStrategy: "leastLoad",
                 retryDelay: 30000,
                 retryAmount: 5,
-                sortByRegion: false,
                 avoidUnhealthyNodes: false,
                 maxCpuLoad: 80,
                 maxMemoryUsage: 90
@@ -108,7 +107,7 @@ class Manager extends Util_1.EventEmitter {
         this.idleCheckInterval = setInterval(() => {
             const now = Date.now();
             for (const player of this.players.all) {
-                if (!player.playing && now - player.lastActivityTime >= idleTimeout) {
+                if ((!player.playing || player.paused) && now - player.lastActivityTime >= idleTimeout) {
                     this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
                     player.destroy();
                 }
@@ -118,15 +117,9 @@ class Manager extends Util_1.EventEmitter {
     async search(options) {
         (0, Util_1.validate)(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         (0, Util_1.validate)(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
-        let node;
-        if (options.node) {
-            node = this.nodes.nodes.get(options.node) || [...this.nodes.nodes.values()].find(n => n.identifier === options.node);
-        }
-        else {
-            node = this.nodes.leastUsedNode;
-        }
+        const node = this.nodes.findNode();
         if (!node) {
-            throw new Error("Moonlink.js > Search > No available nodes for searching, or the specified node was not found.");
+            throw new Error("Moonlink.js > Search > No available nodes for searching.");
         }
         let identifier;
         const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
@@ -140,7 +133,10 @@ class Manager extends Util_1.EventEmitter {
         }
         const res = await node.rest.loadTracks(identifier);
         this.emit("debug", `Moonlink.js > Manager <- Search result for query "${options.query}". LoadType: ${res.loadType}`);
-        const result = new (Util_1.Structure.get("SearchResult"))(res, options.requester);
+        const result = new (Util_1.Structure.get("SearchResult"))(res, options.requester, this.options.search?.playlistLoadLimit);
+        if (result.loadType === "search") {
+            result.tracks = result.tracks.slice(0, this.options.search?.resultLimit ?? 10);
+        }
         if (this.options.sources?.disabledSources && this.options.sources.disabledSources.length > 0) {
             result.tracks = result.tracks.filter(track => {
                 const isDisabled = this.options.sources.disabledSources.includes(track.sourceName);
@@ -171,6 +167,7 @@ class Manager extends Util_1.EventEmitter {
             case "VOICE_SERVER_UPDATE":
                 player.voiceState.token = packet.d.token;
                 player.voiceState.endpoint = packet.d.endpoint;
+                player.voiceState.event = packet.d;
                 this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
                 break;
         }

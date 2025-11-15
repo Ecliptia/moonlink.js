@@ -8,7 +8,7 @@ class SearchResult {
     tracks;
     playlistName;
     exception;
-    constructor(response, requester) {
+    constructor(response, requester, playlistLoadLimit) {
         switch (response.loadType) {
             case "track":
                 this.loadType = types_1.LoadType.TRACK;
@@ -16,7 +16,9 @@ class SearchResult {
                 break;
             case "playlist":
                 this.loadType = types_1.LoadType.PLAYLIST;
-                this.tracks = response.data.tracks.map(track => new Track_1.Track(track, requester));
+                this.tracks = response.data.tracks
+                    .slice(0, playlistLoadLimit)
+                    .map(track => new Track_1.Track(track, requester));
                 this.playlistName = response.data.info.name;
                 break;
             case "search":

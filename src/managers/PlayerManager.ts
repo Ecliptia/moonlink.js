@@ -104,6 +104,7 @@ export class PlayerManager {
         const player = new (Structure.get("Player"))(this.manager, node, options);
         this.players.set(options.guildId, player);
         
+        this.manager.emit("playerCreate", player);
         this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player created. Guild: ${options.guildId}, Options: ${JSON.stringify(options)}`);
         return player;
     }
@@ -163,6 +164,7 @@ export class PlayerManager {
             return false;
         }
 
+        this.manager.emit("playerDestroy", player);
         this.players.delete(guildId);
         
         this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player destroyed for Guild: ${guildId}`);
@@ -199,6 +201,6 @@ export class PlayerManager {
             return;
         }
 
-        throw new Error("Moonlink.js > PlayerManager > Seu servidor está esquisito, precisa de reincialização");
+        throw new Error("Moonlink.js > PlayerManager > Could not establish voice connection with Lavalink after multiple attempts.");
     }
 }

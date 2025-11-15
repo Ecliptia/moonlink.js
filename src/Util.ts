@@ -188,27 +188,20 @@ export function generateUUID(host: string, port: number): string {
 
 export function Log(message: string, LogPath: string): void {
   const timestamp = new Date().toISOString();
-  const logmessage = `[${timestamp}] ${message}
-`;
+  const logMessage = `[${timestamp}] ${message}\n`;
 
-  const logpath = path.resolve(LogPath);
+  try {
+    const logPathResolved = path.resolve(LogPath);
+    const logDir = path.dirname(logPathResolved);
 
-  fs.exists(logpath, (exists: boolean) => {
-    if (!exists) {
-      try {
-        fs.mkdirSync(path.dirname(logpath), { recursive: true });
-        fs.writeFileSync(logpath, "");
-      } catch (error) {
-        console.error("Failed to create log file:", error);
-        return;
-      }
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
     }
-    try {
-      fs.appendFileSync(logpath, logmessage);
-    } catch (error) {
-      console.error("Failed to append to log file:", error);
-    }
-  });
+
+    fs.appendFileSync(logPathResolved, logMessage);
+  } catch (error) {
+    console.error("Failed to write to log file:", error);
+  }
 }
 
 export async function makeRequest<T = any>(
@@ -408,7 +401,7 @@ export function isSourceBlacklisted(manager: any, sourceName: string): boolean {
 }
 
 export function isValidDiscordId(id: string): boolean {
-  return typeof id === "string" && /^\\d{17,20}$/.test(id);
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
 }
 
 export class EventEmitter<E extends { [K in keyof E]: (...args: any[]) => void }> {

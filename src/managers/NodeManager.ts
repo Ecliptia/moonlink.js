@@ -14,6 +14,30 @@ export class NodeManager {
         }
     }
 
+    public init(): void {
+        for (const node of this.nodes.values()) {
+            node.connect();
+        }
+    }
+
+    public add(config: IManagerNodeConfig): void {
+        this._validateConfig(config);
+        const identifier = config.identifier || `${config.host}:${config.port}`;
+        if (this.nodes.has(identifier)) {
+            throw new Error(`Node with identifier '${identifier}' already exists.`);
+        }
+        const node = new (Structure.get("Node"))(this.manager, { ...config, identifier });
+        this.nodes.set(identifier, node);
+        this.manager.emit("debug", `Moonlink.js > NodeManager#add: Node added. Identifier: ${identifier}`);
+    }
+
+    public remove(identifier: string): boolean {
+        const node = this.nodes.get(identifier);
+        if (!node) return false;
+        node.destroy();
+        return this.nodes.delete(identifier);
+    }
+
     public get onlineNodes(): any[] {
         return [...this.nodes.values()].filter((node) => { return node.connected; });
     }
@@ -23,137 +47,68 @@ export class NodeManager {
     }
 
     public get leastUsedNode(): any | undefined {
-        return this.findNode("players");
+        return this.findNode();
     }
 
-    public get size(): number {
-        return this.nodes.size;
-    }
+    public findNode(): any | undefined {
+        const nodeOptions = this.manager.options.node;
+        const sortBy = nodeOptions?.selectionStrategy ?? "penalty";
 
-    public get all(): any[] {
-        return [...this.nodes.values()];
-    }
-
-    public has(id: string): boolean {
-        if (this.nodes.has(id)) return true;
-        return this.all.some(node => node.identifier === id);
-    }
-
-    public getById(id: string): any | undefined {
-        let node = this.nodes.get(id);
-        if (!node) {
-            node = this.all.find(n => n.identifier === id);
-        }
-        return node;
-    }
-
-    public filter(predicate: (node: any) => boolean): any[] {
-        return this.all.filter(predicate);
-    }
-
-    public find(predicate: (node: any) => boolean): any | undefined {
-        return this.all.find(predicate);
-    }
-
-    public map<T>(callback: (node: any) => T): T[] {
-        return this.all.map(callback);
-    }
-
-    public forEach(callback: (node: any) => void): void {
-        this.all.forEach(callback);
-    }
-
-    public init(): void {
-        if (!this.nodes.size) {
-            throw new Error("Moonlink.js > NodeManager#init: No nodes were provided to initialize.");
-        }
-        this.manager.emit("debug", `Moonlink.js > NodeManager#init: Initializing ${this.nodes.size} nodes.`);
-        for (const node of this.nodes.values()) {
-            node.connect();
-        }
-    }
-
-    public add(config: IManagerNodeConfig): void {
-        this._validateConfig(config);
-
-        const node = new (Structure.get("Node"))(this.manager, config);
-        
-        if (this.nodes.has(node.uuid)) {
-            throw new Error(`NodeManager#add: A node with the uuid "${node.uuid}" already exists.`);
-        }
-
-        this.nodes.set(node.uuid, node);
-    }
-
-    public remove(id: string): boolean {
-        let nodeToRemove = this.nodes.get(id);
-
-        if (!nodeToRemove) {
-            nodeToRemove = [...this.nodes.values()].find(node => node.identifier === id);
-        }
-
-        if (!nodeToRemove) {
-            this.manager.emit("debug", `Moonlink.js > NodeManager#remove: Could not find a node with id "${id}".`);
-            return false;
-        }
-
-        nodeToRemove.destroy();
-        this.nodes.delete(nodeToRemove.uuid);
-        this.manager.emit("debug", `Moonlink.js > NodeManager#remove: Node ${nodeToRemove.identifier} destroyed.`);
-        return true;
-    }
-
-    public findNode(sortBy: NodeSortStrategy = "penalty"): any | undefined {
-        const onlineNodes = this.onlineNodes;
-        if (!onlineNodes.length) {
+        let nodes = this.onlineNodes;
+        if (!nodes.length) {
             this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: No online nodes available.`);
             return undefined;
         }
 
-        if (onlineNodes.length <= 1) {
-            return onlineNodes[0];
+        if (nodeOptions?.avoidUnhealthyNodes) {
+            const healthyNodes = nodes.filter(node => {
+                if (!node.stats) return true;
+                const cpuLoad = node.stats.cpu.systemLoad * 100;
+                const memoryUsage = (node.stats.memory.used / node.stats.memory.allocated) * 100;
+                
+                const isHealthy = cpuLoad < (nodeOptions.maxCpuLoad ?? 80) && memoryUsage < (nodeOptions.maxMemoryUsage ?? 90);
+                if (!isHealthy) {
+                    this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: Node ${node.identifier} is unhealthy. CPU: ${cpuLoad.toFixed(2)}%, Memory: ${memoryUsage.toFixed(2)}%`);
+                }
+                return isHealthy;
+            });
+
+            if (healthyNodes.length) {
+                nodes = healthyNodes;
+            } else {
+                this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: No healthy nodes available, falling back to all online nodes.`);
+            }
         }
 
-        return onlineNodes.sort((a, b) => {
+        if (nodes.length <= 1) {
+            return nodes[0];
+        }
+
+        return nodes.sort((a, b) => {
             switch (sortBy) {
-                case "players": {
-                    const aPlayers = a?.stats?.players ?? 0;
-                    const bPlayers = b?.stats?.players ?? 0;
-                    return aPlayers - bPlayers;
-                }
-                case "playingPlayers": {
-                    const aPlayers = a?.stats?.playingPlayers ?? 0;
-                    const bPlayers = b?.stats?.playingPlayers ?? 0;
-                    return aPlayers - bPlayers;
-                }
-                case "memory": {
-                    const aMemory = a?.stats?.memory?.used ?? 0;
-                    const bMemory = b?.stats?.memory?.used ?? 0;
-                    return aMemory - bMemory;
-                }
-                case "cpuLavalink": {
-                    const aCpu = a?.stats?.cpu?.lavalinkLoad ?? 0;
-                    const bCpu = b?.stats?.cpu?.lavalinkLoad ?? 0;
-                    return aCpu - bCpu;
-                }
-                case "cpuSystem": {
-                    const aCpu = a?.stats?.cpu?.systemLoad ?? 0;
-                    const bCpu = b?.stats?.cpu?.systemLoad ?? 0;
-                    return aCpu - bCpu;
-                }
-                case "uptime": {
-                    const aUptime = a?.stats?.uptime ?? 0;
-                    const bUptime = b?.stats?.uptime ?? 0;
-                    return bUptime - aUptime;
-                }
+                case "leastPlayers":
+                case "players":
+                    return (a.stats?.players ?? 0) - (b.stats?.players ?? 0);
+                case "playingPlayers":
+                    return (a.stats?.playingPlayers ?? 0) - (b.stats?.playingPlayers ?? 0);
+                case "memory":
+                    return (a.stats?.memory?.used ?? 0) - (b.stats?.memory?.used ?? 0);
+                case "cpuLavalink":
+                    return (a.stats?.cpu?.lavalinkLoad ?? 0) - (b.stats?.cpu?.lavalinkLoad ?? 0);
+                case "cpuSystem":
+                    return (a.stats?.cpu?.systemLoad ?? 0) - (b.stats?.cpu?.systemLoad ?? 0);
+                case "uptime":
+                    return (b.stats?.uptime ?? 0) - (a.stats?.uptime ?? 0);
                 case "random":
                     return Math.random() - 0.5;
+                case "priority":
+                    return (a.priority ?? 0) - (b.priority ?? 0);
+                case "leastLoad":
                 case "penalty":
-                default: {
-                    const aPenalty = (a?.stats?.players ?? 0) + ((a?.stats?.cpu?.systemLoad ?? 0) * 100);
-                    const bPenalty = (b?.stats?.players ?? 0) + ((b?.stats?.cpu?.systemLoad ?? 0) * 100);
+                default:
+                    const aPenalty = (a.stats?.players ?? 0) + ((a.stats?.cpu?.systemLoad ?? 0) * 100);
+                    const bPenalty = (b.stats?.players ?? 0) + ((b.stats?.cpu?.systemLoad ?? 0) * 100);
                     return aPenalty - bPenalty;
-                }
             }
         })[0];
     }
