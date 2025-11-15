@@ -1,4 +1,4 @@
-import { IDatabaseOptions } from "../typings/interfaces";
+import { IDatabaseOptions } from "../typings/Interfaces";
 import { open, RootDatabase } from "lmdb";
 import * as path from "node:path";
 import * as fs from "node:fs";

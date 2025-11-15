@@ -3,7 +3,7 @@ import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
 import { Structure, validate } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
-import { IPlayerConfig } from "../typings/interfaces";
+import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Track } from "./Track";
 
@@ -35,6 +35,8 @@ export class Player {
     
     public voiceState: VoiceState = {} as VoiceState;
     public _lastVoiceState: VoiceState | null = null;
+    public _voiceStateReady: boolean = false;
+    public _awaitingVoiceConnection: boolean = false;
     
     private readonly selfDeaf: boolean;
     private readonly selfMute: boolean;
@@ -142,6 +144,8 @@ export class Player {
             },
         };
         
+        this._awaitingVoiceConnection = true;
+        this._voiceStateReady = false;
         this.manager.send(this.guildId, payload);
         this.manager.emit("debug", `Moonlink.js > Player#connect >> Sent VOICE_STATE_UPDATE to Discord gateway for guild ${this.guildId}`);
 
@@ -172,6 +176,8 @@ export class Player {
         this.manager.emit("debug", `Moonlink.js > Player#disconnect >> Sent VOICE_STATE_UPDATE (disconnect) to Discord gateway for guild ${this.guildId}`);
 
         this.connected = false;
+        this._voiceStateReady = false;
+        this._awaitingVoiceConnection = false;
         await this.updateData("connected", this.connected);
         return this;
     }
@@ -196,7 +202,7 @@ export class Player {
 
         if (!nextTrack || !nextTrack.encoded) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}. Next track is ${JSON.stringify(nextTrack)}`);
-            if (nextTrack) this.queue.unshift(nextTrack); // Re-add if it was just invalid
+            if (nextTrack) this.queue.unshift(nextTrack);
             return false;
         }
         
@@ -209,6 +215,17 @@ export class Player {
         const oldPaused = this.paused;
         this.playing = true;
         this.paused = false;
+
+        try {
+            await this.manager.players.ensureVoiceConnection(this);
+        } catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Voice connection verification failed for guild ${this.guildId}. Error: ${(e as Error).message}`);
+            this.playing = oldPlaying;
+            this.paused = oldPaused;
+            this.current = previousTrack;
+            this.queue.unshift(nextTrack);
+            throw e;
+        }
 
         const payload = {
             track: { 
@@ -438,6 +455,8 @@ export class Player {
             return false;
         }
 
+        this._voiceStateReady = false;
+        this._awaitingVoiceConnection = false;
         await this.connect();
 
         if (this.current) {

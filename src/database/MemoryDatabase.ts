@@ -1,4 +1,4 @@
-import { IDatabaseOptions } from "../typings/interfaces";
+import { IDatabaseOptions } from "../typings/Interfaces";
 
 export class MemoryDatabase {
     private readonly data: Map<string, any> = new Map();

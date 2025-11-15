@@ -1,6 +1,6 @@
 import { makeRequest } from "../Util";
 import { Node } from "./Node";
-import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/interfaces";
+import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 
 export class Rest {
     private readonly node: Node;

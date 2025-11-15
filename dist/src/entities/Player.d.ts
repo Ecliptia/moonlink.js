@@ -2,7 +2,7 @@ import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
 import { PlayerLoop, VoiceState } from "../typings/types";
-import { IPlayerConfig } from "../typings/interfaces";
+import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Track } from "./Track";
 export declare class Player {
@@ -29,6 +29,8 @@ export declare class Player {
     historySize: number;
     voiceState: VoiceState;
     _lastVoiceState: VoiceState | null;
+    _voiceStateReady: boolean;
+    _awaitingVoiceConnection: boolean;
     private readonly selfDeaf;
     private readonly selfMute;
     lastActivityTime: number;

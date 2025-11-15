@@ -3,7 +3,7 @@ import {
     IManagerConfig,
     IManagerOptionsConfig,
     ISearchQuery,
-} from "../typings/interfaces";
+} from "../typings/Interfaces";
 import { Structure, validate, EventEmitter, sources } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { Connector } from "../connectors/Connector";
@@ -199,8 +199,18 @@ export class Manager extends EventEmitter<IManagerEvents> {
         }
 
         if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
-            this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Verifying connection.`);
-            await this.players.verifyVoiceState(player);
+            this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Voice packets successfully received.`);
+            
+            if (player._awaitingVoiceConnection && !player._voiceStateReady) {
+                try {
+                    await this.players.verifyVoiceState(player);
+                    player._voiceStateReady = true;
+                    player._awaitingVoiceConnection = false;
+                    this.emit("debug", `Moonlink.js > Manager >> Voice connection verified and ready for Guild: ${player.guildId}.`);
+                } catch (e) {
+                    this.emit("debug", `Moonlink.js > Manager >> Voice verification failed for Guild: ${player.guildId}. Error: ${(e as Error).message}`);
+                }
+            }
         }
     }
 }

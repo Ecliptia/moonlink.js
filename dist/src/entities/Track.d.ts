@@ -1,4 +1,4 @@
-import { ITrack } from "../typings/interfaces";
+import { ITrack } from "../typings/Interfaces";
 export declare class Track {
     readonly encoded: string;
     title: string;
