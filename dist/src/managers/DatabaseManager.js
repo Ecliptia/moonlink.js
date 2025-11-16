@@ -3,11 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseManager = void 0;
 const MemoryDatabase_1 = require("../database/MemoryDatabase");
 const LMDBDatabase_1 = require("../database/LMDBDatabase");
+const BetterSqlite3Database_1 = require("../database/BetterSqlite3Database");
 class DatabaseManager {
     database;
     constructor(options) {
         if (options.provider === "lmdb") {
             this.database = new LMDBDatabase_1.LMDBDatabase(options);
+        }
+        else if (options.provider === "better-sqlite3") {
+            this.database = new BetterSqlite3Database_1.BetterSqlite3Database(options);
         }
         else {
             this.database = new MemoryDatabase_1.MemoryDatabase(options);

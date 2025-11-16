@@ -92,6 +92,7 @@ export interface IManagerNodeConfig {
 export interface IManagerOptionsConfig {
     database?: IDatabaseOptions;
     clientName?: string;
+    userAgent?: string;
     resume?: boolean;
     resumeTimeout?: number;
     autoResume?: boolean;
@@ -339,7 +340,7 @@ export interface IFilters {
 }
 
 export interface IDatabaseOptions {
-    provider?: "memory" | "lmdb";
+    provider?: "memory" | "lmdb" | "better-sqlite3";
     path?: string;
     maxDbs?: number;
     compression?: boolean;

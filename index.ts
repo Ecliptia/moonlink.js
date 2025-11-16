@@ -1,3 +1,4 @@
+export const version: string = require("../package.json").version as string;
 import { Structure } from "./src/Util";
 import { Manager } from "./src/core/Manager";
 import { Node } from "./src/entities/Node";
@@ -23,5 +24,17 @@ Structure.register("NodeManager", NodeManager);
 Structure.register("PlayerManager", PlayerManager);
 Structure.register("WebSocket", WebSocket);
 
-export { Manager, Connectors };
-export default Manager;
+export {
+    Manager,
+    Node,
+    Player,
+    Queue,
+    Rest,
+    Filters,
+    Track,
+    SearchResult,
+    NodeManager,
+    PlayerManager,
+    WebSocket,
+    Connectors,
+};

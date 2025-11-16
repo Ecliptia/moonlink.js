@@ -1,4 +1,14 @@
+export declare const version: string;
 import { Manager } from "./src/core/Manager";
+import { Node } from "./src/entities/Node";
+import { Player } from "./src/entities/Player";
+import { Queue } from "./src/entities/Queue";
+import { Rest } from "./src/entities/Rest";
+import { Filters } from "./src/entities/Filters";
+import { Track } from "./src/entities/Track";
+import { SearchResult } from "./src/structures/SearchResult";
+import { NodeManager } from "./src/managers/NodeManager";
+import { PlayerManager } from "./src/managers/PlayerManager";
+import { WebSocket } from "./src/services/WebSocket";
 import { Connectors } from "./src/connectors";
-export { Manager, Connectors };
-export default Manager;
+export { Manager, Node, Player, Queue, Rest, Filters, Track, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, };

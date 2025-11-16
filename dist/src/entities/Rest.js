@@ -14,7 +14,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -23,7 +24,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -37,7 +39,8 @@ class Rest {
             method: "PATCH",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: data
         });
@@ -47,7 +50,8 @@ class Rest {
         await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "DELETE",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
     }
@@ -57,7 +61,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || { loadType: "empty", data: {} };
@@ -68,7 +73,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/decodetrack?${params}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -78,7 +84,8 @@ class Rest {
             method: "POST",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: encodedTracks
         });
@@ -88,14 +95,18 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/info`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
     }
     async getVersion() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/version`, {
-            method: "GET"
+            method: "GET",
+            headers: {
+                "User-Agent": this.node.manager.options?.userAgent
+            }
         });
         return res || null;
     }
@@ -103,7 +114,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/stats`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -112,7 +124,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/status`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -122,7 +135,8 @@ class Rest {
             method: "POST",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: { address }
         });
@@ -131,7 +145,8 @@ class Rest {
         await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/free/all`, {
             method: "POST",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
     }
@@ -139,7 +154,8 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/lyrics/${trackId}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -149,7 +165,8 @@ class Rest {
             method: "PATCH",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: {
                 resuming,

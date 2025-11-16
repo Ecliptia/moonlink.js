@@ -8,6 +8,7 @@ import { Structure, validate, EventEmitter, sources } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { Connector } from "../connectors/Connector";
 import { DatabaseManager } from "../managers/DatabaseManager";
+import { version } from "../..";
 
 export class Manager extends EventEmitter<IManagerEvents> {
     public initialized: boolean = false;
@@ -27,8 +28,10 @@ export class Manager extends EventEmitter<IManagerEvents> {
         validate(config.options, (value) => value == null || (typeof value === "object" && !Array.isArray(value)), "Manager config 'options' must be a plain object if provided.");
 
         this.send = config.send || null;
+        
         this.options = { 
-            clientName: "Moonlink.js",
+            clientName: `Moonlink.js/v${version} (https://github.com/Ecliptia/moonlink.js)`,
+            userAgent: `Moonlink.js/v${version} (Snoozy/16.11.2025)`,
             resume: false,
             resumeTimeout: 60,
             autoResume: false,
