@@ -20,8 +20,8 @@ class Manager extends Util_1.EventEmitter {
         (0, Util_1.validate)(config.options, (value) => value == null || (typeof value === "object" && !Array.isArray(value)), "Manager config 'options' must be a plain object if provided.");
         this.send = config.send || null;
         this.options = {
-            clientName: `Moonlink.js/v${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
-            userAgent: `Moonlink.js/v${__1.version} (Snoozy/16.11.2025)`,
+            clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
+            userAgent: `Moonlink.js/${__1.version} (Snoozy/16.11.2025)`,
             resume: false,
             resumeTimeout: 60,
             autoResume: false,
