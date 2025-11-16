@@ -39,6 +39,7 @@ const manager = new Manager({
             provider: "memory",
             path: "./database"
         },
+        autoResume: true,
         customFilters: {
             "Reset": {},
             "Alien": "pitch=1.5,vibrato=f=3:d=0.7",
