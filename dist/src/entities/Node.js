@@ -239,7 +239,13 @@ class Node {
                                 player.ping = -1;
                                 player.data = playerState.data || {};
                                 player.voiceState = playerState.voiceState || {};
-                                player.current = playerState.currentTrack ? new (Util_1.Structure.get("Track"))(playerState.currentTrack) : null;
+                                let oldposition = 0;
+                                let requester = null;
+                                if (player.current.position)
+                                    oldposition = player.current.position;
+                                if (player.current.requester)
+                                    requester = player.current.requester || playerState.currentTrack?.userData?.requester || null;
+                                player.current = playerState.currentTrack ? new (Util_1.Structure.get("Track"))(playerState.currentTrack, requester, this.uuid) : null;
                                 player.queue.clear();
                                 if (playerState.queue && playerState.queue.length > 0) {
                                     player.queue.add(playerState.queue.map(t => new (Util_1.Structure.get("Track"))(t)));
@@ -257,7 +263,7 @@ class Node {
                                     this.manager.emit("debug", `Moonlink.js > Node >> Resuming playback for player ${guildId}. Track: ${player.current.title}`);
                                     await player.play({
                                         track: player.current,
-                                        position: playerState.currentTrack.info.position || 0
+                                        position: oldposition ?? playerState.currentTrack.info.position ?? 0
                                     });
                                 }
                             }
