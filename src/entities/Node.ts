@@ -323,7 +323,7 @@ export class Node {
                     const player = this.manager.players.get(guildId);
                     if (player) {
                         this.manager.emit("debug", `Moonlink.js > Node >> Destroying player ${guildId} on node ${this.identifier}. Reason: autoResume disabled on node reconnect.`);
-                        await player.destroy();
+                        await player.destroy("autoResume disabled on node reconnect");
                     }
                 }
             }
@@ -650,14 +650,14 @@ export class Node {
     if (fatalCodes.includes(code)) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Fatal close code ${code} for player ${player.guildId}, destroying player.`);
         this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
-        player.destroy();
+        await player.destroy(`WebSocket closed with fatal code: ${code}`);
         return;
     }
 
     const voiceOptions = this.manager.options.voiceConnection;
     if (!voiceOptions?.autoReconnect) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect is disabled for player ${player.guildId}.`);
-        player.destroy();
+        await player.destroy("Auto-reconnect disabled");
         return;
     }
 
@@ -667,7 +667,7 @@ export class Node {
     if (reconnectAttempts > maxReconnectAttempts) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Max reconnect attempts reached (${maxReconnectAttempts}) for player ${player.guildId}.`);
         this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
-        player.destroy();
+        await player.destroy("Max reconnect attempts reached");
         return;
     }
 
@@ -717,7 +717,7 @@ export class Node {
             if (reconnectAttempts >= maxReconnectAttempts) {
                 this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> All reconnect attempts exhausted for player ${player.guildId}.`);
                 this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
-                player.destroy();
+                await player.destroy("All reconnect attempts exhausted");
             }
         }
     }, reconnectDelay);
@@ -821,7 +821,7 @@ export class Node {
     if (player.autoLeave) {
         this.manager.emit("debug", `Moonlink.js > Node#handleQueueEnd -> AutoLeave enabled, destroying player ${player.guildId}.`);
         this.manager.emit("autoLeaved", player, lastTrack);
-        player.destroy();
+        await player.destroy("AutoLeave enabled");
     }
   }
 

@@ -121,12 +121,12 @@ export class Manager extends EventEmitter<IManagerEvents> {
     private startIdleMonitoring(): void {
         const idleTimeout = this.options.playerDestruction?.idleTimeout ?? 300000;
         
-        this.idleCheckInterval = setInterval(() => {
+        this.idleCheckInterval = setInterval(async () => {
             const now = Date.now();
             for (const player of this.players.all) {
                 if ((!player.playing || player.paused) && now - player.lastActivityTime >= idleTimeout) {
                     this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
-                    player.destroy();
+                    await player.destroy();
                 }
             }
         }, 60000);

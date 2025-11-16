@@ -18,9 +18,9 @@ export declare class PlayerManager {
     find(predicate: (player: Player) => boolean): Player | undefined;
     map<T>(callback: (player: Player) => T): T[];
     forEach(callback: (player: Player) => void): void;
-    clear(): void;
-    destroyAll(): void;
-    destroy(guildId: string): boolean;
+    clear(): Promise<void>;
+    destroyAll(): Promise<void>;
+    destroy(guildId: string, reason?: string): Promise<boolean>;
     ensureVoiceConnection(player: Player): Promise<void>;
     verifyVoiceState(player: Player): Promise<void>;
 }

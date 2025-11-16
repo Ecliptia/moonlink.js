@@ -145,29 +145,21 @@ export class PlayerManager {
         this.all.forEach(callback);
     }
 
-    public clear(): void {
-        for (const player of this.all) {
-            player.destroy();
-        }
-        this.players.clear();
-        this.manager.emit("debug", `Moonlink.js > PlayerManager >> All players cleared.`);
+    public async clear(): Promise<void> {
+        if (this.players.size === 0) return;
+        await Promise.all([...this.all].map(p => p.destroy("clear")));
     }
 
-    public destroyAll(): void {
-        this.clear();
+    public async destroyAll(): Promise<void> {
+        await this.clear();
     }
 
-    public destroy(guildId: string): boolean {
+    public async destroy(guildId: string, reason?: string): Promise<boolean> {
         const player = this.get(guildId);
         if (!player) {
-            this.manager.emit("debug", `Moonlink.js > PlayerManager >> Attempted to destroy non-existent player for Guild: ${guildId}.`);
             return false;
         }
-
-        this.manager.emit("playerDestroy", player);
-        this.players.delete(guildId);
-        
-        this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player destroyed for Guild: ${guildId}`);
+        await player.destroy(reason);
         return true;
     }
 
