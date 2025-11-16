@@ -173,6 +173,7 @@ class Manager extends Util_1.EventEmitter {
         }
         if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
             this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Voice packets successfully received.`);
+            await player.updateData("voiceState", player.voiceState);
             if (player._awaitingVoiceConnection && !player._voiceStateReady) {
                 try {
                     await this.players.verifyVoiceState(player);

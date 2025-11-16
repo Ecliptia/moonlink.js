@@ -142,6 +142,36 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Node >> Starting player failover from ${this.identifier}...`);
             this.handlePlayerFailover();
         }
+        else {
+            const nodePlayers = [...this.manager.players.all.filter(p => p.node.uuid === this.uuid)];
+            if (shouldMovePlayersOnDisconnect) {
+                if (nodePlayers.length > 0) {
+                    this.manager.emit("debug", `Moonlink.js > Node >> No available nodes for failover. Destroying ${nodePlayers.length} players from node ${this.identifier}.`);
+                    (async () => {
+                        for (const player of nodePlayers) {
+                            await player.destroy();
+                        }
+                    })();
+                }
+            }
+            else {
+                if (nodePlayers.length > 0) {
+                    this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected. Resetting state for ${nodePlayers.length} players.`);
+                    for (const player of nodePlayers) {
+                        player.connected = false;
+                        player.playing = false;
+                        player.paused = false;
+                        player.voiceState = {};
+                        player._lastVoiceState = null;
+                        player._voiceStateReady = false;
+                        player._awaitingVoiceConnection = false;
+                        player.ping = -1;
+                        player.lastActivityTime = Date.now();
+                        this.manager.emit("debug", `Moonlink.js > Node >> Player ${player.guildId} state has been reset due to node disconnection.`);
+                    }
+                }
+            }
+        }
         if (this.retryAmount > this.reconnectAttempts) {
             this.reconnect();
         }
@@ -186,59 +216,68 @@ class Node {
                         for (const guildId of nodePlayersIndex) {
                             const playerState = await this.manager.database.get(`player-${guildId}`);
                             if (playerState) {
-                                try {
-                                    let player = this.manager.players.get(guildId);
-                                    if (!player) {
-                                        player = new (Util_1.Structure.get("Player"))(this.manager, this, {
-                                            guildId: playerState.guildId,
-                                            voiceChannelId: playerState.voiceChannelId,
-                                            textChannelId: playerState.textChannelId,
-                                            volume: playerState.volume,
-                                            loop: playerState.loop,
-                                            loopCount: playerState.loopCount,
-                                            autoPlay: playerState.autoPlay,
-                                            autoLeave: playerState.autoLeave,
-                                            selfDeaf: playerState.selfDeaf,
-                                            selfMute: playerState.selfMute,
-                                        });
-                                        player.playing = playerState.playing;
-                                        player.paused = playerState.paused;
-                                        player.connected = playerState.connected;
-                                        player.ping = playerState.ping;
-                                        player.data = playerState.data || {};
-                                        player.voiceState = playerState.voiceState || {};
-                                        if (playerState.currentTrack) {
-                                            player.current = new (Util_1.Structure.get("Track"))(playerState.currentTrack);
-                                        }
-                                        if (playerState.queue && playerState.queue.length > 0) {
-                                            const tracks = playerState.queue.map(t => new (Util_1.Structure.get("Track"))(t));
-                                            player.queue.add(tracks);
-                                        }
-                                        if (playerState.previousTracks && playerState.previousTracks.length > 0) {
-                                            player.previous = playerState.previousTracks.map(t => new (Util_1.Structure.get("Track"))(t));
-                                        }
-                                        this.manager.players.players.set(guildId, player);
-                                        this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} restored from DB on node ${this.identifier}.`);
-                                    }
-                                    if (player.voiceState.sessionId && player.voiceState.event) {
-                                        this.manager.emit("debug", `Moonlink.js > Node >> Reconnecting player ${guildId} to voice channel ${player.voiceChannelId}.`);
-                                        await player.node.rest.updatePlayer(player.guildId, { voice: player.voiceState });
-                                        if (playerState.playing && player.current) {
-                                            this.manager.emit("debug", `Moonlink.js > Node >> Resuming playback for player ${guildId}. Track: ${player.current.title} at position ${player.current.position || 0}ms.`);
-                                            await player.play({
-                                                track: player.current,
-                                                position: player.current.position || 0
-                                            });
-                                        }
-                                    }
+                                let player = this.manager.players.get(guildId);
+                                if (!player) {
+                                    player = new (Util_1.Structure.get("Player"))(this.manager, this, {
+                                        guildId: playerState.guildId,
+                                        voiceChannelId: playerState.voiceChannelId,
+                                        textChannelId: playerState.textChannelId,
+                                        selfDeaf: playerState.selfDeaf,
+                                        selfMute: playerState.selfMute,
+                                    });
+                                    this.manager.players.players.set(guildId, player);
+                                    this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} created from DB for auto-resume.`);
                                 }
-                                catch (error) {
-                                    this.manager.emit("debug", `Moonlink.js > Node >> Failed to restore player ${guildId} on node ${this.identifier}. Error: ${error.message}`);
+                                player.volume = playerState.volume;
+                                player.loop = playerState.loop;
+                                player.loopCount = playerState.loopCount;
+                                player.autoPlay = playerState.autoPlay;
+                                player.autoLeave = playerState.autoLeave;
+                                player.playing = playerState.playing;
+                                player.paused = playerState.paused;
+                                player.connected = false;
+                                player.ping = -1;
+                                player.data = playerState.data || {};
+                                player.voiceState = playerState.voiceState || {};
+                                player.current = playerState.currentTrack ? new (Util_1.Structure.get("Track"))(playerState.currentTrack) : null;
+                                player.queue.clear();
+                                if (playerState.queue && playerState.queue.length > 0) {
+                                    player.queue.add(playerState.queue.map(t => new (Util_1.Structure.get("Track"))(t)));
+                                }
+                                if (playerState.previousTracks && playerState.previousTracks.length > 0) {
+                                    player.previous = playerState.previousTracks.map(t => new (Util_1.Structure.get("Track"))(t));
+                                }
+                                else {
+                                    player.previous = [];
+                                }
+                                this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} state refreshed from DB.`);
+                                if (playerState.playing && player.current) {
+                                    this.manager.emit("debug", `Moonlink.js > Node >> Auto-resuming player ${guildId}. Requesting new voice connection.`);
+                                    await player.connect();
+                                    this.manager.emit("debug", `Moonlink.js > Node >> Resuming playback for player ${guildId}. Track: ${player.current.title}`);
+                                    await player.play({
+                                        track: player.current,
+                                        position: playerState.currentTrack.info.position || 0
+                                    });
                                 }
                             }
                             else {
                                 this.manager.emit("debug", `Moonlink.js > Node >> Player state not found in DB for guild ${guildId}. Removing from node-players index.`);
                                 await this.manager.players._updateNodePlayersIndex(this.uuid, guildId, 'remove');
+                            }
+                        }
+                    }
+                }
+                else if (!this.manager.options.autoResume && !payload.resumed) {
+                    this.manager.emit("debug", `Moonlink.js > Node >> AutoResume is disabled and session not resumed. Destroying players on node ${this.identifier}.`);
+                    const nodePlayersIndex = await this.manager.database.get(`node-players-${this.uuid}`);
+                    if (nodePlayersIndex && nodePlayersIndex.length > 0) {
+                        this.manager.emit("debug", `Moonlink.js > Node >> Found ${nodePlayersIndex.length} players to destroy on node ${this.identifier}.`);
+                        for (const guildId of nodePlayersIndex) {
+                            const player = this.manager.players.get(guildId);
+                            if (player) {
+                                this.manager.emit("debug", `Moonlink.js > Node >> Destroying player ${guildId} on node ${this.identifier}. Reason: autoResume disabled on node reconnect.`);
+                                await player.destroy();
                             }
                         }
                     }
