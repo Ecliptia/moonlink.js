@@ -290,6 +290,7 @@ export class Filters implements IFilters {
         }
 
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Applying filters: ${JSON.stringify(payload)}`);
+        this.player.manager.emit("filtersUpdate", this.player, this);
         const updatedPlayer = await this.player.node.rest.updatePlayer(this.player.guildId, { filters: payload });
         
         if (updatedPlayer) {
