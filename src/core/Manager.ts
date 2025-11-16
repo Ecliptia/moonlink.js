@@ -30,8 +30,8 @@ export class Manager extends EventEmitter<IManagerEvents> {
         this.send = config.send || null;
         
         this.options = { 
-            clientName: `Moonlink.js/v${version} (https://github.com/Ecliptia/moonlink.js)`,
-            userAgent: `Moonlink.js/v${version} (Snoozy/16.11.2025)`,
+            clientName: `Moonlink.js/${version} (https://github.com/Ecliptia/moonlink.js)`,
+            userAgent: `Moonlink.js/${version} (Snoozy/16.11.2025)`,
             resume: false,
             resumeTimeout: 60,
             autoResume: false,

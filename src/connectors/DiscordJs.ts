@@ -15,7 +15,7 @@ export class DiscordJs extends Connector {
         this.client = client;
         this.manager.emit("debug", `Moonlink.js > DiscordJsConnector#listen >> Attaching listeners to client...`);
 
-        this.client.once("ready", () => {
+        this.client.once("clientReady", () => {
             this.manager.emit("debug", `Moonlink.js > DiscordJsConnector#ready >> Client is ready, initializing manager with user ID ${this.client.user.id}`);
             this.manager.init(this.client.user.id);
         });
