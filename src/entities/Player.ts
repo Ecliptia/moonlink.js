@@ -208,7 +208,7 @@ export class Player {
         
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track ? nextTrack : new Track(nextTrack);
-        this.current.position = options.position ?? 0;
+        this.current.position = options.position || 0;
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
 
         const oldPlaying = this.playing;
@@ -232,7 +232,7 @@ export class Player {
                 encoded: this.current.encoded,
                 userData: this.current.userData 
             },
-            position: this.current.position,
+            position: options.position || this.current.position,
         };
 
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
