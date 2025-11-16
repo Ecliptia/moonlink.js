@@ -41,7 +41,7 @@ class LMDBDatabase {
     db;
     dbPath;
     constructor(options) {
-        this.dbPath = options.path ? path.resolve(options.path) : path.join(process.cwd(), "src", "datastore");
+        this.dbPath = options.path ? path.resolve(options.path) : path.resolve(__dirname, "../datastore");
         if (!fs.existsSync(this.dbPath)) {
             try {
                 fs.mkdirSync(this.dbPath, { recursive: true });
