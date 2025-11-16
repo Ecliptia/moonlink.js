@@ -60,7 +60,7 @@ export declare class Player {
     setAutoPlay(autoPlay: boolean): this;
     setAutoLeave(autoLeave: boolean): this;
     shuffle(): this;
-    destroy(): Promise<void>;
+    destroy(reason?: string): Promise<void>;
     restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
     setVoiceChannel(voiceChannelId: string): this;

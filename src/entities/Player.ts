@@ -443,24 +443,34 @@ export class Player {
         return this;
     }
 
-    public async destroy(): Promise<void> {
+    public async destroy(reason?: string): Promise<void> {
         if (this.destroyed) {
-            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player already destroyed for guild ${this.guildId}`);
             return;
         }
+        this.destroyed = true;
 
-        this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}`);
+        this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}. Reason: ${reason || "No reason provided"}`);
         
+        this.playing = false;
+        this.paused = false;
+
         await this.disconnect();
-        await this.stop();
+        
+        try {
+            await this.node.rest.destroyPlayer(this.guildId);
+        } catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${(e as Error).message}`);
+        }
+        
         this.queue.clear();
-        this.manager.players.destroy(this.guildId);
+        
+        this.manager.emit("playerDestroy", this, reason);
+        this.manager.players.players.delete(this.guildId);
         
         await this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'remove');
         await this.manager.database.delete(`player-${this.guildId}`);
 
-        this.destroyed = true;
-        this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}. State removed from DB and node-players index.`);
+        this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
 
     public async restart(): Promise<boolean> {

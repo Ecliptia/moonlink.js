@@ -117,25 +117,20 @@ class PlayerManager {
     forEach(callback) {
         this.all.forEach(callback);
     }
-    clear() {
-        for (const player of this.all) {
-            player.destroy();
-        }
-        this.players.clear();
-        this.manager.emit("debug", `Moonlink.js > PlayerManager >> All players cleared.`);
+    async clear() {
+        if (this.players.size === 0)
+            return;
+        await Promise.all([...this.all].map(p => p.destroy("clear")));
     }
-    destroyAll() {
-        this.clear();
+    async destroyAll() {
+        await this.clear();
     }
-    destroy(guildId) {
+    async destroy(guildId, reason) {
         const player = this.get(guildId);
         if (!player) {
-            this.manager.emit("debug", `Moonlink.js > PlayerManager >> Attempted to destroy non-existent player for Guild: ${guildId}.`);
             return false;
         }
-        this.manager.emit("playerDestroy", player);
-        this.players.delete(guildId);
-        this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player destroyed for Guild: ${guildId}`);
+        await player.destroy(reason);
         return true;
     }
     async ensureVoiceConnection(player) {
