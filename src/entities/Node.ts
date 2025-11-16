@@ -107,6 +107,7 @@ export class Node {
   }
 
   public reconnect(): void {
+    this.manager.emit("nodeReconnect", this);
     this.setState(NodeState.CONNECTING);
     const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
 
@@ -225,6 +226,8 @@ export class Node {
       this.manager.emit("debug", `Moonlink.js > Node <- Received malformed payload from ${this.identifier}. Data: ${data}, Error: ${e}.`);
       return;
     }
+
+    this.manager.emit("nodeRaw", this, payload);
 
     const player = this.manager.players.get(payload.guildId);
     if (!player && payload.guildId) {
@@ -888,6 +891,7 @@ export class Node {
     await this.manager.database.delete(`node-players-${this.uuid}`);
     this.destroyed = true;
     this.setState(NodeState.DESTROYED);
+    this.manager.emit("nodeDestroy", this.identifier);
     this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed. Session data and node-players index removed from DB.`);
   }
 }

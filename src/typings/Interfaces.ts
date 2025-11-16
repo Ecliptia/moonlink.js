@@ -1,25 +1,78 @@
-import { NodeSortStrategy } from "./types";
+import { Node } from "../entities/Node";
+import { Player } from "../entities/Player";
+import { Track } from "../entities/Track";
+import { Filters } from "../entities/Filters";
+import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy } from "./types";
+
 export interface IManagerEvents {
     debug: (message: string) => void;
-    nodeStateChange: (node: any, oldState: any, newState: any) => void;
-    nodeConnected: (node: any) => void;
-    nodeDisconnect: (node: any, code: number, reason: string) => void;
-    nodeReady: (node: any, payload: any) => void;
-    nodeError: (node: any, error: Error) => void;
-    playerCreate: (player: any) => void;
-    playerDestroy: (player: any) => void;
-    playerSwitchedNode: (player: any, oldNode: any, newNode: any) => void;
-    playerVoiceChannelSet: (player: any, oldChannel: string, newChannel: string) => void;
-    playerTextChannelSet: (player: any, oldChannel: string, newChannel: string) => void;
-    playerTriggeredBack: (player: any, track: any) => void;
-    trackStart: (player: any, track: any) => void;
-    trackEnd: (player: any, track: any, reason: string, payload: any) => void;
-    trackStuck: (player: any, track: any, threshold: number, payload: any) => void;
-    trackException: (player: any, track: any, exception: any, payload: any) => void;
-    socketClosed: (player: any, code: number, reason: string, byRemote: boolean, payload: any) => void;
-    queueEnd: (player: any, lastTrack: any) => void;
-    autoPlayed: (player: any, track: any, previousTrack: any) => void;
-    autoLeaved: (player: any, lastTrack: any) => void;
+
+    // Node Events
+    nodeCreate: (node: Node) => void;
+    nodeReady: (node: Node, payload: any) => void;
+    nodeConnected: (node: Node) => void;
+    nodeError: (node: Node, error: Error) => void;
+    nodeReconnect: (node: Node) => void;
+    nodeDisconnect: (node: Node, code: number, reason: string) => void;
+    nodeDestroy: (identifier: string) => void;
+    nodeRaw: (node: Node, payload: any) => void;
+    nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
+    nodeAutoResumed: (node: Node, players: Player[]) => void;
+
+    // Player Events
+    playerCreate: (player: Player) => void;
+    playerDestroy: (player: Player, reason?: string) => void;
+    playerUpdate: (player: Player, track: Track, payload: any) => void;
+    playerSwitchedNode: (player: Player, oldNode: Node, newNode: Node) => void;
+    playerConnecting: (player: Player) => void;
+    playerConnected: (player: Player) => void;
+    playerReady: (player: Player) => void;
+    playerResuming: (player: Player) => void;
+    playerResumed: (player: Player) => void;
+    playerDisconnected: (player: Player) => void;
+    playerReconnect: (player: Player, reason?: string) => void;
+    playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
+    playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
+    playerSuppressChange: (player: Player, suppress: boolean) => void;
+    playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
+    playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
+    playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
+    playerChangedLoop: (player: Player, oldLoop: PlayerLoop, loop: PlayerLoop, oldLoopCount?: number, newLoopCount?: number) => void;
+    playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
+    playerNodeSet: (player: Player, oldNode: string, newNode: string) => void;
+    
+    // Player Triggered Events
+    playerTriggeredPlay: (player: Player, track: Track) => void;
+    playerTriggeredPause: (player: Player) => void;
+    playerTriggeredResume: (player: Player) => void;
+    playerTriggeredStop: (player: Player) => void;
+    playerTriggeredSkip: (player: Player, oldTrack: Record<string, any>, currentTrack: Track, position: number) => void;
+    playerTriggeredSeek: (player: Player, position: number) => void;
+    playerTriggeredShuffle: (player: Player, oldQueue: Record<string, any>, currentQueue: Track[]) => void;
+    playerTriggeredBack: (player: Player, track: Track) => void;
+
+    // Track Events
+    trackStart: (player: Player, track: Track) => void;
+    trackEnd: (player: Player, track: Track, reason: TrackEndReason, payload?: any) => void;
+    trackStuck: (player: Player, track: Track, threshold: number, payload?: any) => void;
+    trackException: (player: Player, track: Track, exception: any, payload?: any) => void;
+
+    // Queue Events
+    queueAdd: (player: Player, tracks: Track | Track[]) => void;
+    queueRemove: (player: Player, tracks: Track | Track[]) => void;
+    queueMoveRange: (player: Player, tracks: Track[], fromIndex: number, toIndex: number) => void;
+    queueRemoveRange: (player: Player, tracks: Track[], startIndex: number, endIndex: number) => void;
+    queueDuplicate: (player: Player, tracks: Track[], index: number) => void;
+    queueEnd: (player: Player, lastTrack?: Track) => void;
+
+    // Other Events
+    filtersUpdate: (player: Player, filters: Filters) => void;
+    socketClosed: (player: Player, code: number, reason: string, byRemote: boolean, payload?: any) => void;
+    voiceSessionChanged: (player: Player, oldSessionId: string | boolean, sessionId: string) => void;
+    autoPlayed: (player: Player, track: Track, previousTrack: Track) => void;
+    autoLeaved: (player: Player, lastTrack?: Track) => void;
 }
 
 export interface IManagerNodeConfig {

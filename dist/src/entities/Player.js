@@ -46,7 +46,7 @@ class Player {
         this.loop = config.loop ?? this.manager.options.defaultPlayer?.loop ?? "off";
         this.loopCount = config.loopCount;
         this.historySize = this.manager.options.defaultPlayer?.historySize ?? 10;
-        this.queue = new (Util_1.Structure.get("Queue"))(this.manager);
+        this.queue = new (Util_1.Structure.get("Queue"))(this);
         this.filters = new (Util_1.Structure.get("Filters"))(this);
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
         this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'add');
@@ -201,6 +201,7 @@ class Player {
             },
             position: options.position || this.current.position,
         };
+        this.manager.emit("playerTriggeredPlay", this, this.current);
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
         try {
             await this.node.rest.updatePlayer(this.guildId, payload, options.noReplace ?? this.manager.options.noReplace);
@@ -237,6 +238,7 @@ class Player {
             return this;
         }
         this.manager.emit("debug", `Moonlink.js > Player#pause -> Sending pause request to node ${this.node.identifier} for guild ${this.guildId}`);
+        this.manager.emit("playerTriggeredPause", this);
         await this.node.rest.updatePlayer(this.guildId, { paused: true });
         const oldPaused = this.paused;
         this.paused = true;
@@ -252,6 +254,7 @@ class Player {
             return this;
         }
         this.manager.emit("debug", `Moonlink.js > Player#resume -> Sending resume request to node ${this.node.identifier} for guild ${this.guildId}`);
+        this.manager.emit("playerTriggeredResume", this);
         await this.node.rest.updatePlayer(this.guildId, { paused: false });
         const oldPaused = this.paused;
         this.paused = false;
@@ -262,6 +265,7 @@ class Player {
     }
     async stop() {
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
+        this.manager.emit("playerTriggeredStop", this);
         await this.node.rest.updatePlayer(this.guildId, { track: { encoded: null } });
         const oldPlaying = this.playing;
         this.playing = false;
@@ -275,6 +279,7 @@ class Player {
         return this;
     }
     async skip(position) {
+        const oldTrack = this.current;
         if (position !== undefined) {
             this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to position ${position} in queue for guild ${this.guildId}`);
             const track = this.queue.remove(position);
@@ -282,6 +287,7 @@ class Player {
                 this.manager.emit("debug", `Moonlink.js > Player#skip >> Invalid queue position for guild ${this.guildId}`);
                 return false;
             }
+            this.manager.emit("playerTriggeredSkip", this, oldTrack, track, position);
             const played = await this.play({ track: track instanceof Track_1.Track ? track : new Track_1.Track(track) });
             await this.updateData("queue", this.queue.map(t => t.toJSON()));
             return played;
@@ -295,6 +301,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty, cannot skip for guild ${this.guildId}`);
             return false;
         }
+        const nextTrack = this.queue.first;
+        this.manager.emit("playerTriggeredSkip", this, oldTrack, nextTrack, 0);
         this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to next track in queue for guild ${this.guildId}`);
         const played = await this.play();
         await this.updateData("queue", this.queue.map(t => t.toJSON()));
@@ -303,6 +311,7 @@ class Player {
     async seek(position) {
         (0, Util_1.validate)(position, (v) => typeof v === "number" && !isNaN(v) && v >= 0, "Player#seek > Position must be a valid number.");
         this.manager.emit("debug", `Moonlink.js > Player#seek -> Seeking to position ${position}ms for guild ${this.guildId}`);
+        this.manager.emit("playerTriggeredSeek", this, position);
         await this.node.rest.updatePlayer(this.guildId, { position });
         if (this.current) {
             this.current.position = position;
@@ -316,6 +325,7 @@ class Player {
         const oldVolume = this.volume;
         this.volume = volume;
         this.updateData("volume", this.volume);
+        this.manager.emit("playerChangedVolume", this, oldVolume, volume);
         this.manager.emit("debug", `Moonlink.js > Player#setVolume -> Changing volume from ${oldVolume} to ${volume} for guild ${this.guildId}`);
         this.node.rest.updatePlayer(this.guildId, { volume });
         this.manager.emit("debug", `Moonlink.js > Player#setVolume >> Volume updated for guild ${this.guildId}`);
@@ -323,22 +333,26 @@ class Player {
     }
     setLoop(loop, count) {
         const oldLoop = this.loop;
+        const oldLoopCount = this.loopCount;
         this.loop = loop;
         this.loopCount = count;
         this.updateData("loop", this.loop);
         this.updateData("loopCount", this.loopCount);
+        this.manager.emit("playerChangedLoop", this, oldLoop, this.loop, oldLoopCount, this.loopCount);
         this.manager.emit("debug", `Moonlink.js > Player#setLoop >> Loop mode changed from "${oldLoop}" to "${loop}"${count ? ` (count: ${count})` : ""} for guild ${this.guildId}`);
         return this;
     }
     setAutoPlay(autoPlay) {
         this.autoPlay = autoPlay;
         this.updateData("autoPlay", this.autoPlay);
+        this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.manager.emit("debug", `Moonlink.js > Player#setAutoPlay >> AutoPlay set to ${autoPlay} for guild ${this.guildId}`);
         return this;
     }
     setAutoLeave(autoLeave) {
         this.autoLeave = autoLeave;
         this.updateData("autoLeave", this.autoLeave);
+        this.manager.emit("playerAutoLeaveSet", this, autoLeave);
         this.manager.emit("debug", `Moonlink.js > Player#setAutoLeave >> AutoLeave set to ${autoLeave} for guild ${this.guildId}`);
         return this;
     }
@@ -347,8 +361,10 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#shuffle >> Queue has less than 2 tracks, cannot shuffle for guild ${this.guildId}`);
             return this;
         }
+        const oldQueue = [...this.queue.tracks];
         this.manager.emit("debug", `Moonlink.js > Player#shuffle -> Shuffling queue with ${this.queue.size} tracks for guild ${this.guildId}`);
         this.queue.shuffle();
+        this.manager.emit("playerTriggeredShuffle", this, oldQueue, this.queue.tracks);
         this.manager.emit("debug", `Moonlink.js > Player#shuffle >> Queue shuffled for guild ${this.guildId}`);
         return this;
     }
@@ -431,7 +447,7 @@ class Player {
         this.voiceChannelId = voiceChannelId;
         this.updateData("voiceChannelId", this.voiceChannelId);
         this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannel >> Voice channel changed from ${oldChannel} to ${voiceChannelId} for guild ${this.guildId}`);
-        this.manager.emit("playerVoiceChannelSet", this, oldChannel, voiceChannelId);
+        this.manager.emit("playerVoiceChannelIdSet", this, oldChannel, voiceChannelId);
         return this;
     }
     setTextChannel(textChannelId) {
@@ -444,7 +460,7 @@ class Player {
         this.textChannelId = textChannelId;
         this.updateData("textChannelId", this.textChannelId);
         this.manager.emit("debug", `Moonlink.js > Player#setTextChannel >> Text channel changed from ${oldChannel} to ${textChannelId} for guild ${this.guildId}`);
-        this.manager.emit("playerTextChannelSet", this, oldChannel, textChannelId);
+        this.manager.emit("playerTextChannelIdSet", this, oldChannel, textChannelId);
         return this;
     }
     async replay() {

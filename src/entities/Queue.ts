@@ -1,12 +1,15 @@
 import { Track } from "./Track";
 import type { Manager } from "../core/Manager";
+import type { Player } from "./Player";
 
 export class Queue {
+    private player: Player;
     private manager: Manager;
     public tracks: Track[] = [];
 
-    constructor(manager: Manager) {
-        this.manager = manager;
+    constructor(player: Player) {
+        this.player = player;
+        this.manager = player.manager;
     }
 
     public get size(): number {
@@ -38,6 +41,8 @@ export class Queue {
         const maxSize = this.manager.options.queue?.maxSize ?? 1000;
         const allowDuplicates = this.manager.options.queue?.allowDuplicates ?? true;
 
+        let addedTracks: Track[] = [];
+
         for (const t of tracksToAdd) {
             if (t === undefined || t === null) continue;
 
@@ -52,6 +57,11 @@ export class Queue {
             }
 
             this.tracks.push(t);
+            addedTracks.push(t);
+        }
+
+        if (addedTracks.length > 0) {
+            this.manager.emit("queueAdd", this.player, addedTracks.length === 1 ? addedTracks[0] : addedTracks);
         }
     }
 
@@ -65,23 +75,38 @@ export class Queue {
 
     public remove(index: number = 0): Track | undefined {
         if (index < 0 || index >= this.tracks.length) return undefined;
-        return this.tracks.splice(index, 1)[0];
+        const removedTrack = this.tracks.splice(index, 1)[0];
+        if (removedTrack) {
+            this.manager.emit("queueRemove", this.player, removedTrack);
+        }
+        return removedTrack;
     }
 
     public shift(): Track | undefined {
-        return this.tracks.shift();
+        const track = this.tracks.shift();
+        if (track) {
+            this.manager.emit("queueRemove", this.player, track);
+        }
+        return track;
     }
 
     public unshift(track: Track): void {
         this.tracks.unshift(track);
+        this.manager.emit("queueAdd", this.player, track);
     }
 
     public pop(): Track | undefined {
-        return this.tracks.pop();
+        const track = this.tracks.pop();
+        if (track) {
+            this.manager.emit("queueRemove", this.player, track);
+        }
+        return track;
     }
 
     public clear(): void {
+        const oldQueue = [...this.tracks];
         this.tracks = [];
+        this.manager.emit("queueRemove", this.player, oldQueue);
     }
 
     public shuffle(): void {
@@ -96,11 +121,14 @@ export class Queue {
 
         const uniqueTracks: Track[] = [];
         const seenEncoded: Set<string> = new Set();
+        const removedTracks: Track[] = [];
 
         for (const track of this.tracks) {
             if (!seenEncoded.has(track.encoded)) {
                 uniqueTracks.push(track);
                 seenEncoded.add(track.encoded);
+            } else {
+                removedTracks.push(track);
             }
         }
 
@@ -109,6 +137,9 @@ export class Queue {
         }
 
         this.tracks = uniqueTracks;
+        if (removedTracks.length > 0) {
+            this.manager.emit("queueRemove", this.player, removedTracks);
+        }
         return true;
     }
 
@@ -140,6 +171,7 @@ export class Queue {
         
         const track = this.tracks.splice(from, 1)[0];
         this.tracks.splice(to, 0, track);
+        this.manager.emit("queueMoveRange", this.player, [track], from, to);
         return true;
     }
 
@@ -152,6 +184,7 @@ export class Queue {
 
         const tracksToMove = this.tracks.splice(fromIndex, count);
         this.tracks.splice(toIndex, 0, ...tracksToMove);
+        this.manager.emit("queueMoveRange", this.player, tracksToMove, fromIndex, toIndex);
         return true;
     }
 
@@ -161,7 +194,8 @@ export class Queue {
             return false;
         }
 
-        this.tracks.splice(startIndex, endIndex - startIndex + 1);
+        const removed = this.tracks.splice(startIndex, endIndex - startIndex + 1);
+        this.manager.emit("queueRemoveRange", this.player, removed, startIndex, endIndex);
         return true;
     }
 
@@ -177,6 +211,7 @@ export class Queue {
         }
 
         this.tracks.splice(index + 1, 0, ...duplicatedTracks);
+        this.manager.emit("queueDuplicate", this.player, duplicatedTracks, index);
         return true;
     }
 
@@ -184,7 +219,8 @@ export class Queue {
         if (index < 0 || index >= this.tracks.length) return false;
         if (index === 0) return true;
 
-        this.tracks.splice(0, index);
+        const removed = this.tracks.splice(0, index);
+        this.manager.emit("queueRemoveRange", this.player, removed, 0, index - 1);
         return true;
     }
 

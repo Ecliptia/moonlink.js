@@ -1,9 +1,10 @@
 import { Track } from "./Track";
-import type { Manager } from "../core/Manager";
+import type { Player } from "./Player";
 export declare class Queue {
+    private player;
     private manager;
     tracks: Track[];
-    constructor(manager: Manager);
+    constructor(player: Player);
     get size(): number;
     get first(): Track | undefined;
     get last(): Track | undefined;
