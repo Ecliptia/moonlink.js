@@ -1,13 +1,16 @@
 import { IDatabaseOptions } from "../typings/Interfaces";
 import { MemoryDatabase } from "../database/MemoryDatabase";
 import { LMDBDatabase } from "../database/LMDBDatabase";
+import { BetterSqlite3Database } from "../database/BetterSqlite3Database";
 
 export class DatabaseManager {
-    private database: MemoryDatabase | LMDBDatabase;
+    private database: MemoryDatabase | LMDBDatabase | BetterSqlite3Database;
 
     constructor(options: IDatabaseOptions) {
         if (options.provider === "lmdb") {
             this.database = new LMDBDatabase(options);
+        } else if (options.provider === "better-sqlite3") {
+            this.database = new BetterSqlite3Database(options);
         } else {
             this.database = new MemoryDatabase(options);
         }

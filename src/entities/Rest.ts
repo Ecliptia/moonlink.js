@@ -17,7 +17,8 @@ export class Rest {
         const res = await makeRequest<IRESTGetPlayers[]>(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -27,7 +28,8 @@ export class Rest {
         const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -42,7 +44,8 @@ export class Rest {
             method: "PATCH",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: data
         });
@@ -53,7 +56,8 @@ export class Rest {
         await makeRequest(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "DELETE",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
     }
@@ -65,7 +69,8 @@ export class Rest {
         const res = await makeRequest<any>(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
 
@@ -79,7 +84,8 @@ export class Rest {
         const res = await makeRequest<ITrack>(`${this.url}/v4/decodetrack?${params}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -90,7 +96,8 @@ export class Rest {
             method: "POST",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: encodedTracks
         });
@@ -101,7 +108,8 @@ export class Rest {
         const res = await makeRequest<any>(`${this.url}/v4/info`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -109,7 +117,10 @@ export class Rest {
 
     public async getVersion(): Promise<string | null> {
         const res = await makeRequest<string>(`${this.url}/version`, {
-            method: "GET"
+            method: "GET",
+            headers: {
+                "User-Agent": this.node.manager.options?.userAgent
+            }
         });
         return res || null;
     }
@@ -118,7 +129,8 @@ export class Rest {
         const res = await makeRequest<INodeStats>(`${this.url}/v4/stats`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -128,7 +140,8 @@ export class Rest {
         const res = await makeRequest<IRoutePlannerStatus>(`${this.url}/v4/routeplanner/status`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -139,7 +152,8 @@ export class Rest {
             method: "POST",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: { address }
         });
@@ -149,7 +163,8 @@ export class Rest {
         await makeRequest(`${this.url}/v4/routeplanner/free/all`, {
             method: "POST",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
     }
@@ -158,7 +173,8 @@ export class Rest {
         const res = await makeRequest<IRESTGetLyrics>(`${this.url}/v4/lyrics/${trackId}`, {
             method: "GET",
             headers: {
-                "Authorization": this.node.password
+                "Authorization": this.node.password,
+                "User-Agent": this.node.manager.options?.userAgent
             }
         });
         return res || null;
@@ -169,7 +185,8 @@ export class Rest {
             method: "PATCH",
             headers: {
                 "Authorization": this.node.password,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": this.node.manager.options?.userAgent
             },
             body: {
                 resuming,
