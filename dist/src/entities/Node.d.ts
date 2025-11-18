@@ -39,7 +39,7 @@ export declare class Node {
     reconnect(): void;
     protected open(): Promise<void>;
     protected close(event: {
-        code: number;
+        code: any;
         reason: string;
     }): void;
     protected message({ data }: {
