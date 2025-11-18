@@ -36,10 +36,11 @@ const manager = new Manager({
     nodes,
     options: {
         database: {
-            provider: "memory",
+            provider: "lmdb",
             path: "./database"
         },
         autoResume: true,
+        resume: true, 
         customFilters: {
             "Reset": {},
             "Alien": "pitch=1.5,vibrato=f=3:d=0.7",
@@ -636,7 +637,12 @@ manager.on("trackStart", async (player, track) => {
     if (oldMessage) oldMessage.delete().catch(() => {});
 
     const newUI = await buildPlayerUI(player);
-    const newMessage = await player.textChannelId.send({ ...newUI, flags: [MessageFlags.SuppressNotifications] });
+    const channel = await client.channels.fetch(player.textChannelId).catch(() => null);
+    if (!channel) {
+        console.error(`[trackStart] Could not find text channel with ID ${player.textChannelId} for guild ${player.guildId}`);
+        return;
+    }
+    const newMessage = await channel.send({ ...newUI, flags: [MessageFlags.SuppressNotifications] });
     playerMessages.set(player.guildId, newMessage);
 
     const existingInterval = playerIntervals.get(player.guildId);
@@ -667,7 +673,7 @@ client.on("interactionCreate", async (interaction) => {
             if (interaction.commandName !== "play") return;
             if (!interaction.member.voice.channel) return interaction.reply({ content: "Whoa there! 🛑 You gotta be in a voice channel for me to play some tunes! Hop in one and try again!", flags: [MessageFlags.Ephemeral] });
             await interaction.deferReply();
-            const player = manager.players.create({ guildId: interaction.guildId, voiceChannelId: interaction.member.voice.channelId, textChannelId: interaction.channel, autoPlay: true, selfDeaf: true });
+            const player = manager.players.create({ guildId: interaction.guildId, voiceChannelId: interaction.member.voice.channelId, textChannelId: interaction.channel.id, autoPlay: true, selfDeaf: true });
             const wasPlaying = player.playing;
             if (!player.connected) await player.connect();
             const searchResult = await manager.search({ query: interaction.options.getString("query"), requester: interaction.user });
