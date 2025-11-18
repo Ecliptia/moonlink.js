@@ -12,7 +12,7 @@ class PlayerManager {
         return [...this.players.values()];
     }
     async _updateNodePlayersIndex(nodeUuid, guildId, action) {
-        const nodePlayersKey = `node-players-${nodeUuid}`;
+        const nodePlayersKey = `moonlink.${this.manager.clientId}.node-players.${nodeUuid}`;
         let nodePlayers = await this.manager.database.get(nodePlayersKey) || [];
         if (action === 'add') {
             if (!nodePlayers.includes(guildId)) {
@@ -28,51 +28,6 @@ class PlayerManager {
             }
         }
         await this.manager.database.set(nodePlayersKey, nodePlayers);
-    }
-    async loadPersistedPlayers() {
-        this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers -> Attempting to load persisted players.`);
-        for (const node of this.manager.nodes.onlineNodes) {
-            const nodePlayersKey = `node-players-${node.uuid}`;
-            const guildIds = await this.manager.database.get(nodePlayersKey) || [];
-            if (guildIds.length === 0) {
-                this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers >> No persisted players found for node ${node.identifier}.`);
-                continue;
-            }
-            this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers -> Found ${guildIds.length} persisted players for node ${node.identifier}.`);
-            for (const guildId of guildIds) {
-                const playerState = await this.manager.database.get(`player-${guildId}`);
-                if (playerState) {
-                    const player = new (Util_1.Structure.get("Player"))(this.manager, node, {
-                        guildId: playerState.guildId,
-                        voiceChannelId: playerState.voiceChannelId,
-                        textChannelId: playerState.textChannelId,
-                        volume: playerState.volume,
-                        loop: playerState.loop,
-                        loopCount: playerState.loopCount,
-                        autoPlay: playerState.autoPlay,
-                        autoLeave: playerState.autoLeave,
-                        selfDeaf: playerState.selfDeaf,
-                        selfMute: playerState.selfMute,
-                    });
-                    player.current = playerState.currentTrack ? new (Util_1.Structure.get("Track"))(playerState.currentTrack) : null;
-                    player.queue.add(playerState.queue.map(trackData => new (Util_1.Structure.get("Track"))(trackData)));
-                    player.previous = playerState.previousTracks.map(trackData => new (Util_1.Structure.get("Track"))(trackData));
-                    player.voiceState = playerState.voiceState;
-                    player.data = playerState.data;
-                    player.playing = playerState.playing;
-                    player.paused = playerState.paused;
-                    player.connected = playerState.connected;
-                    player.ping = playerState.ping;
-                    this.players.set(guildId, player);
-                    this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers >> Successfully loaded player for guild ${guildId} on node ${node.identifier}.`);
-                }
-                else {
-                    this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers >> No player state found for guild ${guildId}, removing from index.`);
-                    await this._updateNodePlayersIndex(node.uuid, guildId, 'remove');
-                }
-            }
-        }
-        this.manager.emit("debug", `Moonlink.js > PlayerManager#loadPersistedPlayers >> Finished loading persisted players.`);
     }
     create(options) {
         (0, Util_1.validate)(options.guildId, (v) => typeof v === "string", "PlayerOptions#guildId must be a string.");

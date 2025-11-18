@@ -12,6 +12,10 @@ export class Queue {
         this.manager = player.manager;
     }
 
+    private async _save(): Promise<void> {
+        await this.manager.database.set(`moonlink.${this.manager.clientId}.queue.${this.player.guildId}`, this.tracks.map(t => t.toJSON()));
+    }
+
     public get size(): number {
         return this.tracks.length;
     }
@@ -62,6 +66,7 @@ export class Queue {
 
         if (addedTracks.length > 0) {
             this.manager.emit("queueAdd", this.player, addedTracks.length === 1 ? addedTracks[0] : addedTracks);
+            this._save();
         }
     }
 
@@ -78,6 +83,7 @@ export class Queue {
         const removedTrack = this.tracks.splice(index, 1)[0];
         if (removedTrack) {
             this.manager.emit("queueRemove", this.player, removedTrack);
+            this._save();
         }
         return removedTrack;
     }
@@ -86,6 +92,7 @@ export class Queue {
         const track = this.tracks.shift();
         if (track) {
             this.manager.emit("queueRemove", this.player, track);
+            this._save();
         }
         return track;
     }
@@ -93,12 +100,14 @@ export class Queue {
     public unshift(track: Track): void {
         this.tracks.unshift(track);
         this.manager.emit("queueAdd", this.player, track);
+        this._save();
     }
 
     public pop(): Track | undefined {
         const track = this.tracks.pop();
         if (track) {
             this.manager.emit("queueRemove", this.player, track);
+            this._save();
         }
         return track;
     }
@@ -107,6 +116,7 @@ export class Queue {
         const oldQueue = [...this.tracks];
         this.tracks = [];
         this.manager.emit("queueRemove", this.player, oldQueue);
+        this._save();
     }
 
     public shuffle(): void {
@@ -114,6 +124,7 @@ export class Queue {
             const j = Math.floor(Math.random() * (i + 1));
             [this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
         }
+        this._save();
     }
 
     public removeDuplicates(): boolean {
@@ -140,22 +151,26 @@ export class Queue {
         if (removedTracks.length > 0) {
             this.manager.emit("queueRemove", this.player, removedTracks);
         }
+        this._save();
         return true;
     }
 
     public sortByTitle(): void {
         if (this.tracks.length < 2) return;
         this.tracks.sort((a, b) => a.title.localeCompare(b.title));
+        this._save();
     }
 
     public sortByAuthor(): void {
         if (this.tracks.length < 2) return;
         this.tracks.sort((a, b) => a.author.localeCompare(b.author));
+        this._save();
     }
 
     public sortByDuration(): void {
         if (this.tracks.length < 2) return;
         this.tracks.sort((a, b) => a.duration - b.duration);
+        this._save();
     }
 
     public find(query: string): Track | undefined {
@@ -172,6 +187,7 @@ export class Queue {
         const track = this.tracks.splice(from, 1)[0];
         this.tracks.splice(to, 0, track);
         this.manager.emit("queueMoveRange", this.player, [track], from, to);
+        this._save();
         return true;
     }
 
@@ -185,6 +201,7 @@ export class Queue {
         const tracksToMove = this.tracks.splice(fromIndex, count);
         this.tracks.splice(toIndex, 0, ...tracksToMove);
         this.manager.emit("queueMoveRange", this.player, tracksToMove, fromIndex, toIndex);
+        this._save();
         return true;
     }
 
@@ -196,6 +213,7 @@ export class Queue {
 
         const removed = this.tracks.splice(startIndex, endIndex - startIndex + 1);
         this.manager.emit("queueRemoveRange", this.player, removed, startIndex, endIndex);
+        this._save();
         return true;
     }
 
@@ -212,6 +230,7 @@ export class Queue {
 
         this.tracks.splice(index + 1, 0, ...duplicatedTracks);
         this.manager.emit("queueDuplicate", this.player, duplicatedTracks, index);
+        this._save();
         return true;
     }
 
@@ -221,6 +240,7 @@ export class Queue {
 
         const removed = this.tracks.splice(0, index);
         this.manager.emit("queueRemoveRange", this.player, removed, 0, index - 1);
+        this._save();
         return true;
     }
 
@@ -234,6 +254,7 @@ export class Queue {
 
     public reverse(): void {
         this.tracks.reverse();
+        this._save();
     }
 
     public [Symbol.iterator](): Iterator<Track> {

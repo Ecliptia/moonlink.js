@@ -32,8 +32,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
         this.options = { 
             clientName: `Moonlink.js/${version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${version} (Snoozy/16.11.2025)`,
-            resume: false,
-            resumeTimeout: 60,
             autoResume: false,
             playerAutoFailover: false,
             movePlayersOnNodeDisconnect: false,
@@ -110,7 +108,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
         this.clientId = clientId;
 
         this.nodes.init();
-        await this.players.loadPersistedPlayers();
         
         if (this.options.playerDestruction?.autoDestroyOnIdle) {
             this.startIdleMonitoring();

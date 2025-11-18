@@ -22,8 +22,6 @@ class Manager extends Util_1.EventEmitter {
         this.options = {
             clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${__1.version} (Snoozy/16.11.2025)`,
-            resume: false,
-            resumeTimeout: 60,
             autoResume: false,
             playerAutoFailover: false,
             movePlayersOnNodeDisconnect: false,
@@ -96,7 +94,6 @@ class Manager extends Util_1.EventEmitter {
         (0, Util_1.validate)(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
         this.clientId = clientId;
         this.nodes.init();
-        await this.players.loadPersistedPlayers();
         if (this.options.playerDestruction?.autoDestroyOnIdle) {
             this.startIdleMonitoring();
         }
