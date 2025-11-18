@@ -40,7 +40,7 @@ const manager = new Manager({
             path: "./database"
         },
         autoResume: true,
-        resume: false, 
+        resume: true, 
         customFilters: {
             "Reset": {},
             "Alien": "pitch=1.5,vibrato=f=3:d=0.7",

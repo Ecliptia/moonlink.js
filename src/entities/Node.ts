@@ -132,14 +132,7 @@ export class Node {
         this.manager.emit("debug", `Moonlink.js > Node >> Failed to get node info for ${this.identifier}. Error: ${error.message}`);
     }
     
-    if (this.manager.options.resume) {
-        try {
-            await this.rest.updateSession(this.manager.options.resume, this.manager.options.resumeTimeout || 60);
-            this.manager.emit("debug", `Moonlink.js > Node >> Configured resuming for ${this.identifier}. Timeout: ${this.manager.options.resumeTimeout || 60}s`);
-        } catch (error) {
-            this.manager.emit("debug", `Moonlink.js > Node >> Failed to configure resuming for ${this.identifier}. Error: ${error.message}`);
-        }
-    }
+
     
     this.manager.emit("nodeConnected", this);
   }
@@ -176,7 +169,6 @@ export class Node {
                     player.connected = false;
                     player.playing = false;
                     player.paused = false;
-                    player.voiceState = {} as VoiceState;
                     player._lastVoiceState = null;
                     player._voiceStateReady = false;
                     player._awaitingVoiceConnection = false;
@@ -223,16 +215,39 @@ export class Node {
     switch (payload.op) {
       case "ready":
         this.manager.emit("debug", `Moonlink.js > Node >> READY payload: ${stringifyWithReplacer(payload)}`);
-        const attemptedResume = this.state === NodeState.RESUMING;
-        const oldSessionId = this.sessionId;
         
         this.sessionId = payload.sessionId;
-        this.resumed = payload.resumed;
-        
         this.setState(NodeState.READY);
         
-        this.manager.emit("nodeReady", this, payload);
+        if (this.manager.options.autoResume) {
+            this.manager.emit("debug", `Moonlink.js > Node >> autoResume is TRUE. Attempting to restart players for node ${this.identifier}.`);
+            const nodePlayersKey = `moonlink.${this.manager.clientId}.node-players.${this.uuid}`;
+            const guildIds = await this.manager.database.get<string[]>(nodePlayersKey) || [];
 
+            if (guildIds.length) {
+                this.manager.emit("debug", `Moonlink.js > Node >> Found ${guildIds.length} players in DB to auto-resume.`);
+                const resumedPlayers = [];
+                for (const guildId of guildIds) {
+                    const playerData = await this.manager.database.get<any>(`moonlink.${this.manager.clientId}.players.${guildId}`);
+                    if (playerData) {
+                        const player = this.manager.players.create({ guildId: playerData.guildId, voiceChannelId: playerData.voiceChannelId, textChannelId: playerData.textChannelId });
+                        player.loadState(playerData);
+
+                        const queueData = await this.manager.database.get<any[]>(`moonlink.${this.manager.clientId}.queue.${guildId}`);
+                        const currentTrackData = await this.manager.database.get<any>(`moonlink.${this.manager.clientId}.currentTrack.${guildId}`);
+
+                        if (queueData) player.queue.add(queueData.map(t => new (Structure.get("Track"))(t)));
+                        if (currentTrackData) player.current = new (Structure.get("Track"))(currentTrackData);
+
+                        await player.restart();
+                        resumedPlayers.push(player);
+                    }
+                }
+                this.manager.emit("nodeAutoResumed", this, resumedPlayers);
+            }
+        }
+        
+        this.manager.emit("nodeReady", this, payload);
         loggedByCase = true;
         break;
       case "stats":
@@ -736,7 +751,7 @@ export class Node {
   }
 
   private async handlePlayerFailover(): Promise<void> {
-    const nodePlayersIndex = await this.manager.database.get<string[]>(`node-players-${this.uuid}`) || [];
+    const nodePlayersIndex = await this.manager.database.get<string[]>(`moonlink.${this.manager.clientId}.node-players.${this.uuid}`) || [];
     
     if (nodePlayersIndex.length === 0) {
         this.manager.emit("debug", `Moonlink.js > Node >> No players to failover from node ${this.identifier}.`);
@@ -792,8 +807,7 @@ export class Node {
     if(this.socket) {
       this.socket.close();
     }
-    await this.manager.database.delete(`node-${this.uuid}-session`);
-    await this.manager.database.delete(`node-players-${this.uuid}`);
+    await this.manager.database.delete(`moonlink.${this.manager.clientId}.node-players.${this.uuid}`);
     this.destroyed = true;
     this.setState(NodeState.DESTROYED);
     this.manager.emit("nodeDestroy", this.identifier);

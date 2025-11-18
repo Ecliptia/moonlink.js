@@ -52,6 +52,29 @@ class Player {
         this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'add');
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player ${this.guildId} added to node-players index for node ${this.node.uuid}.`);
     }
+    loadState(state) {
+        this.voiceChannelId = state.voiceChannelId || this.voiceChannelId;
+        this.textChannelId = state.textChannelId || this.textChannelId;
+        this.volume = state.volume ?? this.volume;
+        this.loop = state.loop ?? this.loop;
+        this.loopCount = state.loopCount;
+        this.autoPlay = state.autoPlay ?? this.autoPlay;
+        this.autoLeave = state.autoLeave ?? this.autoLeave;
+        this.current = state.currentTrack ? new (Util_1.Structure.get("Track"))(state.currentTrack) : null;
+        if (state.queue) {
+            this.queue.add(state.queue.map(trackData => new (Util_1.Structure.get("Track"))(trackData)));
+        }
+        if (state.previousTracks) {
+            this.previous = state.previousTracks.map(trackData => new (Util_1.Structure.get("Track"))(trackData));
+        }
+        this.voiceState = state.voiceState || this.voiceState;
+        this.data = state.data || this.data;
+        this.playing = state.playing ?? this.playing;
+        this.paused = state.paused ?? this.paused;
+        this.connected = state.connected ?? this.connected;
+        this.ping = state.ping ?? this.ping;
+        this.manager.emit("debug", `Moonlink.js > Player#loadState >> Loaded state for player ${this.guildId}.`);
+    }
     updateActivity() {
         this.lastActivityTime = Date.now();
     }
@@ -75,7 +98,7 @@ class Player {
         current[parts[parts.length - 1]] = value;
     }
     async updateData(path, data) {
-        let playerState = await this.manager.database.get(`player-${this.guildId}`);
+        let playerState = await this.manager.database.get(`moonlink.${this.manager.clientId}.players.${this.guildId}`);
         if (!playerState) {
             playerState = {
                 guildId: this.guildId,
@@ -86,9 +109,6 @@ class Player {
                 loopCount: this.loopCount,
                 autoPlay: this.autoPlay,
                 autoLeave: this.autoLeave,
-                currentTrack: this.current ? this.current.toJSON() : null,
-                queue: this.queue.map(track => track.toJSON()),
-                previousTracks: this.previous.map(track => track.toJSON()),
                 voiceState: this.voiceState,
                 data: this.data,
                 nodeUuid: this.node.uuid,
@@ -108,7 +128,7 @@ class Player {
             if (path != 'data')
                 this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated path '${path}' for guild ${this.guildId}. New value: ${JSON.stringify(data)}.`);
         }
-        await this.manager.database.set(`player-${this.guildId}`, playerState);
+        await this.manager.database.set(`moonlink.${this.manager.clientId}.players.${this.guildId}`, playerState);
     }
     async connect(options = {}) {
         if (!this.voiceChannelId) {
@@ -225,8 +245,7 @@ class Player {
             this.updateData("previousTracks", this.previous.map(t => t.toJSON()));
         }
         this.set("isBackPlay", false);
-        this.updateData("currentTrack", this.current.toJSON());
-        this.updateData("queue", this.queue.map(t => t.toJSON()));
+        await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, this.current.toJSON());
         this.updateData("playing", this.playing);
         this.updateData("paused", this.paused);
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
@@ -272,7 +291,7 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player state changed: playing: ${oldPlaying} -> ${this.playing}`);
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = null;
-        await this.updateData("currentTrack", null);
+        await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, null);
         await this.updateData("playing", this.playing);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player state changed: current: ${oldTrackTitle} -> null`);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player stopped for guild ${this.guildId}`);
@@ -387,38 +406,46 @@ class Player {
         this.manager.emit("playerDestroy", this, reason);
         this.manager.players.players.delete(this.guildId);
         await this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'remove');
-        await this.manager.database.delete(`player-${this.guildId}`);
+        await this.manager.database.delete(`moonlink.${this.manager.clientId}.players.${this.guildId}`);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
     async restart() {
         this.manager.emit("debug", `Moonlink.js > Player#restart -> Restarting player for guild ${this.guildId}`);
-        if (!this.current && !this.queue.size) {
-            this.manager.emit("debug", `Moonlink.js > Player#restart >> No track or queue to restart for guild ${this.guildId}`);
+        this.manager.emit("playerResuming", this);
+        if (!this.voiceChannelId) {
+            this.manager.emit("debug", `Moonlink.js > Player#restart >> Cannot restart player without a voiceChannelId for guild ${this.guildId}`);
             return false;
         }
-        this._voiceStateReady = false;
-        this._awaitingVoiceConnection = false;
-        await this.connect();
+        try {
+            await this.connect();
+            await this.manager.players.ensureVoiceConnection(this);
+        }
+        catch (error) {
+            this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${error.message}`);
+            await this.destroy("Failed to establish voice connection on restart.");
+            return false;
+        }
         if (this.current) {
-            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track for guild ${this.guildId}`);
-            const played = await this.play({
-                track: this.current,
+            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${this.current.position}ms.`);
+            this.playing = true;
+            this.paused = false;
+            await this.node.rest.updatePlayer(this.guildId, {
+                track: { encoded: this.current.encoded },
                 position: this.current.position,
             });
-            await this.updateData("currentTrack", this.current.toJSON());
-            await this.updateData("playing", this.playing);
-            await this.updateData("paused", this.paused);
-            return played;
+            await this.updateData("playing", true);
+            await this.updateData("paused", false);
+        }
+        else if (this.queue.size > 0) {
+            this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
+            await this.play();
         }
         else {
-            this.manager.emit("debug", `Moonlink.js > Player#restart -> Playing first track from queue for guild ${this.guildId}`);
-            const played = await this.play();
-            await this.updateData("currentTrack", this.current ? this.current.toJSON() : null);
-            await this.updateData("queue", this.queue.map(t => t.toJSON()));
-            await this.updateData("playing", this.playing);
-            await this.updateData("paused", this.paused);
-            return played;
+            this.manager.emit("debug", `Moonlink.js > Player#restart >> No track to restore and queue is empty for guild ${this.guildId}`);
+            return true;
         }
+        this.manager.emit("playerResumed", this);
+        return true;
     }
     async transferNode(node) {
         const targetNode = typeof node === "string" ? this.manager.nodes.get(node) : node;
@@ -507,6 +534,7 @@ class Player {
             position: 0
         });
         if (played) {
+            await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, this.current.toJSON());
             this.manager.emit("playerTriggeredBack", this, lastTrack);
             this.manager.emit("debug", `Moonlink.js > Player#back >> Successfully went back for guild ${this.guildId}`);
         }

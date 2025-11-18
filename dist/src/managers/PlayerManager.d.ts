@@ -7,7 +7,6 @@ export declare class PlayerManager {
     constructor(manager: Manager);
     get all(): Player[];
     _updateNodePlayersIndex(nodeUuid: string, guildId: string, action: 'add' | 'remove'): Promise<void>;
-    loadPersistedPlayers(): Promise<void>;
     create(options: PlayerOptions): Player;
     get(guildId: string): Player | undefined;
     has(guildId: string): boolean;
