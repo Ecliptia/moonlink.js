@@ -153,30 +153,20 @@ class Manager extends Util_1.EventEmitter {
             case "VOICE_STATE_UPDATE":
                 if (packet.d.user_id !== this.clientId)
                     return;
-                player.voiceState.sessionId = packet.d.session_id;
+                player.voice.sessionId = packet.d.session_id;
                 player.voiceChannelId = packet.d.channel_id;
                 this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
                 break;
             case "VOICE_SERVER_UPDATE":
-                player.voiceState.token = packet.d.token;
-                player.voiceState.endpoint = packet.d.endpoint;
-                player.voiceState.event = packet.d;
+                player.voice.token = packet.d.token;
+                player.voice.endpoint = packet.d.endpoint;
+                player.voice.event = packet.d;
                 this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
                 break;
         }
-        if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
-            this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Voice packets successfully received.`);
-            if (player._awaitingVoiceConnection && !player._voiceStateReady) {
-                try {
-                    await this.players.verifyVoiceState(player);
-                    player._voiceStateReady = true;
-                    player._awaitingVoiceConnection = false;
-                    this.emit("debug", `Moonlink.js > Manager >> Voice connection verified and ready for Guild: ${player.guildId}.`);
-                }
-                catch (e) {
-                    this.emit("debug", `Moonlink.js > Manager >> Voice verification failed for Guild: ${player.guildId}. Error: ${e.message}`);
-                }
-            }
+        if (player.voice.sessionId && player.voice.token && player.voice.endpoint) {
+            this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Sending to Lavalink.`);
+            await player.node.rest.updatePlayer(player.guildId, { voice: player.voice });
         }
     }
 }

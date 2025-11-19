@@ -150,9 +150,6 @@ export class Node {
             player.connected = false;
             player.playing = false;
             player.paused = false;
-            player._lastVoiceState = null;
-            player._voiceStateReady = false;
-            player._awaitingVoiceConnection = false;
             player.ping = -1;
             player.lastActivityTime = Date.now();
             this.manager.emit("debug", `Moonlink.js > Node >> Player ${player.guildId} state has been reset due to node disconnection.`);

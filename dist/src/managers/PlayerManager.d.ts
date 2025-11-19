@@ -19,6 +19,4 @@ export declare class PlayerManager {
     clear(): Promise<void>;
     destroyAll(): Promise<void>;
     destroy(guildId: string, reason?: string): Promise<boolean>;
-    ensureVoiceConnection(player: Player): Promise<void>;
-    verifyVoiceState(player: Player): Promise<void>;
 }
