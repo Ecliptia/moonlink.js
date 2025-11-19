@@ -25,10 +25,7 @@ class Player {
     current = null;
     previous = [];
     historySize = 10;
-    voiceState = {};
-    _lastVoiceState = null;
-    _voiceStateReady = false;
-    _awaitingVoiceConnection = false;
+    voice = {};
     selfDeaf;
     selfMute;
     lastActivityTime = Date.now();
@@ -74,8 +71,6 @@ class Player {
                 self_mute: options.setMute ?? this.selfMute,
             },
         };
-        this._awaitingVoiceConnection = true;
-        this._voiceStateReady = false;
         this.manager.send(this.guildId, payload);
         this.manager.emit("debug", `Moonlink.js > Player#connect >> Sent VOICE_STATE_UPDATE to Discord gateway for guild ${this.guildId}`);
         this.connected = true;
@@ -99,8 +94,7 @@ class Player {
         this.manager.send(this.guildId, payload);
         this.manager.emit("debug", `Moonlink.js > Player#disconnect >> Sent VOICE_STATE_UPDATE (disconnect) to Discord gateway for guild ${this.guildId}`);
         this.connected = false;
-        this._voiceStateReady = false;
-        this._awaitingVoiceConnection = false;
+        this.voice = {};
         return this;
     }
     async play(options = {}) {
@@ -131,17 +125,6 @@ class Player {
         const oldPaused = this.paused;
         this.playing = true;
         this.paused = false;
-        try {
-            await this.manager.players.ensureVoiceConnection(this);
-        }
-        catch (e) {
-            this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Voice connection verification failed for guild ${this.guildId}. Error: ${e.message}`);
-            this.playing = oldPlaying;
-            this.paused = oldPaused;
-            this.current = previousTrack;
-            this.queue.unshift(nextTrack);
-            throw e;
-        }
         const payload = {
             track: {
                 encoded: this.current.encoded,
@@ -326,7 +309,6 @@ class Player {
         }
         try {
             await this.connect();
-            await this.manager.players.ensureVoiceConnection(this);
         }
         catch (error) {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${error.message}`);

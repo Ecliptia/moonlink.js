@@ -27,10 +27,7 @@ export declare class Player {
     current: Track | null;
     previous: Track[];
     historySize: number;
-    voiceState: VoiceState;
-    _lastVoiceState: VoiceState | null;
-    _voiceStateReady: boolean;
-    _awaitingVoiceConnection: boolean;
+    voice: VoiceState;
     private readonly selfDeaf;
     private readonly selfMute;
     lastActivityTime: number;
