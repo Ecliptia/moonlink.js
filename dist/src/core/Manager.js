@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Manager = void 0;
 const Util_1 = require("../Util");
-const DatabaseManager_1 = require("../managers/DatabaseManager");
 const __1 = require("../..");
 class Manager extends Util_1.EventEmitter {
     initialized = false;
@@ -11,7 +10,6 @@ class Manager extends Util_1.EventEmitter {
     clientId;
     nodes;
     players;
-    database;
     idleCheckInterval;
     constructor(config) {
         super();
@@ -22,9 +20,6 @@ class Manager extends Util_1.EventEmitter {
         this.options = {
             clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${__1.version} (Snoozy/16.11.2025)`,
-            autoResume: false,
-            playerAutoFailover: false,
-            movePlayersOnNodeDisconnect: false,
             noReplace: false,
             customFilters: {},
             defaultPlayer: {
@@ -79,7 +74,6 @@ class Manager extends Util_1.EventEmitter {
         Util_1.Structure.setManager(this);
         this.nodes = new (Util_1.Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Util_1.Structure.get("PlayerManager"))(this);
-        this.database = new DatabaseManager_1.DatabaseManager(this.options.database || { provider: "lmdb", path: "./src/datastore" });
     }
     use(connector, client) {
         connector.setManager(this);
@@ -172,7 +166,6 @@ class Manager extends Util_1.EventEmitter {
         }
         if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
             this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Voice packets successfully received.`);
-            await player.updateData("voiceState", player.voiceState);
             if (player._awaitingVoiceConnection && !player._voiceStateReady) {
                 try {
                     await this.players.verifyVoiceState(player);

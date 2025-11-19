@@ -17,8 +17,6 @@ export declare class Node {
     reconnectAttempts: number;
     retryAmount: number;
     retryDelay: number;
-    resumed: boolean;
-    resumeTimeout: number;
     regions: string[];
     secure: boolean;
     sessionId: string;
@@ -56,6 +54,5 @@ export declare class Node {
     protected error({ error }: {
         error: any;
     }): void;
-    private handlePlayerFailover;
     destroy(): Promise<void>;
 }

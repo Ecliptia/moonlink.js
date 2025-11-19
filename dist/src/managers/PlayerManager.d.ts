@@ -6,7 +6,6 @@ export declare class PlayerManager {
     readonly players: Map<string, Player>;
     constructor(manager: Manager);
     get all(): Player[];
-    _updateNodePlayersIndex(nodeUuid: string, guildId: string, action: 'add' | 'remove'): Promise<void>;
     create(options: PlayerOptions): Player;
     get(guildId: string): Player | undefined;
     has(guildId: string): boolean;
