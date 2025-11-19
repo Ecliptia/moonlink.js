@@ -17,8 +17,6 @@ class Node {
     reconnectAttempts = 0;
     retryAmount;
     retryDelay = 60000;
-    resumed = false;
-    resumeTimeout = 60000;
     regions;
     secure;
     sessionId;
@@ -44,7 +42,6 @@ class Node {
         this.retryDelay = config.retryDelay || 30000;
         this.retryAmount = config.retryAmount || 5;
         this.secure = config.secure;
-        this.sessionId = config.sessionId;
         this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
         this.rest = new (Util_1.Structure.get("Rest"))(this);
         this.manager.emit("debug", `Moonlink.js > Node >> New node initialized. Identifier: ${this.identifier} (${this.host}:${this.port}), UUID: ${this.uuid}`);
@@ -115,38 +112,19 @@ class Node {
         if (this.socket) {
             this.socket.close();
         }
-        const shouldMovePlayersOnDisconnect = this.manager.options.movePlayersOnNodeDisconnect ?? this.manager.options.playerAutoFailover ?? false;
-        if (shouldMovePlayersOnDisconnect && this.manager.nodes.onlineNodes.length > 0) {
-            this.manager.emit("debug", `Moonlink.js > Node >> Starting player failover from ${this.identifier}...`);
-            this.handlePlayerFailover();
-        }
-        else {
-            const nodePlayers = [...this.manager.players.all.filter(p => p.node.uuid === this.uuid)];
-            if (shouldMovePlayersOnDisconnect) {
-                if (nodePlayers.length > 0) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> No available nodes for failover. Destroying ${nodePlayers.length} players from node ${this.identifier}.`);
-                    (async () => {
-                        for (const player of nodePlayers) {
-                            await player.destroy();
-                        }
-                    })();
-                }
-            }
-            else {
-                if (nodePlayers.length > 0) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected. Resetting state for ${nodePlayers.length} players.`);
-                    for (const player of nodePlayers) {
-                        player.connected = false;
-                        player.playing = false;
-                        player.paused = false;
-                        player._lastVoiceState = null;
-                        player._voiceStateReady = false;
-                        player._awaitingVoiceConnection = false;
-                        player.ping = -1;
-                        player.lastActivityTime = Date.now();
-                        this.manager.emit("debug", `Moonlink.js > Node >> Player ${player.guildId} state has been reset due to node disconnection.`);
-                    }
-                }
+        const nodePlayers = [...this.manager.players.all.filter(p => p.node.uuid === this.uuid)];
+        if (nodePlayers.length > 0) {
+            this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected. Resetting state for ${nodePlayers.length} players.`);
+            for (const player of nodePlayers) {
+                player.connected = false;
+                player.playing = false;
+                player.paused = false;
+                player._lastVoiceState = null;
+                player._voiceStateReady = false;
+                player._awaitingVoiceConnection = false;
+                player.ping = -1;
+                player.lastActivityTime = Date.now();
+                this.manager.emit("debug", `Moonlink.js > Node >> Player ${player.guildId} state has been reset due to node disconnection.`);
             }
         }
         if (this.retryAmount > this.reconnectAttempts) {
@@ -183,31 +161,6 @@ class Node {
                 this.manager.emit("debug", `Moonlink.js > Node >> READY payload: ${(0, Util_1.stringifyWithReplacer)(payload)}`);
                 this.sessionId = payload.sessionId;
                 this.setState(types_1.NodeState.READY);
-                if (this.manager.options.autoResume) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> autoResume is TRUE. Attempting to restart players for node ${this.identifier}.`);
-                    const nodePlayersKey = `moonlink.${this.manager.clientId}.node-players.${this.uuid}`;
-                    const guildIds = await this.manager.database.get(nodePlayersKey) || [];
-                    if (guildIds.length) {
-                        this.manager.emit("debug", `Moonlink.js > Node >> Found ${guildIds.length} players in DB to auto-resume.`);
-                        const resumedPlayers = [];
-                        for (const guildId of guildIds) {
-                            const playerData = await this.manager.database.get(`moonlink.${this.manager.clientId}.players.${guildId}`);
-                            if (playerData) {
-                                const player = this.manager.players.create({ guildId: playerData.guildId, voiceChannelId: playerData.voiceChannelId, textChannelId: playerData.textChannelId });
-                                player.loadState(playerData);
-                                const queueData = await this.manager.database.get(`moonlink.${this.manager.clientId}.queue.${guildId}`);
-                                const currentTrackData = await this.manager.database.get(`moonlink.${this.manager.clientId}.currentTrack.${guildId}`);
-                                if (queueData)
-                                    player.queue.add(queueData.map(t => new (Util_1.Structure.get("Track"))(t)));
-                                if (currentTrackData)
-                                    player.current = new (Util_1.Structure.get("Track"))(currentTrackData);
-                                await player.restart();
-                                resumedPlayers.push(player);
-                            }
-                        }
-                        this.manager.emit("nodeAutoResumed", this, resumedPlayers);
-                    }
-                }
                 this.manager.emit("nodeReady", this, payload);
                 loggedByCase = true;
                 break;
@@ -643,58 +596,14 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node !> Error on node ${this.identifier}. Error: ${error.message}.`);
         this.manager.emit("nodeError", this, error);
     }
-    async handlePlayerFailover() {
-        const nodePlayersIndex = await this.manager.database.get(`moonlink.${this.manager.clientId}.node-players.${this.uuid}`) || [];
-        if (nodePlayersIndex.length === 0) {
-            this.manager.emit("debug", `Moonlink.js > Node >> No players to failover from node ${this.identifier}.`);
-            return;
-        }
-        for (const guildId of nodePlayersIndex) {
-            try {
-                const player = this.manager.players.get(guildId);
-                if (!player) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} not found in memory during failover.`);
-                    continue;
-                }
-                const targetNode = this.manager.nodes.findNode();
-                if (!targetNode || targetNode.uuid === this.uuid) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> No available target node for failover for player ${guildId} from ${this.identifier}.`);
-                    continue;
-                }
-                this.manager.emit("debug", `Moonlink.js > Node >> Failing over player ${guildId} from ${this.identifier} to ${targetNode.identifier}.`);
-                const oldNode = player.node;
-                player.node = targetNode;
-                await this.manager.players._updateNodePlayersIndex(this.uuid, guildId, 'remove');
-                await this.manager.players._updateNodePlayersIndex(targetNode.uuid, guildId, 'add');
-                this.manager.emit("debug", `Moonlink.js > Node >> Player ${guildId} moved from ${oldNode.identifier} to ${targetNode.identifier}.`);
-                this.manager.emit("playerSwitchedNode", player, oldNode, targetNode);
-                if (player.voiceState.sessionId && player.voiceState.event) {
-                    await player.node.rest.updatePlayer(player.guildId, { voice: player.voiceState });
-                    this.manager.emit("debug", `Moonlink.js > Node >> Updated voice state for player ${guildId} on new node.`);
-                }
-                if (player.playing && player.current) {
-                    await player.play({
-                        track: player.current,
-                        position: player.current.position || 0
-                    });
-                    this.manager.emit("debug", `Moonlink.js > Node >> Resumed playback for player ${guildId} on node ${targetNode.identifier}.`);
-                }
-            }
-            catch (error) {
-                this.manager.emit("debug", `Moonlink.js > Node >> Failed to failover player ${guildId}. Error: ${error.message}`);
-            }
-        }
-        this.manager.emit("debug", `Moonlink.js > Node >> Failover completed for node ${this.identifier}.`);
-    }
     async destroy() {
         if (this.socket) {
             this.socket.close();
         }
-        await this.manager.database.delete(`moonlink.${this.manager.clientId}.node-players.${this.uuid}`);
         this.destroyed = true;
         this.setState(types_1.NodeState.DESTROYED);
         this.manager.emit("nodeDestroy", this.identifier);
-        this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed. Session data and node-players index removed from DB.`);
+        this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed.`);
     }
 }
 exports.Node = Node;

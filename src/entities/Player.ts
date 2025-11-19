@@ -61,35 +61,6 @@ export class Player {
         this.filters = new (Structure.get("Filters"))(this);
         
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
-        this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'add');
-        this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player ${this.guildId} added to node-players index for node ${this.node.uuid}.`);
-    }
-
-    public loadState(state: any): void {
-        this.voiceChannelId = state.voiceChannelId || this.voiceChannelId;
-        this.textChannelId = state.textChannelId || this.textChannelId;
-        this.volume = state.volume ?? this.volume;
-        this.loop = state.loop ?? this.loop;
-        this.loopCount = state.loopCount;
-        this.autoPlay = state.autoPlay ?? this.autoPlay;
-        this.autoLeave = state.autoLeave ?? this.autoLeave;
-        
-        this.current = state.currentTrack ? new (Structure.get("Track"))(state.currentTrack) : null;
-        if (state.queue) {
-            this.queue.add(state.queue.map(trackData => new (Structure.get("Track"))(trackData)));
-        }
-        if (state.previousTracks) {
-            this.previous = state.previousTracks.map(trackData => new (Structure.get("Track"))(trackData));
-        }
-        
-        this.voiceState = state.voiceState || this.voiceState;
-        this.data = state.data || this.data;
-        this.playing = state.playing ?? this.playing;
-        this.paused = state.paused ?? this.paused;
-        this.connected = state.connected ?? this.connected;
-        this.ping = state.ping ?? this.ping;
-        
-        this.manager.emit("debug", `Moonlink.js > Player#loadState >> Loaded state for player ${this.guildId}.`);
     }
 
     public updateActivity(): void {
@@ -98,57 +69,11 @@ export class Player {
 
     public set(key: string, value: unknown): this {
         this.data[key] = value;
-        this.updateData("data", this.data);
         return this;
     }
 
     public get<T>(key: string): T | undefined {
         return this.data[key] as T;
-    }
-
-    private setNestedProperty(obj: any, path: string, value: any): void {
-        const parts = path.split('.');
-        let current = obj;
-        for (let i = 0; i < parts.length - 1; i++) {
-            if (!current[parts[i]] || typeof current[parts[i]] !== 'object') {
-                current[parts[i]] = {};
-            }
-            current = current[parts[i]];
-        }
-        current[parts[parts.length - 1]] = value;
-    }
-
-    public async updateData<T>(path?: string, data?: T): Promise<void> {
-        let playerState = await this.manager.database.get<any>(`moonlink.${this.manager.clientId}.players.${this.guildId}`);
-        if (!playerState) {
-            playerState = {
-                guildId: this.guildId,
-                voiceChannelId: this.voiceChannelId,
-                textChannelId: this.textChannelId,
-                volume: this.volume,
-                loop: this.loop,
-                loopCount: this.loopCount,
-                autoPlay: this.autoPlay,
-                autoLeave: this.autoLeave,
-                voiceState: this.voiceState,
-                data: this.data,
-                nodeUuid: this.node.uuid,
-                playing: this.playing,
-                paused: this.paused,
-                connected: this.connected,
-                ping: this.ping,
-            };
-            this.manager.emit("debug", `Moonlink.js > Player#updateData >> Initializing player state for guild ${this.guildId}.`);
-        }
-
-        if (path === undefined || path === null || path === "") {
-            Object.assign(playerState, data);
-            this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated full player state for guild ${this.guildId}.`);
-        } else {
-            this.setNestedProperty(playerState, path, data);
-            if (path != 'data') this.manager.emit("debug", `Moonlink.js > Player#updateData >> Updated path '${path}' for guild ${this.guildId}. New value: ${JSON.stringify(data)}.`);
-        }
-        await this.manager.database.set(`moonlink.${this.manager.clientId}.players.${this.guildId}`, playerState);
     }
 
     public async connect(options: { setDeaf?: boolean; setMute?: boolean } = {}): Promise<this> {
@@ -174,7 +99,6 @@ export class Player {
         this.manager.emit("debug", `Moonlink.js > Player#connect >> Sent VOICE_STATE_UPDATE to Discord gateway for guild ${this.guildId}`);
 
         this.connected = true;
-        await this.updateData("connected", this.connected);
         return this;
     }
 
@@ -202,7 +126,6 @@ export class Player {
         this.connected = false;
         this._voiceStateReady = false;
         this._awaitingVoiceConnection = false;
-        await this.updateData("connected", this.connected);
         return this;
     }
 
@@ -281,13 +204,8 @@ export class Player {
                 this.previous.shift();
             }
             this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
-            this.updateData("previousTracks", this.previous.map(t => t.toJSON()));
         }
         this.set("isBackPlay", false);
-
-        await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, this.current.toJSON());
-        this.updateData("playing", this.playing);
-        this.updateData("paused", this.paused);
         
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
         
@@ -306,7 +224,6 @@ export class Player {
 
         const oldPaused = this.paused;
         this.paused = true;
-        await this.updateData("paused", this.paused);
         this.manager.emit("debug", `Moonlink.js > Player#pause >> Player state changed: paused: ${oldPaused} -> ${this.paused}`);
         
         this.manager.emit("debug", `Moonlink.js > Player#pause >> Player paused for guild ${this.guildId}`);
@@ -326,7 +243,6 @@ export class Player {
 
         const oldPaused = this.paused;
         this.paused = false;
-        await this.updateData("paused", this.paused);
         this.manager.emit("debug", `Moonlink.js > Player#resume >> Player state changed: paused: ${oldPaused} -> ${this.paused}`);
         
         this.manager.emit("debug", `Moonlink.js > Player#resume >> Player resumed for guild ${this.guildId}`);
@@ -345,8 +261,6 @@ export class Player {
 
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = null;
-        await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, null);
-        await this.updateData("playing", this.playing);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player state changed: current: ${oldTrackTitle} -> null`);
         
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player stopped for guild ${this.guildId}`);
@@ -363,27 +277,24 @@ export class Player {
                 return false;
             }
             this.manager.emit("playerTriggeredSkip", this, oldTrack, track, position);
-                            const played = await this.play({ track: track instanceof Track ? track : new Track(track) });
-                            await this.updateData("queue", this.queue.map(t => t.toJSON()));
-                            return played;
-                        }
+            return await this.play({ track: track instanceof Track ? track : new Track(track) });
+        }
                     
-                        if (!this.queue.size) {
-                            if (this.autoPlay) {
-                                this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue empty, stopping player (autoPlay enabled) for guild ${this.guildId}`);
-                                await this.stop();
-                                return true;
-                            }
-                            this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty, cannot skip for guild ${this.guildId}`);
-                            return false;
-                        }
+        if (!this.queue.size) {
+            if (this.autoPlay) {
+                this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue empty, stopping player (autoPlay enabled) for guild ${this.guildId}`);
+                await this.stop();
+                return true;
+            }
+            this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty, cannot skip for guild ${this.guildId}`);
+            return false;
+        }
                     
-                        const nextTrack = this.queue.first;
-                        this.manager.emit("playerTriggeredSkip", this, oldTrack, nextTrack, 0);
-                        this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to next track in queue for guild ${this.guildId}`);
-                        const played = await this.play();
-                        await this.updateData("queue", this.queue.map(t => t.toJSON()));
-                        return played;    }
+        const nextTrack = this.queue.first;
+        this.manager.emit("playerTriggeredSkip", this, oldTrack, nextTrack, 0);
+        this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to next track in queue for guild ${this.guildId}`);
+        return await this.play();
+    }
 
     public async seek(position: number): Promise<this> {
         validate(
@@ -397,7 +308,6 @@ export class Player {
         await this.node.rest.updatePlayer(this.guildId, { position });
         if (this.current) {
             this.current.position = position;
-            await this.updateData("currentTrack.position", this.current.position);
         }
         this.manager.emit("debug", `Moonlink.js > Player#seek >> Sent seek request to node ${this.node.identifier}`);
         
@@ -413,7 +323,6 @@ export class Player {
 
         const oldVolume = this.volume;
         this.volume = volume;
-        this.updateData("volume", this.volume);
         this.manager.emit("playerChangedVolume", this, oldVolume, volume);
         
         this.manager.emit("debug", `Moonlink.js > Player#setVolume -> Changing volume from ${oldVolume} to ${volume} for guild ${this.guildId}`);
@@ -428,8 +337,6 @@ export class Player {
         const oldLoopCount = this.loopCount;
         this.loop = loop;
         this.loopCount = count;
-        this.updateData("loop", this.loop);
-        this.updateData("loopCount", this.loopCount);
         this.manager.emit("playerChangedLoop", this, oldLoop, this.loop, oldLoopCount, this.loopCount);
         
         this.manager.emit("debug", `Moonlink.js > Player#setLoop >> Loop mode changed from "${oldLoop}" to "${loop}"${count ? ` (count: ${count})` : ""} for guild ${this.guildId}`);
@@ -438,7 +345,6 @@ export class Player {
 
     public setAutoPlay(autoPlay: boolean): this {
         this.autoPlay = autoPlay;
-        this.updateData("autoPlay", this.autoPlay);
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.manager.emit("debug", `Moonlink.js > Player#setAutoPlay >> AutoPlay set to ${autoPlay} for guild ${this.guildId}`);
         return this;
@@ -446,7 +352,6 @@ export class Player {
 
     public setAutoLeave(autoLeave: boolean): this {
         this.autoLeave = autoLeave;
-        this.updateData("autoLeave", this.autoLeave);
         this.manager.emit("playerAutoLeaveSet", this, autoLeave);
         this.manager.emit("debug", `Moonlink.js > Player#setAutoLeave >> AutoLeave set to ${autoLeave} for guild ${this.guildId}`);
         return this;
@@ -489,9 +394,6 @@ export class Player {
         
         this.manager.emit("playerDestroy", this, reason);
         this.manager.players.players.delete(this.guildId);
-        
-        await this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'remove');
-        await this.manager.database.delete(`moonlink.${this.manager.clientId}.players.${this.guildId}`);
 
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
@@ -524,9 +426,6 @@ export class Player {
                 position: this.current.position,
             });
             
-            await this.updateData("playing", true);
-            await this.updateData("paused", false);
-            
         } else if (this.queue.size > 0) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
             await this.play();
@@ -556,13 +455,7 @@ export class Player {
             this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Failed to destroy player on old node: ${e.message}`);
         }
 
-        await this.manager.players._updateNodePlayersIndex(oldNode.uuid, this.guildId, 'remove');
-        this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Player ${this.guildId} removed from node-players index for old node ${oldNode.uuid}.`);
-
         this.node = targetNode;
-
-        await this.manager.players._updateNodePlayersIndex(this.node.uuid, this.guildId, 'add');
-        this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Player ${this.guildId} added to node-players index for new node ${this.node.uuid}.`);
 
         await this.restart();
 
@@ -585,7 +478,6 @@ export class Player {
 
         const oldChannel = this.voiceChannelId;
         this.voiceChannelId = voiceChannelId;
-        this.updateData("voiceChannelId", this.voiceChannelId);
         
         this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannel >> Voice channel changed from ${oldChannel} to ${voiceChannelId} for guild ${this.guildId}`);
         this.manager.emit("playerVoiceChannelIdSet", this, oldChannel, voiceChannelId);
@@ -606,7 +498,6 @@ export class Player {
 
         const oldChannel = this.textChannelId;
         this.textChannelId = textChannelId;
-        this.updateData("textChannelId", this.textChannelId);
         
         this.manager.emit("debug", `Moonlink.js > Player#setTextChannel >> Text channel changed from ${oldChannel} to ${textChannelId} for guild ${this.guildId}`);
         this.manager.emit("playerTextChannelIdSet", this, oldChannel, textChannelId);
@@ -621,14 +512,10 @@ export class Player {
 
         this.manager.emit("debug", `Moonlink.js > Player#replay -> Replaying track "${this.current.title}" for guild ${this.guildId}`);
         
-        const played = await this.play({
+        return await this.play({
             track: this.current,
             position: 0,
         });
-        await this.updateData("currentTrack", this.current.toJSON());
-        await this.updateData("playing", this.playing);
-        await this.updateData("paused", this.paused);
-        return played;
     }
 
     public async back(): Promise<boolean> {
@@ -659,7 +546,6 @@ export class Player {
         });
 
         if (played) {
-            await this.manager.database.set(`moonlink.${this.manager.clientId}.currentTrack.${this.guildId}`, this.current.toJSON());
             this.manager.emit("playerTriggeredBack", this, lastTrack);
             this.manager.emit("debug", `Moonlink.js > Player#back >> Successfully went back for guild ${this.guildId}`);
         } else {

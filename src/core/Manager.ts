@@ -7,7 +7,6 @@ import {
 import { Structure, validate, EventEmitter, sources } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { Connector } from "../connectors/Connector";
-import { DatabaseManager } from "../managers/DatabaseManager";
 import { version } from "../..";
 
 export class Manager extends EventEmitter<IManagerEvents> {
@@ -17,7 +16,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public clientId: string;
     public readonly nodes: any;
     public readonly players: PlayerManager;
-    public readonly database: DatabaseManager;
     private idleCheckInterval?: NodeJS.Timeout;
 
     constructor(config: IManagerConfig) {
@@ -32,9 +30,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
         this.options = { 
             clientName: `Moonlink.js/${version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${version} (Snoozy/16.11.2025)`,
-            autoResume: false,
-            playerAutoFailover: false,
-            movePlayersOnNodeDisconnect: false,
             noReplace: false,
             customFilters: {},
             defaultPlayer: {
@@ -91,7 +86,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
 
         this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Structure.get("PlayerManager"))(this);
-        this.database = new DatabaseManager(this.options.database || { provider: "lmdb", path: "./src/datastore" });
     }
 
     public use(connector: Connector, client: any): this {
@@ -200,7 +194,6 @@ export class Manager extends EventEmitter<IManagerEvents> {
 
         if (player.voiceState.sessionId && player.voiceState.token && player.voiceState.endpoint) {
             this.emit("debug", `Moonlink.js > Manager >> Voice state complete for Guild: ${player.guildId}. Voice packets successfully received.`);
-            await player.updateData("voiceState", player.voiceState);
             
             if (player._awaitingVoiceConnection && !player._voiceStateReady) {
                 try {

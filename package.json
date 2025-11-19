@@ -38,8 +38,5 @@
   "devDependencies": {
     "@types/node": "^24.10.0",
     "typescript": "^5.5.4"
-  },
-  "dependencies": {
-    "lmdb": "^3.4.4"
   }
 }

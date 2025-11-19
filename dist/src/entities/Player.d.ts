@@ -35,12 +35,9 @@ export declare class Player {
     private readonly selfMute;
     lastActivityTime: number;
     constructor(manager: Manager, node: Node, config: IPlayerConfig);
-    loadState(state: any): void;
     updateActivity(): void;
     set(key: string, value: unknown): this;
     get<T>(key: string): T | undefined;
-    private setNestedProperty;
-    updateData<T>(path?: string, data?: T): Promise<void>;
     connect(options?: {
         setDeaf?: boolean;
         setMute?: boolean;

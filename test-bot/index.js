@@ -39,8 +39,8 @@ const manager = new Manager({
             provider: "lmdb",
             path: "./database"
         },
-        autoResume: true,
-        resume: true, 
+        autoResume: false,
+        resume: false, 
         customFilters: {
             "Reset": {},
             "Alien": "pitch=1.5,vibrato=f=3:d=0.7",
@@ -673,7 +673,7 @@ client.on("interactionCreate", async (interaction) => {
             if (interaction.commandName !== "play") return;
             if (!interaction.member.voice.channel) return interaction.reply({ content: "Whoa there! 🛑 You gotta be in a voice channel for me to play some tunes! Hop in one and try again!", flags: [MessageFlags.Ephemeral] });
             await interaction.deferReply();
-            const player = manager.players.create({ guildId: interaction.guildId, voiceChannelId: interaction.member.voice.channelId, textChannelId: interaction.channel.id, autoPlay: true, selfDeaf: true });
+            const player = manager.players.create({ guildId: interaction.guildId, voiceChannelId: interaction.member.voice.channelId, textChannelId: interaction.channel.id, autoPlay: true, selfDeaf: false });
             const wasPlaying = player.playing;
             if (!player.connected) await player.connect();
             const searchResult = await manager.search({ query: interaction.options.getString("query"), requester: interaction.user });

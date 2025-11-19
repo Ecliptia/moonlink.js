@@ -17,7 +17,6 @@ export interface IManagerEvents {
     nodeDestroy: (identifier: string) => void;
     nodeRaw: (node: Node, payload: any) => void;
     nodeStateChange: (node: Node, oldState: NodeState, newState: NodeState) => void;
-    nodeAutoResumed: (node: Node, players: Player[]) => void;
 
     // Player Events
     playerCreate: (player: Player) => void;
@@ -86,18 +85,11 @@ export interface IManagerNodeConfig {
     retryAmount?: number;
     regions?: string[];
     priority?: number;
-    sessionId?: string;
 }
 
 export interface IManagerOptionsConfig {
-    database?: IDatabaseOptions;
     clientName?: string;
     userAgent?: string;
-    resume?: boolean;
-    resumeTimeout?: number;
-    autoResume?: boolean;
-    playerAutoFailover?: boolean;
-    movePlayersOnNodeDisconnect?: boolean;
     noReplace?: boolean;
     customFilters?: Record<string, string | IFilters>;
     defaultPlayer?: IDefaultPlayerOptions;
@@ -205,7 +197,6 @@ export interface INode {
   retryAmount?: number;
   regions?: string[];
   secure?: boolean;
-  sessionId?: string;
   priority?: number;
 }
 
@@ -337,13 +328,6 @@ export interface IFilters {
     channelMix?: IChannelMix;
     lowPass?: ILowPass;
     pluginFilters?: Record<string, any>;
-}
-
-export interface IDatabaseOptions {
-    provider?: "memory" | "lmdb" | "better-sqlite3";
-    path?: string;
-    maxDbs?: number;
-    compression?: boolean;
 }
 
 export type RoutePlannerType = "RotatingIpRoutePlanner" | "NanoIpRoutePlanner" | "RotatingNanoIpRoutePlanner" | "BalancingIpRoutePlanner";

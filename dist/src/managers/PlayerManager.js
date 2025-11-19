@@ -11,24 +11,6 @@ class PlayerManager {
     get all() {
         return [...this.players.values()];
     }
-    async _updateNodePlayersIndex(nodeUuid, guildId, action) {
-        const nodePlayersKey = `moonlink.${this.manager.clientId}.node-players.${nodeUuid}`;
-        let nodePlayers = await this.manager.database.get(nodePlayersKey) || [];
-        if (action === 'add') {
-            if (!nodePlayers.includes(guildId)) {
-                nodePlayers.push(guildId);
-                this.manager.emit("debug", `Moonlink.js > PlayerManager#_updateNodePlayersIndex >> Added guild ${guildId} to node-players index for node ${nodeUuid}. Index: ${JSON.stringify(nodePlayers)}.`);
-            }
-        }
-        else {
-            const index = nodePlayers.indexOf(guildId);
-            if (index > -1) {
-                nodePlayers.splice(index, 1);
-                this.manager.emit("debug", `Moonlink.js > PlayerManager#_updateNodePlayersIndex >> Removed guild ${guildId} from node-players index for node ${nodeUuid}. Index: ${JSON.stringify(nodePlayers)}.`);
-            }
-        }
-        await this.manager.database.set(nodePlayersKey, nodePlayers);
-    }
     create(options) {
         (0, Util_1.validate)(options.guildId, (v) => typeof v === "string", "PlayerOptions#guildId must be a string.");
         if (this.players.has(options.guildId)) {
