@@ -338,8 +338,10 @@ export class Node {
     }
     const trackForEvent = new (Structure.get("Track"))(trackData, player.current?.requester);
 
-    player.playing = false;
-    player.paused = false;
+    if (reason !== "replaced") {
+      player.playing = false;
+      player.paused = false;
+    }
 
     player.set("isBackPlay", false);
     
