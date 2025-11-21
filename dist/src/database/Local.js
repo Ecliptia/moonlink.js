@@ -55,7 +55,7 @@ class Local {
     async init(manager, options) {
         this.manager = manager;
         this.compactionIntervalMs = 60000;
-        this.dir = options?.path ?? path_1.default.resolve(__dirname, "../datastore");
+        this.dir = this.manager.options.database?.options?.path ?? path_1.default.resolve(__dirname, "../datastore");
         this.snapshotPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.json`);
         this.logPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.wal`);
         await fs_1.default.promises.mkdir(this.dir, { recursive: true });
@@ -114,7 +114,7 @@ class Local {
         catch (err) {
             this.store = {};
             if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8').catch(() => { });
+                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8');
             }
         }
     }
@@ -125,7 +125,7 @@ class Local {
         }
         catch (err) {
             if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.logPath, '').catch(() => { });
+                await fs_1.default.promises.writeFile(this.logPath, '');
             }
             return;
         }

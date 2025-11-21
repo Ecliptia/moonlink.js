@@ -287,8 +287,10 @@ class Node {
             trackData.userData = player.current.userData;
         }
         const trackForEvent = new (Util_1.Structure.get("Track"))(trackData, player.current?.requester);
-        player.playing = false;
-        player.paused = false;
+        if (reason !== "replaced") {
+            player.playing = false;
+            player.paused = false;
+        }
         player.set("isBackPlay", false);
         this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
         if (player.destroyed) {

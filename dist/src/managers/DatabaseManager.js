@@ -9,7 +9,6 @@ class DatabaseManager {
     constructor(manager) {
         this.manager = manager;
         const dbConfig = this.manager.options.database || { type: 'memory' };
-        console.log(`[DatabaseManager] Using database type: ${dbConfig.type}`);
         switch (dbConfig.type) {
             case 'local':
                 this.provider = new Local_1.Local();
