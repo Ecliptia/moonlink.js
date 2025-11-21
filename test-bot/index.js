@@ -39,7 +39,7 @@ const manager = new Manager({
             type: "local",
         },
         autoResume: false,
-        resume: false, 
+        resume: true, 
         customFilters: {
             "Reset": {},
             "Alien": "pitch=1.5,vibrato=f=3:d=0.7",

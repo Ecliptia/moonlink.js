@@ -24,6 +24,7 @@ export declare class Player {
     autoPlay: boolean;
     autoLeave: boolean;
     ping: number;
+    isResuming: boolean;
     current: Track | null;
     previous: Track[];
     historySize: number;

@@ -7,12 +7,13 @@ type DatabaseProvider = Memory | Local;
 export class DatabaseManager {
   public provider: DatabaseProvider;
   private manager: Manager;
+  private dbConfig: { type: 'memory' | 'local'; options?: any; };
 
   constructor(manager: Manager) {
     this.manager = manager;
-    const dbConfig = this.manager.options.database || { type: 'memory' };
+    this.dbConfig = this.manager.options.database || { type: 'memory' };
     
-    switch (dbConfig.type) {
+    switch (this.dbConfig.type) {
       case 'local':
         this.provider = new Local();
         break;
@@ -21,8 +22,10 @@ export class DatabaseManager {
         this.provider = new Memory();
         break;
     }
+  }
 
-    this.provider.init(this.manager, dbConfig.options);
+  public async initialize(): Promise<void> {
+    await this.provider.init(this.manager, this.dbConfig.options);
   }
 
   public async get<T>(key: string): Promise<T | undefined> {

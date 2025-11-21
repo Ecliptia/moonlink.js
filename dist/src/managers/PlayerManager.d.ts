@@ -1,12 +1,12 @@
 import { Manager } from "../core/Manager";
 import { Player } from "../entities/Player";
-import { PlayerOptions } from "../typings/types";
+import { IPlayerConfig } from "../typings/Interfaces";
 export declare class PlayerManager {
     readonly manager: Manager;
     readonly players: Map<string, Player>;
     constructor(manager: Manager);
     get all(): Player[];
-    create(options: PlayerOptions): Player;
+    create(options: IPlayerConfig): Player;
     get(guildId: string): Player | undefined;
     has(guildId: string): boolean;
     get size(): number;

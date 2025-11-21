@@ -5,7 +5,9 @@ type DatabaseProvider = Memory | Local;
 export declare class DatabaseManager {
     provider: DatabaseProvider;
     private manager;
+    private dbConfig;
     constructor(manager: Manager);
+    initialize(): Promise<void>;
     get<T>(key: string): Promise<T | undefined>;
     set<T>(key: string, value: T): Promise<void>;
     remove(key: string): Promise<boolean>;

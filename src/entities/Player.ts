@@ -28,6 +28,7 @@ export class Player {
     public autoPlay: boolean = false;
     public autoLeave: boolean = false;
     public ping: number = -1;
+    public isResuming: boolean = false;
     
     public current: Track | null = null;
     public previous: Track[] = [];

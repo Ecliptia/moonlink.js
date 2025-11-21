@@ -6,10 +6,11 @@ const Local_1 = require("../database/Local");
 class DatabaseManager {
     provider;
     manager;
+    dbConfig;
     constructor(manager) {
         this.manager = manager;
-        const dbConfig = this.manager.options.database || { type: 'memory' };
-        switch (dbConfig.type) {
+        this.dbConfig = this.manager.options.database || { type: 'memory' };
+        switch (this.dbConfig.type) {
             case 'local':
                 this.provider = new Local_1.Local();
                 break;
@@ -18,7 +19,9 @@ class DatabaseManager {
                 this.provider = new Memory_1.Memory();
                 break;
         }
-        this.provider.init(this.manager, dbConfig.options);
+    }
+    async initialize() {
+        await this.provider.init(this.manager, this.dbConfig.options);
     }
     async get(key) {
         return this.provider.get(key);
