@@ -6,6 +6,7 @@ import {
 } from "../typings/Interfaces";
 import { Structure, validate, EventEmitter, sources } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
+import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
 import { version } from "../..";
 
@@ -16,6 +17,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public clientId: string;
     public readonly nodes: any;
     public readonly players: PlayerManager;
+    public database: DatabaseManager;
     private idleCheckInterval?: NodeJS.Timeout;
 
     constructor(config: IManagerConfig) {
@@ -79,6 +81,9 @@ export class Manager extends EventEmitter<IManagerEvents> {
                 retryFailedTracks: false,
                 maxRetryAttempts: 3
             },
+            database: {
+                type: "local"
+            },
             ...config.options 
         };
 
@@ -100,6 +105,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
 
         validate(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
         this.clientId = clientId;
+        this.database = new DatabaseManager(this);
 
         this.nodes.init();
         

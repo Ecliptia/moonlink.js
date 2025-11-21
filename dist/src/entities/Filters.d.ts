@@ -23,6 +23,8 @@ export declare class Filters implements IFilters {
     get active(): Set<string>;
     list(): string[];
     set(name: string, value: string | IFilters): this;
+    toJSON(): object;
+    private _updateFilters;
     define(name: string, value: string | IFilters): this;
     has(name: string): boolean;
     isActive(name: string): boolean;

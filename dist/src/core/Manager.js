@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Manager = void 0;
 const Util_1 = require("../Util");
+const DatabaseManager_1 = require("../managers/DatabaseManager");
 const __1 = require("../..");
 class Manager extends Util_1.EventEmitter {
     initialized = false;
@@ -10,6 +11,7 @@ class Manager extends Util_1.EventEmitter {
     clientId;
     nodes;
     players;
+    database;
     idleCheckInterval;
     constructor(config) {
         super();
@@ -69,6 +71,9 @@ class Manager extends Util_1.EventEmitter {
                 retryFailedTracks: false,
                 maxRetryAttempts: 3
             },
+            database: {
+                type: "local"
+            },
             ...config.options
         };
         Util_1.Structure.setManager(this);
@@ -87,6 +92,7 @@ class Manager extends Util_1.EventEmitter {
             return this;
         (0, Util_1.validate)(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
         this.clientId = clientId;
+        this.database = new DatabaseManager_1.DatabaseManager(this);
         this.nodes.init();
         if (this.options.playerDestruction?.autoDestroyOnIdle) {
             this.startIdleMonitoring();

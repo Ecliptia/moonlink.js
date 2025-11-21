@@ -85,6 +85,10 @@ export interface IManagerOptionsConfig {
     sources?: ISourceOptions;
     playerDestruction?: IPlayerDestructionOptions;
     trackHandling?: ITrackHandlingOptions;
+    database?: {
+        type: 'memory' | 'local';
+        options?: any;
+    };
 }
 export interface IDefaultPlayerOptions {
     volume?: number;

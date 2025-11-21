@@ -35,6 +35,7 @@ export declare class Player {
     updateActivity(): void;
     set(key: string, value: unknown): this;
     get<T>(key: string): T | undefined;
+    updateData<T>(path?: string, data?: T): Promise<void>;
     connect(options?: {
         setDeaf?: boolean;
         setMute?: boolean;

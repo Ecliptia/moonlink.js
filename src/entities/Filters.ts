@@ -125,6 +125,27 @@ export class Filters implements IFilters {
         return this;
     }
 
+    public toJSON(): object {
+        return {
+            volume: this.volume,
+            equalizer: this.equalizer,
+            karaoke: this.karaoke,
+            timescale: this.timescale,
+            tremolo: this.tremolo,
+            vibrato: this.vibrato,
+            rotation: this.rotation,
+            distortion: this.distortion,
+            channelMix: this.channelMix,
+            lowPass: this.lowPass,
+            pluginFilters: this.pluginFilters,
+            activeFilters: [...this.activeFilters],
+        };
+    }
+
+    private _updateFilters(): void {
+        this.player.updateData('filters', this.toJSON());
+    }
+
     public define(name: string, value: string | IFilters): this {
         return this.set(name, value);
     }
@@ -142,12 +163,14 @@ export class Filters implements IFilters {
             throw new Error(`Filter "${name}" does not exist. Available filters: ${this.available.join(", ")}`);
         }
         this.activeFilters.add(name);
+        this._updateFilters();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" enabled.`);
         return this;
     }
 
     public disable(name: string): this {
         this.activeFilters.delete(name);
+        this._updateFilters();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" disabled.`);
         return this;
     }
@@ -185,56 +208,67 @@ export class Filters implements IFilters {
     public setVolume(volume: number): this {
         validate(volume, v => typeof v === "number" && !isNaN(v), "Volume must be a number.");
         this.volume = Math.max(0, Math.min(volume, 1000));
+        this._updateFilters();
         return this;
     }
 
     public setEqualizer(bands: IEqualizerBand[]): this {
         this.equalizer = bands;
+        this._updateFilters();
         return this;
     }
 
     public setKaraoke(karaoke?: IKaraoke): this {
         this.karaoke = karaoke;
+        this._updateFilters();
         return this;
     }
 
     public setTimescale(timescale?: ITimescale): this {
         this.timescale = timescale;
+        this._updateFilters();
         return this;
     }
 
     public setTremolo(tremolo?: ITremolo): this {
         this.tremolo = tremolo;
+        this._updateFilters();
         return this;
     }
 
     public setVibrato(vibrato?: IVibrato): this {
         this.vibrato = vibrato;
+        this._updateFilters();
         return this;
     }
 
     public setRotation(rotation?: IRotation): this {
         this.rotation = rotation;
+        this._updateFilters();
         return this;
     }
     
     public setDistortion(distortion?: IDistortion): this {
         this.distortion = distortion;
+        this._updateFilters();
         return this;
     }
 
     public setChannelMix(channelMix?: IChannelMix): this {
         this.channelMix = channelMix;
+        this._updateFilters();
         return this;
     }
 
     public setLowPass(lowPass?: ILowPass): this {
         this.lowPass = lowPass;
+        this._updateFilters();
         return this;
     }
 
     public setPluginFilters(filters: Record<string, any>): this {
         this.pluginFilters = filters;
+        this._updateFilters();
         return this;
     }
 
@@ -252,6 +286,7 @@ export class Filters implements IFilters {
         this.pluginFilters = undefined;
         this.activeFilters.clear();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters cleared.`);
+        this._updateFilters();
         return this;
     }
 
