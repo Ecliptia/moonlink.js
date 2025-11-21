@@ -1,6 +1,7 @@
 import { IManagerEvents, IManagerConfig, IManagerOptionsConfig, ISearchQuery } from "../typings/Interfaces";
 import { EventEmitter } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
+import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
 export declare class Manager extends EventEmitter<IManagerEvents> {
     initialized: boolean;
@@ -9,6 +10,7 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     clientId: string;
     readonly nodes: any;
     readonly players: PlayerManager;
+    database: DatabaseManager;
     private idleCheckInterval?;
     constructor(config: IManagerConfig);
     use(connector: Connector, client: any): this;

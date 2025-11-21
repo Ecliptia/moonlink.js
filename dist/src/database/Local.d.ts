@@ -1,0 +1,31 @@
+import { Manager } from "../core/Manager";
+export declare class Local {
+    private store;
+    private dir;
+    private snapshotPath;
+    private logPath;
+    private walStream?;
+    private compactionIntervalMs;
+    private compactionTimer?;
+    private manager;
+    private walBuffer;
+    private readonly walBufferMaxSize;
+    private walFlushInterval?;
+    private readonly walFlushIntervalMs;
+    init(manager: Manager, options?: any): Promise<void>;
+    private _serializeEntry;
+    private _deserializeEntry;
+    private _flushWALBuffer;
+    private loadSnapshot;
+    private replayWAL;
+    private openWALStream;
+    private appendLog;
+    set<T>(key: string, value: T, log?: boolean): Promise<void>;
+    get<T>(key: string): Promise<T | undefined>;
+    has(key: string): Promise<boolean>;
+    remove(key: string, log?: boolean): Promise<boolean>;
+    keys(pattern?: string): Promise<string[]>;
+    clear(): Promise<void>;
+    private compact;
+    shutdown(): Promise<void>;
+}

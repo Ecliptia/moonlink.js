@@ -36,8 +36,7 @@ const manager = new Manager({
     nodes,
     options: {
         database: {
-            provider: "lmdb",
-            path: "./database"
+            type: "local",
         },
         autoResume: false,
         resume: false, 

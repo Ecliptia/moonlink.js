@@ -115,6 +115,25 @@ class Filters {
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Custom filter "${name}" defined.`);
         return this;
     }
+    toJSON() {
+        return {
+            volume: this.volume,
+            equalizer: this.equalizer,
+            karaoke: this.karaoke,
+            timescale: this.timescale,
+            tremolo: this.tremolo,
+            vibrato: this.vibrato,
+            rotation: this.rotation,
+            distortion: this.distortion,
+            channelMix: this.channelMix,
+            lowPass: this.lowPass,
+            pluginFilters: this.pluginFilters,
+            activeFilters: [...this.activeFilters],
+        };
+    }
+    _updateFilters() {
+        this.player.updateData('filters', this.toJSON());
+    }
     define(name, value) {
         return this.set(name, value);
     }
@@ -129,11 +148,13 @@ class Filters {
             throw new Error(`Filter "${name}" does not exist. Available filters: ${this.available.join(", ")}`);
         }
         this.activeFilters.add(name);
+        this._updateFilters();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" enabled.`);
         return this;
     }
     disable(name) {
         this.activeFilters.delete(name);
+        this._updateFilters();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Filter "${name}" disabled.`);
         return this;
     }
@@ -166,46 +187,57 @@ class Filters {
     setVolume(volume) {
         (0, Util_1.validate)(volume, v => typeof v === "number" && !isNaN(v), "Volume must be a number.");
         this.volume = Math.max(0, Math.min(volume, 1000));
+        this._updateFilters();
         return this;
     }
     setEqualizer(bands) {
         this.equalizer = bands;
+        this._updateFilters();
         return this;
     }
     setKaraoke(karaoke) {
         this.karaoke = karaoke;
+        this._updateFilters();
         return this;
     }
     setTimescale(timescale) {
         this.timescale = timescale;
+        this._updateFilters();
         return this;
     }
     setTremolo(tremolo) {
         this.tremolo = tremolo;
+        this._updateFilters();
         return this;
     }
     setVibrato(vibrato) {
         this.vibrato = vibrato;
+        this._updateFilters();
         return this;
     }
     setRotation(rotation) {
         this.rotation = rotation;
+        this._updateFilters();
         return this;
     }
     setDistortion(distortion) {
         this.distortion = distortion;
+        this._updateFilters();
         return this;
     }
     setChannelMix(channelMix) {
         this.channelMix = channelMix;
+        this._updateFilters();
         return this;
     }
     setLowPass(lowPass) {
         this.lowPass = lowPass;
+        this._updateFilters();
         return this;
     }
     setPluginFilters(filters) {
         this.pluginFilters = filters;
+        this._updateFilters();
         return this;
     }
     clear() {
@@ -222,6 +254,7 @@ class Filters {
         this.pluginFilters = undefined;
         this.activeFilters.clear();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters cleared.`);
+        this._updateFilters();
         return this;
     }
     reset() {
