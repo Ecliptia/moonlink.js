@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
 const Util_1 = require("../Util");
 const types_1 = require("../typings/types");
+const Track_1 = require("./Track");
 class Node {
     manager;
     uuid;
@@ -17,6 +18,8 @@ class Node {
     reconnectAttempts = 0;
     retryAmount;
     retryDelay = 60000;
+    resumed = false;
+    resumeTimeout = 60000;
     regions;
     secure;
     sessionId;
@@ -42,6 +45,7 @@ class Node {
         this.retryDelay = config.retryDelay || 30000;
         this.retryAmount = config.retryAmount || 5;
         this.secure = config.secure;
+        this.resumeTimeout = this.manager.options.resumeTimeout ?? 60000;
         this.url = `${this.secure ? "https" : "http"}://${this.address}/${this.pathVersion}/`;
         this.rest = new (Util_1.Structure.get("Rest"))(this);
         this.manager.emit("debug", `Moonlink.js > Node >> New node initialized. Identifier: ${this.identifier} (${this.host}:${this.port}), UUID: ${this.uuid}`);
@@ -57,11 +61,17 @@ class Node {
     async connect() {
         this.setState(types_1.NodeState.CONNECTING);
         this.manager.emit("debug", `Moonlink.js > Node -> Attempting connection to ${this.identifier} (${this.host}:${this.port}).`);
+        const nodeData = await this.manager.database.get(`nodes.${this.uuid}`);
+        const sessionId = nodeData?.sessionId;
         let headers = {
             Authorization: this.password,
             "User-Id": this.manager.clientId,
             "Client-Name": this.manager.options.clientName || "Moonlink.js",
         };
+        if (this.manager.options.resume && sessionId) {
+            headers["Session-Id"] = sessionId;
+            this.manager.emit("debug", `Moonlink.js > Node > Connect > Using resume session ID: ${sessionId} for ${this.identifier}`);
+        }
         this.manager.emit("debug", `Moonlink.js > Node >> WebSocket headers for ${this.identifier}: ${(0, Util_1.stringifyWithReplacer)(headers)}.`);
         this.socket = new (Util_1.Structure.get("WebSocket"))(`ws${this.secure ? "s" : ""}://${this.address}/${this.pathVersion}/websocket`, {
             headers,
@@ -112,7 +122,9 @@ class Node {
         if (this.socket) {
             this.socket.close();
         }
-        const nodePlayers = [...this.manager.players.all.filter(p => p.node.uuid === this.uuid)];
+        const nodePlayers = [
+            ...this.manager.players.all.filter((p) => p.node.uuid === this.uuid),
+        ];
         if (nodePlayers.length > 0) {
             this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected. Resetting state for ${nodePlayers.length} players.`);
             for (const player of nodePlayers) {
@@ -157,15 +169,85 @@ class Node {
             case "ready":
                 this.manager.emit("debug", `Moonlink.js > Node >> READY payload: ${(0, Util_1.stringifyWithReplacer)(payload)}`);
                 this.sessionId = payload.sessionId;
+                this.resumed = payload.resumed;
                 this.setState(types_1.NodeState.READY);
+                await this.manager.database.set(`nodes.${this.uuid}`, {
+                    sessionId: this.sessionId,
+                });
+                if (this.manager.options.resume) {
+                    await this.rest.updateSession(this.manager.options.resume, this.resumeTimeout / 1000);
+                    this.manager.emit("debug", `Moonlink.js > Node > Resuming node ${this.uuid}.`);
+                }
                 this.manager.emit("nodeReady", this, payload);
+                if (this.manager.options.resume && this.resumed) {
+                    const players = await this.rest.getPlayers();
+                    if (!players || players?.length === 0) {
+                        this.manager.emit("debug", `Moonlink.js > Node > No players to resume on node ${this.uuid}.`);
+                        loggedByCase = true;
+                        break;
+                    }
+                    for (const playerInfo of players) {
+                        const guildId = playerInfo.guildId;
+                        const storage = await this.manager.database.get(`players.${guildId}`);
+                        if (!storage) {
+                            this.manager.emit("debug", `Moonlink.js > Node > No stored data found for player ${guildId}, skipping resume.`);
+                            continue;
+                        }
+                        this.manager.emit("debug", `Moonlink.js > Node > Attempting to resume player ${guildId} on node ${this.uuid}.`);
+                        const player = this.manager.players.get(guildId);
+                        const reconstructedPlayer = player ??
+                            this.manager.players.create({
+                                guildId: guildId,
+                                voiceChannelId: storage.voiceChannelId,
+                                textChannelId: storage.textChannelId,
+                                selfDeaf: storage.selfDeaf,
+                                selfMute: storage.selfMute,
+                                volume: playerInfo.volume,
+                                node: this.identifier,
+                            });
+                        this.manager.emit("playerResuming", reconstructedPlayer);
+                        reconstructedPlayer.isResuming = true;
+                        if (reconstructedPlayer.voice.sessionId !== this.sessionId) {
+                            reconstructedPlayer.voice.sessionId = this.sessionId;
+                        }
+                        reconstructedPlayer.connect();
+                        reconstructedPlayer.playing = playerInfo.paused === false;
+                        reconstructedPlayer.paused = playerInfo.paused ?? false;
+                        const currentTrackInfo = storage.current;
+                        if (currentTrackInfo && currentTrackInfo.encoded) {
+                            reconstructedPlayer.current = new Track_1.Track((0, Util_1.decodeTrack)(currentTrackInfo.encoded), currentTrackInfo.requester);
+                            reconstructedPlayer.current.position = playerInfo.state.position;
+                        }
+                        else {
+                            reconstructedPlayer.playing = false;
+                            reconstructedPlayer.paused = true;
+                            this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
+                        }
+                        const queueTracks = storage.queue;
+                        if (queueTracks && Array.isArray(queueTracks)) {
+                            for (const trackData of queueTracks) {
+                                if (trackData.encoded) {
+                                    reconstructedPlayer.queue.add(new Track_1.Track((0, Util_1.decodeTrack)(trackData.encoded), trackData.requester));
+                                }
+                            }
+                        }
+                        this.manager.emit("debug", `Moonlink.js > Player ${guildId} has been resumed on node ${this.uuid}.`);
+                        this.manager.emit("playerResumed", reconstructedPlayer);
+                        reconstructedPlayer.isResuming = false;
+                    }
+                }
                 loggedByCase = true;
                 break;
             case "stats":
                 delete payload.op;
                 this.stats = payload;
-                if (!this.lastStats || this.stats.players !== this.lastStats.players || this.stats.playingPlayers !== this.lastStats.playingPlayers) {
-                    this.lastStats = { players: this.stats.players, playingPlayers: this.stats.playingPlayers };
+                if (!this.lastStats ||
+                    this.stats.players !== this.lastStats.players ||
+                    this.stats.playingPlayers !== this.lastStats.playingPlayers) {
+                    this.lastStats = {
+                        players: this.stats.players,
+                        playingPlayers: this.stats.playingPlayers,
+                    };
                     this.manager.emit("debug", `Moonlink.js > Node <- Node ${this.identifier} STATS updated. Stats: ${(0, Util_1.stringifyWithReplacer)(this.stats)}.`);
                 }
                 loggedByCase = true;
@@ -199,7 +281,9 @@ class Node {
                             shouldLog = true;
                             logMessage += ` High ping detected: ${currentState.ping}ms.`;
                         }
-                        else if (lastState.ping && lastState.ping !== -1 && Math.abs(currentState.ping - lastState.ping) > 500) {
+                        else if (lastState.ping &&
+                            lastState.ping !== -1 &&
+                            Math.abs(currentState.ping - lastState.ping) > 500) {
                             shouldLog = true;
                             logMessage += ` Significant ping change: ${lastState.ping}ms -> ${currentState.ping}ms.`;
                         }
@@ -209,7 +293,8 @@ class Node {
                             shouldLog = true;
                             logMessage += ` Position reset to 0 while playing.`;
                         }
-                        else if (currentState.position === lastState.position && currentState.position !== 0) {
+                        else if (currentState.position === lastState.position &&
+                            currentState.position !== 0) {
                             shouldLog = true;
                             logMessage += ` Position stuck at ${currentState.position}ms while playing.`;
                         }
@@ -219,7 +304,12 @@ class Node {
                     this.manager.emit("debug", logMessage);
                 }
                 loggedByCase = true;
-                player.set("lastState", { connected: currentState.connected, position: currentState.position, ping: currentState.ping, time: currentState.time });
+                player.set("lastState", {
+                    connected: currentState.connected,
+                    position: currentState.position,
+                    ping: currentState.ping,
+                    time: currentState.time,
+                });
                 break;
             case "event":
                 if (!player) {
@@ -477,25 +567,8 @@ class Node {
                 player.connect();
                 const timeout = voiceOptions.timeout ?? 15000;
                 await new Promise(resolve => setTimeout(resolve, timeout));
-                if (player.current) {
-                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Restoring playback for player ${player.guildId} at position ${player.current.position}ms. Track: ${player.current.title}.`);
-                    await player.play({
-                        track: player.current,
-                        position: player.current.position
-                    });
-                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Successfully reconnected and restored playback for player ${player.guildId}.`);
-                    player.set("wsReconnectAttempts", 0);
-                }
-                else if (player.queue.size > 0) {
-                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Starting queue playback for player ${player.guildId}. Queue size: ${player.queue.size}.`);
-                    await player.play();
-                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Successfully reconnected and started queue for player ${player.guildId}.`);
-                    player.set("wsReconnectAttempts", 0);
-                }
-                else {
-                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> No track or queue to resume for player ${player.guildId}.`);
-                    player.set("wsReconnectAttempts", 0);
-                }
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice reconnected for player ${player.guildId}. Lavalink should resume playback automatically if applicable.`);
+                player.set("wsReconnectAttempts", 0);
             }
             catch (error) {
                 this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Reconnect attempt ${reconnectAttempts} failed for player ${player.guildId}. Error: ${error.message}.`);

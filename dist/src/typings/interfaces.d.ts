@@ -76,6 +76,8 @@ export interface IManagerOptionsConfig {
     clientName?: string;
     userAgent?: string;
     noReplace?: boolean;
+    resume?: boolean;
+    resumeTimeout?: number;
     customFilters?: Record<string, string | IFilters>;
     defaultPlayer?: IDefaultPlayerOptions;
     voiceConnection?: IVoiceConnectionOptions;
@@ -231,7 +233,23 @@ export interface IRESTGetLyrics {
 }
 export interface IRESTGetPlayers {
     guildId: string;
-    playerState: any;
+    track?: ITrack;
+    volume: number;
+    paused: boolean;
+    state: {
+        time: number;
+        position: number;
+        connected: boolean;
+        ping: number;
+    };
+    filters: any;
+    voice: {
+        token: string;
+        endpoint: string;
+        sessionId: string;
+        connected?: boolean;
+        ping?: number;
+    };
 }
 export interface IEqualizerBand {
     band: number;

@@ -12,7 +12,7 @@ class PlayerManager {
         return [...this.players.values()];
     }
     create(options) {
-        (0, Util_1.validate)(options.guildId, (v) => typeof v === "string", "PlayerOptions#guildId must be a string.");
+        (0, Util_1.validate)(options.guildId, (v) => typeof v === "string", "IPlayerConfig#guildId must be a string.");
         if (this.players.has(options.guildId)) {
             this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player already exists for Guild: ${options.guildId}. Returning existing player.`);
             return this.players.get(options.guildId);

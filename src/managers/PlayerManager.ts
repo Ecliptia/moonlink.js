@@ -2,7 +2,7 @@ import { Manager } from "../core/Manager";
 import { Node } from "../entities/Node";
 import { Player } from "../entities/Player";
 import { Structure, validate, delay } from "../Util";
-import { PlayerOptions } from "../typings/types";
+import { IPlayerConfig } from "../typings/Interfaces";
 
 export class PlayerManager {
     public readonly manager: Manager;
@@ -16,8 +16,8 @@ export class PlayerManager {
         return [...this.players.values()];
     }
 
-    public create(options: PlayerOptions): Player {
-        validate(options.guildId, (v) => typeof v === "string", "PlayerOptions#guildId must be a string.");
+    public create(options: IPlayerConfig): Player {
+        validate(options.guildId, (v) => typeof v === "string", "IPlayerConfig#guildId must be a string.");
 
         if (this.players.has(options.guildId)) {
             this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player already exists for Guild: ${options.guildId}. Returning existing player.`);

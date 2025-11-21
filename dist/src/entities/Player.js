@@ -22,6 +22,7 @@ class Player {
     autoPlay = false;
     autoLeave = false;
     ping = -1;
+    isResuming = false;
     current = null;
     previous = [];
     historySize = 10;

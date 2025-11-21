@@ -23,6 +23,8 @@ class Manager extends Util_1.EventEmitter {
             clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${__1.version} (Snoozy/16.11.2025)`,
             noReplace: false,
+            resume: false,
+            resumeTimeout: 60000,
             customFilters: {},
             defaultPlayer: {
                 volume: 100,
@@ -93,6 +95,7 @@ class Manager extends Util_1.EventEmitter {
         (0, Util_1.validate)(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
         this.clientId = clientId;
         this.database = new DatabaseManager_1.DatabaseManager(this);
+        await this.database.initialize();
         this.nodes.init();
         if (this.options.playerDestruction?.autoDestroyOnIdle) {
             this.startIdleMonitoring();

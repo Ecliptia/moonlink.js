@@ -17,6 +17,8 @@ export declare class Node {
     reconnectAttempts: number;
     retryAmount: number;
     retryDelay: number;
+    resumed: boolean;
+    resumeTimeout: number;
     regions: string[];
     secure: boolean;
     sessionId: string;
