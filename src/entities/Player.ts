@@ -202,6 +202,9 @@ export class Player {
         }
         this.set("isBackPlay", false);
         
+        this.playing = true;
+        this.paused = false;
+
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
         
         return true;

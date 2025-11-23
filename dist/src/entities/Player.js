@@ -164,6 +164,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
         }
         this.set("isBackPlay", false);
+        this.playing = true;
+        this.paused = false;
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
         return true;
     }

@@ -595,7 +595,7 @@ export class Node {
         }
     }
 
-    if (reason === "replaced" || reason === "stopped") {
+    if (reason === "stopped") {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track was ${reason}, skipping queue logic for player ${player.guildId}.`);
       return;
     }

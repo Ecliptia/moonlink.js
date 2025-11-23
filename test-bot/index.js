@@ -564,8 +564,15 @@ async function buildPlayerUI(player) {
         };
     }
 
-    const progress = createProgressBar(player.current.position, track.duration);
-    const time = `${formatDuration(player.current.position)} / ${formatDuration(track.duration)}`;
+    let progressField;
+    if (track.isStream) {
+        progressField = `<a:cat:1442196058536153259> 🔴 **AO VIVO** (${formatDuration(player.current.position)})`;
+    } else {
+        const progress = createProgressBar(player.current.position, track.duration);
+        const time = `${formatDuration(player.current.position)} / ${formatDuration(track.duration)}`;
+        progressField = `${progress}  ${time}`;
+    }
+
     const nextTrack = player.queue.first;
 
     const embed = new EmbedBuilder()
@@ -581,7 +588,7 @@ async function buildPlayerUI(player) {
 ` +
             `› <a:w4_song:1438718588197273691> ${bold("Next:")} ${nextTrack ? hyperlink(nextTrack.title, nextTrack.uri) : "Nothing"}`
         )
-        .addFields({ name: "Progress", value: `${progress}  ${time}`, inline: false });
+        .addFields({ name: "Progress", value: progressField, inline: false });
 
     const activeFilters = player.get('active_filters');
     if (activeFilters && activeFilters.length > 0) {
