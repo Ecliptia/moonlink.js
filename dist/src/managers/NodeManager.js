@@ -5,13 +5,15 @@ const Util_1 = require("../Util");
 class NodeManager {
     manager;
     nodes = new Map();
+    nodeConfigs;
     constructor(manager, nodeConfigs) {
         this.manager = manager;
-        for (const config of nodeConfigs) {
-            this.add(config);
-        }
+        this.nodeConfigs = nodeConfigs;
     }
     init() {
+        for (const config of this.nodeConfigs) {
+            this.add(config);
+        }
         for (const node of this.nodes.values()) {
             node.connect();
         }

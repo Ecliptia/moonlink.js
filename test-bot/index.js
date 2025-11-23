@@ -665,7 +665,9 @@ manager.on("queueEnd", async (player) => {
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
-
+manager.on("nodeCreate", (node) => {
+    console.log(`Node "${node.identifier}" connecteddddddddddddddddddddddddddd.`);
+});
 client.on("interactionCreate", async (interaction) => {
     try {
         if (interaction.isChatInputCommand()) {
@@ -698,7 +700,7 @@ client.on("interactionCreate", async (interaction) => {
             switch (interaction.customId) {
                 case "player_play_pause":
                     await interaction.deferUpdate();
-                    player.paused ? player.resume() : player.pause();
+                    player.paused ? await player.resume() : await player.pause();
                     await updatePlayerMessage(player);
                     break;
                 case "player_skip":
@@ -716,7 +718,7 @@ client.on("interactionCreate", async (interaction) => {
                         await message.edit({ embeds: [stoppedEmbed], components: [] }).catch(() => {});
                     }
                     cleanupPlayer(interaction.guildId);
-                    player.destroy();
+                    await player.destroy();
                     break;
                 case "player_volume":
                     const volumeMenu = new StringSelectMenuBuilder().setCustomId("player_volume_select").setPlaceholder("Select a volume level").addOptions(Array.from({ length: 11 }, (_, i) => ({ label: `${100 - (i * 10)}%`, value: (100 - (i * 10)).toString() })));

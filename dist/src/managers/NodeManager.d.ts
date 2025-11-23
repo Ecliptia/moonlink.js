@@ -3,6 +3,7 @@ import { IManagerNodeConfig } from "../typings/Interfaces";
 export declare class NodeManager {
     readonly manager: Manager;
     readonly nodes: Map<string, any>;
+    private readonly nodeConfigs;
     constructor(manager: Manager, nodeConfigs: IManagerNodeConfig[]);
     init(): void;
     add(config: IManagerNodeConfig): void;

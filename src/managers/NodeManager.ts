@@ -6,15 +6,18 @@ import { Structure, validate, generateUUID } from "../Util";
 export class NodeManager {
     public readonly manager: Manager;
     public readonly nodes: Map<string, any> = new Map();
+    private readonly nodeConfigs: IManagerNodeConfig[];
 
     constructor(manager: Manager, nodeConfigs: IManagerNodeConfig[]) {
         this.manager = manager;
-        for (const config of nodeConfigs) {
-            this.add(config);
-        }
+        this.nodeConfigs = nodeConfigs;
     }
 
     public init(): void {
+        for (const config of this.nodeConfigs) {
+            this.add(config);
+        }
+        
         for (const node of this.nodes.values()) {
             node.connect();
         }
