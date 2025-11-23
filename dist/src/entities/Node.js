@@ -402,7 +402,7 @@ class Node {
                 this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track failed to load after ${maxRetries} attempts for player ${player.guildId}.`);
             }
         }
-        if (reason === "replaced" || reason === "stopped") {
+        if (reason === "stopped") {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track was ${reason}, skipping queue logic for player ${player.guildId}.`);
             return;
         }
