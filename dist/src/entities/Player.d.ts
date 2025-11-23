@@ -1,9 +1,10 @@
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
-import { PlayerLoop, VoiceState } from "../typings/types";
+import { PlayerLoop } from "../typings/types";
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
+import { Voice } from "./Voice";
 import { Track } from "./Track";
 export declare class Player {
     readonly manager: Manager;
@@ -11,6 +12,7 @@ export declare class Player {
     readonly guildId: string;
     readonly queue: Queue;
     readonly filters: Filters;
+    readonly voice: Voice;
     data: Record<string, unknown>;
     voiceChannelId: string;
     textChannelId: string;
@@ -28,19 +30,13 @@ export declare class Player {
     current: Track | null;
     previous: Track[];
     historySize: number;
-    voice: VoiceState;
-    private readonly selfDeaf;
-    private readonly selfMute;
     lastActivityTime: number;
     constructor(manager: Manager, node: Node, config: IPlayerConfig);
     updateActivity(): void;
     set(key: string, value: unknown): this;
     get<T>(key: string): T | undefined;
     updateData<T>(path?: string, data?: T): Promise<void>;
-    connect(options?: {
-        setDeaf?: boolean;
-        setMute?: boolean;
-    }): Promise<this>;
+    connect(): Promise<this>;
     disconnect(): Promise<this>;
     play(options?: {
         track?: Track;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoadType = exports.NodeState = void 0;
+exports.VoiceConnectionState = exports.LoadType = exports.NodeState = void 0;
 var NodeState;
 (function (NodeState) {
     NodeState[NodeState["CONNECTING"] = 0] = "CONNECTING";
@@ -18,4 +18,11 @@ var LoadType;
     LoadType["EMPTY"] = "empty";
     LoadType["ERROR"] = "error";
 })(LoadType || (exports.LoadType = LoadType = {}));
+var VoiceConnectionState;
+(function (VoiceConnectionState) {
+    VoiceConnectionState[VoiceConnectionState["CONNECTING"] = 0] = "CONNECTING";
+    VoiceConnectionState[VoiceConnectionState["CONNECTED"] = 1] = "CONNECTED";
+    VoiceConnectionState[VoiceConnectionState["DISCONNECTED"] = 2] = "DISCONNECTED";
+    VoiceConnectionState[VoiceConnectionState["DESTROYED"] = 3] = "DESTROYED";
+})(VoiceConnectionState || (exports.VoiceConnectionState = VoiceConnectionState = {}));
 //# sourceMappingURL=types.js.map
