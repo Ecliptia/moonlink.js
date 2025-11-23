@@ -14,6 +14,12 @@ export declare enum LoadType {
     EMPTY = "empty",
     ERROR = "error"
 }
+export declare enum VoiceConnectionState {
+    CONNECTING = 0,
+    CONNECTED = 1,
+    DISCONNECTED = 2,
+    DESTROYED = 3
+}
 export type PlayerOptions = {
     guildId: string;
     voiceChannelId: string;

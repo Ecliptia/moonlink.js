@@ -737,6 +737,11 @@ export class Node {
     
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> WebSocket closed for player ${player.guildId}. Code: ${code}, Reason: "${reason}", By Remote: ${byRemote}. Payload: ${stringifyWithReplacer(payload)}.`);
 
+    if (player.voice.isMoving && code === 4014) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Ignoring WebSocket close (4014) for player ${player.guildId} due to channel move.`);
+        return;
+    }
+    
     if (player.isResuming) {
         this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Player ${player.guildId} is resuming, ignoring WebSocket close event.`);
         return;

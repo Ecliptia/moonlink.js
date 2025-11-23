@@ -5,6 +5,7 @@ import { Structure, validate } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
+import { Voice } from "./Voice";
 import { Track } from "./Track";
 
 export class Player {
@@ -13,6 +14,7 @@ export class Player {
     public readonly guildId: string;
     public readonly queue: Queue;
     public readonly filters: Filters;
+    public readonly voice: Voice;
     public data: Record<string, unknown> = {};
 
     public voiceChannelId: string;
@@ -34,10 +36,6 @@ export class Player {
     public previous: Track[] = [];
     public historySize: number = 10;
     
-    public voice: VoiceState = {} as VoiceState;
-    
-    private readonly selfDeaf: boolean;
-    private readonly selfMute: boolean;
     public lastActivityTime: number = Date.now();
 
     constructor(manager: Manager, node: Node, config: IPlayerConfig) {
@@ -47,8 +45,8 @@ export class Player {
         this.voiceChannelId = config.voiceChannelId;
         this.textChannelId = config.textChannelId || config.voiceChannelId;
         this.volume = config.volume ?? this.manager.options.defaultPlayer?.volume ?? 100;
-        this.selfDeaf = config.selfDeaf ?? this.manager.options.defaultPlayer?.selfDeaf ?? true;
-        this.selfMute = config.selfMute ?? this.manager.options.defaultPlayer?.selfMute ?? false;
+        this.set("selfDeaf", config.selfDeaf ?? this.manager.options.defaultPlayer?.selfDeaf ?? true);
+        this.set("selfMute", config.selfMute ?? this.manager.options.defaultPlayer?.selfMute ?? false);
         this.autoPlay = config.autoPlay ?? this.manager.options.defaultPlayer?.autoPlay ?? false;
         this.autoLeave = config.autoLeave ?? this.manager.options.defaultPlayer?.autoLeave ?? false;
         this.loop = config.loop ?? this.manager.options.defaultPlayer?.loop ?? "off";
@@ -57,6 +55,7 @@ export class Player {
 
         this.queue = new (Structure.get("Queue"))(this);
         this.filters = new (Structure.get("Filters"))(this);
+        this.voice = new Voice(this);
         
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
     
@@ -81,59 +80,19 @@ export class Player {
         await this.manager.database.set(dbPath, data);
     }
 
-    public async connect(options: { setDeaf?: boolean; setMute?: boolean } = {}): Promise<this> {
-        if (!this.voiceChannelId) {
-            throw new Error("Moonlink.js > Player#connect > No voice channel has been set.");
-        }
-
-        this.manager.emit("debug", `Moonlink.js > Player#connect -> Connecting to voice channel ${this.voiceChannelId} in guild ${this.guildId}`);
-
-        const payload = {
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: this.voiceChannelId,
-                self_deaf: options.setDeaf ?? this.selfDeaf,
-                self_mute: options.setMute ?? this.selfMute,
-            },
-        };
-        
-        this.manager.send(this.guildId, payload);
-        this.manager.emit("debug", `Moonlink.js > Player#connect >> Sent VOICE_STATE_UPDATE to Discord gateway for guild ${this.guildId}`);
-
-        this.connected = true;
+    public async connect(): Promise<this> {
+        await this.voice.connect();
         return this;
     }
 
     public async disconnect(): Promise<this> {
-        if (!this.voiceChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Player#disconnect >> Attempted to disconnect but player is not connected for guild ${this.guildId}`);
-            return this;
-        }
-
-        this.manager.emit("debug", `Moonlink.js > Player#disconnect -> Disconnecting from voice channel in guild ${this.guildId}`);
-
-        const payload = {
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: null,
-                self_deaf: false,
-                self_mute: false,
-            },
-        };
-        
-        this.manager.send(this.guildId, payload);
-        this.manager.emit("debug", `Moonlink.js > Player#disconnect >> Sent VOICE_STATE_UPDATE (disconnect) to Discord gateway for guild ${this.guildId}`);
-
-        this.connected = false;
-        this.voice = {} as VoiceState;
+        await this.voice.disconnect();
         return this;
     }
 
     public async play(options: { track?: Track; position?: number, noReplace?: boolean } = {}): Promise<boolean> {
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
-        
+
         const track = options.track;
         
         if (track) {
@@ -389,7 +348,7 @@ export class Player {
         this.playing = false;
         this.paused = false;
 
-        await this.disconnect();
+        this.voice.destroy();
         
         try {
             await this.node.rest.destroyPlayer(this.guildId);
@@ -427,10 +386,18 @@ export class Player {
             this.playing = true;
             this.paused = false;
             
+            const oldPosition = this.current.position;
+
             await this.node.rest.updatePlayer(this.guildId, {
                 track: { encoded: this.current.encoded },
-                position: this.current.position,
+                volume: this.volume,
             });
+ 
+            if (oldPosition > 0 && this.current.isSeekable) {
+                await this.seek(oldPosition);
+            } else {
+                this.manager.emit("debug", `Moonlink.js > Player#restart >> Current track is not seekable or position is 0ms for guild ${this.guildId}, skipping seek.`);
+            }
             
         } else if (this.queue.size > 0) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);

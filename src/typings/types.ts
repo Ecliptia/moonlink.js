@@ -28,6 +28,13 @@ export enum LoadType {
     ERROR = "error",
 }
 
+export enum VoiceConnectionState {
+    CONNECTING,
+    CONNECTED,
+    DISCONNECTED,
+    DESTROYED,
+}
+
 export type PlayerOptions = {
     guildId: string;
     voiceChannelId: string;
