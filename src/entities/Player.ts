@@ -90,10 +90,18 @@ export class Player {
         return this;
     }
 
-    public async play(options: { track?: Track; position?: number, noReplace?: boolean } = {}): Promise<boolean> {
+    public async play(options: { track?: Track; position?: number, noReplace?: boolean } | Track = {}): Promise<boolean> {
+        let finalOptions: { track?: Track; position?: number, noReplace?: boolean };
+
+        if (options instanceof Track || ('encoded' in options && 'info' in options)) {
+            finalOptions = { track: options as Track };
+        } else {
+            finalOptions = options as { track?: Track; position?: number, noReplace?: boolean };
+        }
+
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
 
-        const track = options.track;
+        const track = finalOptions.track;
         
         if (track) {
             this.queue.unshift(track);
@@ -116,7 +124,7 @@ export class Player {
         
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track ? nextTrack : new Track(nextTrack);
-        this.current.position = options.position || 0;
+        this.current.position = finalOptions.position || 0;
         this.updateData("current", { encoded: this.current.encoded, requester: this.current.requester });
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
 
@@ -132,14 +140,14 @@ export class Player {
                 encoded: this.current.encoded,
                 userData: this.current.userData 
             },
-            position: options.position || this.current.position,
+            position: finalOptions.position || this.current.position,
         };
 
         this.manager.emit("playerTriggeredPlay", this, this.current);
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
         
         try {
-            await this.node.rest.updatePlayer(this.guildId, payload, options.noReplace ?? this.manager.options.noReplace);
+            await this.node.rest.updatePlayer(this.guildId, payload, finalOptions.noReplace ?? this.manager.options.noReplace);
             this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
         } catch (e) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Failed to send play request for guild ${this.guildId}. Reverting state. Error: ${(e as Error).message}`);

@@ -42,7 +42,7 @@ export declare class Player {
         track?: Track;
         position?: number;
         noReplace?: boolean;
-    }): Promise<boolean>;
+    } | Track): Promise<boolean>;
     pause(): Promise<this>;
     resume(): Promise<this>;
     stop(): Promise<this>;
