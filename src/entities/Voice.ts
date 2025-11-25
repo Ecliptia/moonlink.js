@@ -219,10 +219,14 @@ export class Voice extends EventEmitter<VoiceEvents> {
             } catch (softError) {
                 this.manager.emit("debug", `Player ${this.player.guildId} recovery: Soft reconnect failed. Attempting hard restart. Error: ${(softError as Error).message}`);
                 try {
+                    this.isMoving = true;
+                    await this.player.node.rest.destroyPlayer(this.player.guildId);
                     await this.player.restart();
                 } catch (hardError) {
                     this.manager.emit("debug", `Player ${this.player.guildId} recovery: Hard restart failed. Destroying player. Error: ${(hardError as Error).message}`);
                     await this.player.destroy("RecoveryFailed");
+                } finally {
+                    this.isMoving = false;
                 }
             }
         }
