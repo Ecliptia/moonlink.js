@@ -38,7 +38,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
         this.emit("stateChange", state);
     }
 
-    public connect(): Promise<void> {
+    public connect(options: { selfDeaf: boolean; selfMute: boolean }): Promise<void> {
         if (this.state === VoiceConnectionState.CONNECTED) {
             return Promise.resolve();
         }
@@ -168,16 +168,66 @@ export class Voice extends EventEmitter<VoiceEvents> {
         this.checkCompletion();
     }
 
-    public handleServerUpdate(data: { token: string; endpoint: string }): void {
-        if(this.state === VoiceConnectionState.DESTROYED) return;
-
-        this.token = data.token;
-        this.endpoint = data.endpoint;
-        this.checkCompletion();
-    }
+        public handleServerUpdate(data: { token: string; endpoint: string }): void {
+            if(this.state === VoiceConnectionState.DESTROYED) return;
     
-    private checkCompletion(): void {
-        if (this.sessionId && this.token && this.endpoint) {
+            this.token = data.token;
+            this.endpoint = data.endpoint;
+            this.checkCompletion();
+        }
+        
+        public check(connected: boolean): void {
+            if (connected) {
+                this.player.set("consecutiveConnectionFailures", 0);
+                return;
+            }
+    
+            if (!this.player.playing && this.player.queue.isEmpty) {
+                return;
+            }
+    
+            const failures = (this.player.get<number>("consecutiveConnectionFailures") || 0) + 1;
+            this.player.set("consecutiveConnectionFailures", failures);
+    
+            if (failures >= 5) {
+                this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
+                this.player.set("consecutiveConnectionFailures", 0);
+                this.recover();
+            }
+        }
+    
+        private async recover(): Promise<void> {
+            if (!this.player.get("userInitiatedConnect")) {
+                this.manager.emit("debug", `Player ${this.player.guildId} recovery skipped: connection not user-initiated.`);
+                return;
+            }
+    
+            try {
+                this.manager.emit("debug", `Player ${this.player.guildId} recovery: Attempting soft reconnect.`);
+                const store = {
+                    voiceChannelId: this.player.voiceChannelId,
+                    selfDeaf: this.player.get<boolean>("selfDeaf"),
+                    selfMute: this.player.get<boolean>("selfMute"),
+                }
+
+                await this.disconnect();
+                this.player.setVoiceChannelId(store.voiceChannelId);
+                await this.connect({
+                    selfDeaf: store.selfDeaf,
+                    selfMute: store.selfMute,
+                })
+            } catch (softError) {
+                this.manager.emit("debug", `Player ${this.player.guildId} recovery: Soft reconnect failed. Attempting hard restart. Error: ${(softError as Error).message}`);
+                try {
+                    await this.player.restart();
+                } catch (hardError) {
+                    this.manager.emit("debug", `Player ${this.player.guildId} recovery: Hard restart failed. Destroying player. Error: ${(hardError as Error).message}`);
+                    await this.player.destroy("RecoveryFailed");
+                }
+            }
+        }
+    
+        private checkCompletion(): void {        if (this.sessionId && this.token && this.endpoint) {
             this.player.node.rest.updatePlayer(this.player.guildId, { 
                 voice: {
                     sessionId: this.sessionId,

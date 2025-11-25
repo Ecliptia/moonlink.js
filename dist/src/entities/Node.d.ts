@@ -41,7 +41,7 @@ export declare class Node {
     protected close(event: {
         code: any;
         reason: string;
-    }): void;
+    }): Promise<void>;
     protected message({ data }: {
         data: any;
     }): Promise<void>;
@@ -57,4 +57,5 @@ export declare class Node {
         error: any;
     }): void;
     destroy(): Promise<void>;
+    private _resumePlayers;
 }

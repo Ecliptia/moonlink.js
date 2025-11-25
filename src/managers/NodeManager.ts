@@ -54,11 +54,15 @@ export class NodeManager {
         return this.findNode();
     }
 
-    public findNode(): any | undefined {
+    public findNode(options?: { exclude?: string[] }): any | undefined {
         const nodeOptions = this.manager.options.node;
         const sortBy = nodeOptions?.selectionStrategy ?? "penalty";
 
         let nodes = this.onlineNodes;
+        if (options?.exclude) {
+            nodes = nodes.filter(node => !options.exclude.includes(node.identifier));
+        }
+
         if (!nodes.length) {
             this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: No online nodes available.`);
             return undefined;

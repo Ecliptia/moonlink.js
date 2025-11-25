@@ -10,6 +10,8 @@ export interface IManagerEvents {
     nodeConnected: (node: Node) => void;
     nodeError: (node: Node, error: Error) => void;
     nodeReconnect: (node: Node) => void;
+    nodeReconnecting: (node: Node, attempt: number) => void;
+    nodeResume: (node: Node) => void;
     nodeDisconnect: (node: Node, code: number, reason: string) => void;
     nodeDestroy: (identifier: string) => void;
     nodeRaw: (node: Node, payload: any) => void;
@@ -36,6 +38,11 @@ export interface IManagerEvents {
     playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
     playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
     playerNodeSet: (player: Player, oldNode: string, newNode: string) => void;
+    playerRecoveryStarted: (player: Player) => void;
+    playerRecoverySuccess: (player: Player) => void;
+    playerRecoveryFailed: (player: Player) => void;
+    playersMoved: (players: Player[], oldNode: Node, newNode: Node) => void;
+    playersOrphaned: (players: Player[], deadNode: Node) => void;
     playerTriggeredPlay: (player: Player, track: Track) => void;
     playerTriggeredPause: (player: Player) => void;
     playerTriggeredResume: (player: Player) => void;
@@ -114,6 +121,8 @@ export interface INodeOptions {
     avoidUnhealthyNodes?: boolean;
     maxCpuLoad?: number;
     maxMemoryUsage?: number;
+    autoMovePlayers?: boolean;
+    autoRebalance?: boolean;
 }
 export interface ISearchOptions {
     defaultPlatform?: "youtube" | "youtubemusic" | "soundcloud" | "local";

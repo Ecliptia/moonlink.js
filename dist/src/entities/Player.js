@@ -64,6 +64,7 @@ class Player {
         await this.manager.database.set(dbPath, data);
     }
     async connect() {
+        this.set("userInitiatedConnect", true);
         await this.voice.connect();
         return this;
     }
