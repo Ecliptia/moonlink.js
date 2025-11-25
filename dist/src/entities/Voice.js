@@ -28,7 +28,7 @@ class Voice extends Util_1.EventEmitter {
         this.state = state;
         this.emit("stateChange", state);
     }
-    connect() {
+    connect(options) {
         if (this.state === types_1.VoiceConnectionState.CONNECTED) {
             return Promise.resolve();
         }
@@ -174,7 +174,17 @@ class Voice extends Util_1.EventEmitter {
         }
         try {
             this.manager.emit("debug", `Player ${this.player.guildId} recovery: Attempting soft reconnect.`);
-            await this.player.connect();
+            const store = {
+                voiceChannelId: this.player.voiceChannelId,
+                selfDeaf: this.player.get("selfDeaf"),
+                selfMute: this.player.get("selfMute"),
+            };
+            await this.disconnect();
+            this.player.setVoiceChannelId(store.voiceChannelId);
+            await this.connect({
+                selfDeaf: store.selfDeaf,
+                selfMute: store.selfMute,
+            });
         }
         catch (softError) {
             this.manager.emit("debug", `Player ${this.player.guildId} recovery: Soft reconnect failed. Attempting hard restart. Error: ${softError.message}`);

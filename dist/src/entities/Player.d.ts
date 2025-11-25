@@ -36,7 +36,10 @@ export declare class Player {
     set(key: string, value: unknown): this;
     get<T>(key: string): T | undefined;
     updateData<T>(path?: string, data?: T): Promise<void>;
-    connect(): Promise<this>;
+    connect({ selfDeaf, selfMute }?: {
+        selfDeaf?: boolean;
+        selfMute?: boolean;
+    }): Promise<this>;
     disconnect(): Promise<this>;
     play(options?: {
         track?: Track;
@@ -56,8 +59,8 @@ export declare class Player {
     destroy(reason?: string): Promise<void>;
     restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
-    setVoiceChannel(voiceChannelId: string): this;
-    setTextChannel(textChannelId: string): this;
+    setVoiceChannelId(voiceChannelId: string): this;
+    setTextChannelId(textChannelId: string): this;
     replay(): Promise<boolean>;
     back(): Promise<boolean>;
 }

@@ -63,9 +63,13 @@ class Player {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
         await this.manager.database.set(dbPath, data);
     }
-    async connect() {
+    async connect({ selfDeaf, selfMute } = {}) {
         this.set("userInitiatedConnect", true);
-        await this.voice.connect();
+        if (selfDeaf !== undefined)
+            this.set("selfDeaf", selfDeaf);
+        if (selfMute !== undefined)
+            this.set("selfMute", selfMute);
+        await this.voice.connect({ selfDeaf: this.get("selfDeaf") ?? true, selfMute: this.get("selfMute") ?? false });
         return this;
     }
     async disconnect() {
@@ -358,10 +362,10 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Successfully transferred player ${this.guildId} to ${targetNode.identifier}`);
         return true;
     }
-    setVoiceChannel(voiceChannelId) {
-        (0, Util_1.validate)(voiceChannelId, (v) => typeof v === "string" && v.length > 0, "Player#setVoiceChannel > Voice channel ID must be a non-empty string.");
+    setVoiceChannelId(voiceChannelId) {
+        (0, Util_1.validate)(voiceChannelId, (v) => typeof v === "string" && v.length > 0, "Player#setVoiceChannelId > Voice channel ID must be a non-empty string.");
         if (this.voiceChannelId === voiceChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannel >> Voice channel already set to ${voiceChannelId} for guild ${this.guildId}`);
+            this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannelId >> Voice channel already set to ${voiceChannelId} for guild ${this.guildId}`);
             return this;
         }
         const oldChannel = this.voiceChannelId;
@@ -371,10 +375,10 @@ class Player {
         this.manager.emit("playerVoiceChannelIdSet", this, oldChannel, voiceChannelId);
         return this;
     }
-    setTextChannel(textChannelId) {
-        (0, Util_1.validate)(textChannelId, (v) => typeof v === "string" && v.length > 0, "Player#setTextChannel > Text channel ID must be a non-empty string.");
+    setTextChannelId(textChannelId) {
+        (0, Util_1.validate)(textChannelId, (v) => typeof v === "string" && v.length > 0, "Player#setTextChannelId > Text channel ID must be a non-empty string.");
         if (this.textChannelId === textChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Player#setTextChannel >> Text channel already set to ${textChannelId} for guild ${this.guildId}`);
+            this.manager.emit("debug", `Moonlink.js > Player#setTextChannelId >> Text channel already set to ${textChannelId} for guild ${this.guildId}`);
             return this;
         }
         const oldChannel = this.textChannelId;
