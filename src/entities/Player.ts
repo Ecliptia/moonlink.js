@@ -254,12 +254,16 @@ export class Player {
                     
         if (!this.queue.size) {
             if (this.autoPlay) {
-                this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue empty, stopping player (autoPlay enabled) for guild ${this.guildId}`);
-                await this.stop();
-                return true;
+                if (!this.current) {
+                     this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty and no current track, cannot trigger autoPlay for guild ${this.guildId}`);
+                     return false;
+                }
+                this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue empty, triggering autoPlay for guild ${this.guildId}`);
+                return await this.node.handleAutoPlay(this, this.current);
             }
-            this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty, cannot skip for guild ${this.guildId}`);
-            return false;
+            this.manager.emit("debug", `Moonlink.js > Player#skip >> Queue is empty, stopping player for guild ${this.guildId}`);
+            await this.stop();
+            return true;
         }
                     
         const nextTrack = this.queue.first;
@@ -540,4 +544,5 @@ export class Player {
         
         return played;
     }
+
 }
