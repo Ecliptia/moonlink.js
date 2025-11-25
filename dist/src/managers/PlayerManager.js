@@ -12,7 +12,14 @@ class PlayerManager {
         return [...this.players.values()];
     }
     create(options) {
-        (0, Util_1.validate)(options.guildId, (v) => typeof v === "string", "IPlayerConfig#guildId must be a string.");
+        (0, Util_1.validate)(options.guildId, (v) => typeof v === "string" && /^\d{17,20}$/.test(v), "IPlayerConfig#guildId must be a valid Discord Snowflake string.");
+        (0, Util_1.validate)(options.voiceChannelId, (v) => typeof v === "string" && /^\d{17,20}$/.test(v), "IPlayerConfig#voiceChannelId must be a valid Discord Snowflake string.");
+        if (options.textChannelId) {
+            (0, Util_1.validate)(options.textChannelId, (v) => typeof v === "string" && /^\d{17,20}$/.test(v), "IPlayerConfig#textChannelId must be a valid Discord Snowflake string.");
+        }
+        if (options.volume) {
+            (0, Util_1.validate)(options.volume, (v) => typeof v === 'number' && v >= 0 && v <= 1000, "IPlayerConfig#volume must be a number between 0 and 1000.");
+        }
         if (this.players.has(options.guildId)) {
             this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player already exists for Guild: ${options.guildId}. Returning existing player.`);
             return this.players.get(options.guildId);

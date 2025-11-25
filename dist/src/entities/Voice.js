@@ -151,6 +151,42 @@ class Voice extends Util_1.EventEmitter {
         this.endpoint = data.endpoint;
         this.checkCompletion();
     }
+    check(connected) {
+        if (connected) {
+            this.player.set("consecutiveConnectionFailures", 0);
+            return;
+        }
+        if (!this.player.playing && this.player.queue.isEmpty) {
+            return;
+        }
+        const failures = (this.player.get("consecutiveConnectionFailures") || 0) + 1;
+        this.player.set("consecutiveConnectionFailures", failures);
+        if (failures >= 5) {
+            this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
+            this.player.set("consecutiveConnectionFailures", 0);
+            this.recover();
+        }
+    }
+    async recover() {
+        if (!this.player.get("userInitiatedConnect")) {
+            this.manager.emit("debug", `Player ${this.player.guildId} recovery skipped: connection not user-initiated.`);
+            return;
+        }
+        try {
+            this.manager.emit("debug", `Player ${this.player.guildId} recovery: Attempting soft reconnect.`);
+            await this.player.connect();
+        }
+        catch (softError) {
+            this.manager.emit("debug", `Player ${this.player.guildId} recovery: Soft reconnect failed. Attempting hard restart. Error: ${softError.message}`);
+            try {
+                await this.player.restart();
+            }
+            catch (hardError) {
+                this.manager.emit("debug", `Player ${this.player.guildId} recovery: Hard restart failed. Destroying player. Error: ${hardError.message}`);
+                await this.player.destroy("RecoveryFailed");
+            }
+        }
+    }
     checkCompletion() {
         if (this.sessionId && this.token && this.endpoint) {
             this.player.node.rest.updatePlayer(this.player.guildId, {

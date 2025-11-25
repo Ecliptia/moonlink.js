@@ -80,8 +80,11 @@ export class Player {
         await this.manager.database.set(dbPath, data);
     }
 
-    public async connect(): Promise<this> {
-        await this.voice.connect();
+    public async connect({ selfDeaf, selfMute }: { selfDeaf?: boolean; selfMute?: boolean } = {}): Promise<this> {
+        this.set("userInitiatedConnect", true);
+        if (selfDeaf !== undefined) this.set("selfDeaf", selfDeaf);
+        if (selfMute !== undefined) this.set("selfMute", selfMute);
+        await this.voice.connect({ selfDeaf: this.get("selfDeaf") ?? true, selfMute: this.get("selfMute") ?? false });
         return this;
     }
 
@@ -445,15 +448,15 @@ export class Player {
         return true;
     }
 
-    public setVoiceChannel(voiceChannelId: string): this {
+    public setVoiceChannelId(voiceChannelId: string): this {
         validate(
             voiceChannelId,
             (v) => typeof v === "string" && v.length > 0,
-            "Player#setVoiceChannel > Voice channel ID must be a non-empty string."
+            "Player#setVoiceChannelId > Voice channel ID must be a non-empty string."
         );
 
         if (this.voiceChannelId === voiceChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannel >> Voice channel already set to ${voiceChannelId} for guild ${this.guildId}`);
+            this.manager.emit("debug", `Moonlink.js > Player#setVoiceChannelId >> Voice channel already set to ${voiceChannelId} for guild ${this.guildId}`);
             return this;
         }
 
@@ -466,15 +469,15 @@ export class Player {
         return this;
     }
 
-    public setTextChannel(textChannelId: string): this {
+    public setTextChannelId(textChannelId: string): this {
         validate(
             textChannelId,
             (v) => typeof v === "string" && v.length > 0,
-            "Player#setTextChannel > Text channel ID must be a non-empty string."
+            "Player#setTextChannelId > Text channel ID must be a non-empty string."
         );
 
         if (this.textChannelId === textChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Player#setTextChannel >> Text channel already set to ${textChannelId} for guild ${this.guildId}`);
+            this.manager.emit("debug", `Moonlink.js > Player#setTextChannelId >> Text channel already set to ${textChannelId} for guild ${this.guildId}`);
             return this;
         }
 

@@ -28,6 +28,8 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
         token: string;
         endpoint: string;
     }): void;
+    check(connected: boolean): void;
+    private recover;
     private checkCompletion;
     destroy(): void;
 }

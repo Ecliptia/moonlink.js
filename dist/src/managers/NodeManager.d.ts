@@ -11,6 +11,8 @@ export declare class NodeManager {
     get onlineNodes(): any[];
     get hasOnlineNodes(): boolean;
     get leastUsedNode(): any | undefined;
-    findNode(): any | undefined;
+    findNode(options?: {
+        exclude?: string[];
+    }): any | undefined;
     private _validateConfig;
 }
