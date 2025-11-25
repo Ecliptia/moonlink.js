@@ -78,14 +78,27 @@ class Player {
     }
     async play(options = {}) {
         let finalOptions;
-        if (options instanceof Track_1.Track || ('encoded' in options && 'info' in options)) {
+        if (options instanceof Track_1.Track) {
+            finalOptions = { track: options };
+        }
+        else if ('encoded' in options && 'info' in options) {
             finalOptions = { track: options };
         }
         else {
             finalOptions = options;
         }
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
-        const track = finalOptions.track;
+        let track = finalOptions.track;
+        if (finalOptions.encoded) {
+            try {
+                const decoded = (0, Util_1.decodeTrack)(finalOptions.encoded);
+                track = new Track_1.Track(decoded, finalOptions.requester);
+            }
+            catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Error decoding track for guild ${this.guildId}. Error: ${e}`);
+                return false;
+            }
+        }
         if (track) {
             this.queue.unshift(track);
             this.manager.emit("debug", `Moonlink.js > Player#play >> Added track "${track.title}" to front of queue for guild ${this.guildId}`);

@@ -1,7 +1,7 @@
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
-import { Structure, validate } from "../Util";
+import { Structure, validate, decodeTrack } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
@@ -93,18 +93,29 @@ export class Player {
         return this;
     }
 
-    public async play(options: { track?: Track; position?: number, noReplace?: boolean } | Track = {}): Promise<boolean> {
-        let finalOptions: { track?: Track; position?: number, noReplace?: boolean };
+    public async play(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean } | Track = {}): Promise<boolean> {
+        let finalOptions: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean };
 
-        if (options instanceof Track || ('encoded' in options && 'info' in options)) {
-            finalOptions = { track: options as Track };
+        if (options instanceof Track) {
+            finalOptions = { track: options };
+        } else if ('encoded' in options && 'info' in options) {
+            finalOptions = { track: options as any };
         } else {
-            finalOptions = options as { track?: Track; position?: number, noReplace?: boolean };
+            finalOptions = options;
         }
 
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
 
-        const track = finalOptions.track;
+        let track = finalOptions.track;
+        if (finalOptions.encoded) {
+            try {
+                const decoded = decodeTrack(finalOptions.encoded);
+                track = new Track(decoded, finalOptions.requester);
+            } catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Error decoding track for guild ${this.guildId}. Error: ${e}`);
+                return false;
+            }
+        }
         
         if (track) {
             this.queue.unshift(track);

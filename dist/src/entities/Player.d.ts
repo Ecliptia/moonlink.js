@@ -43,6 +43,8 @@ export declare class Player {
     disconnect(): Promise<this>;
     play(options?: {
         track?: Track;
+        encoded?: string;
+        requester?: any;
         position?: number;
         noReplace?: boolean;
     } | Track): Promise<boolean>;
