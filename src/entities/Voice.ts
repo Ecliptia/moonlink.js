@@ -227,7 +227,8 @@ export class Voice extends EventEmitter<VoiceEvents> {
             }
         }
     
-        private checkCompletion(): void {        if (this.sessionId && this.token && this.endpoint) {
+        private checkCompletion(): void {        
+            if (this.sessionId && this.token && this.endpoint) {
             this.player.node.rest.updatePlayer(this.player.guildId, { 
                 voice: {
                     sessionId: this.sessionId,
