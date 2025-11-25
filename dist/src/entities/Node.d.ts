@@ -51,7 +51,7 @@ export declare class Node {
     private handleTrackStuck;
     private handleTrackException;
     private handleWebSocketClosed;
-    private handleAutoPlay;
+    handleAutoPlay(player: any, previousTrack: any): Promise<boolean>;
     private handleQueueEnd;
     protected error({ error }: {
         error: any;

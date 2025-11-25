@@ -743,7 +743,7 @@ export class Node {
     }, reconnectDelay);
   }
 
-  private async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
+  public async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
     if (!previousTrack?.sourceName || !previousTrack.identifier) {
         this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No source or identifier for autoPlay in player ${player.guildId}. PreviousTrack: ${stringifyWithReplacer(previousTrack)}.`);
         return false;
