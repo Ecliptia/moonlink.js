@@ -34,10 +34,13 @@ class Track {
         this.sourceName = data.info.sourceName;
         this.position = data.info.position || 0;
         this.time = 0;
-        this.requester = requester;
+        this.requester = requester || data.userData?.requester;
         this.origin = origin;
         this.pluginInfo = data.pluginInfo || {};
         this.userData = data.userData || {};
+        if (this.requester) {
+            this.userData.requester = this.requester;
+        }
     }
     get thumbnail() {
         if (this.artworkUrl)
@@ -49,6 +52,9 @@ class Track {
     }
     setRequester(requester) {
         this.requester = requester;
+        if (this.requester) {
+            this.userData.requester = this.requester;
+        }
         return this;
     }
     setPosition(position) {
