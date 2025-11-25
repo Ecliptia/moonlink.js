@@ -493,6 +493,9 @@ export class Node {
 
   private async handleTrackEnd(player: any, payload: any): Promise<void> {
     const { reason } = payload;
+    if (reason === "replaced") {
+      return;
+    }
     const trackData = payload.track;
     if (player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
         trackData.userData = player.current.userData;
