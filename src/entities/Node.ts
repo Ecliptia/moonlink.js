@@ -746,7 +746,7 @@ export class Node {
         return false;
     }
 
-    const source = previousTrack.sourceName.toLowerCase();
+    const source = previousTrack.sourceName.toLowerCase() as string;
     const identifier = previousTrack.identifier;
     
     let uri: string | undefined;
@@ -792,6 +792,26 @@ export class Node {
 
     if (!uri || !searchSource) {
         this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No valid autoPlay source found for ${source} in player ${player.guildId}.`);
+        if (source !== "youtube") {
+            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Falling back to YouTube Mix for autoPlay in player ${player.guildId}.`);
+            const res = await this.manager.search({
+              query: `${previousTrack.title} ${previousTrack.author}`,
+            })
+
+            if (res && res.tracks && res.tracks.length > 0) {
+                const suposteousTrack = res.tracks[0];
+                uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
+                searchSource = "youtube";
+                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> YouTube Mix URI for autoPlay in player ${player.guildId}: ${uri}.`);
+            } else {
+                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> YouTube Mix fallback failed for autoPlay in player ${player.guildId}.`);
+                return false;
+            }
+        }
+    }
+
+    if (!uri || !searchSource) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Unable to determine URI or search source for autoPlay in player ${player.guildId}.`);
         return false;
     }
 

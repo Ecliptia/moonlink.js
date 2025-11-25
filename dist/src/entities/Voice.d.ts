@@ -18,7 +18,10 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
     constructor(player: Player);
     get manager(): import("../..").Manager;
     private setState;
-    connect(): Promise<void>;
+    connect(options: {
+        selfDeaf: boolean;
+        selfMute: boolean;
+    }): Promise<void>;
     disconnect(): Promise<void>;
     handleStateUpdate(data: {
         session_id: string;
