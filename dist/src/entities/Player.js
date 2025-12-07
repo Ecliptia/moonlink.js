@@ -406,6 +406,7 @@ class Player {
     pause() {
         if (this.paused)
             return true;
+        this.clearHealthCheck();
         this.node.rest.update({
             guildId: this.guildId,
             data: { paused: true },

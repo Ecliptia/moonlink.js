@@ -488,6 +488,8 @@ export class Player {
   public pause(): boolean {
     if (this.paused) return true;
 
+    this.clearHealthCheck();
+
     this.node.rest.update({
       guildId: this.guildId,
       data: { paused: true },
