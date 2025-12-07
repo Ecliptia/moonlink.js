@@ -437,6 +437,8 @@ export class Player {
 
     await this.connect();
 
+    const wasPaused = this.paused;
+
     if (this.current) {
       await this.play({
         encoded: this.current.encoded,
@@ -446,6 +448,11 @@ export class Player {
     } else {
       await this.play();
     }
+
+    if (wasPaused) {
+      this.pause();
+    }
+
     return true;
   }
 
@@ -845,10 +852,15 @@ export class Player {
       return;
     }
 
+    if (serverState.paused !== this.paused) {
+      this.manager.emit("debug", `Health check for ${this.guildId}: Pause state de-sync. Syncing from server (paused: ${serverState.paused}).`);
+      this.paused = serverState.paused;
+      this.playing = !this.paused;
+      return;
+    }
+
     this.manager.emit("debug", `Health check for ${this.guildId}: Nudging stuck track.`);
     this.current.position = serverState.state.position;
-    this.paused = serverState.paused;
-    this.playing = !this.paused;
 
     await this.restart();
   }

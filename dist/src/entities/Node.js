@@ -269,8 +269,7 @@ class Node {
                 if (!player.current)
                     return;
                 player.connected = payload.state.connected;
-                if (!player.paused)
-                    player.paused = payload.state.paused ?? false;
+                player.paused = payload.state.paused ?? false;
                 player.playing = player.connected && !player.paused && player.current !== null;
                 if (payload.state.position > 0 || player.current.position === 0) {
                     player.current.position = payload.state.position;
