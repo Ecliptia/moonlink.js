@@ -50,6 +50,17 @@ class Node {
         this.rest = new (Util_1.Structure.get("Rest"))(this);
         this.manager.emit("debug", `Moonlink.js > Node >> New node initialized. Identifier: ${this.identifier} (${this.host}:${this.port}), UUID: ${this.uuid}`);
     }
+    get latency() {
+        if (!this.socket)
+            return -1;
+        return this.socket.latency;
+    }
+    ping() {
+        if (!this.connected) {
+            return Promise.reject(new Error("Node is not connected."));
+        }
+        return this.socket.ping();
+    }
     get address() {
         return `${this.host}:${this.port}`;
     }

@@ -1,6 +1,6 @@
 import { Manager } from "../core/Manager";
 import { IManagerNodeConfig } from "../typings/Interfaces";
-import { NodeSortStrategy } from "../typings/types";
+import { NodeSortStrategy, NodeState } from "../typings/types";
 import { Structure, validate, generateUUID } from "../Util";
 
 export class NodeManager {
@@ -50,15 +50,33 @@ export class NodeManager {
         return this.onlineNodes.length > 0;
     }
 
+    public get ready(): any[] {
+        return [...this.nodes.values()].filter((node) => node.state === NodeState.READY);
+    }
+
+    public get hasReady(): boolean {
+        return this.ready.length > 0;
+    }
+
     public get leastUsedNode(): any | undefined {
         return this.findNode();
+    }
+
+    public get stats(): Record<string, any> {
+        const nodeStats: Record<string, any> = {};
+        for (const node of this.onlineNodes) {
+            if(node.stats) {
+                nodeStats[node.identifier] = node.stats;
+            }
+        }
+        return nodeStats;
     }
 
     public findNode(options?: { exclude?: string[] }): any | undefined {
         const nodeOptions = this.manager.options.node;
         const sortBy = nodeOptions?.selectionStrategy ?? "penalty";
 
-        let nodes = this.onlineNodes;
+        let nodes = this.ready.length ? this.ready : this.onlineNodes;
         if (options?.exclude) {
             nodes = nodes.filter(node => !options.exclude.includes(node.identifier));
         }

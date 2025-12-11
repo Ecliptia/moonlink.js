@@ -2,7 +2,7 @@ import { Node } from "../entities/Node";
 import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
-import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy } from "./types";
+import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 export interface IManagerEvents {
     debug: (message: string) => void;
     nodeCreate: (node: Node) => void;
@@ -94,6 +94,7 @@ export interface IManagerOptionsConfig {
     sources?: ISourceOptions;
     playerDestruction?: IPlayerDestructionOptions;
     trackHandling?: ITrackHandlingOptions;
+    trackPartial?: TPartialTrackProperties[];
     database?: {
         type: 'memory' | 'local';
         options?: any;
