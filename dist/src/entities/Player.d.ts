@@ -59,6 +59,9 @@ export declare class Player {
         selfMute?: boolean;
         selfDeaf?: boolean;
     }): Promise<this>;
+    toggleMute(): Promise<this>;
+    toggleDeaf(): Promise<this>;
+    search(query: string, source?: string): Promise<any>;
     stop(): Promise<this>;
     skip(position?: number): Promise<boolean>;
     seek(position: number): Promise<this>;

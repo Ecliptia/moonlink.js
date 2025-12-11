@@ -102,6 +102,12 @@ export class Track {
         return this;
     }
 
+    public clone(): Track {
+        const newTrack = new (Structure.get("Track"))(this.toJSON(), this.requester, this.origin);
+        newTrack.userData = JSON.parse(JSON.stringify(this.userData));
+        return newTrack;
+    }
+
     public toJSON(): ITrack {
         return {
             encoded: this.encoded,

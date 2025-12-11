@@ -267,6 +267,22 @@ export class Player {
         return this;
     }
 
+    public async toggleMute(): Promise<this> {
+        return this.setVoiceState({ selfMute: !this.get("selfMute") });
+    }
+
+    public async toggleDeaf(): Promise<this> {
+        return this.setVoiceState({ selfDeaf: !this.get("selfDeaf") });
+    }
+
+    public async search(query: string, source?: string): Promise<any> {
+        return this.manager.search({
+            query,
+            source,
+            node: this.node.identifier
+        });
+    }
+
     public async stop(): Promise<this> {
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);

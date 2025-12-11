@@ -17,5 +17,6 @@ export declare class NodeManager {
     findNode(options?: {
         exclude?: string[];
     }): any | undefined;
+    eject(identifier: string): Promise<boolean>;
     private _validateConfig;
 }

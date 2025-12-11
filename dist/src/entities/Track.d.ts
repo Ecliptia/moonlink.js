@@ -25,5 +25,6 @@ export declare class Track {
     get thumbnail(): string | null;
     setRequester(requester: any): this;
     setPosition(position: number): this;
+    clone(): Track;
     toJSON(): ITrack;
 }
