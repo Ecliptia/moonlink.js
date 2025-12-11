@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NodeManager = void 0;
+const types_1 = require("../typings/types");
 const Util_1 = require("../Util");
 class NodeManager {
     manager;
@@ -42,13 +43,28 @@ class NodeManager {
     get hasOnlineNodes() {
         return this.onlineNodes.length > 0;
     }
+    get ready() {
+        return [...this.nodes.values()].filter((node) => node.state === types_1.NodeState.READY);
+    }
+    get hasReady() {
+        return this.ready.length > 0;
+    }
     get leastUsedNode() {
         return this.findNode();
+    }
+    get stats() {
+        const nodeStats = {};
+        for (const node of this.onlineNodes) {
+            if (node.stats) {
+                nodeStats[node.identifier] = node.stats;
+            }
+        }
+        return nodeStats;
     }
     findNode(options) {
         const nodeOptions = this.manager.options.node;
         const sortBy = nodeOptions?.selectionStrategy ?? "penalty";
-        let nodes = this.onlineNodes;
+        let nodes = this.ready.length ? this.ready : this.onlineNodes;
         if (options?.exclude) {
             nodes = nodes.filter(node => !options.exclude.includes(node.identifier));
         }

@@ -13,6 +13,12 @@ class Manager extends Util_1.EventEmitter {
     players;
     database;
     idleCheckInterval;
+    get readyNodes() {
+        return this.nodes.ready;
+    }
+    get hasReadyNodes() {
+        return this.nodes.hasReady;
+    }
     constructor(config) {
         super();
         (0, Util_1.validate)(config, (value) => value != null, "Manager constructor requires a config object.");
@@ -129,8 +135,14 @@ class Manager extends Util_1.EventEmitter {
             identifier = options.query;
         }
         else {
-            const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
-            const source = Util_1.sources[options.source || defaultPlatform] || Util_1.sources[defaultPlatform] || "ytsearch";
+            let source;
+            if (options.source) {
+                source = Util_1.sources[options.source] || options.source;
+            }
+            else {
+                const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
+                source = Util_1.sources[defaultPlatform] || "ytsearch";
+            }
             identifier = `${source}:${options.query}`;
         }
         const res = await node.rest.loadTracks(identifier);

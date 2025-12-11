@@ -20,6 +20,13 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public database: DatabaseManager;
     private idleCheckInterval?: NodeJS.Timeout;
 
+    public get readyNodes() {
+        return this.nodes.ready;
+    }
+    public get hasReadyNodes() {
+        return this.nodes.hasReady;
+    }
+
     constructor(config: IManagerConfig) {
         super();
 
@@ -150,8 +157,13 @@ export class Manager extends EventEmitter<IManagerEvents> {
         if (URL_REGEX.test(options.query)) {
             identifier = options.query;
         } else {
-            const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
-            const source = sources[options.source || defaultPlatform] || sources[defaultPlatform] || "ytsearch";
+            let source: string;
+            if (options.source) {
+                source = sources[options.source] || options.source;
+            } else {
+                const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
+                source = sources[defaultPlatform] || "ytsearch";
+            }
             identifier = `${source}:${options.query}`;
         }
 

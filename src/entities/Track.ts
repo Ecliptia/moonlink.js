@@ -1,4 +1,6 @@
-import { ITrack } from "../typings/Interfaces";
+import { ITrack, ITrackInfo } from "../typings/Interfaces";
+import { Structure } from "../Util";
+import { TPartialTrackProperties } from "../typings/types";
 
 export class Track {
     public readonly encoded: string;
@@ -19,28 +21,63 @@ export class Track {
     public pluginInfo: Record<string, any>;
     public userData: Record<string, any>;
     public retries: number = 0;
+    private isPartial: boolean = false;
 
     constructor(data: ITrack, requester?: any, origin?: string) {
+        const manager = Structure.getManager();
+        const partialTrackOptions = manager?.options?.trackPartial;
+
         this.encoded = data.encoded;
-        this.title = data.info.title;
-        this.author = data.info.author;
-        this.duration = data.info.length;
-        this.identifier = data.info.identifier;
-        this.isSeekable = data.info.isSeekable;
-        this.isStream = data.info.isStream;
-        this.uri = data.info.uri;
-        this.artworkUrl = data.info.artworkUrl || null;
-        this.isrc = data.info.isrc || null;
-        this.sourceName = data.info.sourceName;
-        this.position = data.info.position || 0;
-        this.time = 0;
         this.requester = requester || data.userData?.requester;
         this.origin = origin;
-        this.pluginInfo = data.pluginInfo || {};
-        this.userData = data.userData || {};
+
+        const trackProps = this.createPropertySetters(data.info);
+
+        if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
+            this.isPartial = true;
+            trackProps.title();
+            trackProps.author();
+            
+            partialTrackOptions.forEach(prop => {
+                if (prop in trackProps) {
+                    trackProps[prop as keyof typeof trackProps]();
+                }
+            });
+        } else {
+            Object.values(trackProps).forEach(setter => setter());
+        }
+
         if (this.requester) {
+            if (!this.userData) this.userData = {};
             this.userData.requester = this.requester;
         }
+
+        Object.keys(this).forEach(key => {
+            if (this[key as keyof this] === undefined) {
+                delete this[key as keyof this];
+            }
+        });
+    }
+
+    private createPropertySetters(info: ITrackInfo): Record<string, () => void> {
+        return {
+            title: () => (this.title = info.title),
+            author: () => (this.author = info.author),
+            duration: () => (this.duration = info.length),
+            identifier: () => (this.identifier = info.identifier),
+            isSeekable: () => (this.isSeekable = info.isSeekable),
+            isStream: () => (this.isStream = info.isStream),
+            uri: () => (this.uri = info.uri),
+            artworkUrl: () => (this.artworkUrl = info.artworkUrl || null),
+            isrc: () => (this.isrc = info.isrc || null),
+            sourceName: () => (this.sourceName = info.sourceName),
+            position: () => (this.position = info.position || 0),
+            time: () => (this.time = 0)
+        };
+    }
+
+    public isPartialTrack(): boolean {
+        return this.isPartial;
     }
 
     public get thumbnail(): string | null {
@@ -54,6 +91,7 @@ export class Track {
     public setRequester(requester: any): this {
         this.requester = requester;
         if (this.requester) {
+            if(!this.userData) this.userData = {};
             this.userData.requester = this.requester;
         }
         return this;

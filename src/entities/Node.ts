@@ -65,6 +65,18 @@ export class Node {
     );
   }
 
+  public get latency(): number {
+    if (!this.socket) return -1;
+    return this.socket.latency;
+  }
+
+  public ping(): Promise<number> {
+    if (!this.connected) {
+      return Promise.reject(new Error("Node is not connected."));
+    }
+    return this.socket.ping();
+  }
+
   public get address(): string {
     return `${this.host}:${this.port}`;
   }

@@ -12,6 +12,8 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     readonly players: PlayerManager;
     database: DatabaseManager;
     private idleCheckInterval?;
+    get readyNodes(): any;
+    get hasReadyNodes(): any;
     constructor(config: IManagerConfig);
     use(connector: Connector, client: any): this;
     init(clientId: string): Promise<this>;

@@ -10,7 +10,10 @@ export declare class NodeManager {
     remove(identifier: string): boolean;
     get onlineNodes(): any[];
     get hasOnlineNodes(): boolean;
+    get ready(): any[];
+    get hasReady(): boolean;
     get leastUsedNode(): any | undefined;
+    get stats(): Record<string, any>;
     findNode(options?: {
         exclude?: string[];
     }): any | undefined;

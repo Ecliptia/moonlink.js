@@ -33,6 +33,8 @@ export declare class Node {
     state: NodeState;
     capabilities: Set<string>;
     constructor(manager: Manager, config: IManagerNodeConfig);
+    get latency(): number;
+    ping(): Promise<number>;
     get address(): string;
     setState(state: NodeState): void;
     connect(): Promise<void>;

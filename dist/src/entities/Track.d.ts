@@ -18,7 +18,10 @@ export declare class Track {
     pluginInfo: Record<string, any>;
     userData: Record<string, any>;
     retries: number;
+    private isPartial;
     constructor(data: ITrack, requester?: any, origin?: string);
+    private createPropertySetters;
+    isPartialTrack(): boolean;
     get thumbnail(): string | null;
     setRequester(requester: any): this;
     setPosition(position: number): this;
