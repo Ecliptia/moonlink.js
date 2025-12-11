@@ -223,6 +223,19 @@ class Player {
         await this.connect({ selfMute, selfDeaf });
         return this;
     }
+    async toggleMute() {
+        return this.setVoiceState({ selfMute: !this.get("selfMute") });
+    }
+    async toggleDeaf() {
+        return this.setVoiceState({ selfDeaf: !this.get("selfDeaf") });
+    }
+    async search(query, source) {
+        return this.manager.search({
+            query,
+            source,
+            node: this.node.identifier
+        });
+    }
     async stop() {
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);

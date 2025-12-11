@@ -139,6 +139,32 @@ export class NodeManager {
         })[0];
     }
 
+    public async eject(identifier: string): Promise<boolean> {
+        const node = this.nodes.get(identifier);
+        if (!node) {
+            this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Node ${identifier} not found.`);
+            return false;
+        }
+
+        const playersToMove = this.manager.players.filter(player => player.node.identifier === identifier);
+        
+        if (playersToMove.length > 0) {
+            this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Moving ${playersToMove.length} players from ${identifier}...`);
+            const newNode = this.findNode({ exclude: [identifier] });
+            
+            if (newNode) {
+                await Promise.all(playersToMove.map(player => player.transferNode(newNode)));
+            } else {
+                this.manager.emit("debug", `Moonlink.js > NodeManager#eject: No other nodes available to receive players from ${identifier}. Players will be destroyed.`);
+                await Promise.all(playersToMove.map(player => player.destroy("Node Ejected")));
+            }
+        }
+
+        this.remove(identifier);
+        this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Node ${identifier} ejected successfully.`);
+        return true;
+    }
+
     private _validateConfig(config: IManagerNodeConfig): void {
         validate(config.host, (value) => typeof value === "string" && value.length > 0, "Node config 'host' must be a non-empty string.");
         validate(config.port, (value) => typeof value === "number" && value >= 0 && value <= 65535, "Node config 'port' must be a number between 0 and 65535.");

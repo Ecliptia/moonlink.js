@@ -252,6 +252,53 @@ class Queue {
     map(callback) {
         return this.tracks.map(callback);
     }
+    at(index) {
+        const actualIndex = index < 0 ? this.tracks.length + index : index;
+        return this.tracks[actualIndex];
+    }
+    swap(index1, index2) {
+        if (index1 < 0 || index1 >= this.tracks.length || index2 < 0 || index2 >= this.tracks.length)
+            return false;
+        [this.tracks[index1], this.tracks[index2]] = [this.tracks[index2], this.tracks[index1]];
+        this._updateQueue();
+        return true;
+    }
+    replace(index, track) {
+        if (index < 0 || index >= this.tracks.length)
+            return false;
+        this.tracks[index] = track;
+        this._updateQueue();
+        return true;
+    }
+    removeWhere(predicate) {
+        const removed = [];
+        const kept = [];
+        for (const track of this.tracks) {
+            if (predicate(track)) {
+                removed.push(track);
+            }
+            else {
+                kept.push(track);
+            }
+        }
+        if (removed.length > 0) {
+            this.tracks = kept;
+            this.manager.emit("queueRemove", this.player, removed);
+            this._updateQueue();
+        }
+        return removed;
+    }
+    truncate(size) {
+        if (size < 0 || size >= this.tracks.length)
+            return false;
+        const removed = this.tracks.splice(size, this.tracks.length - size);
+        if (removed.length > 0) {
+            this.manager.emit("queueRemoveRange", this.player, removed, size, this.tracks.length + removed.length);
+            this._updateQueue();
+            return true;
+        }
+        return false;
+    }
 }
 exports.Queue = Queue;
 //# sourceMappingURL=Queue.js.map

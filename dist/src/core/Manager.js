@@ -125,7 +125,7 @@ class Manager extends Util_1.EventEmitter {
     async search(options) {
         (0, Util_1.validate)(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         (0, Util_1.validate)(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
-        const node = this.nodes.findNode();
+        const node = options.node ? this.nodes.nodes.get(options.node) : this.nodes.findNode();
         if (!node) {
             throw new Error("Moonlink.js > Search > No available nodes for searching.");
         }

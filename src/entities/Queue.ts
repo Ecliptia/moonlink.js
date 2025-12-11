@@ -299,4 +299,58 @@ export class Queue {
     public map<U>(callback: (track: Track, index: number, array: Track[]) => U): U[] {
         return this.tracks.map(callback);
     }
+
+    public at(index: number): Track | undefined {
+        const actualIndex = index < 0 ? this.tracks.length + index : index;
+        return this.tracks[actualIndex];
+    }
+
+    public swap(index1: number, index2: number): boolean {
+        if (index1 < 0 || index1 >= this.tracks.length || index2 < 0 || index2 >= this.tracks.length) return false;
+        
+        [this.tracks[index1], this.tracks[index2]] = [this.tracks[index2], this.tracks[index1]];
+        this._updateQueue();
+        return true;
+    }
+
+    public replace(index: number, track: Track): boolean {
+        if (index < 0 || index >= this.tracks.length) return false;
+        
+        this.tracks[index] = track;
+        this._updateQueue();
+        return true;
+    }
+
+    public removeWhere(predicate: (track: Track) => boolean): Track[] {
+        const removed: Track[] = [];
+        const kept: Track[] = [];
+
+        for (const track of this.tracks) {
+            if (predicate(track)) {
+                removed.push(track);
+            } else {
+                kept.push(track);
+            }
+        }
+
+        if (removed.length > 0) {
+            this.tracks = kept;
+            this.manager.emit("queueRemove", this.player, removed);
+            this._updateQueue();
+        }
+
+        return removed;
+    }
+
+    public truncate(size: number): boolean {
+        if (size < 0 || size >= this.tracks.length) return false;
+        
+        const removed = this.tracks.splice(size, this.tracks.length - size);
+        if (removed.length > 0) {
+            this.manager.emit("queueRemoveRange", this.player, removed, size, this.tracks.length + removed.length);
+            this._updateQueue();
+            return true;
+        }
+        return false;
+    }
 }

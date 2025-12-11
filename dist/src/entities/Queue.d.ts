@@ -39,4 +39,9 @@ export declare class Queue {
     reverse(): void;
     [Symbol.iterator](): Iterator<Track>;
     map<U>(callback: (track: Track, index: number, array: Track[]) => U): U[];
+    at(index: number): Track | undefined;
+    swap(index1: number, index2: number): boolean;
+    replace(index: number, track: Track): boolean;
+    removeWhere(predicate: (track: Track) => boolean): Track[];
+    truncate(size: number): boolean;
 }

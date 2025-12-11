@@ -93,6 +93,11 @@ class Track {
         this.position = position;
         return this;
     }
+    clone() {
+        const newTrack = new (Util_1.Structure.get("Track"))(this.toJSON(), this.requester, this.origin);
+        newTrack.userData = JSON.parse(JSON.stringify(this.userData));
+        return newTrack;
+    }
     toJSON() {
         return {
             encoded: this.encoded,
