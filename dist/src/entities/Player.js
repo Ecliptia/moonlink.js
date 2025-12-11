@@ -177,7 +177,7 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#pause >> Player paused for guild ${this.guildId}`);
         return this;
     }
-    async resume() {
+    async resume(options) {
         this.updateActivity();
         if (!this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#resume >> Player is not paused for guild ${this.guildId}`);
@@ -185,12 +185,42 @@ class Player {
         }
         this.manager.emit("debug", `Moonlink.js > Player#resume -> Sending resume request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredResume", this);
-        await this.node.rest.updatePlayer(this.guildId, { paused: false });
+        const promise = this.node.rest.updatePlayer(this.guildId, { paused: false });
+        if (options?.timeout) {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Resume timed out")), options.timeout));
+            await Promise.race([promise, timeoutPromise]);
+        }
+        else {
+            await promise;
+        }
         const oldPaused = this.paused;
         this.paused = false;
         this.updateData("paused", this.paused);
         this.manager.emit("debug", `Moonlink.js > Player#resume >> Player state changed: paused: ${oldPaused} -> ${this.paused}`);
         this.manager.emit("debug", `Moonlink.js > Player#resume >> Player resumed for guild ${this.guildId}`);
+        return this;
+    }
+    async forward(ms) {
+        if (!this.current)
+            return this;
+        const newPosition = Math.min(this.current.duration, this.current.position + ms);
+        return this.seek(newPosition);
+    }
+    async rewind(ms) {
+        if (!this.current)
+            return this;
+        const newPosition = Math.max(0, this.current.position - ms);
+        return this.seek(newPosition);
+    }
+    async setVoiceState(state) {
+        if (state.channelId) {
+            this.setVoiceChannelId(state.channelId);
+        }
+        const selfMute = state.selfMute ?? this.get("selfMute");
+        const selfDeaf = state.selfDeaf ?? this.get("selfDeaf");
+        this.set("selfMute", selfMute);
+        this.set("selfDeaf", selfDeaf);
+        await this.connect({ selfMute, selfDeaf });
         return this;
     }
     async stop() {

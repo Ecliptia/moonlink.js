@@ -1,4 +1,4 @@
-import { IManagerEvents, IManagerConfig, IManagerOptionsConfig, ISearchQuery } from "../typings/Interfaces";
+import { IManagerEvents, IManagerConfig, IManagerOptionsConfig, ISearchQuery, ITrack, ITrackInfo } from "../typings/Interfaces";
 import { EventEmitter } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
@@ -20,4 +20,6 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     private startIdleMonitoring;
     search(options: ISearchQuery): Promise<any>;
     packetUpdate(packet: any): Promise<void>;
+    decodeTrack(encoded: string): ITrack;
+    encodeTrack(track: ITrackInfo): string;
 }

@@ -266,6 +266,43 @@ export class Filters implements IFilters {
         return this;
     }
 
+    public setSpeed(speed: number): this {
+        if (!this.timescale) this.timescale = {};
+        this.timescale.speed = speed;
+        this._updateFilters();
+        return this;
+    }
+
+    public setPitch(pitch: number): this {
+        if (!this.timescale) this.timescale = {};
+        this.timescale.pitch = pitch;
+        this._updateFilters();
+        return this;
+    }
+
+    public remove(filterName: string): this {
+        if (Filters.BUILTIN_FILTERS[filterName] || this.customDefinitions.has(filterName)) {
+             // It's a preset/custom filter toggle
+             return this.disable(filterName);
+        }
+        
+        // It's a property filter
+        if (filterName === "volume") this.volume = undefined;
+        else if (filterName === "equalizer") this.equalizer = undefined;
+        else if (filterName === "karaoke") this.karaoke = undefined;
+        else if (filterName === "timescale") this.timescale = undefined;
+        else if (filterName === "tremolo") this.tremolo = undefined;
+        else if (filterName === "vibrato") this.vibrato = undefined;
+        else if (filterName === "rotation") this.rotation = undefined;
+        else if (filterName === "distortion") this.distortion = undefined;
+        else if (filterName === "channelMix") this.channelMix = undefined;
+        else if (filterName === "lowPass") this.lowPass = undefined;
+        else if (this.pluginFilters && this.pluginFilters[filterName]) delete this.pluginFilters[filterName];
+
+        this._updateFilters();
+        return this;
+    }
+
     public setPluginFilters(filters: Record<string, any>): this {
         this.pluginFilters = filters;
         this._updateFilters();

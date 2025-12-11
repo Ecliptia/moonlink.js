@@ -36,6 +36,14 @@ export class Queue {
         return this.tracks.reduce((acc, cur) => acc + cur.duration, 0);
     }
 
+    public get remainingDuration(): number {
+        const queueDuration = this.duration;
+        const currentTrackRemaining = this.player.current 
+            ? Math.max(0, this.player.current.duration - this.player.current.position) 
+            : 0;
+        return queueDuration + currentTrackRemaining;
+    }
+
     public get all(): Track[] {
         return this.tracks;
     }
@@ -68,6 +76,20 @@ export class Queue {
             this.manager.emit("queueAdd", this.player, addedTracks.length === 1 ? addedTracks[0] : addedTracks);
             this._updateQueue();
         }
+    }
+
+    public insert(index: number, track: Track | Track[]): void {
+        const tracksToAdd = Array.isArray(track) ? track : [track];
+        const maxSize = this.manager.options.queue?.maxSize ?? 1000;
+        
+        if (maxSize !== "unlimited" && this.tracks.length + tracksToAdd.length > maxSize) {
+            this.manager.emit("debug", `Moonlink.js > Queue >> Max queue size (${maxSize}) reached. Cannot insert more tracks.`);
+            return;
+        }
+
+        this.tracks.splice(index, 0, ...tracksToAdd);
+        this.manager.emit("queueAdd", this.player, tracksToAdd.length === 1 ? tracksToAdd[0] : tracksToAdd);
+        this._updateQueue();
     }
 
     public get(position: number): Track | undefined {
@@ -124,6 +146,19 @@ export class Queue {
             const j = Math.floor(Math.random() * (i + 1));
             [this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
         }
+        this._updateQueue();
+    }
+
+    public shuffleRange(start: number, end: number): void {
+        if (start < 0 || end >= this.tracks.length || start >= end) return;
+        
+        const chunk = this.tracks.slice(start, end + 1);
+        for (let i = chunk.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [chunk[i], chunk[j]] = [chunk[j], chunk[i]];
+        }
+        
+        this.tracks.splice(start, chunk.length, ...chunk);
         this._updateQueue();
     }
 

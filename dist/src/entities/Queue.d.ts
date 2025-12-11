@@ -11,8 +11,10 @@ export declare class Queue {
     get last(): Track | undefined;
     get isEmpty(): boolean;
     get duration(): number;
+    get remainingDuration(): number;
     get all(): Track[];
     add(track: Track | Track[]): void;
+    insert(index: number, track: Track | Track[]): void;
     get(position: number): Track | undefined;
     has(track: Track): boolean;
     remove(index?: number): Track | undefined;
@@ -21,6 +23,7 @@ export declare class Queue {
     pop(): Track | undefined;
     clear(): void;
     shuffle(): void;
+    shuffleRange(start: number, end: number): void;
     removeDuplicates(): boolean;
     sortByTitle(): void;
     sortByAuthor(): void;

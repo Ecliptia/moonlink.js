@@ -235,6 +235,49 @@ class Filters {
         this._updateFilters();
         return this;
     }
+    setSpeed(speed) {
+        if (!this.timescale)
+            this.timescale = {};
+        this.timescale.speed = speed;
+        this._updateFilters();
+        return this;
+    }
+    setPitch(pitch) {
+        if (!this.timescale)
+            this.timescale = {};
+        this.timescale.pitch = pitch;
+        this._updateFilters();
+        return this;
+    }
+    remove(filterName) {
+        if (Filters.BUILTIN_FILTERS[filterName] || this.customDefinitions.has(filterName)) {
+            return this.disable(filterName);
+        }
+        if (filterName === "volume")
+            this.volume = undefined;
+        else if (filterName === "equalizer")
+            this.equalizer = undefined;
+        else if (filterName === "karaoke")
+            this.karaoke = undefined;
+        else if (filterName === "timescale")
+            this.timescale = undefined;
+        else if (filterName === "tremolo")
+            this.tremolo = undefined;
+        else if (filterName === "vibrato")
+            this.vibrato = undefined;
+        else if (filterName === "rotation")
+            this.rotation = undefined;
+        else if (filterName === "distortion")
+            this.distortion = undefined;
+        else if (filterName === "channelMix")
+            this.channelMix = undefined;
+        else if (filterName === "lowPass")
+            this.lowPass = undefined;
+        else if (this.pluginFilters && this.pluginFilters[filterName])
+            delete this.pluginFilters[filterName];
+        this._updateFilters();
+        return this;
+    }
     setPluginFilters(filters) {
         this.pluginFilters = filters;
         this._updateFilters();
