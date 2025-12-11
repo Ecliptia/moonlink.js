@@ -49,7 +49,16 @@ export declare class Player {
         noReplace?: boolean;
     } | Track): Promise<boolean>;
     pause(): Promise<this>;
-    resume(): Promise<this>;
+    resume(options?: {
+        timeout?: number;
+    }): Promise<this>;
+    forward(ms: number): Promise<this>;
+    rewind(ms: number): Promise<this>;
+    setVoiceState(state: {
+        channelId?: string;
+        selfMute?: boolean;
+        selfDeaf?: boolean;
+    }): Promise<this>;
     stop(): Promise<this>;
     skip(position?: number): Promise<boolean>;
     seek(position: number): Promise<this>;

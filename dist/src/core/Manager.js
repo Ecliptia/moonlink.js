@@ -183,6 +183,14 @@ class Manager extends Util_1.EventEmitter {
                 break;
         }
     }
+    decodeTrack(encoded) {
+        (0, Util_1.validate)(encoded, (v) => typeof v === "string", "Manager#decodeTrack > Encoded string must be a string.");
+        return (0, Util_1.decodeTrack)(encoded);
+    }
+    encodeTrack(track) {
+        (0, Util_1.validate)(track, (v) => typeof v === "object", "Manager#encodeTrack > Track info must be an object.");
+        return (0, Util_1.encodeTrack)(track);
+    }
 }
 exports.Manager = Manager;
 //# sourceMappingURL=Manager.js.map

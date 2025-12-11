@@ -55,6 +55,13 @@ class Node {
             return -1;
         return this.socket.latency;
     }
+    getPenalties() {
+        if (!this.stats)
+            return 0;
+        const cpuLoad = this.stats.cpu.systemLoad;
+        const players = this.stats.playingPlayers;
+        return players + (cpuLoad * 100);
+    }
     ping() {
         if (!this.connected) {
             return Promise.reject(new Error("Node is not connected."));

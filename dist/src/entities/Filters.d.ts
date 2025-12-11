@@ -45,6 +45,9 @@ export declare class Filters implements IFilters {
     setDistortion(distortion?: IDistortion): this;
     setChannelMix(channelMix?: IChannelMix): this;
     setLowPass(lowPass?: ILowPass): this;
+    setSpeed(speed: number): this;
+    setPitch(pitch: number): this;
+    remove(filterName: string): this;
     setPluginFilters(filters: Record<string, any>): this;
     clear(): this;
     reset(): this;

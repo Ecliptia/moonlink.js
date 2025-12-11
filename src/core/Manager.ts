@@ -3,8 +3,10 @@ import {
     IManagerConfig,
     IManagerOptionsConfig,
     ISearchQuery,
+    ITrack,
+    ITrackInfo,
 } from "../typings/Interfaces";
-import { Structure, validate, EventEmitter, sources } from "../Util";
+import { Structure, validate, EventEmitter, sources, decodeTrack, encodeTrack } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
@@ -209,5 +211,15 @@ export class Manager extends EventEmitter<IManagerEvents> {
                 player.voice.handleServerUpdate(packet.d);
                 break;
         }
+    }
+
+    public decodeTrack(encoded: string): ITrack {
+        validate(encoded, (v) => typeof v === "string", "Manager#decodeTrack > Encoded string must be a string.");
+        return decodeTrack(encoded);
+    }
+
+    public encodeTrack(track: ITrackInfo): string {
+        validate(track, (v) => typeof v === "object", "Manager#encodeTrack > Track info must be an object.");
+        return encodeTrack(track);
     }
 }

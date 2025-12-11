@@ -70,6 +70,14 @@ export class Node {
     return this.socket.latency;
   }
 
+  public getPenalties(): number {
+    if (!this.stats) return 0;
+    const cpuLoad = this.stats.cpu.systemLoad;
+    const players = this.stats.playingPlayers;
+    
+    return players + (cpuLoad * 100);
+  }
+
   public ping(): Promise<number> {
     if (!this.connected) {
       return Promise.reject(new Error("Node is not connected."));

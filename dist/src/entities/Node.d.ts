@@ -34,6 +34,7 @@ export declare class Node {
     capabilities: Set<string>;
     constructor(manager: Manager, config: IManagerNodeConfig);
     get latency(): number;
+    getPenalties(): number;
     ping(): Promise<number>;
     get address(): string;
     setState(state: NodeState): void;
