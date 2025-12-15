@@ -19,6 +19,8 @@ export class Voice extends EventEmitter<VoiceEvents> {
 
     private connectionTimeout: NodeJS.Timeout | null = null;
     private connectPromise: Promise<void> | null = null;
+    private reconnectionTimer: NodeJS.Timeout | null = null;
+    private lastConnectionStatus: boolean = true;
 
     constructor(player: Player) {
         super();
@@ -177,22 +179,54 @@ export class Voice extends EventEmitter<VoiceEvents> {
         }
         
         public check(connected: boolean): void {
-            if (connected) {
+            if (connected && !this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} reconnected. Clearing timers and resetting failures.`);
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                    this.reconnectionTimer = null;
+                }
                 this.player.set("consecutiveConnectionFailures", 0);
+                this.lastConnectionStatus = true;
                 return;
             }
-    
+
+            if (!connected && this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 5s grace period.`);
+                this.lastConnectionStatus = false;
+
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer); 
+                }
+                
+                this.reconnectionTimer = setTimeout(() => {
+                    this.reconnectionTimer = null;
+
+                    if (!this.player.connected) {
+                        const failures = (this.player.get<number>("consecutiveConnectionFailures") || 0) + 1;
+                        this.player.set("consecutiveConnectionFailures", failures);
+
+                        if (failures >= 5) {
+                            this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
+                            this.player.set("consecutiveConnectionFailures", 0);
+                            this.recover();
+                        } else {
+                            this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 5s grace. Failure count: ${failures}.`);
+                        }
+                    } else {
+                        this.manager.emit("debug", `Player ${this.player.guildId} reconnected within 5s grace period (caught by timer). Resetting failures.`);
+                        this.player.set("consecutiveConnectionFailures", 0);
+                    }
+                }, 5000)
+            }
+
             if (!this.player.playing && this.player.queue.isEmpty) {
-                return;
-            }
-    
-            const failures = (this.player.get<number>("consecutiveConnectionFailures") || 0) + 1;
-            this.player.set("consecutiveConnectionFailures", failures);
-    
-            if (failures >= 5) {
-                this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
-                this.player.set("consecutiveConnectionFailures", 0);
-                this.recover();
+                 if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                    this.reconnectionTimer = null;
+                 }
+                 this.player.set("consecutiveConnectionFailures", 0);
+                 this.manager.emit("debug", `Player ${this.player.guildId} is idle, clearing any pending reconnection checks.`);
+                 return;
             }
         }
     

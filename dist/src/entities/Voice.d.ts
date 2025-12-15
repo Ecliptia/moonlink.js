@@ -15,6 +15,8 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
     isMoving: boolean;
     private connectionTimeout;
     private connectPromise;
+    private reconnectionTimer;
+    private lastConnectionStatus;
     constructor(player: Player);
     get manager(): import("../..").Manager;
     private setState;

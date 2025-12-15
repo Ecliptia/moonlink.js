@@ -1,7 +1,7 @@
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
-import { Structure, validate, decodeTrack } from "../Util";
+import { Structure, validate, decodeTrack, delay } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
@@ -473,6 +473,7 @@ export class Player {
             });
  
             if (oldPosition > 0 && this.current.isSeekable) {
+                await delay(2000); 
                 await this.seek(oldPosition);
             } else {
                 this.manager.emit("debug", `Moonlink.js > Player#restart >> Current track is not seekable or position is 0ms for guild ${this.guildId}, skipping seek.`);
