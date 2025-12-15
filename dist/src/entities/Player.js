@@ -385,6 +385,7 @@ class Player {
                 volume: this.volume,
             });
             if (oldPosition > 0 && this.current.isSeekable) {
+                await (0, Util_1.delay)(2000);
                 await this.seek(oldPosition);
             }
             else {
