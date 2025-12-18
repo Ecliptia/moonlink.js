@@ -154,42 +154,6 @@ class Voice extends Util_1.EventEmitter {
         this.checkCompletion();
     }
     check(connected) {
-        if (connected && !this.lastConnectionStatus) {
-            this.manager.emit("debug", `Player ${this.player.guildId} reconnected. Clearing timers and resetting failures.`);
-            if (this.reconnectionTimer) {
-                clearTimeout(this.reconnectionTimer);
-                this.reconnectionTimer = null;
-            }
-            this.player.set("consecutiveConnectionFailures", 0);
-            this.lastConnectionStatus = true;
-            return;
-        }
-        if (!connected && this.lastConnectionStatus) {
-            this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 5s grace period.`);
-            this.lastConnectionStatus = false;
-            if (this.reconnectionTimer) {
-                clearTimeout(this.reconnectionTimer);
-            }
-            this.reconnectionTimer = setTimeout(() => {
-                this.reconnectionTimer = null;
-                if (!this.player.connected) {
-                    const failures = (this.player.get("consecutiveConnectionFailures") || 0) + 1;
-                    this.player.set("consecutiveConnectionFailures", failures);
-                    if (failures >= 5) {
-                        this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
-                        this.player.set("consecutiveConnectionFailures", 0);
-                        this.recover();
-                    }
-                    else {
-                        this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 5s grace. Failure count: ${failures}.`);
-                    }
-                }
-                else {
-                    this.manager.emit("debug", `Player ${this.player.guildId} reconnected within 5s grace period (caught by timer). Resetting failures.`);
-                    this.player.set("consecutiveConnectionFailures", 0);
-                }
-            }, 5000);
-        }
         if (!this.player.playing && this.player.queue.isEmpty) {
             if (this.reconnectionTimer) {
                 clearTimeout(this.reconnectionTimer);
@@ -198,6 +162,33 @@ class Voice extends Util_1.EventEmitter {
             this.player.set("consecutiveConnectionFailures", 0);
             this.manager.emit("debug", `Player ${this.player.guildId} is idle, clearing any pending reconnection checks.`);
             return;
+        }
+        if (connected) {
+            if (!this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} reconnected. Clearing recovery timer.`);
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                    this.reconnectionTimer = null;
+                }
+                this.player.set("consecutiveConnectionFailures", 0);
+                this.lastConnectionStatus = true;
+            }
+        }
+        else {
+            if (this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 20s recovery timer.`);
+                this.lastConnectionStatus = false;
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                }
+                this.reconnectionTimer = setTimeout(() => {
+                    this.reconnectionTimer = null;
+                    if (!this.player.connected) {
+                        this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 20s. Attempting recovery.`);
+                        this.recover();
+                    }
+                }, 10000);
+            }
         }
     }
     async recover() {
