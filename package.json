@@ -15,8 +15,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "rm -rf dist && tsc",
+    "start": "npm run build && npm run test",
     "test": "node test-bot/index.js"
   },
   "homepage": "https://moonlink.js.org",
