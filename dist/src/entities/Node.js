@@ -98,10 +98,16 @@ class Node {
         this.socket.on("close", this.close.bind(this));
         this.socket.on("message", this.message.bind(this));
         this.socket.on("error", this.error.bind(this));
+        this.socket.on("pong", (latency) => {
+            this.manager.emit("debug", `Moonlink.js > Node >> Received pong from ${this.identifier}. Latency: ${latency}ms.`);
+        });
     }
     reconnect() {
         this.setState(types_1.NodeState.CONNECTING);
-        const delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
+        let delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
+        if (this.reconnectAttempts === 0) {
+            delay = Math.min(this.retryDelay, 1000);
+        }
         this.manager.emit("nodeReconnecting", this, this.reconnectAttempts + 1);
         this.manager.emit("debug", `Moonlink.js > Node >> Reconnecting to ${this.identifier} in ${delay / 1000}s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount}).`);
         this.reconnectTimeout = setTimeout(() => {
@@ -112,6 +118,7 @@ class Node {
     async open() {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
+        this.reconnectAttempts = 0;
         this.connected = true;
         this.setState(types_1.NodeState.CONNECTED);
         this.manager.emit("debug", `Moonlink.js > Node <- Connected to ${this.identifier}.`);
@@ -144,40 +151,42 @@ class Node {
             this.socket.close();
             this.socket = null;
         }
+        if (this.reconnectTimeout)
+            clearTimeout(this.reconnectTimeout);
         const orphanedPlayers = this.manager.players.filter((p) => p.node.uuid === this.uuid);
         let moved = false;
-        if (orphanedPlayers.length > 0) {
-            this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected. Found ${orphanedPlayers.length} orphaned players.`);
-            if (this.manager.options.node?.autoMovePlayers) {
-                const newNode = this.manager.nodes.findNode({ exclude: [this.identifier] });
-                if (newNode) {
-                    moved = true;
-                    this.manager.emit("debug", `Moonlink.js > Node >> Found a new healthy node (${newNode.identifier}). Moving ${orphanedPlayers.length} players...`);
-                    await Promise.all(orphanedPlayers.map(p => p.transferNode(newNode)));
-                    this.manager.emit("playersMoved", orphanedPlayers, this, newNode);
-                }
-                else {
-                    this.manager.emit("debug", `Moonlink.js > Node >> No healthy nodes available to move players. Players will be destroyed.`);
-                }
+        if (orphanedPlayers.length > 0 && this.manager.options.node?.autoMovePlayers) {
+            const newNode = this.manager.nodes.findNode({ exclude: [this.identifier] });
+            if (newNode) {
+                moved = true;
+                this.manager.emit("debug", `Moonlink.js > Node >> Found a new healthy node (${newNode.identifier}). Moving ${orphanedPlayers.length} players...`);
+                await Promise.all(orphanedPlayers.map(p => p.transferNode(newNode)));
+                this.manager.emit("playersMoved", orphanedPlayers, this, newNode);
             }
-            if (!moved) {
-                this.manager.emit("debug", `Moonlink.js > Node >> autoMovePlayers is disabled or no nodes were available. Destroying ${orphanedPlayers.length} players.`);
+            else {
+                this.manager.emit("debug", `Moonlink.js > Node >> No healthy nodes available to move players.`);
+            }
+        }
+        if (this.destroyed || this.reconnectAttempts >= this.retryAmount) {
+            if (!moved && orphanedPlayers.length > 0) {
+                this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected permanently. Destroying ${orphanedPlayers.length} players.`);
                 for (const player of orphanedPlayers) {
-                    await player.destroy("Node disconnected");
+                    await player.destroy("Node disconnected permanently");
                 }
                 this.manager.emit("playersOrphaned", orphanedPlayers, this);
             }
-        }
-        if (this.reconnectTimeout)
-            clearTimeout(this.reconnectTimeout);
-        if (this.retryAmount > this.reconnectAttempts) {
-            this.reconnect();
+            if (this.reconnectAttempts >= this.retryAmount && !this.destroyed) {
+                this.destroyed = true;
+                this.setState(types_1.NodeState.DESTROYED);
+                this.manager.emit("debug", `Moonlink.js > Node >> Max reconnect attempts reached for ${this.identifier}. Node destroyed.`);
+                this.manager.emit("nodeDestroy", this.identifier);
+            }
         }
         else {
-            this.destroyed = true;
-            this.setState(types_1.NodeState.DESTROYED);
-            this.manager.emit("debug", `Moonlink.js > Node >> Max reconnect attempts reached for ${this.identifier}. Node destroyed.`);
-            this.manager.emit("nodeDestroy", this.identifier);
+            if (!moved && orphanedPlayers.length > 0) {
+                this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected (Code ${code}). Attempting reconnect. Keeping ${orphanedPlayers.length} players waiting for resume.`);
+            }
+            this.reconnect();
         }
     }
     async message({ data }) {
@@ -260,6 +269,7 @@ class Node {
                 if (player.current) {
                     player.current.position = currentState.position;
                     player.current.time = currentState.time;
+                    player.updateData("current.position", currentState.position);
                 }
                 let logMessage = `Moonlink.js > Node#handleMessage >> Player ${player.guildId} state updated. CurrentState: ${(0, Util_1.stringifyWithReplacer)(currentState)}.`;
                 let shouldLog = false;
@@ -693,11 +703,11 @@ class Node {
         this.manager.emit("nodeError", this, error);
     }
     async destroy() {
+        this.destroyed = true;
+        this.setState(types_1.NodeState.DESTROYED);
         if (this.socket) {
             this.socket.close();
         }
-        this.destroyed = true;
-        this.setState(types_1.NodeState.DESTROYED);
         this.manager.emit("nodeDestroy", this.identifier);
         this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed.`);
     }
@@ -709,28 +719,36 @@ class Node {
         }
         for (const playerInfo of players) {
             const guildId = playerInfo.guildId;
+            const player = this.manager.players.get(guildId);
+            if (player) {
+                this.manager.emit("debug", `Moonlink.js > Node > Player ${guildId} found in memory. Syncing state with Lavalink.`);
+                player.isResuming = true;
+                player.playing = playerInfo.paused === false;
+                player.paused = playerInfo.paused ?? false;
+                if (player.current) {
+                    player.current.position = playerInfo.state.position;
+                }
+                this.manager.emit("playerResumed", player);
+                player.isResuming = false;
+                continue;
+            }
             const storage = await this.manager.database.get(`players.${guildId}`);
             if (!storage) {
                 this.manager.emit("debug", `Moonlink.js > Node > No stored data found for player ${guildId}, skipping resume.`);
                 continue;
             }
             this.manager.emit("debug", `Moonlink.js > Node > Attempting to resume player ${guildId} on node ${this.uuid}.`);
-            const player = this.manager.players.get(guildId);
-            const reconstructedPlayer = player ??
-                this.manager.players.create({
-                    guildId: guildId,
-                    voiceChannelId: storage.voiceChannelId,
-                    textChannelId: storage.textChannelId,
-                    selfDeaf: storage.selfDeaf,
-                    selfMute: storage.selfMute,
-                    volume: playerInfo.volume,
-                    node: this.identifier,
-                });
+            const reconstructedPlayer = this.manager.players.create({
+                guildId: guildId,
+                voiceChannelId: storage.voiceChannelId,
+                textChannelId: storage.textChannelId,
+                selfDeaf: storage.selfDeaf,
+                selfMute: storage.selfMute,
+                volume: playerInfo.volume,
+                node: this.identifier,
+            });
             this.manager.emit("playerResuming", reconstructedPlayer);
             reconstructedPlayer.isResuming = true;
-            if (reconstructedPlayer.voice.sessionId !== this.sessionId) {
-                reconstructedPlayer.voice.sessionId = this.sessionId;
-            }
             reconstructedPlayer.connect();
             reconstructedPlayer.playing = playerInfo.paused === false;
             reconstructedPlayer.paused = playerInfo.paused ?? false;
