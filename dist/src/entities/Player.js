@@ -348,7 +348,12 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}. Reason: ${reason || "No reason provided"}`);
         this.playing = false;
         this.paused = false;
-        this.disconnect();
+        try {
+            this.disconnect();
+        }
+        catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Voice disconnection failed for guild ${this.guildId}: ${e.message}`);
+        }
         try {
             await this.node.rest.destroyPlayer(this.guildId);
         }
