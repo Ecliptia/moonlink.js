@@ -15,7 +15,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsc --watch",
-    "build": "rm -rf dist && tsc",
+    "build": "rmdir /s /q dist && tsc",
     "start": "npm run build && npm run test",
     "test": "node test-bot/index.js"
   },
