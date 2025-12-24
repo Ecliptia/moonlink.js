@@ -427,7 +427,7 @@ export class Player {
         this.playing = false;
         this.paused = false;
 
-        this.voice.destroy();
+        this.disconnect();
         
         try {
             await this.node.rest.destroyPlayer(this.guildId);
