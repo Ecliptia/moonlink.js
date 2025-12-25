@@ -143,7 +143,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
         if(this.state === VoiceConnectionState.DESTROYED || this.isMoving) return;
 
         if (!data.channel_id) {
-            this.emit("disconnect", new Error("The voice connection was closed."));
+            this.emit("disconnect");
             this.setState(VoiceConnectionState.DISCONNECTED);
             return;
         }
