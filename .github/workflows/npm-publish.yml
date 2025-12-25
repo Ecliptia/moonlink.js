@@ -4,28 +4,29 @@ on:
   release:
     types: [published]
 
-jobs:
+jobs: 
   build:
     runs-on: ubuntu-latest
-
     permissions:
-      id-token: write
       contents: read
-
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
-
-      - run: npm ci
-
-      - run: npm run build
-      
-      - name: Authenticate to npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
-      - name: Publish to npm (OIDC)
-        run: npm publish --access public
+          cache: "npm"
+      - name: "Install latest npm version"
+        run: npm install -g npm
+      - name: "print version"
+        run: npm --v
+      - name: "Install packages"
+        run: |
+          npm i
+          npm ci
+      - name: "publish package"
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          provenance: true
