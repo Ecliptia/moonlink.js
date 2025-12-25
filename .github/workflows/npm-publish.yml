@@ -22,7 +22,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build --if-present
+      - run: npm run build
 
       - name: Publish to npm (OIDC)
-        run: npm publish --provenance --access public
+        run: npm publish --access public
