@@ -23,6 +23,9 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+      
+      - name: Authenticate to npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish to npm (OIDC)
         run: npm publish --access public
