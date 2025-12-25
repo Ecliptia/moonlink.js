@@ -297,7 +297,11 @@ export async function makeRequest<T = any>(
 
                 try {
                   if (contentType.includes("application/json")) {
-                    return resolve(JSON.parse(body.toString()) as T);
+                    try {
+                      return resolve(JSON.parse(body.toString()) as T);
+                    } catch (e) {
+                      return resolve(body.toString() as any as T);
+                    }
                   }
                   return resolve(body.toString() as any as T);
                 } catch (err) {

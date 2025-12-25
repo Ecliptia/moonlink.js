@@ -248,7 +248,12 @@ async function makeRequest(initialUrl, options, timeout = 10000, retries = 3, re
                             }
                             try {
                                 if (contentType.includes("application/json")) {
-                                    return resolve(JSON.parse(body.toString()));
+                                    try {
+                                        return resolve(JSON.parse(body.toString()));
+                                    }
+                                    catch (e) {
+                                        return resolve(body.toString());
+                                    }
                                 }
                                 return resolve(body.toString());
                             }
