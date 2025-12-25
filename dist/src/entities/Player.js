@@ -349,7 +349,7 @@ class Player {
         this.playing = false;
         this.paused = false;
         try {
-            this.disconnect();
+            await this.disconnect();
         }
         catch (e) {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Voice disconnection failed for guild ${this.guildId}: ${e.message}`);
