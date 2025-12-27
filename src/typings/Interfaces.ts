@@ -207,6 +207,12 @@ export interface IOptionsManager {
   playerHealthCheck?: {
     stalePlayerTimeout?: number;
   }
+  trackErrorHandling?: {
+    skipOnException?: boolean;
+    skipOnStuck?: boolean;
+    maxRetries?: number;
+    retryDelay?: number;
+  }
 }
 
 export interface IPlayerConfig {

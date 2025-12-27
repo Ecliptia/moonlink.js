@@ -584,6 +584,25 @@ export class Node {
               payload.thresholdMs +
               "ms."
             );
+            
+            if (this.manager.options.trackErrorHandling?.skipOnStuck) {
+              this.manager.emit(
+                "debug",
+                `Moonlink.js > Auto-skipping stuck track for player ${player.guildId}`
+              );
+              if (player.queue.size > 0) {
+                player.play();
+              } else if (player.autoPlay) {
+                const autoplayed = await this._handleAutoplay(player, "stuck");
+                if (!autoplayed) {
+                  player.current = null;
+                  this.manager.emit("queueEnd", player);
+                }
+              } else {
+                player.current = null;
+                this.manager.emit("queueEnd", player);
+              }
+            }
             break;
           }
           case "TrackExceptionEvent": {
@@ -595,6 +614,25 @@ export class Node {
               " has an exception: " +
               JSON.stringify(payload.exception)
             );
+            
+            if (this.manager.options.trackErrorHandling?.skipOnException) {
+              this.manager.emit(
+                "debug",
+                `Moonlink.js > Auto-skipping failed track for player ${player.guildId} due to exception`
+              );
+              if (player.queue.size > 0) {
+                player.play();
+              } else if (player.autoPlay) {
+                const autoplayed = await this._handleAutoplay(player, "exception");
+                if (!autoplayed) {
+                  player.current = null;
+                  this.manager.emit("queueEnd", player);
+                }
+              } else {
+                player.current = null;
+                this.manager.emit("queueEnd", player);
+              }
+            }
             break;
           }
           case "WebSocketClosedEvent": {
