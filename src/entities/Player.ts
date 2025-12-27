@@ -41,6 +41,7 @@ export class Player {
   public readonly filters: Filters;
   public healthCheckTimeout: NodeJS.Timeout | null = null;
   public isResuming: boolean = false;
+  public trackErrorRetries: number = 0;
 
   private _listen: Listen;
   private _lyrics: Lyrics;

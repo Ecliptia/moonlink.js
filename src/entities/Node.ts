@@ -7,6 +7,7 @@ import {
   decodeTrack,
   generateUUID,
   Player,
+  delay,
 } from "../../index";
 
 import WebSocket from "../services/WebSocket"
@@ -407,6 +408,7 @@ export class Node {
             player.playing = true;
             player.paused = false;
             player.current.position = payload.track.info?.position || 0;
+            player.trackErrorRetries = 0;
 
             this.manager.clearLyricsCacheForGuild(player.guildId);
 
@@ -746,10 +748,30 @@ export class Node {
   }
 
   private async _handleTrackAutoSkip(player: Player, reason: string): Promise<void> {
+    const maxRetries = this.manager.options.trackErrorHandling?.maxRetries ?? 0;
+    const retryDelayMs = this.manager.options.trackErrorHandling?.retryDelay ?? 3000;
+
+    if (maxRetries > 0 && player.trackErrorRetries < maxRetries) {
+      player.trackErrorRetries++;
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > Retrying ${reason} track for player ${player.guildId} (attempt ${player.trackErrorRetries}/${maxRetries})`
+      );
+      
+      await delay(retryDelayMs);
+      
+      if (player.current) {
+        await player.restart();
+        return;
+      }
+    }
+
+    player.trackErrorRetries = 0;
     this.manager.emit(
       "debug",
-      `Moonlink.js > Auto-skipping ${reason} track for player ${player.guildId}`
+      `Moonlink.js > Auto-skipping ${reason} track for player ${player.guildId} after ${maxRetries > 0 ? maxRetries + ' retries' : 'no retries'}`
     );
+    
     const skipped = await player.skip();
     if (!skipped && player.autoPlay) {
       const autoplayed = await this._handleAutoplay(player, reason);
