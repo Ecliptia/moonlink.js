@@ -42,27 +42,58 @@ export class Rest {
     });
   }
   public async update(data: IRESTOptions): Promise<unknown> {
-    let request = await makeRequest(
-      `${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`,
-      {
-        method: "PATCH",
-        body: stringifyWithReplacer(data.data) as any,
-        headers: this.defaultHeaders,
-      }
-    );
+    const player = this.node.manager.players.get(data.guildId);
+    if (player && player.destroyed) {
+      this.node.manager.emit("debug", `Moonlink.js > Rest#update - Skipping update for destroyed player ${data.guildId}`);
+      return null;
+    }
+    
+    try {
+      let request = await makeRequest(
+        `${this.url}/sessions/${this.node.sessionId}/players/${data.guildId}`,
+        {
+          method: "PATCH",
+          body: stringifyWithReplacer(data.data) as any,
+          headers: this.defaultHeaders,
+        }
+      );
 
-    return request;
+      return request;
+    } catch (error) {
+      if (error.message?.includes('404')) {
+        this.node.manager.emit("debug", `Moonlink.js > Rest#update - Player ${data.guildId} not found on server (404). Marking as destroyed.`);
+        if (player) {
+          player.destroyed = true;
+        }
+        return null;
+      }
+      throw error;
+    }
   }
   public async destroy(guildId: string): Promise<unknown> {
-    let request = await makeRequest(
-      `${this.url}/sessions/${this.node.sessionId}/players/${guildId}`,
-      {
-        method: "DELETE",
-        headers: this.defaultHeaders,
-      }
-    );
+    const player = this.node.manager.players.get(guildId);
+    if (player && player.destroyed) {
+      this.node.manager.emit("debug", `Moonlink.js > Rest#destroy - Player ${guildId} already destroyed locally`);
+      return null;
+    }
+    
+    try {
+      let request = await makeRequest(
+        `${this.url}/sessions/${this.node.sessionId}/players/${guildId}`,
+        {
+          method: "DELETE",
+          headers: this.defaultHeaders,
+        }
+      );
 
-    return request;
+      return request;
+    } catch (error) {
+      if (error.message?.includes('404')) {
+        this.node.manager.emit("debug", `Moonlink.js > Rest#destroy - Player ${guildId} not found on server (404). Already destroyed.`);
+        return null;
+      }
+      throw error;
+    }
   }
   public getInfo(): Promise<unknown> {
     return makeRequest(`${this.url}/info`, {
