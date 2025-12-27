@@ -586,22 +586,7 @@ export class Node {
             );
             
             if (this.manager.options.trackErrorHandling?.skipOnStuck) {
-              this.manager.emit(
-                "debug",
-                `Moonlink.js > Auto-skipping stuck track for player ${player.guildId}`
-              );
-              if (player.queue.size > 0) {
-                player.play();
-              } else if (player.autoPlay) {
-                const autoplayed = await this._handleAutoplay(player, "stuck");
-                if (!autoplayed) {
-                  player.current = null;
-                  this.manager.emit("queueEnd", player);
-                }
-              } else {
-                player.current = null;
-                this.manager.emit("queueEnd", player);
-              }
+              await this._handleTrackAutoSkip(player, "stuck");
             }
             break;
           }
@@ -616,22 +601,7 @@ export class Node {
             );
             
             if (this.manager.options.trackErrorHandling?.skipOnException) {
-              this.manager.emit(
-                "debug",
-                `Moonlink.js > Auto-skipping failed track for player ${player.guildId} due to exception`
-              );
-              if (player.queue.size > 0) {
-                player.play();
-              } else if (player.autoPlay) {
-                const autoplayed = await this._handleAutoplay(player, "exception");
-                if (!autoplayed) {
-                  player.current = null;
-                  this.manager.emit("queueEnd", player);
-                }
-              } else {
-                player.current = null;
-                this.manager.emit("queueEnd", player);
-              }
+              await this._handleTrackAutoSkip(player, "exception");
             }
             break;
           }
@@ -772,6 +742,24 @@ export class Node {
         `Moonlink.js > Player ${player.guildId} is autoplay failed: no random track found`
       );
       return false;
+    }
+  }
+
+  private async _handleTrackAutoSkip(player: Player, reason: string): Promise<void> {
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Auto-skipping ${reason} track for player ${player.guildId}`
+    );
+    const skipped = await player.skip();
+    if (!skipped && player.autoPlay) {
+      const autoplayed = await this._handleAutoplay(player, reason);
+      if (!autoplayed) {
+        player.current = null;
+        this.manager.emit("queueEnd", player);
+      }
+    } else if (!skipped) {
+      player.current = null;
+      this.manager.emit("queueEnd", player);
     }
   }
 
