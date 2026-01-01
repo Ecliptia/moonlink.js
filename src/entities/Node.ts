@@ -612,7 +612,13 @@ export class Node {
     const thresholdMs = payload.thresholdMs;
     
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackStuck >> Track stuck for player ${player.guildId}: "${track?.title}". Threshold: ${thresholdMs}ms. Payload: ${stringifyWithReplacer(payload)}.`);
+
     this.manager.emit("trackStuck", player, track, thresholdMs, payload);
+
+    if (track && track.duration === -1) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleTrackStuck >> Track has -1 duration (stream?), skipping auto-recovery to prevent loops for player ${player.guildId}.`);
+        return;
+    }
 
     if (this.manager.options.trackHandling?.skipStuckTracks) {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackStuck >> 'skipStuckTracks' is true, skipping track for player ${player.guildId}.`);
@@ -704,6 +710,8 @@ export class Node {
   private async handleWebSocketClosed(player: any, payload: any): Promise<void> {
     const { code, reason, byRemote } = payload;
     
+    if (player.destroyed) return;
+
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> WebSocket closed for player ${player.guildId}. Code: ${code}, Reason: "${reason}", By Remote: ${byRemote}. Payload: ${stringifyWithReplacer(payload)}.`);
 
     if (player.voice.isMoving && code === 4014) {
