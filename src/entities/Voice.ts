@@ -37,6 +37,11 @@ export class Voice extends EventEmitter<VoiceEvents> {
     private setState(state: VoiceConnectionState) {
         if (this.state === state) return;
         this.state = state;
+        if (state === VoiceConnectionState.DISCONNECTED) {
+            this.sessionId = null;
+            this.token = null;
+            this.endpoint = null;
+        }
         this.emit("stateChange", state);
     }
 
@@ -78,7 +83,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
                 const timeout = this.manager.options.voiceConnection?.timeout ?? 15000;
                 
                 this.connectionTimeout = setTimeout(() => {
-                    this.setState(VoiceConnectionState.DISCONNECTED);
+                    this.disconnect();
                     this.connectPromise = null;
                     reject(new Error(`Voice connection timed out after ${timeout}ms`));
                 }, timeout);

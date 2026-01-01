@@ -88,6 +88,16 @@ class Player {
             finalOptions = options;
         }
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
+        if (!this.voice.sessionId || !this.voice.endpoint) {
+            this.manager.emit("debug", `Moonlink.js > Player#play >> Voice not ready for guild ${this.guildId}, attempting to connect...`);
+            try {
+                await this.connect();
+            }
+            catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Failed to connect voice: ${e}`);
+                return false;
+            }
+        }
         let track = finalOptions.track;
         if (finalOptions.encoded) {
             try {

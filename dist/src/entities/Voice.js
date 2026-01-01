@@ -28,6 +28,11 @@ class Voice extends Util_1.EventEmitter {
         if (this.state === state)
             return;
         this.state = state;
+        if (state === types_1.VoiceConnectionState.DISCONNECTED) {
+            this.sessionId = null;
+            this.token = null;
+            this.endpoint = null;
+        }
         this.emit("stateChange", state);
     }
     connect(options) {
@@ -62,7 +67,7 @@ class Voice extends Util_1.EventEmitter {
                 this.manager.send(this.player.guildId, payload);
                 const timeout = this.manager.options.voiceConnection?.timeout ?? 15000;
                 this.connectionTimeout = setTimeout(() => {
-                    this.setState(types_1.VoiceConnectionState.DISCONNECTED);
+                    this.disconnect();
                     this.connectPromise = null;
                     reject(new Error(`Voice connection timed out after ${timeout}ms`));
                 }, timeout);
