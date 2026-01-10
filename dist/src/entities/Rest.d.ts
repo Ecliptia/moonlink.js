@@ -1,5 +1,5 @@
 import { Node } from "./Node";
-import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
+import { IRESTLoadTracks, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 export declare class Rest {
     private readonly node;
     constructor(node: Node);
@@ -17,6 +17,5 @@ export declare class Rest {
     getRoutePlannerStatus(): Promise<IRoutePlannerStatus | null>;
     freeFailedAddress(address: string): Promise<void>;
     freeAllFailedAddresses(): Promise<void>;
-    getLyrics(trackId: string): Promise<IRESTGetLyrics | null>;
     updateSession(resuming: boolean, timeout: number): Promise<any | null>;
 }
