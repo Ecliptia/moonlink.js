@@ -5,7 +5,7 @@ import { Track } from "../entities/Track";
 export class SearchResult {
     public loadType: LoadType;
     public tracks: Track[];
-    public playlistName?: string;
+    public playlistInfo?: { name: string; selectedTrack: number; duration: number };
     public exception?: {
         message: string;
         severity: string;
@@ -23,7 +23,14 @@ export class SearchResult {
                 this.tracks = response.data.tracks
                     .slice(0, playlistLoadLimit)
                     .map(track => new Track(track, requester));
-                this.playlistName = response.data.info.name;
+                this.playlistInfo = {
+                    duration: response.data.tracks.reduce(
+                        (acc: number, cur: any) => acc + (cur.info.length || 0),
+                        0
+                    ),
+                    name: response.data.info.name,
+                    selectedTrack: response.data.info.selectedTrack
+                };
                 break;
 
             case "search":

@@ -12,6 +12,8 @@ class Voice extends Util_1.EventEmitter {
     isMoving = false;
     connectionTimeout = null;
     connectPromise = null;
+    reconnectionTimer = null;
+    lastConnectionStatus = true;
     constructor(player) {
         super();
         this.player = player;
@@ -26,6 +28,11 @@ class Voice extends Util_1.EventEmitter {
         if (this.state === state)
             return;
         this.state = state;
+        if (state === types_1.VoiceConnectionState.DISCONNECTED) {
+            this.sessionId = null;
+            this.token = null;
+            this.endpoint = null;
+        }
         this.emit("stateChange", state);
     }
     connect(options) {
@@ -60,7 +67,7 @@ class Voice extends Util_1.EventEmitter {
                 this.manager.send(this.player.guildId, payload);
                 const timeout = this.manager.options.voiceConnection?.timeout ?? 15000;
                 this.connectionTimeout = setTimeout(() => {
-                    this.setState(types_1.VoiceConnectionState.DISCONNECTED);
+                    this.disconnect();
                     this.connectPromise = null;
                     reject(new Error(`Voice connection timed out after ${timeout}ms`));
                 }, timeout);
@@ -119,7 +126,7 @@ class Voice extends Util_1.EventEmitter {
         if (this.state === types_1.VoiceConnectionState.DESTROYED || this.isMoving)
             return;
         if (!data.channel_id) {
-            this.emit("disconnect", new Error("The voice connection was closed."));
+            this.emit("disconnect");
             this.setState(types_1.VoiceConnectionState.DISCONNECTED);
             return;
         }
@@ -152,19 +159,41 @@ class Voice extends Util_1.EventEmitter {
         this.checkCompletion();
     }
     check(connected) {
-        if (connected) {
-            this.player.set("consecutiveConnectionFailures", 0);
-            return;
-        }
         if (!this.player.playing && this.player.queue.isEmpty) {
+            if (this.reconnectionTimer) {
+                clearTimeout(this.reconnectionTimer);
+                this.reconnectionTimer = null;
+            }
+            this.player.set("consecutiveConnectionFailures", 0);
+            this.manager.emit("debug", `Player ${this.player.guildId} is idle, clearing any pending reconnection checks.`);
             return;
         }
-        const failures = (this.player.get("consecutiveConnectionFailures") || 0) + 1;
-        this.player.set("consecutiveConnectionFailures", failures);
-        if (failures >= 5) {
-            this.manager.emit("debug", `Player ${this.player.guildId} has had ${failures} consecutive connection failures. Attempting recovery.`);
-            this.player.set("consecutiveConnectionFailures", 0);
-            this.recover();
+        if (connected) {
+            if (!this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} reconnected. Clearing recovery timer.`);
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                    this.reconnectionTimer = null;
+                }
+                this.player.set("consecutiveConnectionFailures", 0);
+                this.lastConnectionStatus = true;
+            }
+        }
+        else {
+            if (this.lastConnectionStatus) {
+                this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 20s recovery timer.`);
+                this.lastConnectionStatus = false;
+                if (this.reconnectionTimer) {
+                    clearTimeout(this.reconnectionTimer);
+                }
+                this.reconnectionTimer = setTimeout(() => {
+                    this.reconnectionTimer = null;
+                    if (!this.player.connected) {
+                        this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 20s. Attempting recovery.`);
+                        this.recover();
+                    }
+                }, 10000);
+            }
         }
     }
     async recover() {

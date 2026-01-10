@@ -688,7 +688,7 @@ client.on("interactionCreate", async (interaction) => {
             if (searchResult.isEmpty || searchResult.isError) return interaction.editReply({ content: "Oops! 😬 Couldn't find any tracks for that. Maybe try a different search? My music radar isn't perfect, ya know!", flags: [MessageFlags.Ephemeral] });
             if (searchResult.isPlaylist) {
                 player.queue.add(searchResult.tracks);
-                await interaction.editReply({ content: `Sweet! 🎉 Just added the playlist **${searchResult.playlistName}** with ${searchResult.tracks.length} awesome tracks to the queue! Get ready to groove!` });
+                await interaction.editReply({ content: `Sweet! 🎉 Just added the playlist **${searchResult.playlistInfo.name}** with ${searchResult.tracks.length} awesome tracks to the queue! Get ready to groove!` });
             } else {
                 player.queue.add(searchResult.tracks[0]);
                 await interaction.editReply({ content: `Nice pick! 👍 **${searchResult.tracks[0].title}** is now chilling in the queue, waiting for its turn to shine!` });

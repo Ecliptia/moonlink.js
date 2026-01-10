@@ -150,16 +150,6 @@ class Rest {
             }
         });
     }
-    async getLyrics(trackId) {
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/lyrics/${trackId}`, {
-            method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
-        });
-        return res || null;
-    }
     async updateSession(resuming, timeout) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}`, {
             method: "PATCH",

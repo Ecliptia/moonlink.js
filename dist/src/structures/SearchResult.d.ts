@@ -4,7 +4,11 @@ import { Track } from "../entities/Track";
 export declare class SearchResult {
     loadType: LoadType;
     tracks: Track[];
-    playlistName?: string;
+    playlistInfo?: {
+        name: string;
+        selectedTrack: number;
+        duration: number;
+    };
     exception?: {
         message: string;
         severity: string;

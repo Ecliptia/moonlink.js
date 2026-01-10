@@ -88,6 +88,16 @@ class Player {
             finalOptions = options;
         }
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
+        if (!this.voice.sessionId || !this.voice.endpoint) {
+            this.manager.emit("debug", `Moonlink.js > Player#play >> Voice not ready for guild ${this.guildId}, attempting to connect...`);
+            try {
+                await this.connect();
+            }
+            catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Failed to connect voice: ${e}`);
+                return false;
+            }
+        }
         let track = finalOptions.track;
         if (finalOptions.encoded) {
             try {
@@ -348,7 +358,12 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}. Reason: ${reason || "No reason provided"}`);
         this.playing = false;
         this.paused = false;
-        this.voice.destroy();
+        try {
+            await this.disconnect();
+        }
+        catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Voice disconnection failed for guild ${this.guildId}: ${e.message}`);
+        }
         try {
             await this.node.rest.destroyPlayer(this.guildId);
         }
@@ -385,6 +400,7 @@ class Player {
                 volume: this.volume,
             });
             if (oldPosition > 0 && this.current.isSeekable) {
+                await (0, Util_1.delay)(2000);
                 await this.seek(oldPosition);
             }
             else {

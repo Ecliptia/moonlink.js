@@ -27,7 +27,7 @@ class Manager extends Util_1.EventEmitter {
         this.send = config.send || null;
         this.options = {
             clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
-            userAgent: `Moonlink.js/${__1.version} (Snoozy/16.11.2025)`,
+            userAgent: `Moonlink.js/${__1.version} (Onsra/10.01.2026)`,
             noReplace: false,
             resume: false,
             resumeTimeout: 60000,

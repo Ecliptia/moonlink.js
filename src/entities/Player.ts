@@ -1,7 +1,7 @@
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
-import { Structure, validate, decodeTrack } from "../Util";
+import { Structure, validate, decodeTrack, delay } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
 import { IPlayerConfig } from "../typings/Interfaces";
 import { Filters } from "./Filters";
@@ -105,6 +105,16 @@ export class Player {
         }
 
         this.manager.emit("debug", `Moonlink.js > Player#play -> play() called for guild ${this.guildId} with options: ${JSON.stringify(options)}`);
+
+        if (!this.voice.sessionId || !this.voice.endpoint) {
+             this.manager.emit("debug", `Moonlink.js > Player#play >> Voice not ready for guild ${this.guildId}, attempting to connect...`);
+             try {
+                 await this.connect();
+             } catch (e) {
+                 this.manager.emit("debug", `Moonlink.js > Player#play >> Failed to connect voice: ${e}`);
+                 return false;
+             }
+        }
 
         let track = finalOptions.track;
         if (finalOptions.encoded) {
@@ -426,9 +436,11 @@ export class Player {
         
         this.playing = false;
         this.paused = false;
-
-        this.voice.destroy();
-        
+        try {
+            await this.disconnect();
+        } catch (e) {
+            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Voice disconnection failed for guild ${this.guildId}: ${(e as Error).message}`);
+        }
         try {
             await this.node.rest.destroyPlayer(this.guildId);
         } catch (e) {
@@ -473,6 +485,7 @@ export class Player {
             });
  
             if (oldPosition > 0 && this.current.isSeekable) {
+                await delay(2000); 
                 await this.seek(oldPosition);
             } else {
                 this.manager.emit("debug", `Moonlink.js > Player#restart >> Current track is not seekable or position is 0ms for guild ${this.guildId}, skipping seek.`);
