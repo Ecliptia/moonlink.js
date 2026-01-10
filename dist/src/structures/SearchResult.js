@@ -6,7 +6,7 @@ const Track_1 = require("../entities/Track");
 class SearchResult {
     loadType;
     tracks;
-    playlistName;
+    playlistInfo;
     exception;
     constructor(response, requester, playlistLoadLimit) {
         switch (response.loadType) {
@@ -19,7 +19,11 @@ class SearchResult {
                 this.tracks = response.data.tracks
                     .slice(0, playlistLoadLimit)
                     .map(track => new Track_1.Track(track, requester));
-                this.playlistName = response.data.info.name;
+                this.playlistInfo = {
+                    duration: response.data.tracks.reduce((acc, cur) => acc + (cur.info.length || 0), 0),
+                    name: response.data.info.name,
+                    selectedTrack: response.data.info.selectedTrack
+                };
                 break;
             case "search":
                 this.loadType = types_1.LoadType.SEARCH;
