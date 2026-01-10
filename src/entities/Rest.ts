@@ -169,17 +169,6 @@ export class Rest {
         });
     }
 
-    public async getLyrics(trackId: string): Promise<IRESTGetLyrics | null> {
-        const res = await makeRequest<IRESTGetLyrics>(`${this.url}/v4/lyrics/${trackId}`, {
-            method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
-        });
-        return res || null;
-    }
-
     public async updateSession(resuming: boolean, timeout: number): Promise<any | null> {
         const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}`, {
             method: "PATCH",

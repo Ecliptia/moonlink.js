@@ -23,8 +23,6 @@
 </a>
 <br>
 <h3>Moonlink.js v5 — Does the leaf even fall? 🍃🌙</h3>
-Moonlink.js invites you to a sonic adventure where code meets melody. Reimagined for robustness, Version 5 brings precise control to your hands, wrapping complex audio engineering in a simple, magical API.
-</div>
 <hr>
 
 ## Table of Contents
