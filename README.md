@@ -2,7 +2,7 @@
 <div align="center">
 <hr>
 <img src="https://img.shields.io/badge/Made_with_♥️_in-Brazil-ED186A?style=for-the-badge"><br>
-<a href="https://discord.gg/q8HzGuHuDY">
+<a href="https://discord.gg/bVz6ppZ3SP">
   <img src="https://img.shields.io/discord/990369410344701964?color=333&label=Support&logo=discord&style=for-the-badge" alt="Discord">
 </a>
 <a href="https://www.npmjs.com/package/moonlink.js">
@@ -36,8 +36,9 @@
 
 ## Documentation
 
-The full Moonlink.js documentation offers guides, tutorials, and detailed examples.  
-- Learn how to create a music bot: [Creating a Music Bot](https://moonlink.js.org/getting-started/creating-a-music-bot)  
+The full Moonlink.js documentation offers guides, tutorials, and detailed examples.
+
+- Learn how to create a music bot: [Creating a Music Bot](https://moonlink.js.org/getting-started/creating-a-music-bot)
 - Discover projects that use Moonlink.js: [Used By](https://moonlink.js.org/#used-by)
 
 For more details, please visit the [Official Documentation](https://moonlink.js.org).
