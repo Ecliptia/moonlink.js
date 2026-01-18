@@ -58,7 +58,7 @@ bun install moonlink.js
 
 ## Support
 
-Join our Discord server: [Moonlink.js - Imagine a Music Bot](https://discord.com/invite/xQq2A8vku3) for support, questions, and community discussions.
+Join our Discord server: [Moonlink.js - Imagine a Music Bot](https://discord.com/invite/bVz6ppZ3SP) for support, questions, and community discussions.
 
 ## Acknowledgements
 
