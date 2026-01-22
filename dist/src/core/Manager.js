@@ -29,7 +29,7 @@ class Manager extends Util_1.EventEmitter {
             clientName: `Moonlink.js/${__1.version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${__1.version} (Onsra/10.01.2026)`,
             noReplace: false,
-            resume: false,
+            resume: true,
             resumeTimeout: 60000,
             customFilters: {},
             defaultPlayer: {

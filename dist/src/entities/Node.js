@@ -20,6 +20,15 @@ class Node {
     retryDelay = 60000;
     resumed = false;
     resumeTimeout = 60000;
+    resumeUpdateTimeout;
+    resumeUpdateAttempts = 0;
+    resumeUpdateInProgress = false;
+    resumeUpdateMaxAttempts = 5;
+    resumeUpdateBaseDelay = 2000;
+    resumeWindowTimeout;
+    resumeWindowActive = false;
+    pendingRecovery = false;
+    recoveryInProgress = false;
     regions;
     secure;
     sessionId;
@@ -115,6 +124,99 @@ class Node {
             this.connect();
         }, delay);
     }
+    resetResumeUpdateState() {
+        this.resumeUpdateAttempts = 0;
+        this.resumeUpdateInProgress = false;
+        if (this.resumeUpdateTimeout) {
+            clearTimeout(this.resumeUpdateTimeout);
+            this.resumeUpdateTimeout = undefined;
+        }
+    }
+    cancelResumeWindow() {
+        this.resumeWindowActive = false;
+        if (this.resumeWindowTimeout) {
+            clearTimeout(this.resumeWindowTimeout);
+            this.resumeWindowTimeout = undefined;
+        }
+    }
+    startResumeWindow() {
+        if (!this.manager.options.resume)
+            return;
+        this.cancelResumeWindow();
+        this.resumeWindowActive = true;
+        const windowMs = Math.max(15000, Math.min(this.resumeTimeout, 30000));
+        this.resumeWindowTimeout = setTimeout(() => {
+            this.resumeWindowTimeout = undefined;
+            this.resumeWindowActive = false;
+            if (this.pendingRecovery && !this.recoveryInProgress) {
+                if (this.state !== types_1.NodeState.READY) {
+                    this.manager.emit("debug", `Moonlink.js > Node >> Resume window expired for ${this.identifier}, waiting for READY before recovery.`);
+                    return;
+                }
+                this.startDisasterRecovery("resume window expired");
+            }
+        }, windowMs);
+    }
+    scheduleResumeUpdateRetry(delayMs) {
+        if (this.resumeUpdateTimeout) {
+            clearTimeout(this.resumeUpdateTimeout);
+        }
+        this.resumeUpdateTimeout = setTimeout(() => {
+            this.resumeUpdateTimeout = undefined;
+            void this.enableResumeWithRetry();
+        }, delayMs);
+    }
+    async enableResumeWithRetry() {
+        if (!this.manager.options.resume)
+            return;
+        if (!this.sessionId)
+            return;
+        if (this.resumeUpdateInProgress)
+            return;
+        this.resumeUpdateInProgress = true;
+        try {
+            await this.rest.updateSession(this.manager.options.resume, this.resumeTimeout / 1000);
+            this.resetResumeUpdateState();
+            this.manager.emit("debug", `Moonlink.js > Node > Resume enabled for session ${this.sessionId} on ${this.identifier}.`);
+        }
+        catch (error) {
+            this.resumeUpdateAttempts++;
+            const attempt = this.resumeUpdateAttempts;
+            const delay = Math.min(this.resumeUpdateBaseDelay * Math.pow(1.5, attempt - 1), 30000);
+            this.manager.emit("debug", `Moonlink.js > Node > Failed to enable resume for ${this.identifier} (attempt ${attempt}/${this.resumeUpdateMaxAttempts}). Retrying in ${Math.round(delay / 1000)}s. Error: ${error.message}`);
+            if (attempt < this.resumeUpdateMaxAttempts) {
+                this.scheduleResumeUpdateRetry(delay);
+            }
+        }
+        finally {
+            this.resumeUpdateInProgress = false;
+        }
+    }
+    async startDisasterRecovery(reason) {
+        if (this.recoveryInProgress)
+            return;
+        this.recoveryInProgress = true;
+        this.pendingRecovery = false;
+        this.manager.emit("debug", `Moonlink.js > Node >> Session not resumed for node ${this.identifier}. Starting disaster recovery (${reason}).`);
+        const playersOnNode = this.manager.players.filter((p) => p.node.uuid === this.uuid);
+        for (const player of playersOnNode) {
+            this.manager.emit("playerRecoveryStarted", player);
+            player
+                .restart()
+                .then((success) => {
+                if (success) {
+                    this.manager.emit("playerRecoverySuccess", player);
+                }
+                else {
+                    this.manager.emit("playerRecoveryFailed", player);
+                }
+            })
+                .catch(() => {
+                this.manager.emit("playerRecoveryFailed", player);
+            });
+        }
+        this.recoveryInProgress = false;
+    }
     async open() {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
@@ -145,6 +247,7 @@ class Node {
         if (this.connected)
             this.connected = false;
         this.setState(types_1.NodeState.DISCONNECTED);
+        this.resetResumeUpdateState();
         this.manager.emit("debug", `Moonlink.js > Node <- Disconnected from ${this.identifier}. Code: ${code}, Reason: ${reason}.`);
         this.manager.emit("nodeDisconnect", this, code, reason);
         if (this.socket) {
@@ -183,6 +286,10 @@ class Node {
             }
         }
         else {
+            if (!moved && orphanedPlayers.length > 0 && this.manager.options.resume) {
+                this.pendingRecovery = true;
+                this.startResumeWindow();
+            }
             if (!moved && orphanedPlayers.length > 0) {
                 this.manager.emit("debug", `Moonlink.js > Node >> Node disconnected (Code ${code}). Attempting reconnect. Keeping ${orphanedPlayers.length} players waiting for resume.`);
             }
@@ -215,30 +322,23 @@ class Node {
                     sessionId: this.sessionId,
                 });
                 if (this.manager.options.resume) {
-                    await this.rest.updateSession(this.manager.options.resume, this.resumeTimeout / 1000);
-                    this.manager.emit("debug", `Moonlink.js > Node > Resuming node ${this.uuid}.`);
+                    void this.enableResumeWithRetry();
                 }
                 this.manager.emit("nodeReady", this, payload);
                 if (this.manager.options.resume) {
                     if (this.resumed) {
                         this.manager.emit("nodeResume", this);
+                        this.pendingRecovery = false;
+                        this.cancelResumeWindow();
                         this._resumePlayers();
                     }
                     else {
-                        this.manager.emit("debug", `Moonlink.js > Node >> Session not resumed for node ${this.identifier}. Attempting disaster recovery...`);
-                        const playersOnNode = this.manager.players.filter(p => p.node.uuid === this.uuid);
-                        for (const player of playersOnNode) {
-                            this.manager.emit("playerRecoveryStarted", player);
-                            player.restart().then(success => {
-                                if (success) {
-                                    this.manager.emit("playerRecoverySuccess", player);
-                                }
-                                else {
-                                    this.manager.emit("playerRecoveryFailed", player);
-                                }
-                            }).catch(() => {
-                                this.manager.emit("playerRecoveryFailed", player);
-                            });
+                        this.pendingRecovery = true;
+                        if (!this.resumeWindowActive) {
+                            void this.startDisasterRecovery("resume not confirmed");
+                        }
+                        else {
+                            this.manager.emit("debug", `Moonlink.js > Node >> Resume window active for ${this.identifier}; delaying recovery.`);
                         }
                     }
                 }
@@ -711,6 +811,8 @@ class Node {
     async destroy() {
         this.destroyed = true;
         this.setState(types_1.NodeState.DESTROYED);
+        this.cancelResumeWindow();
+        this.resetResumeUpdateState();
         if (this.socket) {
             this.socket.close();
         }
@@ -718,6 +820,10 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed.`);
     }
     async _resumePlayers() {
+        if (this.recoveryInProgress) {
+            this.manager.emit("debug", `Moonlink.js > Node > Resume skipped for ${this.identifier}; recovery in progress.`);
+            return;
+        }
         const players = await this.rest.getPlayers();
         if (!players || players?.length === 0) {
             this.manager.emit("debug", `Moonlink.js > Node > No players to resume on node ${this.uuid}.`);

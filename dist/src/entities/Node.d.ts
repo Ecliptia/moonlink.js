@@ -19,6 +19,15 @@ export declare class Node {
     retryDelay: number;
     resumed: boolean;
     resumeTimeout: number;
+    private resumeUpdateTimeout?;
+    private resumeUpdateAttempts;
+    private resumeUpdateInProgress;
+    private resumeUpdateMaxAttempts;
+    private resumeUpdateBaseDelay;
+    private resumeWindowTimeout?;
+    private resumeWindowActive;
+    private pendingRecovery;
+    private recoveryInProgress;
     regions: string[];
     secure: boolean;
     sessionId: string;
@@ -40,6 +49,12 @@ export declare class Node {
     setState(state: NodeState): void;
     connect(): Promise<void>;
     reconnect(): void;
+    private resetResumeUpdateState;
+    private cancelResumeWindow;
+    private startResumeWindow;
+    private scheduleResumeUpdateRetry;
+    private enableResumeWithRetry;
+    private startDisasterRecovery;
     protected open(): Promise<void>;
     protected close(event: {
         code: any;

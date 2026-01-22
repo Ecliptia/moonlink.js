@@ -42,7 +42,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
             clientName: `Moonlink.js/${version} (https://github.com/Ecliptia/moonlink.js)`,
             userAgent: `Moonlink.js/${version} (Onsra/10.01.2026)`,
             noReplace: false,
-            resume: false,
+            resume: true,
             resumeTimeout: 60000,
             customFilters: {},
             defaultPlayer: {
