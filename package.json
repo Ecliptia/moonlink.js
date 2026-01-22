@@ -1,6 +1,6 @@
 {
   "name": "moonlink.js",
-  "version": "5.0.0",
+  "version": "5.0.1.dev.1",
   "description": "Moonlink.js — a new version, but seriously… does the leaf even fall? 🍃🌙",
   "keywords": [
     "bot",
@@ -15,7 +15,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsc --watch",
-    "build": "rmdir /s /q dist && tsc",
+    "build": "rm -rf dist && tsc",
     "start": "npm run build && npm run test",
     "test": "node test-bot/index.js"
   },

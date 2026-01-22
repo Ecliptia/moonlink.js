@@ -67,8 +67,8 @@ class Voice extends Util_1.EventEmitter {
                 this.manager.send(this.player.guildId, payload);
                 const timeout = this.manager.options.voiceConnection?.timeout ?? 15000;
                 this.connectionTimeout = setTimeout(() => {
-                    this.disconnect();
                     this.connectPromise = null;
+                    this.disconnect().catch(() => { });
                     reject(new Error(`Voice connection timed out after ${timeout}ms`));
                 }, timeout);
                 this.once("connect", () => {
@@ -90,25 +90,29 @@ class Voice extends Util_1.EventEmitter {
         return this.connectPromise;
     }
     disconnect() {
-        if (this.state === types_1.VoiceConnectionState.DISCONNECTED || this.state === types_1.VoiceConnectionState.DESTROYED) {
+        if (this.state === types_1.VoiceConnectionState.DISCONNECTED) {
             return Promise.resolve();
         }
-        return new Promise((resolve, reject) => {
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = null;
+        }
+        this.connectPromise = null;
+        if (this.state === types_1.VoiceConnectionState.DESTROYED) {
+            this.setState(types_1.VoiceConnectionState.DISCONNECTED);
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
             const timeout = this.manager.options.voiceConnection?.timeout ?? 15000;
+            const onDisconnect = () => {
+                clearTimeout(disconnectTimeout);
+                resolve();
+            };
             const disconnectTimeout = setTimeout(() => {
                 this.off('disconnect', onDisconnect);
                 this.setState(types_1.VoiceConnectionState.DISCONNECTED);
-                reject(new Error(`Voice disconnection confirmation timed out after ${timeout}ms`));
+                resolve();
             }, timeout);
-            const onDisconnect = (err) => {
-                clearTimeout(disconnectTimeout);
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve();
-                }
-            };
             this.once('disconnect', onDisconnect);
             const payload = {
                 op: 4,
@@ -123,13 +127,13 @@ class Voice extends Util_1.EventEmitter {
         });
     }
     async handleStateUpdate(data) {
-        if (this.state === types_1.VoiceConnectionState.DESTROYED || this.isMoving)
-            return;
         if (!data.channel_id) {
             this.emit("disconnect");
             this.setState(types_1.VoiceConnectionState.DISCONNECTED);
             return;
         }
+        if (this.state === types_1.VoiceConnectionState.DESTROYED || this.isMoving)
+            return;
         if (this.player.voiceChannelId && this.player.voiceChannelId !== data.channel_id) {
             this.isMoving = true;
             this.manager.emit('playerMoved', this.player, this.player.voiceChannelId, data.channel_id);
@@ -250,8 +254,8 @@ class Voice extends Util_1.EventEmitter {
         }
     }
     destroy() {
+        this.disconnect().catch(() => { });
         this.setState(types_1.VoiceConnectionState.DESTROYED);
-        this.disconnect();
     }
 }
 exports.Voice = Voice;
