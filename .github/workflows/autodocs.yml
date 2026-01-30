@@ -16,7 +16,6 @@ jobs:
       contents: write
       pull-requests: write
 
-    # Mapeia o secret para ENV (assim o `if:` não referencia secrets direto)
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
@@ -26,7 +25,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Se não tiver key (ex.: PR de fork), encerra sem falhar o workflow
       - name: Guard (skip if GEMINI key missing)
         if: ${{ env.GEMINI_API_KEY == '' }}
         run: |
@@ -35,7 +33,7 @@ jobs:
 
       - name: Auto Documentation & Docstrings (Gemini)
         if: ${{ env.GEMINI_API_KEY != '' }}
-        uses: devasy23/auto-documentation-action@v1
+        uses: Devasy/auto-documentation-action@v2.0.0
         with:
           model_provider: gemini
           gemini_api_key: ${{ env.GEMINI_API_KEY }}
