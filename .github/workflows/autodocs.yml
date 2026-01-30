@@ -1,0 +1,37 @@
+name: Auto Docs (Gemini) - dev
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard (skip if GEMINI key missing)
+        if: secrets.GEMINI_API_KEY == ''
+        run: |
+          echo "GEMINI_API_KEY is not set. Skipping."
+          exit 0
+
+      - name: Auto Documentation & Docstrings (Gemini)
+        uses: devasy23/auto-documentation-action@v1
+        with:
+          model_provider: gemini
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          target_branches: dev
+          commit_message: "docs(dev): auto-generate TSDoc with Gemini"
