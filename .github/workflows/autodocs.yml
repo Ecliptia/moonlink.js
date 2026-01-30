@@ -16,22 +16,28 @@ jobs:
       contents: write
       pull-requests: write
 
+    # Mapeia o secret para ENV (assim o `if:` não referencia secrets direto)
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Se não tiver key (ex.: PR de fork), encerra sem falhar o workflow
       - name: Guard (skip if GEMINI key missing)
-        if: secrets.GEMINI_API_KEY == ''
+        if: ${{ env.GEMINI_API_KEY == '' }}
         run: |
           echo "GEMINI_API_KEY is not set. Skipping."
           exit 0
 
       - name: Auto Documentation & Docstrings (Gemini)
+        if: ${{ env.GEMINI_API_KEY != '' }}
         uses: devasy23/auto-documentation-action@v1
         with:
           model_provider: gemini
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          gemini_api_key: ${{ env.GEMINI_API_KEY }}
           target_branches: dev
           commit_message: "docs(dev): auto-generate TSDoc with Gemini"
