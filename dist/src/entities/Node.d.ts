@@ -1,8 +1,11 @@
-import { IManagerNodeConfig, INodeStats, ITrack } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
+import { type NodeLinkResponse } from "../Util";
 import { WebSocket } from "../services/WebSocket";
 import { NodeState, TrackEndReason } from "../typings/types";
+import { Track } from "./Track";
+import { YouTubeLiveChat, YouTubeLiveChatOptions } from "./YouTubeLiveChat";
 type LavalinkEventBase = {
     op: "event";
     guildId: string;
@@ -27,13 +30,85 @@ type TrackExceptionEvent = LavalinkEventBase & {
         message?: string;
     } & Record<string, any>;
 };
+type MixStartedEvent = LavalinkEventBase & {
+    type: "MixStartedEvent";
+    mixId: string;
+    track: ITrack;
+    volume: number;
+};
+type MixEndedEvent = LavalinkEventBase & {
+    type: "MixEndedEvent";
+    mixId: string;
+    reason: string;
+};
+type LyricsNotFoundEvent = LavalinkEventBase & {
+    type: "LyricsNotFoundEvent";
+};
+type LyricsFoundEvent = LavalinkEventBase & {
+    type: "LyricsFoundEvent";
+    lyrics?: Record<string, any>;
+};
+type LyricsLineEvent = LavalinkEventBase & {
+    type: "LyricsLineEvent";
+    lineIndex?: number;
+    line?: Record<string, any>;
+    skipped?: boolean;
+};
+type ConnectionStatusEvent = LavalinkEventBase & {
+    type: "ConnectionStatusEvent";
+    status?: string;
+    connected?: boolean;
+};
+type VolumeChangedEvent = LavalinkEventBase & {
+    type: "VolumeChangedEvent";
+    volume?: number;
+};
+type FiltersChangedEvent = LavalinkEventBase & {
+    type: "FiltersChangedEvent";
+    filters?: Record<string, any>;
+};
+type SeekEvent = LavalinkEventBase & {
+    type: "SeekEvent";
+    position?: number;
+};
+type PauseEvent = LavalinkEventBase & {
+    type: "PauseEvent";
+    paused?: boolean;
+};
+type PlayerCreatedEvent = LavalinkEventBase & {
+    type: "PlayerCreatedEvent";
+    player?: Record<string, any>;
+};
+type PlayerDestroyedEvent = LavalinkEventBase & {
+    type: "PlayerDestroyedEvent";
+};
+type PlayerReconnectingEvent = LavalinkEventBase & {
+    type: "PlayerReconnectingEvent";
+    reason?: string;
+};
+type PlayerConnectedEvent = LavalinkEventBase & {
+    type: "PlayerConnectedEvent";
+    voice?: Record<string, any>;
+};
+type EternalBoxInfoEvent = LavalinkEventBase & {
+    type: "EternalBoxInfoEvent";
+    info?: Record<string, any>;
+};
+type EternalBoxJumpEvent = LavalinkEventBase & {
+    type: "EternalBoxJumpEvent";
+    track?: ITrack;
+};
+type StreamMetadataEvent = LavalinkEventBase & {
+    type: "StreamMetadataEvent";
+    metadata?: Record<string, any>;
+};
 type WebSocketClosedEvent = LavalinkEventBase & {
     type: "WebSocketClosedEvent";
     code: number;
     reason: string;
     byRemote: boolean;
 };
-type LavalinkEventPayload = TrackStartEvent | TrackEndEvent | TrackStuckEvent | TrackExceptionEvent | WebSocketClosedEvent;
+type LavalinkEventPayload = TrackStartEvent | TrackEndEvent | TrackStuckEvent | TrackExceptionEvent | MixStartedEvent | MixEndedEvent | ConnectionStatusEvent | VolumeChangedEvent | FiltersChangedEvent | SeekEvent | PauseEvent | PlayerCreatedEvent | PlayerDestroyedEvent | PlayerReconnectingEvent | PlayerConnectedEvent | EternalBoxInfoEvent | EternalBoxJumpEvent | StreamMetadataEvent | LyricsFoundEvent | LyricsLineEvent | LyricsNotFoundEvent | WebSocketClosedEvent;
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -67,6 +142,7 @@ export declare class Node {
     stats?: INodeStats;
     info?: any;
     version?: string;
+    isNodeLink: boolean;
     url: string;
     rest: Rest;
     private lastStats?;
@@ -76,6 +152,10 @@ export declare class Node {
     get latency(): number;
     getPenalties(): number;
     ping(): Promise<number>;
+    createYouTubeLiveChat(identifier: string, options?: YouTubeLiveChatOptions): YouTubeLiveChat;
+    loadLyrics(track: string | ITrack | Track | {
+        encoded?: string;
+    }, lang?: string): Promise<NodeLinkResponse<ILyricsData | Record<string, any>> | null>;
     get address(): string;
     setState(state: NodeState): void;
     connect(): Promise<void>;
@@ -99,6 +179,23 @@ export declare class Node {
     private handleTrackEnd;
     private handleTrackStuck;
     private handleTrackException;
+    private handleMixStarted;
+    private handleMixEnded;
+    private handleConnectionStatus;
+    private handleVolumeChanged;
+    private handleFiltersChanged;
+    private handleSeek;
+    private handlePause;
+    private handlePlayerCreated;
+    private handlePlayerDestroyed;
+    private handlePlayerReconnecting;
+    private handlePlayerConnected;
+    private handleEternalBoxInfo;
+    private handleEternalBoxJump;
+    private handleStreamMetadata;
+    private handleLyricsFound;
+    private handleLyricsLine;
+    private handleLyricsNotFound;
     private handleWebSocketClosed;
     handleAutoPlay(player: any, previousTrack: any): Promise<boolean>;
     private handleQueueEnd;

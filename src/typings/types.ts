@@ -79,6 +79,6 @@ export type VoiceState = {
 
 export type PlayerLoop = "off" | "track" | "queue";
 
-export type TrackEndReason = "finished" | "loadFailed" | "stopped" | "replaced" | "cleanup";
+export type TrackEndReason = "finished" | "loadFailed" | "stopped" | "replaced" | "cleanup" | "gapless";
 
 export type TPartialTrackProperties = "title" | "author" | "duration" | "identifier" | "isSeekable" | "isStream" | "uri" | "artworkUrl" | "isrc" | "sourceName" | "position" | "requester" | "origin" | "pluginInfo" | "userData" | "retries" | "time";

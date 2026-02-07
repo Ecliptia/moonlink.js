@@ -137,10 +137,16 @@ class Manager extends Util_1.EventEmitter {
         else {
             let source;
             if (options.source) {
+                if (Util_1.nodeLinkSources.has(options.source) && !node.isNodeLink) {
+                    throw (0, Util_1.nodeLinkOnlyError)(`search:${options.source}`);
+                }
                 source = Util_1.sources[options.source] || options.source;
             }
             else {
                 const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
+                if (Util_1.nodeLinkSources.has(defaultPlatform) && !node.isNodeLink) {
+                    throw (0, Util_1.nodeLinkOnlyError)(`search:${defaultPlatform}`);
+                }
                 source = Util_1.sources[defaultPlatform] || "ytsearch";
             }
             identifier = `${source}:${options.query}`;

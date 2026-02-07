@@ -4,6 +4,7 @@ exports.Node = void 0;
 const Util_1 = require("../Util");
 const types_1 = require("../typings/types");
 const Track_1 = require("./Track");
+const YouTubeLiveChat_1 = require("./YouTubeLiveChat");
 class Node {
     manager;
     uuid;
@@ -37,6 +38,7 @@ class Node {
     stats;
     info;
     version;
+    isNodeLink = false;
     url;
     rest;
     lastStats;
@@ -76,6 +78,19 @@ class Node {
             return Promise.reject(new Error("Node is not connected."));
         }
         return this.socket.ping();
+    }
+    createYouTubeLiveChat(identifier, options) {
+        if (!this.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("youtubeLiveChat");
+        }
+        return new YouTubeLiveChat_1.YouTubeLiveChat(this, identifier, options);
+    }
+    async loadLyrics(track, lang) {
+        const encoded = typeof track === "string" ? track : track?.encoded;
+        if (!encoded) {
+            throw new Error("loadLyrics requires an encoded track string or object with an encoded field.");
+        }
+        return this.rest.loadLyrics(encoded, lang);
     }
     get address() {
         return `${this.host}:${this.port}`;
@@ -226,15 +241,30 @@ class Node {
         this.setState(types_1.NodeState.CONNECTED);
         this.manager.emit("debug", `Moonlink.js > Node <- Connected to ${this.identifier}.`);
         try {
-            const nodeInfo = await this.rest.getInfo();
-            if (nodeInfo) {
+            const infoResult = await this.rest.getInfoWithHeaders();
+            if (infoResult) {
+                const nodeInfo = infoResult.data;
+                const headers = infoResult.headers;
+                const headerFlag = headers?.iamnodelink;
+                const headerValue = Array.isArray(headerFlag) ? headerFlag[0] : headerFlag;
+                const headerIsNodeLink = typeof headerValue === "string" && headerValue.toLowerCase() === "true";
+                this.isNodeLink = Boolean(nodeInfo?.isNodelink) || headerIsNodeLink;
                 this.info = nodeInfo;
-                this.version = nodeInfo.version?.semver;
+                this.version = nodeInfo?.version?.semver;
+                if (this.isNodeLink) {
+                    this.manager.emit("debug", `Moonlink.js > Node >> NodeLink detected for ${this.identifier}.`);
+                }
                 this.capabilities.clear();
-                for (const source of nodeInfo.sourceManagers)
-                    this.capabilities.add(`source:${source}`);
-                for (const filter of nodeInfo.filters)
-                    this.capabilities.add(`filter:${filter}`);
+                if (Array.isArray(nodeInfo?.sourceManagers)) {
+                    for (const source of nodeInfo.sourceManagers) {
+                        this.capabilities.add(`source:${source}`);
+                    }
+                }
+                if (Array.isArray(nodeInfo?.filters)) {
+                    for (const filter of nodeInfo.filters) {
+                        this.capabilities.add(`filter:${filter}`);
+                    }
+                }
                 this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} capabilities updated: ${[...this.capabilities].join(", ")}`);
             }
         }
@@ -418,6 +448,7 @@ class Node {
                     ping: currentState.ping,
                     time: currentState.time,
                 });
+                this.manager.emit("playerUpdate", player, player.current ?? null, payload);
                 player.voice.check(currentState.connected);
                 break;
             case "event":
@@ -450,6 +481,57 @@ class Node {
                 break;
             case "TrackExceptionEvent":
                 this.handleTrackException(player, payload);
+                break;
+            case "MixStartedEvent":
+                this.handleMixStarted(player, payload);
+                break;
+            case "MixEndedEvent":
+                this.handleMixEnded(player, payload);
+                break;
+            case "ConnectionStatusEvent":
+                this.handleConnectionStatus(player, payload);
+                break;
+            case "VolumeChangedEvent":
+                this.handleVolumeChanged(player, payload);
+                break;
+            case "FiltersChangedEvent":
+                this.handleFiltersChanged(player, payload);
+                break;
+            case "SeekEvent":
+                this.handleSeek(player, payload);
+                break;
+            case "PauseEvent":
+                this.handlePause(player, payload);
+                break;
+            case "PlayerCreatedEvent":
+                this.handlePlayerCreated(player, payload);
+                break;
+            case "PlayerDestroyedEvent":
+                this.handlePlayerDestroyed(player, payload);
+                break;
+            case "PlayerReconnectingEvent":
+                this.handlePlayerReconnecting(player, payload);
+                break;
+            case "PlayerConnectedEvent":
+                this.handlePlayerConnected(player, payload);
+                break;
+            case "EternalBoxInfoEvent":
+                this.handleEternalBoxInfo(player, payload);
+                break;
+            case "EternalBoxJumpEvent":
+                this.handleEternalBoxJump(player, payload);
+                break;
+            case "StreamMetadataEvent":
+                this.handleStreamMetadata(player, payload);
+                break;
+            case "LyricsFoundEvent":
+                this.handleLyricsFound(player, payload);
+                break;
+            case "LyricsLineEvent":
+                this.handleLyricsLine(player, payload);
+                break;
+            case "LyricsNotFoundEvent":
+                this.handleLyricsNotFound(player, payload);
                 break;
             case "WebSocketClosedEvent":
                 this.handleWebSocketClosed(player, payload);
@@ -486,7 +568,7 @@ class Node {
     }
     async handleTrackEnd(player, payload) {
         const { reason } = payload;
-        if (reason === "replaced") {
+        if (reason === "replaced" || reason === "gapless") {
             return;
         }
         const trackData = payload.track ?? player.current?.toJSON?.();
@@ -653,6 +735,103 @@ class Node {
         else {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackException -> Exception count: ${exceptionCount}/3 for player ${player.guildId}, continuing playback.`);
         }
+    }
+    handleMixStarted(player, payload) {
+        const trackData = payload.track;
+        const mixTrack = new (Util_1.Structure.get("Track"))(trackData, trackData?.userData?.requester);
+        this.manager.emit("mixStart", player, payload.mixId, mixTrack, payload.volume, payload);
+    }
+    handleMixEnded(player, payload) {
+        this.manager.emit("mixEnd", player, payload.mixId, payload.reason, payload);
+    }
+    handleConnectionStatus(player, payload) {
+        const statusValue = payload.status ?? payload.connected;
+        let connected;
+        if (typeof statusValue === "string") {
+            connected = statusValue.toLowerCase() === "connected";
+        }
+        else if (typeof statusValue === "boolean") {
+            connected = statusValue;
+        }
+        if (typeof connected === "boolean") {
+            player.connected = connected;
+            player.voice.check(connected);
+            if (connected) {
+                this.manager.emit("playerConnected", player, payload);
+            }
+            else {
+                this.manager.emit("playerDisconnected", player);
+            }
+        }
+        this.manager.emit("playerConnectionStatus", player, statusValue, payload);
+    }
+    handleVolumeChanged(player, payload) {
+        if (typeof payload.volume === "number") {
+            const oldVolume = player.volume;
+            player.volume = payload.volume;
+            player.updateData("volume", player.volume);
+            this.manager.emit("playerChangedVolume", player, oldVolume, player.volume);
+        }
+    }
+    handleFiltersChanged(player, payload) {
+        const filtersPayload = payload.filters?.filters ?? payload.filters;
+        if (filtersPayload && typeof filtersPayload === "object") {
+            Object.assign(player.filters, filtersPayload);
+            void player.updateData("filters", player.filters.toJSON());
+        }
+        this.manager.emit("filtersUpdate", player, player.filters);
+    }
+    handleSeek(player, payload) {
+        if (typeof payload.position !== "number")
+            return;
+        if (player.current) {
+            player.current.position = payload.position;
+            player.updateData("current.position", payload.position);
+        }
+        this.manager.emit("playerSeek", player, payload.position, payload);
+    }
+    handlePause(player, payload) {
+        if (typeof payload.paused !== "boolean")
+            return;
+        player.paused = payload.paused;
+        player.updateData("paused", player.paused);
+        this.manager.emit("playerPause", player, payload.paused, payload);
+    }
+    handlePlayerCreated(player, payload) {
+        this.manager.emit("playerCreated", player, payload);
+    }
+    async handlePlayerDestroyed(player, payload) {
+        this.manager.emit("playerDestroyed", player, payload);
+        if (!player.destroyed) {
+            await player.destroy("Remote player destroyed");
+        }
+    }
+    handlePlayerReconnecting(player, payload) {
+        player.isResuming = true;
+        this.manager.emit("playerReconnect", player, payload.reason);
+    }
+    handlePlayerConnected(player, payload) {
+        player.isResuming = false;
+        player.connected = true;
+        this.manager.emit("playerConnected", player, payload);
+    }
+    handleEternalBoxInfo(player, payload) {
+        this.manager.emit("eternalBoxInfo", player, payload);
+    }
+    handleEternalBoxJump(player, payload) {
+        this.manager.emit("eternalBoxJump", player, payload);
+    }
+    handleStreamMetadata(player, payload) {
+        this.manager.emit("streamMetadata", player, payload);
+    }
+    handleLyricsFound(player, payload) {
+        this.manager.emit("lyricsFound", player, payload);
+    }
+    handleLyricsLine(player, payload) {
+        this.manager.emit("lyricsLine", player, payload);
+    }
+    handleLyricsNotFound(player, payload) {
+        this.manager.emit("lyricsNotFound", player, payload);
     }
     async handleWebSocketClosed(player, payload) {
         const { code, reason, byRemote } = payload;

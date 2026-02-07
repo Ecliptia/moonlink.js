@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass } from "../typings/Interfaces";
+import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass, IEcho, IChorus, ICompressor, IHighPass, IPhaser, ISpatial } from "../typings/Interfaces";
 export declare class Filters implements IFilters {
     volume?: number;
     equalizer?: IEqualizerBand[];
@@ -11,10 +11,17 @@ export declare class Filters implements IFilters {
     distortion?: IDistortion;
     channelMix?: IChannelMix;
     lowPass?: ILowPass;
+    echo?: IEcho;
+    chorus?: IChorus;
+    compressor?: ICompressor;
+    highpass?: IHighPass;
+    phaser?: IPhaser;
+    spatial?: ISpatial;
     pluginFilters?: Record<string, any>;
     private readonly activeFilters;
     private readonly customDefinitions;
     private readonly player;
+    private assertNodeLinkFeature;
     private static readonly BUILTIN_FILTERS;
     constructor(player: Player);
     private loadGlobalFilters;
@@ -45,6 +52,12 @@ export declare class Filters implements IFilters {
     setDistortion(distortion?: IDistortion): this;
     setChannelMix(channelMix?: IChannelMix): this;
     setLowPass(lowPass?: ILowPass): this;
+    setEcho(echo?: IEcho): this;
+    setChorus(chorus?: IChorus): this;
+    setCompressor(compressor?: ICompressor): this;
+    setHighPass(highpass?: IHighPass): this;
+    setPhaser(phaser?: IPhaser): this;
+    setSpatial(spatial?: ISpatial): this;
     setSpeed(speed: number): this;
     setPitch(pitch: number): this;
     remove(filterName: string): this;

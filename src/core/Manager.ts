@@ -7,7 +7,7 @@ import {
     ITrackInfo,
 } from "../typings/Interfaces";
 import type { DiscordGatewayPacket, DiscordVoicePacket } from "../typings/types";
-import { Structure, validate, EventEmitter, sources, decodeTrack, encodeTrack } from "../Util";
+import { Structure, validate, EventEmitter, sources, nodeLinkSources, nodeLinkOnlyError, decodeTrack, encodeTrack } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
@@ -162,9 +162,15 @@ export class Manager extends EventEmitter<IManagerEvents> {
         } else {
             let source: string;
             if (options.source) {
+                if (nodeLinkSources.has(options.source) && !node.isNodeLink) {
+                    throw nodeLinkOnlyError(`search:${options.source}`);
+                }
                 source = sources[options.source] || options.source;
             } else {
                 const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
+                if (nodeLinkSources.has(defaultPlatform) && !node.isNodeLink) {
+                    throw nodeLinkOnlyError(`search:${defaultPlatform}`);
+                }
                 source = sources[defaultPlatform] || "ytsearch";
             }
             identifier = `${source}:${options.query}`;

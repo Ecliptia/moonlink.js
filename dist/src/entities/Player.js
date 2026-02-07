@@ -4,6 +4,7 @@ exports.Player = void 0;
 const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
 const Track_1 = require("./Track");
+const VoiceReceiver_1 = require("./VoiceReceiver");
 class Player {
     manager;
     node;
@@ -29,6 +30,11 @@ class Player {
     previous = [];
     historySize = 10;
     lastActivityTime = Date.now();
+    fading;
+    nextTrack;
+    audioTrackId;
+    loudnessNormalizer;
+    endTime;
     constructor(manager, node, config) {
         this.manager = manager;
         this.node = node;
@@ -62,6 +68,44 @@ class Player {
     async updateData(path, data) {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
         await this.manager.database.set(dbPath, data);
+    }
+    assertNodeLinkFeature(feature) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)(feature);
+        }
+    }
+    resolveEncodedTrack(track) {
+        if (track instanceof Track_1.Track)
+            return track.encoded;
+        if (typeof track === "string" && track.length > 0)
+            return track;
+        throw new Error("Invalid track input. Provide a Track instance or encoded string.");
+    }
+    async sendPlayerUpdate(payload, noReplace) {
+        const hasNodeLinkExtras = Boolean(payload?.voice ||
+            payload?.fading ||
+            payload?.nextTrack ||
+            payload?.track?.audioTrackId ||
+            payload?.loudnessNormalizer !== undefined ||
+            payload?.endTime !== undefined);
+        if (!this.node.isNodeLink && hasNodeLinkExtras) {
+            throw (0, Util_1.nodeLinkOnlyError)("updatePlayer extras");
+        }
+        const finalPayload = { ...payload };
+        if (payload.voice) {
+            const voicePayload = { ...payload.voice };
+            if (this.node.isNodeLink && (!voicePayload.sessionId || !voicePayload.token || !voicePayload.endpoint)) {
+                throw new Error("voice payload requires sessionId, token, and endpoint.");
+            }
+            if (this.node.isNodeLink && !voicePayload.channelId) {
+                voicePayload.channelId = this.voiceChannelId;
+            }
+            finalPayload.voice = voicePayload;
+        }
+        return this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+    }
+    async updatePlayer(payload, noReplace) {
+        return this.sendPlayerUpdate(payload, noReplace);
     }
     async connect({ selfDeaf, selfMute } = {}) {
         this.set("userInitiatedConnect", true);
@@ -137,6 +181,7 @@ class Player {
         this.paused = false;
         this.updateData("playing", this.playing);
         this.updateData("paused", this.paused);
+        const audioTrackId = finalOptions.audioTrackId ?? this.audioTrackId;
         const payload = {
             track: {
                 encoded: this.current.encoded,
@@ -144,10 +189,20 @@ class Player {
             },
             position: finalOptions.position || this.current.position,
         };
+        if (audioTrackId) {
+            payload.track.audioTrackId = audioTrackId;
+        }
+        if (this.fading)
+            payload.fading = this.fading;
+        if (this.nextTrack)
+            payload.nextTrack = this.nextTrack;
+        if (this.loudnessNormalizer !== undefined) {
+            payload.loudnessNormalizer = this.loudnessNormalizer;
+        }
         this.manager.emit("playerTriggeredPlay", this, this.current);
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
         try {
-            await this.node.rest.updatePlayer(this.guildId, payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
             this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
         }
         catch (e) {
@@ -173,6 +228,94 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
         return true;
     }
+    async addMix(track, options) {
+        this.assertNodeLinkFeature("mix:add");
+        const encoded = this.resolveEncodedTrack(track);
+        return this.node.rest.addMixLayer(this.guildId, {
+            track: { encoded, userData: options?.userData },
+            volume: options?.volume
+        });
+    }
+    async getMixes() {
+        this.assertNodeLinkFeature("mix:list");
+        return this.node.rest.getMixLayers(this.guildId);
+    }
+    async updateMixVolume(mixId, volume) {
+        this.assertNodeLinkFeature("mix:update");
+        await this.node.rest.updateMixLayerVolume(this.guildId, mixId, volume);
+        return this;
+    }
+    async removeMix(mixId) {
+        this.assertNodeLinkFeature("mix:remove");
+        await this.node.rest.removeMixLayer(this.guildId, mixId);
+        return this;
+    }
+    async subscribeLyrics(options) {
+        this.assertNodeLinkFeature("lyrics:subscribe");
+        await this.node.rest.subscribeLyrics(this.guildId, options?.skipTrackSource);
+        return this;
+    }
+    async unsubscribeLyrics() {
+        this.assertNodeLinkFeature("lyrics:unsubscribe");
+        await this.node.rest.unsubscribeLyrics(this.guildId);
+        return this;
+    }
+    async loadChapters(encodedTrack) {
+        this.assertNodeLinkFeature("chapters");
+        const target = encodedTrack ?? this.current?.encoded;
+        if (!target) {
+            throw new Error("loadChapters requires an encoded track or an active player track.");
+        }
+        return this.node.rest.loadChapters(target);
+    }
+    async loadMeaning(encodedTrack, lang) {
+        this.assertNodeLinkFeature("meaning");
+        const target = encodedTrack ?? this.current?.encoded;
+        if (!target) {
+            throw new Error("loadMeaning requires an encoded track or an active player track.");
+        }
+        return this.node.rest.loadMeaning(target, lang);
+    }
+    async setFading(fading) {
+        this.assertNodeLinkFeature("fading");
+        this.fading = fading;
+        await this.sendPlayerUpdate({ fading });
+        return this;
+    }
+    async clearFading() {
+        this.assertNodeLinkFeature("fading");
+        this.fading = undefined;
+        await this.sendPlayerUpdate({ fading: { enabled: false } });
+        return this;
+    }
+    async setNextTrack(track, userData) {
+        this.assertNodeLinkFeature("nextTrack");
+        const encoded = this.resolveEncodedTrack(track);
+        this.nextTrack = { encoded, userData };
+        await this.sendPlayerUpdate({ nextTrack: this.nextTrack });
+        return this;
+    }
+    async clearNextTrack() {
+        this.assertNodeLinkFeature("nextTrack");
+        this.nextTrack = undefined;
+        await this.sendPlayerUpdate({ nextTrack: null });
+        return this;
+    }
+    setAudioTrackId(audioTrackId) {
+        this.assertNodeLinkFeature("audioTrackId");
+        this.audioTrackId = audioTrackId;
+        return this;
+    }
+    async setLoudnessNormalizer(enabled) {
+        this.assertNodeLinkFeature("loudnessNormalizer");
+        this.loudnessNormalizer = enabled;
+        await this.sendPlayerUpdate({ loudnessNormalizer: enabled });
+        return this;
+    }
+    createVoiceReceiver(options) {
+        this.assertNodeLinkFeature("voiceReceive");
+        return new VoiceReceiver_1.VoiceReceiver(this.node, this.guildId, options);
+    }
     async pause() {
         if (this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#pause >> Player is already paused for guild ${this.guildId}`);
@@ -180,7 +323,7 @@ class Player {
         }
         this.manager.emit("debug", `Moonlink.js > Player#pause -> Sending pause request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredPause", this);
-        await this.node.rest.updatePlayer(this.guildId, { paused: true });
+        await this.sendPlayerUpdate({ paused: true });
         const oldPaused = this.paused;
         this.paused = true;
         this.updateData("paused", this.paused);
@@ -196,7 +339,7 @@ class Player {
         }
         this.manager.emit("debug", `Moonlink.js > Player#resume -> Sending resume request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredResume", this);
-        const promise = this.node.rest.updatePlayer(this.guildId, { paused: false });
+        const promise = this.sendPlayerUpdate({ paused: false });
         if (options?.timeout) {
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Resume timed out")), options.timeout));
             await Promise.race([promise, timeoutPromise]);
@@ -250,7 +393,7 @@ class Player {
     async stop() {
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
-        await this.node.rest.updatePlayer(this.guildId, { track: { encoded: null } });
+        await this.sendPlayerUpdate({ track: { encoded: null } });
         const oldPlaying = this.playing;
         this.playing = false;
         this.updateData("playing", this.playing);
@@ -296,7 +439,7 @@ class Player {
         (0, Util_1.validate)(position, (v) => typeof v === "number" && !isNaN(v) && v >= 0, "Player#seek > Position must be a valid number.");
         this.manager.emit("debug", `Moonlink.js > Player#seek -> Seeking to position ${position}ms for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredSeek", this, position);
-        await this.node.rest.updatePlayer(this.guildId, { position });
+        await this.sendPlayerUpdate({ position });
         if (this.current) {
             this.current.position = position;
         }
@@ -309,7 +452,7 @@ class Player {
         this.volume = volume;
         this.manager.emit("playerChangedVolume", this, oldVolume, volume);
         this.manager.emit("debug", `Moonlink.js > Player#setVolume -> Changing volume from ${oldVolume} to ${volume} for guild ${this.guildId}`);
-        this.node.rest.updatePlayer(this.guildId, { volume });
+        this.sendPlayerUpdate({ volume });
         this.updateData("volume", this.volume);
         this.manager.emit("debug", `Moonlink.js > Player#setVolume >> Volume updated for guild ${this.guildId}`);
         return this;
@@ -396,10 +539,21 @@ class Player {
             this.playing = true;
             this.paused = false;
             const oldPosition = this.current.position;
-            await this.node.rest.updatePlayer(this.guildId, {
+            const payload = {
                 track: { encoded: this.current.encoded },
                 volume: this.volume,
-            });
+            };
+            if (this.audioTrackId) {
+                payload.track.audioTrackId = this.audioTrackId;
+            }
+            if (this.fading)
+                payload.fading = this.fading;
+            if (this.nextTrack)
+                payload.nextTrack = this.nextTrack;
+            if (this.loudnessNormalizer !== undefined) {
+                payload.loudnessNormalizer = this.loudnessNormalizer;
+            }
+            await this.sendPlayerUpdate(payload);
             if (oldPosition > 0 && this.current.isSeekable) {
                 await (0, Util_1.delay)(2000);
                 await this.seek(oldPosition);

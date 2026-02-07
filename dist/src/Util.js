@@ -3,14 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventEmitter = exports.Plugin = exports.sources = exports.Structure = exports.structures = void 0;
+exports.EventEmitter = exports.Plugin = exports.sources = exports.nodeLinkSources = exports.NODELINK_URL = exports.Structure = exports.structures = void 0;
 exports.validate = validate;
 exports.delay = delay;
+exports.nodeLinkOnlyError = nodeLinkOnlyError;
+exports.normalizeNodeLinkResponse = normalizeNodeLinkResponse;
 exports.decodeTrack = decodeTrack;
 exports.encodeTrack = encodeTrack;
 exports.generateUUID = generateUUID;
 exports.Log = Log;
 exports.makeRequest = makeRequest;
+exports.makeStreamRequest = makeStreamRequest;
 exports.stringifyWithReplacer = stringifyWithReplacer;
 exports.isSourceBlacklisted = isSourceBlacklisted;
 exports.isValidDiscordId = isValidDiscordId;
@@ -66,6 +69,20 @@ function validate(prop, validator, errorMessage) {
 }
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+exports.NODELINK_URL = "https://github.com/PerformanC/NodeLink";
+function nodeLinkOnlyError(feature) {
+    return new Error(`NodeLink-only feature (${feature}). This node is not NodeLink. See ${exports.NODELINK_URL}.`);
+}
+function normalizeNodeLinkResponse(input, fallbackLoadType) {
+    if (input && typeof input === "object" && "data" in input) {
+        const typed = input;
+        return {
+            loadType: typed.loadType ?? fallbackLoadType,
+            data: typed.data,
+        };
+    }
+    return { loadType: fallbackLoadType, data: input };
 }
 function decodeTrack(encoded) {
     const buffer = Buffer.from(encoded, "base64");
@@ -192,6 +209,7 @@ function Log(message, LogPath) {
     }
 }
 async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, retryDelay = 1000, maxRedirects = 5) {
+    const { returnHeaders } = options;
     const supportsZstd = typeof node_zlib_1.default
         .createZstdDecompress === "function";
     const acceptEncoding = supportsZstd
@@ -215,6 +233,7 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                             "Accept-Encoding": acceptEncoding,
                         },
                     };
+                    delete requestOptions.returnHeaders;
                     delete requestOptions.headers["host"];
                     const req = transport.request(requestOptions, (res) => {
                         const { statusCode, headers } = res;
@@ -261,15 +280,27 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                             const contentType = res.headers["content-type"] || "";
                             if (body.length === 0) {
                                 if (contentType.includes("application/json")) {
-                                    return resolve({});
+                                    const emptyJson = {};
+                                    return resolve(returnHeaders
+                                        ? { data: emptyJson, headers: res.headers }
+                                        : emptyJson);
                                 }
-                                return resolve("");
+                                const emptyText = "";
+                                return resolve(returnHeaders
+                                    ? { data: emptyText, headers: res.headers }
+                                    : emptyText);
                             }
                             try {
                                 if (contentType.includes("application/json")) {
-                                    return resolve(JSON.parse(body.toString()));
+                                    const parsedJson = JSON.parse(body.toString());
+                                    return resolve(returnHeaders
+                                        ? { data: parsedJson, headers: res.headers }
+                                        : parsedJson);
                                 }
-                                return resolve(body.toString());
+                                const parsedText = body.toString();
+                                return resolve(returnHeaders
+                                    ? { data: parsedText, headers: res.headers }
+                                    : parsedText);
                             }
                             catch (err) {
                                 return reject(new Error(`Failed to parse response: ${err.message}`));
@@ -316,6 +347,50 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
     }
     return undefined;
 }
+async function makeStreamRequest(initialUrl, options, timeout = 100000) {
+    return new Promise((resolve, reject) => {
+        const urlObject = new node_url_1.URL(initialUrl);
+        const transport = urlObject.protocol === "https:" ? node_https_1.default : node_http_1.default;
+        const requestOptions = {
+            ...options,
+            hostname: urlObject.hostname,
+            port: urlObject.port || (urlObject.protocol === "https:" ? 443 : 80),
+            path: urlObject.pathname + urlObject.search,
+        };
+        delete requestOptions.headers?.["host"];
+        const req = transport.request(requestOptions, (res) => {
+            const statusCode = res.statusCode ?? 0;
+            if (statusCode < 200 || statusCode >= 300) {
+                const chunks = [];
+                res.on("data", (chunk) => chunks.push(chunk));
+                res.on("end", () => {
+                    const body = Buffer.concat(chunks).toString();
+                    reject(new Error(`Stream request failed (${statusCode}): ${body || "Unknown error"}`));
+                });
+                return;
+            }
+            resolve({
+                stream: res,
+                statusCode,
+                headers: res.headers,
+            });
+        });
+        req.on("error", (err) => reject(new Error(`Stream request error: ${err.message}`)));
+        req.on("timeout", () => {
+            req.destroy();
+            reject(new Error("Stream request timed out"));
+        });
+        req.setTimeout(timeout);
+        if (options.body) {
+            const bodyData = typeof options.body === "object" && options.body !== null
+                ? JSON.stringify(options.body)
+                : options.body.toString();
+            req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+            req.write(bodyData);
+        }
+        req.end();
+    });
+}
 function stringifyWithReplacer(obj) {
     const cache = new Set();
     return JSON.stringify(obj, (_key, value) => {
@@ -328,11 +403,57 @@ function stringifyWithReplacer(obj) {
         return value;
     });
 }
+exports.nodeLinkSources = new Set([
+    "admsearch",
+    "amsearch",
+    "audiomack",
+    "bcsearch",
+    "bilibili",
+    "dzsearch",
+    "flowery",
+    "ftts",
+    "gaanasearch",
+    "gtts",
+    "jssearch",
+    "lfsearch",
+    "mcsearch",
+    "ncsearch",
+    "nicovideo",
+    "pdsearch",
+    "shsearch",
+    "speak",
+    "spsearch",
+    "szsearch",
+    "tdsearch",
+    "vksearch",
+]);
 exports.sources = {
     youtube: "ytsearch",
     youtubemusic: "ytmsearch",
     soundcloud: "scsearch",
     local: "local",
+    admsearch: "admsearch",
+    amsearch: "amsearch",
+    audiomack: "audiomack",
+    bcsearch: "bcsearch",
+    bilibili: "bilibili",
+    dzsearch: "dzsearch",
+    flowery: "flowery",
+    ftts: "ftts",
+    gaanasearch: "gaanasearch",
+    gtts: "gtts",
+    jssearch: "jssearch",
+    lfsearch: "lfsearch",
+    mcsearch: "mcsearch",
+    ncsearch: "ncsearch",
+    nicovideo: "nicovideo",
+    pdsearch: "pdsearch",
+    shsearch: "shsearch",
+    speak: "speak",
+    spsearch: "spsearch",
+    szsearch: "szsearch",
+    tdsearch: "tdsearch",
+    vksearch: "vksearch",
 };
 class Plugin {
     name;

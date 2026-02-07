@@ -1,6 +1,6 @@
 import { Player } from "./Player";
-import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass } from "../typings/Interfaces";
-import { validate } from "../Util";
+import { IFilters, IEqualizerBand, IKaraoke, ITimescale, ITremolo, IVibrato, IRotation, IDistortion, IChannelMix, ILowPass, IEcho, IChorus, ICompressor, IHighPass, IPhaser, ISpatial } from "../typings/Interfaces";
+import { nodeLinkOnlyError, validate } from "../Util";
 
 export class Filters implements IFilters {
     public volume?: number;
@@ -13,11 +13,23 @@ export class Filters implements IFilters {
     public distortion?: IDistortion;
     public channelMix?: IChannelMix;
     public lowPass?: ILowPass;
+    public echo?: IEcho;
+    public chorus?: IChorus;
+    public compressor?: ICompressor;
+    public highpass?: IHighPass;
+    public phaser?: IPhaser;
+    public spatial?: ISpatial;
     public pluginFilters?: Record<string, any>;
 
     private readonly activeFilters: Set<string> = new Set();
     private readonly customDefinitions: Map<string, IFilters> = new Map();
     private readonly player: Player;
+
+    private assertNodeLinkFeature(feature: string): void {
+        if (!this.player.node.isNodeLink) {
+            throw nodeLinkOnlyError(`filter:${feature}`);
+        }
+    }
 
     private static readonly BUILTIN_FILTERS: Record<string, IFilters> = {
         "8d": { rotation: { rotationHz: 0.2 } },
@@ -137,6 +149,12 @@ export class Filters implements IFilters {
             distortion: this.distortion,
             channelMix: this.channelMix,
             lowPass: this.lowPass,
+            echo: this.echo,
+            chorus: this.chorus,
+            compressor: this.compressor,
+            highpass: this.highpass,
+            phaser: this.phaser,
+            spatial: this.spatial,
             pluginFilters: this.pluginFilters,
             activeFilters: [...this.activeFilters],
         };
@@ -266,6 +284,54 @@ export class Filters implements IFilters {
         return this;
     }
 
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setEcho(echo?: IEcho): this {
+        this.assertNodeLinkFeature("echo");
+        this.echo = echo;
+        this._updateFilters();
+        return this;
+    }
+
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setChorus(chorus?: IChorus): this {
+        this.assertNodeLinkFeature("chorus");
+        this.chorus = chorus;
+        this._updateFilters();
+        return this;
+    }
+
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setCompressor(compressor?: ICompressor): this {
+        this.assertNodeLinkFeature("compressor");
+        this.compressor = compressor;
+        this._updateFilters();
+        return this;
+    }
+
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setHighPass(highpass?: IHighPass): this {
+        this.assertNodeLinkFeature("highpass");
+        this.highpass = highpass;
+        this._updateFilters();
+        return this;
+    }
+
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setPhaser(phaser?: IPhaser): this {
+        this.assertNodeLinkFeature("phaser");
+        this.phaser = phaser;
+        this._updateFilters();
+        return this;
+    }
+
+    /** NodeLink-only filter. See https://github.com/PerformanC/NodeLink */
+    public setSpatial(spatial?: ISpatial): this {
+        this.assertNodeLinkFeature("spatial");
+        this.spatial = spatial;
+        this._updateFilters();
+        return this;
+    }
+
     public setSpeed(speed: number): this {
         if (!this.timescale) this.timescale = {};
         this.timescale.speed = speed;
@@ -297,6 +363,12 @@ export class Filters implements IFilters {
         else if (filterName === "distortion") this.distortion = undefined;
         else if (filterName === "channelMix") this.channelMix = undefined;
         else if (filterName === "lowPass") this.lowPass = undefined;
+        else if (filterName === "echo") this.echo = undefined;
+        else if (filterName === "chorus") this.chorus = undefined;
+        else if (filterName === "compressor") this.compressor = undefined;
+        else if (filterName === "highpass") this.highpass = undefined;
+        else if (filterName === "phaser") this.phaser = undefined;
+        else if (filterName === "spatial") this.spatial = undefined;
         else if (this.pluginFilters && this.pluginFilters[filterName]) delete this.pluginFilters[filterName];
 
         this._updateFilters();
@@ -320,6 +392,12 @@ export class Filters implements IFilters {
         this.distortion = undefined;
         this.channelMix = undefined;
         this.lowPass = undefined;
+        this.echo = undefined;
+        this.chorus = undefined;
+        this.compressor = undefined;
+        this.highpass = undefined;
+        this.phaser = undefined;
+        this.spatial = undefined;
         this.pluginFilters = undefined;
         this.activeFilters.clear();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters cleared.`);
@@ -333,6 +411,10 @@ export class Filters implements IFilters {
 
     public async apply(): Promise<Player> {
         let payload: IFilters = {};
+
+        if (!this.player.node.isNodeLink && (this.echo || this.chorus || this.compressor || this.highpass || this.phaser || this.spatial)) {
+            throw nodeLinkOnlyError("filters");
+        }
 
         for (const name of this.activeFilters) {
             const filter = this.getFilter(name);
@@ -352,6 +434,12 @@ export class Filters implements IFilters {
             distortion: this.distortion,
             channelMix: this.channelMix,
             lowPass: this.lowPass,
+            echo: this.echo,
+            chorus: this.chorus,
+            compressor: this.compressor,
+            highpass: this.highpass,
+            phaser: this.phaser,
+            spatial: this.spatial,
             pluginFilters: this.pluginFilters,
         };
 
@@ -363,7 +451,7 @@ export class Filters implements IFilters {
 
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Applying filters: ${JSON.stringify(payload)}`);
         this.player.manager.emit("filtersUpdate", this.player, this);
-        const updatedPlayer = await this.player.node.rest.updatePlayer(this.player.guildId, { filters: payload });
+        const updatedPlayer = await this.player.updatePlayer({ filters: payload });
         
         if (updatedPlayer) {
             this.player.volume = updatedPlayer.volume;

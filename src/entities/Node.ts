@@ -1,4 +1,4 @@
-import { IManagerNodeConfig, INodeStats, ITrack } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import {
@@ -6,10 +6,13 @@ import {
   generateUUID,
   stringifyWithReplacer,
   decodeTrack,
+  type NodeLinkResponse,
+  nodeLinkOnlyError,
 } from "../Util";
 import { WebSocket } from "../services/WebSocket";
 import { NodeState, TrackEndReason, VoiceState } from "../typings/types";
 import { Track } from "./Track";
+import { YouTubeLiveChat, YouTubeLiveChatOptions } from "./YouTubeLiveChat";
 
 type LavalinkEventBase = {
   op: "event";
@@ -37,6 +40,95 @@ type TrackExceptionEvent = LavalinkEventBase & {
   exception: { severity: string; message?: string } & Record<string, any>;
 };
 
+type MixStartedEvent = LavalinkEventBase & {
+  type: "MixStartedEvent";
+  mixId: string;
+  track: ITrack;
+  volume: number;
+};
+
+type MixEndedEvent = LavalinkEventBase & {
+  type: "MixEndedEvent";
+  mixId: string;
+  reason: string;
+};
+
+type LyricsNotFoundEvent = LavalinkEventBase & {
+  type: "LyricsNotFoundEvent";
+};
+
+type LyricsFoundEvent = LavalinkEventBase & {
+  type: "LyricsFoundEvent";
+  lyrics?: Record<string, any>;
+};
+
+type LyricsLineEvent = LavalinkEventBase & {
+  type: "LyricsLineEvent";
+  lineIndex?: number;
+  line?: Record<string, any>;
+  skipped?: boolean;
+};
+
+type ConnectionStatusEvent = LavalinkEventBase & {
+  type: "ConnectionStatusEvent";
+  status?: string;
+  connected?: boolean;
+};
+
+type VolumeChangedEvent = LavalinkEventBase & {
+  type: "VolumeChangedEvent";
+  volume?: number;
+};
+
+type FiltersChangedEvent = LavalinkEventBase & {
+  type: "FiltersChangedEvent";
+  filters?: Record<string, any>;
+};
+
+type SeekEvent = LavalinkEventBase & {
+  type: "SeekEvent";
+  position?: number;
+};
+
+type PauseEvent = LavalinkEventBase & {
+  type: "PauseEvent";
+  paused?: boolean;
+};
+
+type PlayerCreatedEvent = LavalinkEventBase & {
+  type: "PlayerCreatedEvent";
+  player?: Record<string, any>;
+};
+
+type PlayerDestroyedEvent = LavalinkEventBase & {
+  type: "PlayerDestroyedEvent";
+};
+
+type PlayerReconnectingEvent = LavalinkEventBase & {
+  type: "PlayerReconnectingEvent";
+  reason?: string;
+};
+
+type PlayerConnectedEvent = LavalinkEventBase & {
+  type: "PlayerConnectedEvent";
+  voice?: Record<string, any>;
+};
+
+type EternalBoxInfoEvent = LavalinkEventBase & {
+  type: "EternalBoxInfoEvent";
+  info?: Record<string, any>;
+};
+
+type EternalBoxJumpEvent = LavalinkEventBase & {
+  type: "EternalBoxJumpEvent";
+  track?: ITrack;
+};
+
+type StreamMetadataEvent = LavalinkEventBase & {
+  type: "StreamMetadataEvent";
+  metadata?: Record<string, any>;
+};
+
 type WebSocketClosedEvent = LavalinkEventBase & {
   type: "WebSocketClosedEvent";
   code: number;
@@ -49,6 +141,23 @@ type LavalinkEventPayload =
   | TrackEndEvent
   | TrackStuckEvent
   | TrackExceptionEvent
+  | MixStartedEvent
+  | MixEndedEvent
+  | ConnectionStatusEvent
+  | VolumeChangedEvent
+  | FiltersChangedEvent
+  | SeekEvent
+  | PauseEvent
+  | PlayerCreatedEvent
+  | PlayerDestroyedEvent
+  | PlayerReconnectingEvent
+  | PlayerConnectedEvent
+  | EternalBoxInfoEvent
+  | EternalBoxJumpEvent
+  | StreamMetadataEvent
+  | LyricsFoundEvent
+  | LyricsLineEvent
+  | LyricsNotFoundEvent
   | WebSocketClosedEvent;
 
 export class Node {
@@ -84,6 +193,7 @@ export class Node {
   public stats?: INodeStats;
   public info?: any;
   public version?: string;
+  public isNodeLink: boolean = false;
   public url: string;
   public rest: Rest;
   private lastStats?: { players: number; playingPlayers: number };
@@ -132,6 +242,30 @@ export class Node {
       return Promise.reject(new Error("Node is not connected."));
     }
     return this.socket.ping();
+  }
+
+  /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+  public createYouTubeLiveChat(
+    identifier: string,
+    options?: YouTubeLiveChatOptions
+  ): YouTubeLiveChat {
+    if (!this.isNodeLink) {
+      throw nodeLinkOnlyError("youtubeLiveChat");
+    }
+    return new YouTubeLiveChat(this, identifier, options);
+  }
+
+  /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+  public async loadLyrics(
+    track: string | ITrack | Track | { encoded?: string },
+    lang?: string
+  ): Promise<NodeLinkResponse<ILyricsData | Record<string, any>> | null> {
+    const encoded =
+      typeof track === "string" ? track : track?.encoded;
+    if (!encoded) {
+      throw new Error("loadLyrics requires an encoded track string or object with an encoded field.");
+    }
+    return this.rest.loadLyrics(encoded, lang);
   }
 
   public get address(): string {
@@ -350,16 +484,37 @@ export class Node {
     );
 
     try {
-      const nodeInfo = await this.rest.getInfo();
-      if (nodeInfo) {
+      const infoResult = await this.rest.getInfoWithHeaders();
+      if (infoResult) {
+        const nodeInfo = infoResult.data;
+        const headers = infoResult.headers;
+        const headerFlag = headers?.iamnodelink;
+        const headerValue = Array.isArray(headerFlag) ? headerFlag[0] : headerFlag;
+        const headerIsNodeLink =
+          typeof headerValue === "string" && headerValue.toLowerCase() === "true";
+
+        this.isNodeLink = Boolean(nodeInfo?.isNodelink) || headerIsNodeLink;
         this.info = nodeInfo;
-        this.version = nodeInfo.version?.semver;
+        this.version = nodeInfo?.version?.semver;
+
+        if (this.isNodeLink) {
+          this.manager.emit(
+            "debug",
+            `Moonlink.js > Node >> NodeLink detected for ${this.identifier}.`
+          );
+        }
 
         this.capabilities.clear();
-        for (const source of nodeInfo.sourceManagers)
-          this.capabilities.add(`source:${source}`);
-        for (const filter of nodeInfo.filters)
-          this.capabilities.add(`filter:${filter}`);
+        if (Array.isArray(nodeInfo?.sourceManagers)) {
+          for (const source of nodeInfo.sourceManagers) {
+            this.capabilities.add(`source:${source}`);
+          }
+        }
+        if (Array.isArray(nodeInfo?.filters)) {
+          for (const filter of nodeInfo.filters) {
+            this.capabilities.add(`filter:${filter}`);
+          }
+        }
 
         this.manager.emit(
           "debug",
@@ -605,6 +760,7 @@ export class Node {
           time: currentState.time,
         });
 
+        this.manager.emit("playerUpdate", player, player.current ?? null, payload);
         player.voice.check(currentState.connected);
         break;
       case "event":
@@ -648,6 +804,57 @@ export class Node {
             break;
         case "TrackExceptionEvent":
             this.handleTrackException(player, payload);
+            break;
+        case "MixStartedEvent":
+            this.handleMixStarted(player, payload);
+            break;
+        case "MixEndedEvent":
+            this.handleMixEnded(player, payload);
+            break;
+        case "ConnectionStatusEvent":
+            this.handleConnectionStatus(player, payload);
+            break;
+        case "VolumeChangedEvent":
+            this.handleVolumeChanged(player, payload);
+            break;
+        case "FiltersChangedEvent":
+            this.handleFiltersChanged(player, payload);
+            break;
+        case "SeekEvent":
+            this.handleSeek(player, payload);
+            break;
+        case "PauseEvent":
+            this.handlePause(player, payload);
+            break;
+        case "PlayerCreatedEvent":
+            this.handlePlayerCreated(player, payload);
+            break;
+        case "PlayerDestroyedEvent":
+            this.handlePlayerDestroyed(player, payload);
+            break;
+        case "PlayerReconnectingEvent":
+            this.handlePlayerReconnecting(player, payload);
+            break;
+        case "PlayerConnectedEvent":
+            this.handlePlayerConnected(player, payload);
+            break;
+        case "EternalBoxInfoEvent":
+            this.handleEternalBoxInfo(player, payload);
+            break;
+        case "EternalBoxJumpEvent":
+            this.handleEternalBoxJump(player, payload);
+            break;
+        case "StreamMetadataEvent":
+            this.handleStreamMetadata(player, payload);
+            break;
+        case "LyricsFoundEvent":
+            this.handleLyricsFound(player, payload);
+            break;
+        case "LyricsLineEvent":
+            this.handleLyricsLine(player, payload);
+            break;
+        case "LyricsNotFoundEvent":
+            this.handleLyricsNotFound(player, payload);
             break;
         case "WebSocketClosedEvent":
             this.handleWebSocketClosed(player, payload);
@@ -693,7 +900,7 @@ export class Node {
 
   private async handleTrackEnd(player: any, payload: TrackEndEvent): Promise<void> {
     const { reason } = payload;
-    if (reason === "replaced") {
+    if (reason === "replaced" || reason === "gapless") {
       return;
     }
     const trackData = payload.track ?? player.current?.toJSON?.();
@@ -880,6 +1087,118 @@ export class Node {
     } else {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackException -> Exception count: ${exceptionCount}/3 for player ${player.guildId}, continuing playback.`);
     }
+  }
+
+  private handleMixStarted(player: any, payload: MixStartedEvent): void {
+    const trackData = payload.track;
+    const mixTrack = new (Structure.get("Track"))(trackData, trackData?.userData?.requester);
+    this.manager.emit("mixStart", player, payload.mixId, mixTrack, payload.volume, payload);
+  }
+
+  private handleMixEnded(player: any, payload: MixEndedEvent): void {
+    this.manager.emit("mixEnd", player, payload.mixId, payload.reason, payload);
+  }
+
+  private handleConnectionStatus(player: any, payload: ConnectionStatusEvent): void {
+    const statusValue = payload.status ?? payload.connected;
+    let connected: boolean | undefined;
+    if (typeof statusValue === "string") {
+      connected = statusValue.toLowerCase() === "connected";
+    } else if (typeof statusValue === "boolean") {
+      connected = statusValue;
+    }
+
+    if (typeof connected === "boolean") {
+      player.connected = connected;
+      player.voice.check(connected);
+      if (connected) {
+        this.manager.emit("playerConnected", player, payload);
+      } else {
+        this.manager.emit("playerDisconnected", player);
+      }
+    }
+
+    this.manager.emit("playerConnectionStatus", player, statusValue, payload);
+  }
+
+  private handleVolumeChanged(player: any, payload: VolumeChangedEvent): void {
+    if (typeof payload.volume === "number") {
+      const oldVolume = player.volume;
+      player.volume = payload.volume;
+      player.updateData("volume", player.volume);
+      this.manager.emit("playerChangedVolume", player, oldVolume, player.volume);
+    }
+  }
+
+  private handleFiltersChanged(player: any, payload: FiltersChangedEvent): void {
+    const filtersPayload = (payload.filters as any)?.filters ?? payload.filters;
+    if (filtersPayload && typeof filtersPayload === "object") {
+      Object.assign(player.filters, filtersPayload);
+      void player.updateData("filters", player.filters.toJSON());
+    }
+    this.manager.emit("filtersUpdate", player, player.filters);
+  }
+
+  private handleSeek(player: any, payload: SeekEvent): void {
+    if (typeof payload.position !== "number") return;
+    if (player.current) {
+      player.current.position = payload.position;
+      player.updateData("current.position", payload.position);
+    }
+    this.manager.emit("playerSeek", player, payload.position, payload);
+  }
+
+  private handlePause(player: any, payload: PauseEvent): void {
+    if (typeof payload.paused !== "boolean") return;
+    player.paused = payload.paused;
+    player.updateData("paused", player.paused);
+    this.manager.emit("playerPause", player, payload.paused, payload);
+  }
+
+  private handlePlayerCreated(player: any, payload: PlayerCreatedEvent): void {
+    this.manager.emit("playerCreated", player, payload);
+  }
+
+  private async handlePlayerDestroyed(player: any, payload: PlayerDestroyedEvent): Promise<void> {
+    this.manager.emit("playerDestroyed", player, payload);
+    if (!player.destroyed) {
+      await player.destroy("Remote player destroyed");
+    }
+  }
+
+  private handlePlayerReconnecting(player: any, payload: PlayerReconnectingEvent): void {
+    player.isResuming = true;
+    this.manager.emit("playerReconnect", player, payload.reason);
+  }
+
+  private handlePlayerConnected(player: any, payload: PlayerConnectedEvent): void {
+    player.isResuming = false;
+    player.connected = true;
+    this.manager.emit("playerConnected", player, payload);
+  }
+
+  private handleEternalBoxInfo(player: any, payload: EternalBoxInfoEvent): void {
+    this.manager.emit("eternalBoxInfo", player, payload);
+  }
+
+  private handleEternalBoxJump(player: any, payload: EternalBoxJumpEvent): void {
+    this.manager.emit("eternalBoxJump", player, payload);
+  }
+
+  private handleStreamMetadata(player: any, payload: StreamMetadataEvent): void {
+    this.manager.emit("streamMetadata", player, payload);
+  }
+
+  private handleLyricsFound(player: any, payload: LyricsFoundEvent): void {
+    this.manager.emit("lyricsFound", player, payload);
+  }
+
+  private handleLyricsLine(player: any, payload: LyricsLineEvent): void {
+    this.manager.emit("lyricsLine", player, payload);
+  }
+
+  private handleLyricsNotFound(player: any, payload: LyricsNotFoundEvent): void {
+    this.manager.emit("lyricsNotFound", player, payload);
   }
 
   private async handleWebSocketClosed(player: any, payload: WebSocketClosedEvent): Promise<void> {

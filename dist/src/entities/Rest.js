@@ -89,6 +89,14 @@ class Rest {
         });
         return res || null;
     }
+    async getInfoWithHeaders() {
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/info`, {
+            method: "GET",
+            headers: this.authHeaders,
+            returnHeaders: true
+        });
+        return res || null;
+    }
     async getVersion() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/version`, {
             method: "GET",
@@ -133,6 +141,233 @@ class Rest {
             }
         });
         return res || null;
+    }
+    async addMixLayer(guildId, data) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("mix:add");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
+            method: "POST",
+            headers: this.jsonHeaders,
+            body: data
+        });
+        return res || null;
+    }
+    async getMixLayers(guildId) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("mix:list");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async updateMixLayerVolume(guildId, mixId, volume) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("mix:update");
+        }
+        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
+            method: "PATCH",
+            headers: this.jsonHeaders,
+            body: { volume }
+        });
+    }
+    async removeMixLayer(guildId, mixId) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("mix:remove");
+        }
+        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
+            method: "DELETE",
+            headers: this.authHeaders
+        });
+    }
+    async loadLyrics(encodedTrack, lang) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("lyrics");
+        }
+        const params = new URLSearchParams();
+        params.append("encodedTrack", encodedTrack);
+        if (lang)
+            params.append("lang", lang);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadlyrics?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res ? (0, Util_1.normalizeNodeLinkResponse)(res, res.loadType) : null;
+    }
+    async loadChapters(encodedTrack) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("chapters");
+        }
+        const params = new URLSearchParams();
+        params.append("encodedTrack", encodedTrack);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadchapters?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "chapters") : null;
+    }
+    async loadMeaning(encodedTrack, lang) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("meaning");
+        }
+        const params = new URLSearchParams();
+        params.append("encodedTrack", encodedTrack);
+        if (lang)
+            params.append("lang", lang);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/meaning?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res ? (0, Util_1.normalizeNodeLinkResponse)(res, res.loadType) : null;
+    }
+    async getConnectionStatus() {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("connection");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/connection`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "connection") : null;
+    }
+    async getMetrics() {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("metrics");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/metrics`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async getWorkers() {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("workers:get");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/workers`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "workers") : null;
+    }
+    async patchWorker(payload) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("workers:patch");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/workers`, {
+            method: "PATCH",
+            headers: this.jsonHeaders,
+            body: payload
+        });
+        return res || null;
+    }
+    async getYoutubeConfig(validate = false) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("youtube:config");
+        }
+        const params = new URLSearchParams();
+        if (validate)
+            params.append("validate", "true");
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/config${params.toString() ? `?${params}` : ""}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async updateYoutubeConfig(payload) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("youtube:config");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/config`, {
+            method: "PATCH",
+            headers: this.jsonHeaders,
+            body: payload
+        });
+        return res || null;
+    }
+    async exchangeYoutubeOAuth(refreshToken) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("youtube:oauth");
+        }
+        const params = new URLSearchParams();
+        params.append("refreshToken", refreshToken);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/oauth?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async encodeTrackRemote(track) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("encodetrack");
+        }
+        const params = new URLSearchParams();
+        params.append("track", track);
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/encodetrack?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async encodeTracksRemote(tracks) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("encodedtracks");
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/encodedtracks`, {
+            method: "POST",
+            headers: this.jsonHeaders,
+            body: tracks
+        });
+        return res || null;
+    }
+    async trackStream(encodedTrack, itag) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("trackstream");
+        }
+        const params = new URLSearchParams();
+        params.append("encodedTrack", encodedTrack);
+        if (itag !== undefined && itag !== null) {
+            params.append("itag", String(itag));
+        }
+        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/trackstream?${params}`, {
+            method: "GET",
+            headers: this.authHeaders
+        });
+        return res || null;
+    }
+    async loadStream(payload) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("loadstream");
+        }
+        const res = await (0, Util_1.makeStreamRequest)(`${this.url}/v4/loadstream`, {
+            method: "POST",
+            headers: this.jsonHeaders,
+            body: payload
+        });
+        return { stream: res.stream, headers: res.headers };
+    }
+    async subscribeLyrics(guildId, skipTrackSource) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("lyrics:subscribe");
+        }
+        const params = new URLSearchParams();
+        if (skipTrackSource)
+            params.append("skipTrackSource", "true");
+        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe${params.toString() ? `?${params}` : ""}`, {
+            method: "POST",
+            headers: this.authHeaders
+        });
+    }
+    async unsubscribeLyrics(guildId) {
+        if (!this.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)("lyrics:unsubscribe");
+        }
+        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe`, {
+            method: "DELETE",
+            headers: this.authHeaders
+        });
     }
 }
 exports.Rest = Rest;

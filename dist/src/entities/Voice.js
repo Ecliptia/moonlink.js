@@ -14,6 +14,8 @@ class Voice extends Util_1.EventEmitter {
     connectPromise = null;
     reconnectionTimer = null;
     lastConnectionStatus = true;
+    lastVoiceUpdate = null;
+    voiceUpdateInFlight = false;
     constructor(player) {
         super();
         this.player = player;
@@ -32,6 +34,8 @@ class Voice extends Util_1.EventEmitter {
             this.sessionId = null;
             this.token = null;
             this.endpoint = null;
+            this.lastVoiceUpdate = null;
+            this.voiceUpdateInFlight = false;
         }
         this.emit("stateChange", state);
     }
@@ -262,17 +266,32 @@ class Voice extends Util_1.EventEmitter {
     }
     checkCompletion() {
         if (this.sessionId && this.token && this.endpoint) {
-            this.player.node.rest.updatePlayer(this.player.guildId, {
-                voice: {
-                    sessionId: this.sessionId,
-                    token: this.token,
-                    endpoint: this.endpoint
-                }
-            }).then(() => {
+            const voicePayload = {
+                sessionId: this.sessionId,
+                token: this.token,
+                endpoint: this.endpoint
+            };
+            if (this.player.node.isNodeLink) {
+                voicePayload.channelId = this.player.voiceChannelId;
+            }
+            const samePayload = this.lastVoiceUpdate
+                && this.lastVoiceUpdate.sessionId === voicePayload.sessionId
+                && this.lastVoiceUpdate.token === voicePayload.token
+                && this.lastVoiceUpdate.endpoint === voicePayload.endpoint
+                && this.lastVoiceUpdate.channelId === voicePayload.channelId;
+            if (samePayload && (this.state === types_1.VoiceConnectionState.CONNECTED || this.voiceUpdateInFlight)) {
+                return;
+            }
+            this.voiceUpdateInFlight = true;
+            this.player.updatePlayer({ voice: voicePayload }, true).then(() => {
+                this.voiceUpdateInFlight = false;
+                this.lastVoiceUpdate = { ...voicePayload };
                 this.isMoving = false;
                 this.setState(types_1.VoiceConnectionState.CONNECTED);
                 this.emit("connect");
             }).catch(e => {
+                this.voiceUpdateInFlight = false;
+                this.lastVoiceUpdate = null;
                 this.manager.emit("debug", `Failed to send voice update: ${e.message}`);
                 this.emit("disconnect", e);
             });

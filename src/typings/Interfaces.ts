@@ -23,15 +23,20 @@ export interface IManagerEvents {
     // Player Events
     playerCreate: (player: Player) => void;
     playerDestroy: (player: Player, reason?: string) => void;
-    playerUpdate: (player: Player, track: Track, payload: any) => void;
+    playerUpdate: (player: Player, track: Track | null, payload: any) => void;
     playerSwitchedNode: (player: Player, oldNode: Node, newNode: Node) => void;
     playerConnecting: (player: Player) => void;
-    playerConnected: (player: Player) => void;
+    playerConnected: (player: Player, payload?: any) => void;
     playerReady: (player: Player) => void;
     playerResuming: (player: Player) => void;
     playerResumed: (player: Player) => void;
     playerDisconnected: (player: Player) => void;
     playerReconnect: (player: Player, reason?: string) => void;
+    playerCreated: (player: Player, payload?: any) => void;
+    playerDestroyed: (player: Player, payload?: any) => void;
+    playerConnectionStatus: (player: Player, status: string | boolean | undefined, payload?: any) => void;
+    playerSeek: (player: Player, position: number, payload?: any) => void;
+    playerPause: (player: Player, paused: boolean, payload?: any) => void;
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
     playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
     playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
@@ -66,6 +71,11 @@ export interface IManagerEvents {
     trackEnd: (player: Player, track: Track, reason: TrackEndReason, payload?: any) => void;
     trackStuck: (player: Player, track: Track, threshold: number, payload?: any) => void;
     trackException: (player: Player, track: Track, exception: any, payload?: any) => void;
+    mixStart: (player: Player, mixId: string, track: Track, volume: number, payload?: any) => void;
+    mixEnd: (player: Player, mixId: string, reason: string, payload?: any) => void;
+    lyricsNotFound: (player: Player, payload?: any) => void;
+    lyricsFound: (player: Player, payload?: any) => void;
+    lyricsLine: (player: Player, payload?: any) => void;
 
     // Queue Events
     queueAdd: (player: Player, tracks: Track | Track[]) => void;
@@ -81,6 +91,9 @@ export interface IManagerEvents {
     voiceSessionChanged: (player: Player, oldSessionId: string | boolean, sessionId: string) => void;
     autoPlayed: (player: Player, track: Track, previousTrack: Track) => void;
     autoLeaved: (player: Player, lastTrack?: Track) => void;
+    streamMetadata: (player: Player, payload?: any) => void;
+    eternalBoxInfo: (player: Player, payload?: any) => void;
+    eternalBoxJump: (player: Player, payload?: any) => void;
 }
 
 export interface IManagerNodeConfig {
@@ -328,6 +341,47 @@ export interface IRotation {
     rotationHz?: number;
 }
 
+export interface IEcho {
+    delay?: number;
+    feedback?: number;
+    mix?: number;
+}
+
+export interface IChorus {
+    rate?: number;
+    depth?: number;
+    delay?: number;
+    mix?: number;
+    feedback?: number;
+}
+
+export interface ICompressor {
+    threshold?: number;
+    ratio?: number;
+    attack?: number;
+    release?: number;
+    gain?: number;
+}
+
+export interface IHighPass {
+    smoothing?: number;
+}
+
+export interface IPhaser {
+    stages?: number;
+    rate?: number;
+    depth?: number;
+    feedback?: number;
+    mix?: number;
+    minFrequency?: number;
+    maxFrequency?: number;
+}
+
+export interface ISpatial {
+    depth?: number;
+    rate?: number;
+}
+
 export interface IDistortion {
     sinOffset?: number;
     sinScale?: number;
@@ -361,7 +415,66 @@ export interface IFilters {
     distortion?: IDistortion;
     channelMix?: IChannelMix;
     lowPass?: ILowPass;
+    echo?: IEcho;
+    chorus?: IChorus;
+    compressor?: ICompressor;
+    highpass?: IHighPass;
+    phaser?: IPhaser;
+    spatial?: ISpatial;
     pluginFilters?: Record<string, any>;
+}
+
+export type FadingCurve = "linear" | "exponential" | "logarithmic" | "s-curve";
+
+export interface IFadingSection {
+    duration?: number;
+    curve?: FadingCurve;
+}
+
+export interface IFadingOptions {
+    enabled?: boolean;
+    trackStart?: IFadingSection;
+    trackEnd?: IFadingSection;
+    trackStop?: IFadingSection;
+    seek?: IFadingSection;
+    ducking?: IFadingSection;
+}
+
+export interface ILyricsLine {
+    text: string;
+    time: number | null;
+    duration: number | null;
+}
+
+export interface ILyricsData {
+    synced: boolean;
+    lang?: string;
+    source?: string;
+    lines: ILyricsLine[];
+}
+
+export interface ILyricsResponse {
+    loadType: "lyrics" | "empty";
+    data: ILyricsData | Record<string, any>;
+}
+
+export interface IMeaningResponse {
+    loadType: string;
+    data: Record<string, any>;
+}
+
+export interface IChapterThumbnail {
+    url: string;
+    width: number;
+    height: number;
+}
+
+export interface IChapter {
+    title: string;
+    startTime: number;
+    endTime?: number;
+    duration?: number;
+    thumbnails?: IChapterThumbnail[];
 }
 
 export type RoutePlannerType = "RotatingIpRoutePlanner" | "NanoIpRoutePlanner" | "RotatingNanoIpRoutePlanner" | "BalancingIpRoutePlanner";

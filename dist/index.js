@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.version = void 0;
+exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.version = void 0;
 exports.version = require("../package.json").version;
 const Util_1 = require("./src/Util");
 const Manager_1 = require("./src/core/Manager");
@@ -17,6 +17,10 @@ const Filters_1 = require("./src/entities/Filters");
 Object.defineProperty(exports, "Filters", { enumerable: true, get: function () { return Filters_1.Filters; } });
 const Track_1 = require("./src/entities/Track");
 Object.defineProperty(exports, "Track", { enumerable: true, get: function () { return Track_1.Track; } });
+const VoiceReceiver_1 = require("./src/entities/VoiceReceiver");
+Object.defineProperty(exports, "VoiceReceiver", { enumerable: true, get: function () { return VoiceReceiver_1.VoiceReceiver; } });
+const YouTubeLiveChat_1 = require("./src/entities/YouTubeLiveChat");
+Object.defineProperty(exports, "YouTubeLiveChat", { enumerable: true, get: function () { return YouTubeLiveChat_1.YouTubeLiveChat; } });
 const SearchResult_1 = require("./src/structures/SearchResult");
 Object.defineProperty(exports, "SearchResult", { enumerable: true, get: function () { return SearchResult_1.SearchResult; } });
 const NodeManager_1 = require("./src/managers/NodeManager");

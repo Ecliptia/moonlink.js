@@ -11,19 +11,69 @@ export declare abstract class Structure {
 }
 export declare function validate<T>(prop: T | undefined, validator: (value: T) => boolean, errorMessage: string): void;
 export declare function delay(ms: number): Promise<void>;
+export declare const NODELINK_URL = "https://github.com/PerformanC/NodeLink";
+export declare function nodeLinkOnlyError(feature: string): Error;
+export type NodeLinkResponse<T> = {
+    loadType?: string;
+    data: T;
+};
+export declare function normalizeNodeLinkResponse<T>(input: T | {
+    loadType?: string;
+    data?: T;
+}, fallbackLoadType?: string): NodeLinkResponse<T>;
 export declare function decodeTrack(encoded: string): ITrack;
 export declare function encodeTrack(track: ITrackInfo): string;
 export declare function generateUUID(host: string, port: number): string;
 export declare function Log(message: string, LogPath: string): void;
+export type ResponseWithHeaders<T> = {
+    data: T;
+    headers: http.IncomingHttpHeaders;
+};
 export declare function makeRequest<T = any>(initialUrl: string, options: http.RequestOptions & {
     body?: any;
+    returnHeaders: true;
+}, timeout?: number, retries?: number, retryDelay?: number, maxRedirects?: number): Promise<ResponseWithHeaders<T> | undefined>;
+export declare function makeRequest<T = any>(initialUrl: string, options: http.RequestOptions & {
+    body?: any;
+    returnHeaders?: false;
 }, timeout?: number, retries?: number, retryDelay?: number, maxRedirects?: number): Promise<T | undefined>;
+export type StreamResponse = {
+    stream: http.IncomingMessage;
+    statusCode: number;
+    headers: http.IncomingHttpHeaders;
+};
+export declare function makeStreamRequest(initialUrl: string, options: http.RequestOptions & {
+    body?: any;
+}, timeout?: number): Promise<StreamResponse>;
 export declare function stringifyWithReplacer(obj: any): string;
+export declare const nodeLinkSources: Set<string>;
 export declare const sources: {
     youtube: string;
     youtubemusic: string;
     soundcloud: string;
     local: string;
+    admsearch: string;
+    amsearch: string;
+    audiomack: string;
+    bcsearch: string;
+    bilibili: string;
+    dzsearch: string;
+    flowery: string;
+    ftts: string;
+    gaanasearch: string;
+    gtts: string;
+    jssearch: string;
+    lfsearch: string;
+    mcsearch: string;
+    ncsearch: string;
+    nicovideo: string;
+    pdsearch: string;
+    shsearch: string;
+    speak: string;
+    spsearch: string;
+    szsearch: string;
+    tdsearch: string;
+    vksearch: string;
 };
 export declare class Plugin {
     name: string;

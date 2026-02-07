@@ -1,11 +1,13 @@
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
+import { type NodeLinkResponse } from "../Util";
 import { PlayerLoop } from "../typings/types";
-import { IPlayerConfig } from "../typings/Interfaces";
+import { IPlayerConfig, IFadingOptions, IChapter, IMeaningResponse } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
+import { VoiceReceiver, VoiceReceiverOptions } from "./VoiceReceiver";
 export declare class Player {
     readonly manager: Manager;
     node: Node;
@@ -31,11 +33,20 @@ export declare class Player {
     previous: Track[];
     historySize: number;
     lastActivityTime: number;
+    private fading?;
+    private nextTrack?;
+    private audioTrackId?;
+    private loudnessNormalizer?;
+    private endTime?;
     constructor(manager: Manager, node: Node, config: IPlayerConfig);
     updateActivity(): void;
     set(key: string, value: unknown): this;
     get<T>(key: string): T | undefined;
     updateData<T>(path?: string, data?: T): Promise<void>;
+    private assertNodeLinkFeature;
+    private resolveEncodedTrack;
+    private sendPlayerUpdate;
+    updatePlayer(payload: Record<string, any>, noReplace?: boolean): Promise<any>;
     connect({ selfDeaf, selfMute }?: {
         selfDeaf?: boolean;
         selfMute?: boolean;
@@ -47,7 +58,28 @@ export declare class Player {
         requester?: any;
         position?: number;
         noReplace?: boolean;
+        audioTrackId?: string;
     } | Track): Promise<boolean>;
+    addMix(track: Track | string, options?: {
+        volume?: number;
+        userData?: Record<string, any>;
+    }): Promise<any | null>;
+    getMixes(): Promise<any | null>;
+    updateMixVolume(mixId: string, volume: number): Promise<this>;
+    removeMix(mixId: string): Promise<this>;
+    subscribeLyrics(options?: {
+        skipTrackSource?: boolean;
+    }): Promise<this>;
+    unsubscribeLyrics(): Promise<this>;
+    loadChapters(encodedTrack?: string): Promise<NodeLinkResponse<IChapter[]> | null>;
+    loadMeaning(encodedTrack?: string, lang?: string): Promise<NodeLinkResponse<IMeaningResponse | Record<string, any>> | null>;
+    setFading(fading: IFadingOptions): Promise<this>;
+    clearFading(): Promise<this>;
+    setNextTrack(track: Track | string, userData?: Record<string, any>): Promise<this>;
+    clearNextTrack(): Promise<this>;
+    setAudioTrackId(audioTrackId?: string): this;
+    setLoudnessNormalizer(enabled: boolean): Promise<this>;
+    createVoiceReceiver(options?: VoiceReceiverOptions): VoiceReceiver;
     pause(): Promise<this>;
     resume(options?: {
         timeout?: number;

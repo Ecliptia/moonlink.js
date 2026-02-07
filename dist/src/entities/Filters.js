@@ -13,10 +13,21 @@ class Filters {
     distortion;
     channelMix;
     lowPass;
+    echo;
+    chorus;
+    compressor;
+    highpass;
+    phaser;
+    spatial;
     pluginFilters;
     activeFilters = new Set();
     customDefinitions = new Map();
     player;
+    assertNodeLinkFeature(feature) {
+        if (!this.player.node.isNodeLink) {
+            throw (0, Util_1.nodeLinkOnlyError)(`filter:${feature}`);
+        }
+    }
     static BUILTIN_FILTERS = {
         "8d": { rotation: { rotationHz: 0.2 } },
         "nightcore": { timescale: { speed: 1.2, pitch: 1.2, rate: 1 } },
@@ -127,6 +138,12 @@ class Filters {
             distortion: this.distortion,
             channelMix: this.channelMix,
             lowPass: this.lowPass,
+            echo: this.echo,
+            chorus: this.chorus,
+            compressor: this.compressor,
+            highpass: this.highpass,
+            phaser: this.phaser,
+            spatial: this.spatial,
             pluginFilters: this.pluginFilters,
             activeFilters: [...this.activeFilters],
         };
@@ -235,6 +252,42 @@ class Filters {
         this._updateFilters();
         return this;
     }
+    setEcho(echo) {
+        this.assertNodeLinkFeature("echo");
+        this.echo = echo;
+        this._updateFilters();
+        return this;
+    }
+    setChorus(chorus) {
+        this.assertNodeLinkFeature("chorus");
+        this.chorus = chorus;
+        this._updateFilters();
+        return this;
+    }
+    setCompressor(compressor) {
+        this.assertNodeLinkFeature("compressor");
+        this.compressor = compressor;
+        this._updateFilters();
+        return this;
+    }
+    setHighPass(highpass) {
+        this.assertNodeLinkFeature("highpass");
+        this.highpass = highpass;
+        this._updateFilters();
+        return this;
+    }
+    setPhaser(phaser) {
+        this.assertNodeLinkFeature("phaser");
+        this.phaser = phaser;
+        this._updateFilters();
+        return this;
+    }
+    setSpatial(spatial) {
+        this.assertNodeLinkFeature("spatial");
+        this.spatial = spatial;
+        this._updateFilters();
+        return this;
+    }
     setSpeed(speed) {
         if (!this.timescale)
             this.timescale = {};
@@ -273,6 +326,18 @@ class Filters {
             this.channelMix = undefined;
         else if (filterName === "lowPass")
             this.lowPass = undefined;
+        else if (filterName === "echo")
+            this.echo = undefined;
+        else if (filterName === "chorus")
+            this.chorus = undefined;
+        else if (filterName === "compressor")
+            this.compressor = undefined;
+        else if (filterName === "highpass")
+            this.highpass = undefined;
+        else if (filterName === "phaser")
+            this.phaser = undefined;
+        else if (filterName === "spatial")
+            this.spatial = undefined;
         else if (this.pluginFilters && this.pluginFilters[filterName])
             delete this.pluginFilters[filterName];
         this._updateFilters();
@@ -294,6 +359,12 @@ class Filters {
         this.distortion = undefined;
         this.channelMix = undefined;
         this.lowPass = undefined;
+        this.echo = undefined;
+        this.chorus = undefined;
+        this.compressor = undefined;
+        this.highpass = undefined;
+        this.phaser = undefined;
+        this.spatial = undefined;
         this.pluginFilters = undefined;
         this.activeFilters.clear();
         this.player.manager.emit("debug", `Moonlink.js > Filters >> All filters cleared.`);
@@ -305,6 +376,9 @@ class Filters {
     }
     async apply() {
         let payload = {};
+        if (!this.player.node.isNodeLink && (this.echo || this.chorus || this.compressor || this.highpass || this.phaser || this.spatial)) {
+            throw (0, Util_1.nodeLinkOnlyError)("filters");
+        }
         for (const name of this.activeFilters) {
             const filter = this.getFilter(name);
             if (filter) {
@@ -322,6 +396,12 @@ class Filters {
             distortion: this.distortion,
             channelMix: this.channelMix,
             lowPass: this.lowPass,
+            echo: this.echo,
+            chorus: this.chorus,
+            compressor: this.compressor,
+            highpass: this.highpass,
+            phaser: this.phaser,
+            spatial: this.spatial,
             pluginFilters: this.pluginFilters,
         };
         for (const key in directFilters) {
@@ -331,7 +411,7 @@ class Filters {
         }
         this.player.manager.emit("debug", `Moonlink.js > Filters >> Applying filters: ${JSON.stringify(payload)}`);
         this.player.manager.emit("filtersUpdate", this.player, this);
-        const updatedPlayer = await this.player.node.rest.updatePlayer(this.player.guildId, { filters: payload });
+        const updatedPlayer = await this.player.updatePlayer({ filters: payload });
         if (updatedPlayer) {
             this.player.volume = updatedPlayer.volume;
         }

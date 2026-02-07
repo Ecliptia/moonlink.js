@@ -65,6 +65,35 @@ export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export const NODELINK_URL = "https://github.com/PerformanC/NodeLink";
+
+/** NodeLink-only guard helper. */
+export function nodeLinkOnlyError(feature: string): Error {
+  return new Error(
+    `NodeLink-only feature (${feature}). This node is not NodeLink. See ${NODELINK_URL}.`
+  );
+}
+
+export type NodeLinkResponse<T> = {
+  loadType?: string;
+  data: T;
+};
+
+/** Normalizes NodeLink responses that may vary in structure. */
+export function normalizeNodeLinkResponse<T>(
+  input: T | { loadType?: string; data?: T },
+  fallbackLoadType?: string
+): NodeLinkResponse<T> {
+  if (input && typeof input === "object" && "data" in input) {
+    const typed = input as { loadType?: string; data?: T };
+    return {
+      loadType: typed.loadType ?? fallbackLoadType,
+      data: typed.data as T,
+    };
+  }
+  return { loadType: fallbackLoadType, data: input as T };
+}
+
 export function decodeTrack(encoded: string): ITrack {
   const buffer = Buffer.from(encoded, "base64");
   let position = 0;
@@ -204,14 +233,38 @@ export function Log(message: string, LogPath: string): void {
   }
 }
 
+export type ResponseWithHeaders<T> = {
+  data: T;
+  headers: http.IncomingHttpHeaders;
+};
+
+export function makeRequest<T = any>(
+  initialUrl: string,
+  options: http.RequestOptions & { body?: any; returnHeaders: true },
+  timeout?: number,
+  retries?: number,
+  retryDelay?: number,
+  maxRedirects?: number
+): Promise<ResponseWithHeaders<T> | undefined>;
+
+export function makeRequest<T = any>(
+  initialUrl: string,
+  options: http.RequestOptions & { body?: any; returnHeaders?: false },
+  timeout?: number,
+  retries?: number,
+  retryDelay?: number,
+  maxRedirects?: number
+): Promise<T | undefined>;
+
 export async function makeRequest<T = any>(
   initialUrl: string,
-  options: http.RequestOptions & { body?: any },
+  options: http.RequestOptions & { body?: any; returnHeaders?: boolean },
   timeout = 100000,
   retries = 3,
   retryDelay = 1000,
   maxRedirects = 5
-): Promise<T | undefined> {
+): Promise<T | ResponseWithHeaders<T> | undefined> {
+  const { returnHeaders } = options;
   const supportsZstd =
     typeof (zlib as { createZstdDecompress?: () => zlib.ZstdDecompress })
       .createZstdDecompress === "function";
@@ -225,7 +278,7 @@ export async function makeRequest<T = any>(
       let redirectCount = 0;
 
       while (redirectCount <= maxRedirects) {
-        const result = await new Promise<T | { _redirect: string }>
+        const result = await new Promise<T | { _redirect: string } | ResponseWithHeaders<T>>
           ((resolve, reject) => {
             const urlObject = new URL(currentUrl);
             const transport = urlObject.protocol === "https:" ? https : http;
@@ -240,6 +293,7 @@ export async function makeRequest<T = any>(
                 "Accept-Encoding": acceptEncoding,
               },
             };
+            delete (requestOptions as { returnHeaders?: boolean }).returnHeaders;
             delete requestOptions.headers["host"];
 
             const req = transport.request(requestOptions, (res) => {
@@ -304,16 +358,36 @@ export async function makeRequest<T = any>(
 
                 if (body.length === 0) {
                   if (contentType.includes("application/json")) {
-                    return resolve({} as T);
+                    const emptyJson = {} as T;
+                    return resolve(
+                      returnHeaders
+                        ? { data: emptyJson, headers: res.headers }
+                        : emptyJson
+                    );
                   }
-                  return resolve("" as any);
+                  const emptyText = "" as any as T;
+                  return resolve(
+                    returnHeaders
+                      ? { data: emptyText, headers: res.headers }
+                      : emptyText
+                  );
                 }
 
                 try {
                   if (contentType.includes("application/json")) {
-                    return resolve(JSON.parse(body.toString()) as T);
+                    const parsedJson = JSON.parse(body.toString()) as T;
+                    return resolve(
+                      returnHeaders
+                        ? { data: parsedJson, headers: res.headers }
+                        : parsedJson
+                    );
                   }
-                  return resolve(body.toString() as any as T);
+                  const parsedText = body.toString() as any as T;
+                  return resolve(
+                    returnHeaders
+                      ? { data: parsedText, headers: res.headers }
+                      : parsedText
+                  );
                 } catch (err) {
                   return reject(
                     new Error(
@@ -382,6 +456,68 @@ export async function makeRequest<T = any>(
   return undefined;
 }
 
+export type StreamResponse = {
+  stream: http.IncomingMessage;
+  statusCode: number;
+  headers: http.IncomingHttpHeaders;
+};
+
+export async function makeStreamRequest(
+  initialUrl: string,
+  options: http.RequestOptions & { body?: any },
+  timeout = 100000
+): Promise<StreamResponse> {
+  return new Promise((resolve, reject) => {
+    const urlObject = new URL(initialUrl);
+    const transport = urlObject.protocol === "https:" ? https : http;
+
+    const requestOptions: http.RequestOptions = {
+      ...options,
+      hostname: urlObject.hostname,
+      port: urlObject.port || (urlObject.protocol === "https:" ? 443 : 80),
+      path: urlObject.pathname + urlObject.search,
+    };
+    delete requestOptions.headers?.["host"];
+
+    const req = transport.request(requestOptions, (res) => {
+      const statusCode = res.statusCode ?? 0;
+      if (statusCode < 200 || statusCode >= 300) {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () => {
+          const body = Buffer.concat(chunks).toString();
+          reject(new Error(`Stream request failed (${statusCode}): ${body || "Unknown error"}`));
+        });
+        return;
+      }
+      resolve({
+        stream: res,
+        statusCode,
+        headers: res.headers,
+      });
+    });
+
+    req.on("error", (err) => reject(new Error(`Stream request error: ${err.message}`)));
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Stream request timed out"));
+    });
+
+    req.setTimeout(timeout);
+
+    if (options.body) {
+      const bodyData =
+        typeof options.body === "object" && options.body !== null
+          ? JSON.stringify(options.body)
+          : options.body.toString();
+      req.setHeader("Content-Length", Buffer.byteLength(bodyData));
+      req.write(bodyData);
+    }
+
+    req.end();
+  });
+}
+
 export function stringifyWithReplacer(obj: any): string {
   const cache = new Set();
   return JSON.stringify(obj, (_key, value) => {
@@ -395,11 +531,59 @@ export function stringifyWithReplacer(obj: any): string {
   });
 }
 
+/** NodeLink-only search prefixes. See https://github.com/PerformanC/NodeLink */
+export const nodeLinkSources = new Set([
+  "admsearch",
+  "amsearch",
+  "audiomack",
+  "bcsearch",
+  "bilibili",
+  "dzsearch",
+  "flowery",
+  "ftts",
+  "gaanasearch",
+  "gtts",
+  "jssearch",
+  "lfsearch",
+  "mcsearch",
+  "ncsearch",
+  "nicovideo",
+  "pdsearch",
+  "shsearch",
+  "speak",
+  "spsearch",
+  "szsearch",
+  "tdsearch",
+  "vksearch",
+]);
+
 export const sources = {
   youtube: "ytsearch",
   youtubemusic: "ytmsearch",
   soundcloud: "scsearch",
   local: "local",
+  admsearch: "admsearch",
+  amsearch: "amsearch",
+  audiomack: "audiomack",
+  bcsearch: "bcsearch",
+  bilibili: "bilibili",
+  dzsearch: "dzsearch",
+  flowery: "flowery",
+  ftts: "ftts",
+  gaanasearch: "gaanasearch",
+  gtts: "gtts",
+  jssearch: "jssearch",
+  lfsearch: "lfsearch",
+  mcsearch: "mcsearch",
+  ncsearch: "ncsearch",
+  nicovideo: "nicovideo",
+  pdsearch: "pdsearch",
+  shsearch: "shsearch",
+  speak: "speak",
+  spsearch: "spsearch",
+  szsearch: "szsearch",
+  tdsearch: "tdsearch",
+  vksearch: "vksearch",
 };
 
 export class Plugin {

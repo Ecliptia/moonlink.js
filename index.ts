@@ -7,6 +7,8 @@ import { Queue } from "./src/entities/Queue";
 import { Rest } from "./src/entities/Rest";
 import { Filters } from "./src/entities/Filters";
 import { Track } from "./src/entities/Track";
+import { VoiceReceiver } from "./src/entities/VoiceReceiver";
+import { YouTubeLiveChat } from "./src/entities/YouTubeLiveChat";
 import { SearchResult } from "./src/structures/SearchResult";
 import { NodeManager } from "./src/managers/NodeManager";
 import { PlayerManager } from "./src/managers/PlayerManager";
@@ -32,6 +34,8 @@ export {
     Rest,
     Filters,
     Track,
+    VoiceReceiver,
+    YouTubeLiveChat,
     SearchResult,
     NodeManager,
     PlayerManager,
