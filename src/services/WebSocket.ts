@@ -362,7 +362,10 @@ export class WebSocket extends EventEmitter {
                             this.emit("pong", this.latency);
                             return;
                         }
-                    } catch (e) {}
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : String(error);
+                        this.emit("error", { error: new Error(`Failed to parse pong payload: ${message}`) });
+                    }
                 }
                 
                 this.emit("pong");

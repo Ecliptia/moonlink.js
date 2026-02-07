@@ -1,4 +1,4 @@
-import { IManagerNodeConfig, INodeStats } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import {
@@ -8,8 +8,48 @@ import {
   decodeTrack,
 } from "../Util";
 import { WebSocket } from "../services/WebSocket";
-import { NodeState, VoiceState } from "../typings/types";
+import { NodeState, TrackEndReason, VoiceState } from "../typings/types";
 import { Track } from "./Track";
+
+type LavalinkEventBase = {
+  op: "event";
+  guildId: string;
+};
+
+type TrackStartEvent = LavalinkEventBase & {
+  type: "TrackStartEvent";
+  track: ITrack;
+};
+
+type TrackEndEvent = LavalinkEventBase & {
+  type: "TrackEndEvent";
+  track: ITrack | null;
+  reason: TrackEndReason;
+};
+
+type TrackStuckEvent = LavalinkEventBase & {
+  type: "TrackStuckEvent";
+  thresholdMs: number;
+};
+
+type TrackExceptionEvent = LavalinkEventBase & {
+  type: "TrackExceptionEvent";
+  exception: { severity: string; message?: string } & Record<string, any>;
+};
+
+type WebSocketClosedEvent = LavalinkEventBase & {
+  type: "WebSocketClosedEvent";
+  code: number;
+  reason: string;
+  byRemote: boolean;
+};
+
+type LavalinkEventPayload =
+  | TrackStartEvent
+  | TrackEndEvent
+  | TrackStuckEvent
+  | TrackExceptionEvent
+  | WebSocketClosedEvent;
 
 export class Node {
   public readonly manager: Manager;
@@ -288,7 +328,11 @@ export class Node {
             this.manager.emit("playerRecoveryFailed", player);
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          this.manager.emit(
+            "debug",
+            `Moonlink.js > Node >> Player recovery failed for ${player.guildId}. Error: ${(error as Error).message}`
+          );
           this.manager.emit("playerRecoveryFailed", player);
         });
     }
@@ -576,7 +620,7 @@ export class Node {
             payload.type
           }, Payload: ${stringifyWithReplacer(payload)}.`
         );
-        this.handleEvent(player, payload);
+        this.handleEvent(player, payload as LavalinkEventPayload);
         loggedByCase = true;
         break;
       default:
@@ -591,7 +635,7 @@ export class Node {
     }
    }
 
-  protected handleEvent(player: any, payload: any): void {
+  protected handleEvent(player: any, payload: LavalinkEventPayload): void {
     switch (payload.type) {
         case "TrackStartEvent":
             this.handleTrackStart(player, payload);
@@ -611,7 +655,7 @@ export class Node {
     }
   }
 
-  private async handleTrackStart(player: any, payload: any): Promise<void> {
+  private async handleTrackStart(player: any, payload: TrackStartEvent): Promise<void> {
     const trackData = payload.track ?? player.current?.toJSON?.();
     const trackTitle = trackData?.info?.title ?? player.current?.title ?? "Unknown";
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackStart >> Track started for player ${player.guildId}: "${trackTitle}". Track: ${stringifyWithReplacer(trackData ?? payload.track)}.`);
@@ -647,7 +691,7 @@ export class Node {
     this.manager.emit("trackStart", player, trackForEvent);
   }
 
-  private async handleTrackEnd(player: any, payload: any): Promise<void> {
+  private async handleTrackEnd(player: any, payload: TrackEndEvent): Promise<void> {
     const { reason } = payload;
     if (reason === "replaced") {
       return;
@@ -660,10 +704,8 @@ export class Node {
         ? new (Structure.get("Track"))(trackData, player.current?.requester)
         : player.current;
 
-    if (reason !== "replaced") {
-      player.playing = false;
-      player.paused = false;
-    }
+    player.playing = false;
+    player.paused = false;
 
     player.set("isBackPlay", false);
     
@@ -740,7 +782,7 @@ export class Node {
     await this.handleQueueEnd(player, trackForEvent);
   }
 
-  private async handleTrackStuck(player: any, payload: any): Promise<void> {
+  private async handleTrackStuck(player: any, payload: TrackStuckEvent): Promise<void> {
     const track = player.current;
     const thresholdMs = payload.thresholdMs;
     
@@ -789,7 +831,7 @@ export class Node {
     }
   }
 
-  private async handleTrackException(player: any, payload: any): Promise<void> {
+  private async handleTrackException(player: any, payload: TrackExceptionEvent): Promise<void> {
     const track = player.current;
     const exception = payload.exception;
     
@@ -840,7 +882,7 @@ export class Node {
     }
   }
 
-  private async handleWebSocketClosed(player: any, payload: any): Promise<void> {
+  private async handleWebSocketClosed(player: any, payload: WebSocketClosedEvent): Promise<void> {
     const { code, reason, byRemote } = payload;
     
     if (player.destroyed) return;

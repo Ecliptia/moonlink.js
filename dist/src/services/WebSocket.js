@@ -312,7 +312,10 @@ class WebSocket extends node_events_1.EventEmitter {
                             return;
                         }
                     }
-                    catch (e) { }
+                    catch (error) {
+                        const message = error instanceof Error ? error.message : String(error);
+                        this.emit("error", { error: new Error(`Failed to parse pong payload: ${message}`) });
+                    }
                 }
                 this.emit("pong");
                 break;

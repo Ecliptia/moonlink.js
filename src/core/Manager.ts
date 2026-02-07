@@ -6,6 +6,7 @@ import {
     ITrack,
     ITrackInfo,
 } from "../typings/Interfaces";
+import type { DiscordGatewayPacket, DiscordVoicePacket } from "../typings/types";
 import { Structure, validate, EventEmitter, sources, decodeTrack, encodeTrack } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
@@ -191,24 +192,25 @@ export class Manager extends EventEmitter<IManagerEvents> {
         return result;
     }
 
-    public async packetUpdate(packet: any): Promise<void> {
-        if (!this.initialized || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
+    public async packetUpdate(packet: DiscordGatewayPacket): Promise<void> {
+        if (!this.initialized || !packet.t || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
 
-        const player = this.players.get(packet.d.guild_id);
+        const voicePacket = packet as DiscordVoicePacket;
+        const player = this.players.get(voicePacket.d.guild_id);
         if (!player) {
-            this.emit("debug", `Moonlink.js > Manager <- Received packet for non-existent player. GuildId: ${packet.d.guild_id}, Packet Type: ${packet.t}`);
+            this.emit("debug", `Moonlink.js > Manager <- Received packet for non-existent player. GuildId: ${voicePacket.d.guild_id}, Packet Type: ${voicePacket.t}`);
             return;
         }
 
-        switch (packet.t) {
+        switch (voicePacket.t) {
             case "VOICE_STATE_UPDATE":
-                if (packet.d.user_id !== this.clientId) return;
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
-                player.voice.handleStateUpdate(packet.d);
+                if (voicePacket.d.user_id !== this.clientId) return;
+                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
+                player.voice.handleStateUpdate(voicePacket.d);
                 break;
             case "VOICE_SERVER_UPDATE":
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${packet.d.guild_id}, Data: ${JSON.stringify(packet.d)}`);
-                player.voice.handleServerUpdate(packet.d);
+                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
+                player.voice.handleServerUpdate(voicePacket.d);
                 break;
         }
     }

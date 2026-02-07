@@ -211,7 +211,8 @@ class Node {
                     this.manager.emit("playerRecoveryFailed", player);
                 }
             })
-                .catch(() => {
+                .catch((error) => {
+                this.manager.emit("debug", `Moonlink.js > Node >> Player recovery failed for ${player.guildId}. Error: ${error.message}`);
                 this.manager.emit("playerRecoveryFailed", player);
             });
         }
@@ -495,10 +496,8 @@ class Node {
         const trackForEvent = trackData
             ? new (Util_1.Structure.get("Track"))(trackData, player.current?.requester)
             : player.current;
-        if (reason !== "replaced") {
-            player.playing = false;
-            player.paused = false;
-        }
+        player.playing = false;
+        player.paused = false;
         player.set("isBackPlay", false);
         if (trackForEvent) {
             this.manager.emit("trackEnd", player, trackForEvent, reason, payload);

@@ -2,6 +2,9 @@ import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 export declare class Rest {
     private readonly node;
+    private readonly authHeaders;
+    private readonly jsonHeaders;
+    private readonly userAgentHeaders;
     constructor(node: Node);
     get url(): string;
     getPlayers(): Promise<IRESTGetPlayers[] | null>;

@@ -4,9 +4,23 @@ import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, I
 
 export class Rest {
     private readonly node: Node;
+    private readonly authHeaders: Record<string, string>;
+    private readonly jsonHeaders: Record<string, string>;
+    private readonly userAgentHeaders: Record<string, string>;
 
     constructor(node: Node) {
         this.node = node;
+        this.authHeaders = {
+            "Authorization": this.node.password,
+            "User-Agent": this.node.manager.options?.userAgent
+        };
+        this.jsonHeaders = {
+            ...this.authHeaders,
+            "Content-Type": "application/json"
+        };
+        this.userAgentHeaders = {
+            "User-Agent": this.node.manager.options?.userAgent
+        };
     }
 
     public get url(): string {
@@ -16,10 +30,7 @@ export class Rest {
     public async getPlayers(): Promise<IRESTGetPlayers[] | null> {
         const res = await makeRequest<IRESTGetPlayers[]>(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -27,10 +38,7 @@ export class Rest {
     public async getPlayer(guildId: string): Promise<any | null> {
         const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -42,11 +50,7 @@ export class Rest {
         }
         const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
             method: "PATCH",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: data
         });
         return res || null;
@@ -55,10 +59,7 @@ export class Rest {
     public async destroyPlayer(guildId: string): Promise<void> {
         await makeRequest(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
     }
 
@@ -68,10 +69,7 @@ export class Rest {
 
         const res = await makeRequest<any>(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
 
         return res || { loadType: "empty", data: {} };
@@ -83,10 +81,7 @@ export class Rest {
 
         const res = await makeRequest<ITrack>(`${this.url}/v4/decodetrack?${params}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -94,11 +89,7 @@ export class Rest {
     public async decodeTracks(encodedTracks: string[]): Promise<ITrack[] | null> {
         const res = await makeRequest<ITrack[]>(`${this.url}/v4/decodetracks`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: encodedTracks
         });
         return res || null;
@@ -107,10 +98,7 @@ export class Rest {
     public async getInfo(): Promise<any | null> {
         const res = await makeRequest<any>(`${this.url}/v4/info`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -118,9 +106,7 @@ export class Rest {
     public async getVersion(): Promise<string | null> {
         const res = await makeRequest<string>(`${this.url}/version`, {
             method: "GET",
-            headers: {
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.userAgentHeaders
         });
         return res || null;
     }
@@ -128,10 +114,7 @@ export class Rest {
     public async getStats(): Promise<INodeStats | null> {
         const res = await makeRequest<INodeStats>(`${this.url}/v4/stats`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -139,10 +122,7 @@ export class Rest {
     public async getRoutePlannerStatus(): Promise<IRoutePlannerStatus | null> {
         const res = await makeRequest<IRoutePlannerStatus>(`${this.url}/v4/routeplanner/status`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -150,11 +130,7 @@ export class Rest {
     public async freeFailedAddress(address: string): Promise<void> {
         await makeRequest(`${this.url}/v4/routeplanner/free/address`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: { address }
         });
     }
@@ -162,21 +138,14 @@ export class Rest {
     public async freeAllFailedAddresses(): Promise<void> {
         await makeRequest(`${this.url}/v4/routeplanner/free/all`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
     }
 
     public async updateSession(resuming: boolean, timeout: number): Promise<any | null> {
         const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}`, {
             method: "PATCH",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: {
                 resuming,
                 timeout

@@ -4,8 +4,22 @@ exports.Rest = void 0;
 const Util_1 = require("../Util");
 class Rest {
     node;
+    authHeaders;
+    jsonHeaders;
+    userAgentHeaders;
     constructor(node) {
         this.node = node;
+        this.authHeaders = {
+            "Authorization": this.node.password,
+            "User-Agent": this.node.manager.options?.userAgent
+        };
+        this.jsonHeaders = {
+            ...this.authHeaders,
+            "Content-Type": "application/json"
+        };
+        this.userAgentHeaders = {
+            "User-Agent": this.node.manager.options?.userAgent
+        };
     }
     get url() {
         return `http${this.node.secure ? "s" : ""}://${this.node.host}:${this.node.port}`;
@@ -13,20 +27,14 @@ class Rest {
     async getPlayers() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
     async getPlayer(guildId) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
@@ -37,11 +45,7 @@ class Rest {
         }
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
             method: "PATCH",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: data
         });
         return res || null;
@@ -49,10 +53,7 @@ class Rest {
     async destroyPlayer(guildId) {
         await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
     }
     async loadTracks(identifier) {
@@ -60,10 +61,7 @@ class Rest {
         params.append("identifier", identifier);
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || { loadType: "empty", data: {} };
     }
@@ -72,21 +70,14 @@ class Rest {
         params.append("encodedTrack", encodedTrack);
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/decodetrack?${params}`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
     async decodeTracks(encodedTracks) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/decodetracks`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: encodedTracks
         });
         return res || null;
@@ -94,70 +85,48 @@ class Rest {
     async getInfo() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/info`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
     async getVersion() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/version`, {
             method: "GET",
-            headers: {
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.userAgentHeaders
         });
         return res || null;
     }
     async getStats() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/stats`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
     async getRoutePlannerStatus() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/status`, {
             method: "GET",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
         return res || null;
     }
     async freeFailedAddress(address) {
         await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/free/address`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: { address }
         });
     }
     async freeAllFailedAddresses() {
         await (0, Util_1.makeRequest)(`${this.url}/v4/routeplanner/free/all`, {
             method: "POST",
-            headers: {
-                "Authorization": this.node.password,
-                "User-Agent": this.node.manager.options?.userAgent
-            }
+            headers: this.authHeaders
         });
     }
     async updateSession(resuming, timeout) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}`, {
             method: "PATCH",
-            headers: {
-                "Authorization": this.node.password,
-                "Content-Type": "application/json",
-                "User-Agent": this.node.manager.options?.userAgent
-            },
+            headers: this.jsonHeaders,
             body: {
                 resuming,
                 timeout

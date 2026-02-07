@@ -94,33 +94,47 @@ class NodeManager {
         if (nodes.length <= 1) {
             return nodes[0];
         }
-        return nodes.sort((a, b) => {
-            switch (sortBy) {
-                case "leastPlayers":
-                case "players":
-                    return (a.stats?.players ?? 0) - (b.stats?.players ?? 0);
-                case "playingPlayers":
-                    return (a.stats?.playingPlayers ?? 0) - (b.stats?.playingPlayers ?? 0);
-                case "memory":
-                    return (a.stats?.memory?.used ?? 0) - (b.stats?.memory?.used ?? 0);
-                case "cpuLavalink":
-                    return (a.stats?.cpu?.lavalinkLoad ?? 0) - (b.stats?.cpu?.lavalinkLoad ?? 0);
-                case "cpuSystem":
-                    return (a.stats?.cpu?.systemLoad ?? 0) - (b.stats?.cpu?.systemLoad ?? 0);
-                case "uptime":
-                    return (b.stats?.uptime ?? 0) - (a.stats?.uptime ?? 0);
-                case "random":
-                    return Math.random() - 0.5;
-                case "priority":
-                    return (a.priority ?? 0) - (b.priority ?? 0);
-                case "leastLoad":
-                case "penalty":
-                default:
-                    const aPenalty = (a.stats?.players ?? 0) + ((a.stats?.cpu?.systemLoad ?? 0) * 100);
-                    const bPenalty = (b.stats?.players ?? 0) + ((b.stats?.cpu?.systemLoad ?? 0) * 100);
-                    return aPenalty - bPenalty;
-            }
-        })[0];
+        const scoredNodes = nodes.map((node) => {
+            const players = node.stats?.players ?? 0;
+            const cpuSystem = node.stats?.cpu?.systemLoad ?? 0;
+            return {
+                node,
+                players,
+                playingPlayers: node.stats?.playingPlayers ?? 0,
+                memory: node.stats?.memory?.used ?? 0,
+                cpuLavalink: node.stats?.cpu?.lavalinkLoad ?? 0,
+                cpuSystem,
+                uptime: node.stats?.uptime ?? 0,
+                priority: node.priority ?? 0,
+                penalty: players + (cpuSystem * 100),
+            };
+        });
+        if (sortBy === "random") {
+            return scoredNodes[Math.floor(Math.random() * scoredNodes.length)].node;
+        }
+        const pickLowest = (key) => scoredNodes.reduce((best, current) => (current[key] < best[key] ? current : best)).node;
+        const pickHighest = (key) => scoredNodes.reduce((best, current) => (current[key] > best[key] ? current : best)).node;
+        switch (sortBy) {
+            case "leastPlayers":
+            case "players":
+                return pickLowest("players");
+            case "playingPlayers":
+                return pickLowest("playingPlayers");
+            case "memory":
+                return pickLowest("memory");
+            case "cpuLavalink":
+                return pickLowest("cpuLavalink");
+            case "cpuSystem":
+                return pickLowest("cpuSystem");
+            case "uptime":
+                return pickHighest("uptime");
+            case "priority":
+                return pickLowest("priority");
+            case "leastLoad":
+            case "penalty":
+            default:
+                return pickLowest("penalty");
+        }
     }
     async eject(identifier) {
         const node = this.nodes.get(identifier);

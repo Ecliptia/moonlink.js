@@ -1,8 +1,39 @@
-import { IManagerNodeConfig, INodeStats } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import { WebSocket } from "../services/WebSocket";
-import { NodeState } from "../typings/types";
+import { NodeState, TrackEndReason } from "../typings/types";
+type LavalinkEventBase = {
+    op: "event";
+    guildId: string;
+};
+type TrackStartEvent = LavalinkEventBase & {
+    type: "TrackStartEvent";
+    track: ITrack;
+};
+type TrackEndEvent = LavalinkEventBase & {
+    type: "TrackEndEvent";
+    track: ITrack | null;
+    reason: TrackEndReason;
+};
+type TrackStuckEvent = LavalinkEventBase & {
+    type: "TrackStuckEvent";
+    thresholdMs: number;
+};
+type TrackExceptionEvent = LavalinkEventBase & {
+    type: "TrackExceptionEvent";
+    exception: {
+        severity: string;
+        message?: string;
+    } & Record<string, any>;
+};
+type WebSocketClosedEvent = LavalinkEventBase & {
+    type: "WebSocketClosedEvent";
+    code: number;
+    reason: string;
+    byRemote: boolean;
+};
+type LavalinkEventPayload = TrackStartEvent | TrackEndEvent | TrackStuckEvent | TrackExceptionEvent | WebSocketClosedEvent;
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -63,7 +94,7 @@ export declare class Node {
     protected message({ data }: {
         data: any;
     }): Promise<void>;
-    protected handleEvent(player: any, payload: any): void;
+    protected handleEvent(player: any, payload: LavalinkEventPayload): void;
     private handleTrackStart;
     private handleTrackEnd;
     private handleTrackStuck;
@@ -77,3 +108,4 @@ export declare class Node {
     destroy(): Promise<void>;
     private _resumePlayers;
 }
+export {};

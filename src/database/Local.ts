@@ -72,8 +72,11 @@ export class Local {
       const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
       this.walStream.write(dataToWrite);
       this.walBuffer = [];
-    } catch (e) {
-      // silent fail
+    } catch (error) {
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > LocalDB >> Failed to flush WAL buffer. Error: ${(error as Error).message}`
+      );
     }
   }
 
@@ -119,7 +122,10 @@ export class Local {
     try {
       this.walStream = createWriteStream(this.logPath, { flags: 'a' });
     } catch (err: any) {
-      // silent fail
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > LocalDB >> Failed to open WAL stream. Error: ${err.message}`
+      );
     }
   }
 
@@ -247,7 +253,10 @@ export class Local {
 
       await fs.promises.writeFile(this.logPath, '', 'utf-8');
     } catch (err: any) {
-      // silent fail
+      this.manager.emit(
+        "debug",
+        `Moonlink.js > LocalDB >> Failed to compact database. Error: ${err.message}`
+      );
     } finally {
       this.openWALStream();
     }

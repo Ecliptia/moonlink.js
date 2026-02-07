@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { VoiceConnectionState } from "../typings/types";
+import { VoiceConnectionState, VoiceStateUpdate, VoiceServerUpdate } from "../typings/types";
 import { EventEmitter } from "../Util";
 
 interface VoiceEvents {
@@ -170,7 +170,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
         });
     }
 
-    public async handleStateUpdate(data: { session_id: string; channel_id: string | null }): Promise<void> {
+    public async handleStateUpdate(data: VoiceStateUpdate): Promise<void> {
         if (!data.channel_id) {
             this.emit("disconnect");
             this.setState(VoiceConnectionState.DISCONNECTED);
@@ -201,7 +201,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
         this.checkCompletion();
     }
 
-    public handleServerUpdate(data: { token: string; endpoint: string }): void {
+    public handleServerUpdate(data: VoiceServerUpdate): void {
         if (this.state === VoiceConnectionState.DESTROYED) return;
 
         this.token = data.token;

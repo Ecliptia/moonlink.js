@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { VoiceConnectionState } from "../typings/types";
+import { VoiceConnectionState, VoiceStateUpdate, VoiceServerUpdate } from "../typings/types";
 import { EventEmitter } from "../Util";
 interface VoiceEvents {
     stateChange: (state: VoiceConnectionState) => void;
@@ -25,14 +25,8 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
         selfMute: boolean;
     }): Promise<void>;
     disconnect(): Promise<void>;
-    handleStateUpdate(data: {
-        session_id: string;
-        channel_id: string | null;
-    }): Promise<void>;
-    handleServerUpdate(data: {
-        token: string;
-        endpoint: string;
-    }): void;
+    handleStateUpdate(data: VoiceStateUpdate): Promise<void>;
+    handleServerUpdate(data: VoiceServerUpdate): void;
     check(connected: boolean): void;
     private recover;
     private checkCompletion;
