@@ -13,4 +13,6 @@ import { NodeManager } from "./src/managers/NodeManager";
 import { PlayerManager } from "./src/managers/PlayerManager";
 import { WebSocket } from "./src/services/WebSocket";
 import { Connectors } from "./src/connectors";
-export { Manager, Node, Player, Queue, Rest, Filters, Track, VoiceReceiver, YouTubeLiveChat, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, };
+import { SpotifySource } from "./src/sources/spotify";
+import { DeezerSource } from "./src/sources/deezer";
+export { Manager, Node, Player, Queue, Rest, Filters, Track, VoiceReceiver, YouTubeLiveChat, SpotifySource, DeezerSource, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, };

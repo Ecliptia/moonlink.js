@@ -910,14 +910,14 @@ class Node {
                 this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using YouTube Mix for autoPlay in player ${player.guildId}. URI: ${uri}.`);
                 break;
             case "spotify":
-                if (this.capabilities.has("search:sprec")) {
+                if (this.isNodeLink && this.capabilities.has("source:spotify")) {
                     uri = `seed_tracks=${identifier}`;
                     searchSource = "sprec";
                     this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Spotify recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
                 }
                 break;
             case "deezer":
-                if (this.capabilities.has("search:dzrec")) {
+                if (this.isNodeLink && this.capabilities.has("source:deezer")) {
                     uri = identifier;
                     searchSource = "dzrec";
                     this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Deezer recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
@@ -929,7 +929,7 @@ class Node {
                 this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using SoundCloud artist search for autoPlay in player ${player.guildId}. URI: ${uri}.`);
                 break;
             case "applemusic":
-                if (this.capabilities.has("search:amrec")) {
+                if (this.isNodeLink && this.capabilities.has("source:applemusic")) {
                     uri = identifier;
                     searchSource = "amrec";
                     this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Apple Music recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);

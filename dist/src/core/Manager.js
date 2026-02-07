@@ -4,6 +4,8 @@ exports.Manager = void 0;
 const Util_1 = require("../Util");
 const DatabaseManager_1 = require("../managers/DatabaseManager");
 const __1 = require("../..");
+const spotify_1 = require("../sources/spotify");
+const deezer_1 = require("../sources/deezer");
 class Manager extends Util_1.EventEmitter {
     initialized = false;
     options;
@@ -13,6 +15,8 @@ class Manager extends Util_1.EventEmitter {
     players;
     database;
     idleCheckInterval;
+    spotifySource;
+    deezerSource;
     get readyNodes() {
         return this.nodes.ready;
     }
@@ -68,6 +72,12 @@ class Manager extends Util_1.EventEmitter {
             sources: {
                 disabledSources: []
             },
+            spotify: {
+                enabled: false
+            },
+            deezer: {
+                enabled: false
+            },
             playerDestruction: {
                 autoDestroyOnIdle: false,
                 idleTimeout: 300000
@@ -122,9 +132,71 @@ class Manager extends Util_1.EventEmitter {
             }
         }, 60000);
     }
+    isSpotifyEnabled() {
+        const config = this.options.spotify;
+        if (!config)
+            return false;
+        if (config.enabled !== undefined)
+            return config.enabled;
+        return Boolean(config.clientId || config.clientSecret || config.accessToken);
+    }
+    isDeezerEnabled() {
+        const config = this.options.deezer;
+        if (!config)
+            return false;
+        if (config.enabled !== undefined)
+            return config.enabled;
+        return true;
+    }
+    getSpotifySource() {
+        if (!this.isSpotifyEnabled())
+            return null;
+        if (!this.spotifySource) {
+            this.spotifySource = new spotify_1.SpotifySource(this);
+        }
+        return this.spotifySource;
+    }
+    getDeezerSource() {
+        if (!this.isDeezerEnabled())
+            return null;
+        if (!this.deezerSource) {
+            this.deezerSource = new deezer_1.DeezerSource(this);
+        }
+        return this.deezerSource;
+    }
+    async resolveNativeSource(options) {
+        let query = options.query;
+        const source = options.source?.toLowerCase();
+        if (source === "spotify") {
+            query = `spsearch:${options.query}`;
+        }
+        else if (source === "spsearch" || source === "sprec") {
+            query = `${source}:${options.query}`;
+        }
+        else if (source === "deezer") {
+            query = `dzsearch:${options.query}`;
+        }
+        else if (source === "dzsearch") {
+            query = `dzsearch:${options.query}`;
+        }
+        const spotify = this.getSpotifySource();
+        if (spotify && spotify.match(query)) {
+            return spotify.load(query);
+        }
+        const deezer = this.getDeezerSource();
+        if (deezer && deezer.match(query)) {
+            return deezer.load(query);
+        }
+        return null;
+    }
     async search(options) {
         (0, Util_1.validate)(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         (0, Util_1.validate)(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
+        const nativeResult = await this.resolveNativeSource(options);
+        if (nativeResult) {
+            this.emit("debug", `Moonlink.js > Manager <- Native source result for query \"${options.query}\". LoadType: ${nativeResult.loadType}`);
+            return new (Util_1.Structure.get("SearchResult"))(nativeResult, options.requester, this.options.search?.playlistLoadLimit);
+        }
         const node = options.node ? this.nodes.nodes.get(options.node) : this.nodes.findNode();
         if (!node) {
             throw new Error("Moonlink.js > Search > No available nodes for searching.");

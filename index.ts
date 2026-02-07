@@ -14,6 +14,8 @@ import { NodeManager } from "./src/managers/NodeManager";
 import { PlayerManager } from "./src/managers/PlayerManager";
 import { WebSocket } from "./src/services/WebSocket";
 import { Connectors } from "./src/connectors";
+import { SpotifySource } from "./src/sources/spotify";
+import { DeezerSource } from "./src/sources/deezer";
 
 Structure.register("Node", Node);
 Structure.register("Player", Player);
@@ -36,6 +38,8 @@ export {
     Track,
     VoiceReceiver,
     YouTubeLiveChat,
+    SpotifySource,
+    DeezerSource,
     SearchResult,
     NodeManager,
     PlayerManager,

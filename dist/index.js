@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.version = void 0;
+exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.DeezerSource = exports.SpotifySource = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.version = void 0;
 exports.version = require("../package.json").version;
 const Util_1 = require("./src/Util");
 const Manager_1 = require("./src/core/Manager");
@@ -31,6 +31,10 @@ const WebSocket_1 = require("./src/services/WebSocket");
 Object.defineProperty(exports, "WebSocket", { enumerable: true, get: function () { return WebSocket_1.WebSocket; } });
 const connectors_1 = require("./src/connectors");
 Object.defineProperty(exports, "Connectors", { enumerable: true, get: function () { return connectors_1.Connectors; } });
+const spotify_1 = require("./src/sources/spotify");
+Object.defineProperty(exports, "SpotifySource", { enumerable: true, get: function () { return spotify_1.SpotifySource; } });
+const deezer_1 = require("./src/sources/deezer");
+Object.defineProperty(exports, "DeezerSource", { enumerable: true, get: function () { return deezer_1.DeezerSource; } });
 Util_1.Structure.register("Node", Node_1.Node);
 Util_1.Structure.register("Player", Player_1.Player);
 Util_1.Structure.register("Queue", Queue_1.Queue);

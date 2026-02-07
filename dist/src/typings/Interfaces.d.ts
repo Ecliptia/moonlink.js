@@ -105,6 +105,8 @@ export interface IManagerOptionsConfig {
     search?: ISearchOptions;
     queue?: IQueueOptions;
     sources?: ISourceOptions;
+    spotify?: ISpotifyOptions;
+    deezer?: IDeezerOptions;
     playerDestruction?: IPlayerDestructionOptions;
     trackHandling?: ITrackHandlingOptions;
     trackPartial?: TPartialTrackProperties[];
@@ -150,6 +152,28 @@ export interface IQueueOptions {
 }
 export interface ISourceOptions {
     disabledSources?: string[];
+}
+export interface ISpotifyOptions {
+    enabled?: boolean;
+    clientId?: string;
+    clientSecret?: string;
+    accessToken?: string;
+    accessTokenExpiresAt?: number;
+    market?: string;
+    limitLoadSearch?: number;
+    limitLoadPlaylist?: number;
+    limitLoadAlbum?: number;
+    limitLoadArtist?: number;
+    limitLoadPlaylistPage?: number;
+    limitLoadAlbumPage?: number;
+    limitLoadRecommendations?: number;
+}
+export interface IDeezerOptions {
+    enabled?: boolean;
+    maxSearchResults?: number;
+    maxPlaylistTracks?: number;
+    maxAlbumTracks?: number;
+    maxArtistTracks?: number;
 }
 export interface IPlayerDestructionOptions {
     autoDestroyOnIdle?: boolean;

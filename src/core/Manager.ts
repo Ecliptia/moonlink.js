@@ -5,6 +5,7 @@ import {
     ISearchQuery,
     ITrack,
     ITrackInfo,
+    IRESTLoadTracks,
 } from "../typings/Interfaces";
 import type { DiscordGatewayPacket, DiscordVoicePacket } from "../typings/types";
 import { Structure, validate, EventEmitter, sources, nodeLinkSources, nodeLinkOnlyError, decodeTrack, encodeTrack } from "../Util";
@@ -12,6 +13,8 @@ import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
 import { version } from "../..";
+import { SpotifySource } from "../sources/spotify";
+import { DeezerSource } from "../sources/deezer";
 
 export class Manager extends EventEmitter<IManagerEvents> {
     public initialized: boolean = false;
@@ -22,6 +25,8 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public readonly players: PlayerManager;
     public database: DatabaseManager;
     private idleCheckInterval?: NodeJS.Timeout;
+    private spotifySource?: SpotifySource;
+    private deezerSource?: DeezerSource;
 
     public get readyNodes() {
         return this.nodes.ready;
@@ -81,6 +86,12 @@ export class Manager extends EventEmitter<IManagerEvents> {
             },
             sources: {
                 disabledSources: []
+            },
+            spotify: {
+                enabled: false
+            },
+            deezer: {
+                enabled: false
             },
             playerDestruction: {
                 autoDestroyOnIdle: false,
@@ -145,9 +156,76 @@ export class Manager extends EventEmitter<IManagerEvents> {
         }, 60000);
     }
 
+    private isSpotifyEnabled(): boolean {
+        const config = this.options.spotify;
+        if (!config) return false;
+        if (config.enabled !== undefined) return config.enabled;
+        return Boolean(config.clientId || config.clientSecret || config.accessToken);
+    }
+
+    private isDeezerEnabled(): boolean {
+        const config = this.options.deezer;
+        if (!config) return false;
+        if (config.enabled !== undefined) return config.enabled;
+        return true;
+    }
+
+    private getSpotifySource(): SpotifySource | null {
+        if (!this.isSpotifyEnabled()) return null;
+        if (!this.spotifySource) {
+            this.spotifySource = new SpotifySource(this);
+        }
+        return this.spotifySource;
+    }
+
+    private getDeezerSource(): DeezerSource | null {
+        if (!this.isDeezerEnabled()) return null;
+        if (!this.deezerSource) {
+            this.deezerSource = new DeezerSource(this);
+        }
+        return this.deezerSource;
+    }
+
+    private async resolveNativeSource(options: ISearchQuery): Promise<IRESTLoadTracks | null> {
+        let query = options.query;
+        const source = options.source?.toLowerCase();
+
+        if (source === "spotify") {
+            query = `spsearch:${options.query}`;
+        } else if (source === "spsearch" || source === "sprec") {
+            query = `${source}:${options.query}`;
+        } else if (source === "deezer") {
+            query = `dzsearch:${options.query}`;
+        } else if (source === "dzsearch") {
+            query = `dzsearch:${options.query}`;
+        }
+
+        const spotify = this.getSpotifySource();
+        if (spotify && spotify.match(query)) {
+            return spotify.load(query);
+        }
+
+        const deezer = this.getDeezerSource();
+        if (deezer && deezer.match(query)) {
+            return deezer.load(query);
+        }
+
+        return null;
+    }
+
     public async search(options: ISearchQuery): Promise<any> {
         validate(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         validate(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
+
+        const nativeResult = await this.resolveNativeSource(options);
+        if (nativeResult) {
+            this.emit("debug", `Moonlink.js > Manager <- Native source result for query \"${options.query}\". LoadType: ${nativeResult.loadType}`);
+            return new (Structure.get("SearchResult"))(
+                nativeResult,
+                options.requester,
+                this.options.search?.playlistLoadLimit
+            );
+        }
 
         const node = options.node ? this.nodes.nodes.get(options.node) : this.nodes.findNode();
         if (!node) {
