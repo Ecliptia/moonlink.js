@@ -192,6 +192,11 @@ function Log(message, LogPath) {
     }
 }
 async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, retryDelay = 1000, maxRedirects = 5) {
+    const supportsZstd = typeof node_zlib_1.default
+        .createZstdDecompress === "function";
+    const acceptEncoding = supportsZstd
+        ? "gzip, deflate, br, zstd"
+        : "gzip, deflate, br";
     let currentUrl = initialUrl;
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
@@ -207,7 +212,7 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                         path: urlObject.pathname + urlObject.search,
                         headers: {
                             ...options.headers,
-                            "Accept-Encoding": "gzip, deflate, br",
+                            "Accept-Encoding": acceptEncoding,
                         },
                     };
                     delete requestOptions.headers["host"];
@@ -227,15 +232,26 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                             return reject(new Error(`Server responded with status ${statusCode}`));
                         }
                         let stream = res;
-                        const encoding = res.headers["content-encoding"];
-                        if (encoding === "gzip") {
+                        const encodingHeader = res.headers["content-encoding"];
+                        const encoding = Array.isArray(encodingHeader)
+                            ? encodingHeader[0]
+                            : encodingHeader;
+                        const normalizedEncoding = typeof encoding === "string" ? encoding.toLowerCase() : undefined;
+                        if (normalizedEncoding === "gzip") {
                             stream = res.pipe(node_zlib_1.default.createGunzip());
                         }
-                        else if (encoding === "deflate") {
+                        else if (normalizedEncoding === "deflate") {
                             stream = res.pipe(node_zlib_1.default.createInflate());
                         }
-                        else if (encoding === "br") {
+                        else if (normalizedEncoding === "br") {
                             stream = res.pipe(node_zlib_1.default.createBrotliDecompress());
+                        }
+                        else if (normalizedEncoding === "zstd") {
+                            if (!supportsZstd) {
+                                req.destroy();
+                                return reject(new Error("Zstd is not supported by this Node.js runtime."));
+                            }
+                            stream = res.pipe(node_zlib_1.default.createZstdDecompress());
                         }
                         const chunks = [];
                         stream.on("data", (chunk) => chunks.push(chunk));

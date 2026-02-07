@@ -212,6 +212,12 @@ export async function makeRequest<T = any>(
   retryDelay = 1000,
   maxRedirects = 5
 ): Promise<T | undefined> {
+  const supportsZstd =
+    typeof (zlib as { createZstdDecompress?: () => zlib.ZstdDecompress })
+      .createZstdDecompress === "function";
+  const acceptEncoding = supportsZstd
+    ? "gzip, deflate, br, zstd"
+    : "gzip, deflate, br";
   let currentUrl = initialUrl;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -231,7 +237,7 @@ export async function makeRequest<T = any>(
               path: urlObject.pathname + urlObject.search,
               headers: {
                 ...options.headers,
-                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Encoding": acceptEncoding,
               },
             };
             delete requestOptions.headers["host"];
@@ -263,14 +269,27 @@ export async function makeRequest<T = any>(
                 | zlib.Gunzip
                 | zlib.Inflate
                 | zlib.BrotliDecompress = res;
-              const encoding = res.headers["content-encoding"];
+              const encodingHeader = res.headers["content-encoding"];
+              const encoding = Array.isArray(encodingHeader)
+                ? encodingHeader[0]
+                : encodingHeader;
+              const normalizedEncoding =
+                typeof encoding === "string" ? encoding.toLowerCase() : undefined;
 
-              if (encoding === "gzip") {
+              if (normalizedEncoding === "gzip") {
                 stream = res.pipe(zlib.createGunzip());
-              } else if (encoding === "deflate") {
+              } else if (normalizedEncoding === "deflate") {
                 stream = res.pipe(zlib.createInflate());
-              } else if (encoding === "br") {
+              } else if (normalizedEncoding === "br") {
                 stream = res.pipe(zlib.createBrotliDecompress());
+              } else if (normalizedEncoding === "zstd") {
+                if (!supportsZstd) {
+                  req.destroy();
+                  return reject(new Error("Zstd is not supported by this Node.js runtime."));
+                }
+                stream = res.pipe(
+                  (zlib as { createZstdDecompress: () => zlib.ZstdDecompress }).createZstdDecompress()
+                );
               }
 
               const chunks: Buffer[] = [];
