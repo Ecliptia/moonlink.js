@@ -73,6 +73,7 @@ class Player {
         return this;
     }
     async disconnect() {
+        this.set("userInitiatedConnect", false);
         await this.voice.disconnect();
         return this;
     }

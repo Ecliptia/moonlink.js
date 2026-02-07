@@ -89,6 +89,7 @@ export class Player {
     }
 
     public async disconnect(): Promise<this> {
+        this.set("userInitiatedConnect", false);
         await this.voice.disconnect();
         return this;
     }

@@ -36,8 +36,17 @@ class Voice extends Util_1.EventEmitter {
         this.emit("stateChange", state);
     }
     connect(options) {
-        if (this.state === types_1.VoiceConnectionState.CONNECTED) {
+        if (!this.player.voiceChannelId) {
+            this.manager.emit("debug", `Moonlink.js > Voice#connect >> Missing voiceChannelId for guild ${this.player.guildId}, skipping connect.`);
+            this.setState(types_1.VoiceConnectionState.DISCONNECTED);
             return Promise.resolve();
+        }
+        if (this.state === types_1.VoiceConnectionState.CONNECTED && this.sessionId && this.token && this.endpoint) {
+            return Promise.resolve();
+        }
+        if (this.state === types_1.VoiceConnectionState.CONNECTED) {
+            this.manager.emit("debug", `Moonlink.js > Voice#connect >> Connected state without voice data for guild ${this.player.guildId}, forcing reconnect.`);
+            this.setState(types_1.VoiceConnectionState.DISCONNECTED);
         }
         if (!this.connectPromise) {
             this.connectPromise = new Promise((resolve, reject) => {
@@ -98,6 +107,12 @@ class Voice extends Util_1.EventEmitter {
             this.connectionTimeout = null;
         }
         this.connectPromise = null;
+        if (this.state === types_1.VoiceConnectionState.CONNECTING || !this.player.voiceChannelId) {
+            this.manager.emit("debug", `Moonlink.js > Voice#disconnect >> Skipping voice disconnect for guild ${this.player.guildId} (state: ${types_1.VoiceConnectionState[this.state]}, voiceChannelId: ${this.player.voiceChannelId ?? "null"}).`);
+            this.setState(types_1.VoiceConnectionState.DISCONNECTED);
+            this.emit("disconnect");
+            return Promise.resolve();
+        }
         if (this.state === types_1.VoiceConnectionState.DESTROYED) {
             this.setState(types_1.VoiceConnectionState.DISCONNECTED);
             return Promise.resolve();
@@ -170,6 +185,16 @@ class Voice extends Util_1.EventEmitter {
             }
             this.player.set("consecutiveConnectionFailures", 0);
             this.manager.emit("debug", `Player ${this.player.guildId} is idle, clearing any pending reconnection checks.`);
+            return;
+        }
+        if (!connected && !this.player.get("userInitiatedConnect")) {
+            if (this.reconnectionTimer) {
+                clearTimeout(this.reconnectionTimer);
+                this.reconnectionTimer = null;
+            }
+            this.player.set("consecutiveConnectionFailures", 0);
+            this.lastConnectionStatus = false;
+            this.manager.emit("debug", `Player ${this.player.guildId} recovery skipped: connection not user-initiated.`);
             return;
         }
         if (connected) {
