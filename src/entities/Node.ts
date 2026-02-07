@@ -697,6 +697,10 @@ export class Node {
           player.updateData("current.position", currentState.position);
         }
 
+        if (player.playing && !player.paused && currentState.connected) {
+          player.updateActivity();
+        }
+
         let logMessage = `Moonlink.js > Node#handleMessage >> Player ${
           player.guildId
         } state updated. CurrentState: ${stringifyWithReplacer(
@@ -869,6 +873,7 @@ export class Node {
     
     player.playing = true;
     player.paused = false;
+    player.updateActivity();
     
     if (player.current) {
         player.current.position = 0;
@@ -913,6 +918,7 @@ export class Node {
 
     player.playing = false;
     player.paused = false;
+    player.updateActivity();
 
     player.set("isBackPlay", false);
     
@@ -1152,6 +1158,7 @@ export class Node {
     if (typeof payload.paused !== "boolean") return;
     player.paused = payload.paused;
     player.updateData("paused", player.paused);
+    player.updateActivity();
     this.manager.emit("playerPause", player, payload.paused, payload);
   }
 

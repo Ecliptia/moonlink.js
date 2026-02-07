@@ -402,6 +402,9 @@ class Node {
                     player.current.time = currentState.time;
                     player.updateData("current.position", currentState.position);
                 }
+                if (player.playing && !player.paused && currentState.connected) {
+                    player.updateActivity();
+                }
                 let logMessage = `Moonlink.js > Node#handleMessage >> Player ${player.guildId} state updated. CurrentState: ${(0, Util_1.stringifyWithReplacer)(currentState)}.`;
                 let shouldLog = false;
                 const lastState = player.get("lastState");
@@ -544,6 +547,7 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackStart >> Track started for player ${player.guildId}: "${trackTitle}". Track: ${(0, Util_1.stringifyWithReplacer)(trackData ?? payload.track)}.`);
         player.playing = true;
         player.paused = false;
+        player.updateActivity();
         if (player.current) {
             player.current.position = 0;
         }
@@ -580,6 +584,7 @@ class Node {
             : player.current;
         player.playing = false;
         player.paused = false;
+        player.updateActivity();
         player.set("isBackPlay", false);
         if (trackForEvent) {
             this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
@@ -795,6 +800,7 @@ class Node {
             return;
         player.paused = payload.paused;
         player.updateData("paused", player.paused);
+        player.updateActivity();
         this.manager.emit("playerPause", player, payload.paused, payload);
     }
     handlePlayerCreated(player, payload) {
