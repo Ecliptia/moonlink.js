@@ -97,11 +97,11 @@ class Rest {
         });
         return res || null;
     }
-    async getVersion() {
+    async getVersion(timeout, retries) {
         const res = await (0, Util_1.makeRequest)(`${this.url}/version`, {
             method: "GET",
-            headers: this.userAgentHeaders
-        });
+            headers: this.authHeaders
+        }, timeout, retries);
         return res || null;
     }
     async getStats() {

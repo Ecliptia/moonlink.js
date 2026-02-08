@@ -18,7 +18,7 @@ export declare class Rest {
     decodeTracks(encodedTracks: string[]): Promise<ITrack[] | null>;
     getInfo(): Promise<any | null>;
     getInfoWithHeaders(): Promise<ResponseWithHeaders<any> | null>;
-    getVersion(): Promise<string | null>;
+    getVersion(timeout?: number, retries?: number): Promise<string | null>;
     getStats(): Promise<INodeStats | null>;
     getRoutePlannerStatus(): Promise<IRoutePlannerStatus | null>;
     freeFailedAddress(address: string): Promise<void>;

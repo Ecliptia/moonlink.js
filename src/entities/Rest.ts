@@ -113,11 +113,11 @@ export class Rest {
         return res || null;
     }
 
-    public async getVersion(): Promise<string | null> {
+    public async getVersion(timeout?: number, retries?: number): Promise<string | null> {
         const res = await makeRequest<string>(`${this.url}/version`, {
             method: "GET",
-            headers: this.userAgentHeaders
-        });
+            headers: this.authHeaders
+        }, timeout, retries);
         return res || null;
     }
 
