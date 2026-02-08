@@ -3,7 +3,7 @@ import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
 import { type NodeLinkResponse } from "../Util";
 import { PlayerLoop } from "../typings/types";
-import { IPlayerConfig, IFadingOptions, IChapter, IMeaningResponse } from "../typings/Interfaces";
+import { IPlayerConfig, IFadingOptions, IChapter, IMeaningResponse, IFilters } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
@@ -73,6 +73,15 @@ export declare class Player {
     unsubscribeLyrics(): Promise<this>;
     loadChapters(encodedTrack?: string): Promise<NodeLinkResponse<IChapter[]> | null>;
     loadMeaning(encodedTrack?: string, lang?: string): Promise<NodeLinkResponse<IMeaningResponse | Record<string, any>> | null>;
+    getLoadDirectStream(options?: {
+        volume?: number;
+        position?: number;
+        filters?: IFilters | Record<string, any>;
+    }): Promise<{
+        stream: NodeJS.ReadableStream;
+        headers: Record<string, any>;
+    }>;
+    getDirectStream(itag?: number | null): Promise<any | null>;
     setFading(fading: IFadingOptions): Promise<this>;
     clearFading(): Promise<this>;
     setNextTrack(track: Track | string, userData?: Record<string, any>): Promise<this>;

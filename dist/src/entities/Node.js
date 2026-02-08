@@ -92,6 +92,27 @@ class Node {
         }
         return this.rest.loadLyrics(encoded, lang);
     }
+    async loadDirectStream(track, volume, position, filters) {
+        const encoded = typeof track === "string" ? track : track?.encoded;
+        if (!encoded) {
+            throw new Error("loadDirectStream requires an encoded track string or object with an encoded field.");
+        }
+        const payload = { encodedTrack: encoded };
+        if (volume !== undefined)
+            payload.volume = volume;
+        if (position !== undefined)
+            payload.position = position;
+        if (filters !== undefined)
+            payload.filters = filters;
+        return this.rest.loadStream(payload);
+    }
+    async getDirectStream(track, itag) {
+        const encoded = typeof track === "string" ? track : track?.encoded;
+        if (!encoded) {
+            throw new Error("getDirectStream requires an encoded track string or object with an encoded field.");
+        }
+        return this.rest.trackStream(encoded, itag);
+    }
     get address() {
         return `${this.host}:${this.port}`;
     }

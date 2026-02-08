@@ -213,6 +213,47 @@ export interface INodeStats {
         lavalinkLoad: number;
     };
 }
+export interface INodeConnectionMetrics {
+    speed?: {
+        bps?: number;
+        kbps?: number;
+        mbps?: number;
+    };
+    downloadedBytes?: number;
+    durationSeconds?: number;
+    latencyMs?: number;
+    endpoint?: {
+        name?: string;
+        url?: string;
+        expectedSizeBytes?: number;
+    };
+    dns?: {
+        isOnline?: boolean;
+        host?: string;
+        latencyMs?: number;
+    };
+    ping?: {
+        host?: string;
+        alive?: boolean;
+        minMs?: number;
+        avgMs?: number;
+        maxMs?: number;
+        packetLoss?: number;
+    };
+    network?: {
+        isConnected?: boolean;
+        connectionType?: string;
+        ipAddress?: string;
+        interfaceName?: string;
+        dnsServers?: string[];
+        gateway?: string;
+    };
+    timestamp?: number;
+}
+export interface INodeConnectionStatus {
+    status: string;
+    metrics: INodeConnectionMetrics;
+}
 export interface INode {
     host: string;
     port: number;

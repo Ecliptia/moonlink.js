@@ -1,5 +1,5 @@
 import { type NodeLinkResponse, type ResponseWithHeaders } from "../Util";
-import type { IChapter, IFilters, ILyricsData, IMeaningResponse } from "../typings/Interfaces";
+import type { IChapter, IFilters, ILyricsData, IMeaningResponse, INodeConnectionStatus } from "../typings/Interfaces";
 import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 export declare class Rest {
@@ -37,10 +37,7 @@ export declare class Rest {
     loadLyrics(encodedTrack: string, lang?: string): Promise<NodeLinkResponse<ILyricsData | Record<string, any>> | null>;
     loadChapters(encodedTrack: string): Promise<NodeLinkResponse<IChapter[]> | null>;
     loadMeaning(encodedTrack: string, lang?: string): Promise<NodeLinkResponse<IMeaningResponse | Record<string, any>> | null>;
-    getConnectionStatus(): Promise<NodeLinkResponse<{
-        status: string;
-        metrics: any;
-    }> | null>;
+    getConnectionStatus(): Promise<NodeLinkResponse<INodeConnectionStatus> | null>;
     getMetrics(): Promise<string | null>;
     getWorkers(): Promise<NodeLinkResponse<any[]> | null>;
     patchWorker(payload: Record<string, any>): Promise<any | null>;

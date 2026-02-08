@@ -279,6 +279,22 @@ class Player {
         }
         return this.node.rest.loadMeaning(target, lang);
     }
+    async getLoadDirectStream(options) {
+        this.assertNodeLinkFeature("loadstream");
+        const target = this.current?.encoded;
+        if (!target) {
+            throw new Error("getLoadDirectStream requires an active player track.");
+        }
+        return this.node.loadDirectStream(target, options?.volume, options?.position, options?.filters);
+    }
+    async getDirectStream(itag) {
+        this.assertNodeLinkFeature("trackstream");
+        const target = this.current?.encoded;
+        if (!target) {
+            throw new Error("getDirectStream requires an active player track.");
+        }
+        return this.node.getDirectStream(target, itag);
+    }
     async setFading(fading) {
         this.assertNodeLinkFeature("fading");
         this.fading = fading;

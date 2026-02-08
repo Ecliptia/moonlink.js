@@ -1,5 +1,5 @@
 import { makeRequest, makeStreamRequest, normalizeNodeLinkResponse, type NodeLinkResponse, type ResponseWithHeaders, nodeLinkOnlyError } from "../Util";
-import type { IChapter, IFilters, ILyricsData, ILyricsResponse, IMeaningResponse } from "../typings/Interfaces";
+import type { IChapter, IFilters, ILyricsData, ILyricsResponse, IMeaningResponse, INodeConnectionStatus } from "../typings/Interfaces";
 import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
 
@@ -275,12 +275,12 @@ export class Rest {
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
-    public async getConnectionStatus(): Promise<NodeLinkResponse<{ status: string; metrics: any }> | null> {
+    public async getConnectionStatus(): Promise<NodeLinkResponse<INodeConnectionStatus> | null> {
         if (!this.node.isNodeLink) {
             throw nodeLinkOnlyError("connection");
         }
 
-        const res = await makeRequest<{ status: string; metrics: any }>(`${this.url}/v4/connection`, {
+        const res = await makeRequest<INodeConnectionStatus>(`${this.url}/v4/connection`, {
             method: "GET",
             headers: this.authHeaders
         });

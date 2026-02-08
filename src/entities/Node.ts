@@ -1,4 +1,4 @@
-import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData, IFilters } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import {
@@ -266,6 +266,43 @@ export class Node {
       throw new Error("loadLyrics requires an encoded track string or object with an encoded field.");
     }
     return this.rest.loadLyrics(encoded, lang);
+  }
+
+  /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+  public async loadDirectStream(
+    track: string | ITrack | Track | { encoded?: string },
+    volume?: number,
+    position?: number,
+    filters?: IFilters | Record<string, any>
+  ): Promise<{ stream: NodeJS.ReadableStream; headers: Record<string, any> }> {
+    const encoded =
+      typeof track === "string" ? track : track?.encoded;
+    if (!encoded) {
+      throw new Error("loadDirectStream requires an encoded track string or object with an encoded field.");
+    }
+    const payload: {
+      encodedTrack: string;
+      volume?: number;
+      position?: number;
+      filters?: IFilters | Record<string, any>;
+    } = { encodedTrack: encoded };
+    if (volume !== undefined) payload.volume = volume;
+    if (position !== undefined) payload.position = position;
+    if (filters !== undefined) payload.filters = filters;
+    return this.rest.loadStream(payload);
+  }
+
+  /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+  public async getDirectStream(
+    track: string | ITrack | Track | { encoded?: string },
+    itag?: number | null
+  ): Promise<any | null> {
+    const encoded =
+      typeof track === "string" ? track : track?.encoded;
+    if (!encoded) {
+      throw new Error("getDirectStream requires an encoded track string or object with an encoded field.");
+    }
+    return this.rest.trackStream(encoded, itag);
   }
 
   public get address(): string {

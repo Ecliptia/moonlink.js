@@ -3,7 +3,7 @@ import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
 import { Structure, validate, decodeTrack, delay, nodeLinkOnlyError, type NodeLinkResponse } from "../Util";
 import { PlayerLoop, VoiceState } from "../typings/types";
-import { IPlayerConfig, IFadingOptions, ILyricsData, IChapter, IMeaningResponse } from "../typings/Interfaces";
+import { IPlayerConfig, IFadingOptions, ILyricsData, IChapter, IMeaningResponse, IFilters } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
@@ -330,6 +330,26 @@ export class Player {
             throw new Error("loadMeaning requires an encoded track or an active player track.");
         }
         return this.node.rest.loadMeaning(target, lang);
+    }
+
+    /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+    public async getLoadDirectStream(options?: { volume?: number; position?: number; filters?: IFilters | Record<string, any> }): Promise<{ stream: NodeJS.ReadableStream; headers: Record<string, any> }> {
+        this.assertNodeLinkFeature("loadstream");
+        const target = this.current?.encoded;
+        if (!target) {
+            throw new Error("getLoadDirectStream requires an active player track.");
+        }
+        return this.node.loadDirectStream(target, options?.volume, options?.position, options?.filters);
+    }
+
+    /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
+    public async getDirectStream(itag?: number | null): Promise<any | null> {
+        this.assertNodeLinkFeature("trackstream");
+        const target = this.current?.encoded;
+        if (!target) {
+            throw new Error("getDirectStream requires an active player track.");
+        }
+        return this.node.getDirectStream(target, itag);
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */

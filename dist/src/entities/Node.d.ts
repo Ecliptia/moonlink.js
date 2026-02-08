@@ -1,4 +1,4 @@
-import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData } from "../typings/Interfaces";
+import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData, IFilters } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
 import { type NodeLinkResponse } from "../Util";
@@ -156,6 +156,15 @@ export declare class Node {
     loadLyrics(track: string | ITrack | Track | {
         encoded?: string;
     }, lang?: string): Promise<NodeLinkResponse<ILyricsData | Record<string, any>> | null>;
+    loadDirectStream(track: string | ITrack | Track | {
+        encoded?: string;
+    }, volume?: number, position?: number, filters?: IFilters | Record<string, any>): Promise<{
+        stream: NodeJS.ReadableStream;
+        headers: Record<string, any>;
+    }>;
+    getDirectStream(track: string | ITrack | Track | {
+        encoded?: string;
+    }, itag?: number | null): Promise<any | null>;
     get address(): string;
     setState(state: NodeState): void;
     connect(): Promise<void>;
