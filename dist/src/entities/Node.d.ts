@@ -121,9 +121,6 @@ export declare class Node {
     destroyed: boolean;
     reconnectTimeout?: NodeJS.Timeout;
     reconnectAttempts: number;
-    private versionPollTimeout?;
-    private versionPollInProgress;
-    private versionPollFailureLogged;
     retryAmount: number;
     retryDelay: number;
     resumed: boolean;
@@ -163,7 +160,6 @@ export declare class Node {
     setState(state: NodeState): void;
     connect(): Promise<void>;
     reconnect(): void;
-    private scheduleVersionPoll;
     private resetResumeUpdateState;
     private cancelResumeWindow;
     private startResumeWindow;

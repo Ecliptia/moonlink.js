@@ -172,9 +172,6 @@ export class Node {
   public destroyed: boolean = false;
   public reconnectTimeout?: NodeJS.Timeout;
   public reconnectAttempts: number = 0;
-  private versionPollTimeout?: NodeJS.Timeout;
-  private versionPollInProgress: boolean = false;
-  private versionPollFailureLogged: boolean = false;
   public retryAmount: number;
   public retryDelay: number = 60000;
   public resumed: boolean = false;
@@ -334,12 +331,6 @@ export class Node {
   public reconnect(): void {
     this.setState(NodeState.CONNECTING);
     
-    if (this.versionPollTimeout) {
-      clearTimeout(this.versionPollTimeout);
-      this.versionPollTimeout = undefined;
-    }
-    this.versionPollFailureLogged = false;
-
     let delay = Math.min(
       this.retryDelay * Math.pow(1.5, this.reconnectAttempts),
       300000
@@ -362,54 +353,6 @@ export class Node {
       this.reconnectAttempts++;
       this.connect();
     }, delay);
-
-    this.scheduleVersionPoll();
-  }
-
-  private scheduleVersionPoll(): void {
-    if (this.versionPollTimeout || this.destroyed || this.connected) return;
-
-    this.versionPollTimeout = setTimeout(async () => {
-      this.versionPollTimeout = undefined;
-
-      if (this.destroyed || this.connected) return;
-      if (!this.reconnectTimeout || this.socket) return;
-      if (this.reconnectAttempts >= this.retryAmount) return;
-
-      if (this.versionPollInProgress) {
-        this.scheduleVersionPoll();
-        return;
-      }
-
-      this.versionPollInProgress = true;
-
-      try {
-        const version = await this.rest.getVersion(1000, 0);
-        if (version && this.reconnectTimeout) {
-          clearTimeout(this.reconnectTimeout);
-          this.reconnectTimeout = undefined;
-          this.reconnectAttempts++;
-          this.manager.emit(
-            "debug",
-            `Moonlink.js > Node >> ${this.identifier} responded to /version. Reconnecting immediately.`
-          );
-          this.connect();
-          return;
-        }
-      } catch (error) {
-        if (!this.versionPollFailureLogged) {
-          this.versionPollFailureLogged = true;
-          this.manager.emit(
-            "debug",
-            `Moonlink.js > Node >> /version poll failed for ${this.identifier}. Error: ${(error as Error).message}`
-          );
-        }
-      } finally {
-        this.versionPollInProgress = false;
-      }
-
-      this.scheduleVersionPoll();
-    }, 1000);
   }
 
   private resetResumeUpdateState(): void {
@@ -533,11 +476,6 @@ export class Node {
 
   protected async open(): Promise<void> {
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-    if (this.versionPollTimeout) {
-      clearTimeout(this.versionPollTimeout);
-      this.versionPollTimeout = undefined;
-    }
-    this.versionPollInProgress = false;
     this.reconnectAttempts = 0;
     this.connected = true;
     this.setState(NodeState.CONNECTED);
@@ -601,11 +539,6 @@ export class Node {
     if (this.connected) this.connected = false;
     this.setState(NodeState.DISCONNECTED);
     this.resetResumeUpdateState();
-    if (this.versionPollTimeout) {
-      clearTimeout(this.versionPollTimeout);
-      this.versionPollTimeout = undefined;
-    }
-    this.versionPollInProgress = false;
     
     this.manager.emit("debug", `Moonlink.js > Node <- Disconnected from ${this.identifier}. Code: ${code}, Reason: ${reason}.`);
     this.manager.emit("nodeDisconnect", this, code, reason);
@@ -1545,11 +1478,6 @@ export class Node {
     this.setState(NodeState.DESTROYED);
     this.cancelResumeWindow();
     this.resetResumeUpdateState();
-    if (this.versionPollTimeout) {
-      clearTimeout(this.versionPollTimeout);
-      this.versionPollTimeout = undefined;
-    }
-    this.versionPollInProgress = false;
     if(this.socket) {
       this.socket.close();
     }

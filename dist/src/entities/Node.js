@@ -17,9 +17,6 @@ class Node {
     destroyed = false;
     reconnectTimeout;
     reconnectAttempts = 0;
-    versionPollTimeout;
-    versionPollInProgress = false;
-    versionPollFailureLogged = false;
     retryAmount;
     retryDelay = 60000;
     resumed = false;
@@ -131,11 +128,6 @@ class Node {
     }
     reconnect() {
         this.setState(types_1.NodeState.CONNECTING);
-        if (this.versionPollTimeout) {
-            clearTimeout(this.versionPollTimeout);
-            this.versionPollTimeout = undefined;
-        }
-        this.versionPollFailureLogged = false;
         let delay = Math.min(this.retryDelay * Math.pow(1.5, this.reconnectAttempts), 300000);
         if (this.reconnectAttempts === 0) {
             delay = Math.min(this.retryDelay, 1000);
@@ -147,46 +139,6 @@ class Node {
             this.reconnectAttempts++;
             this.connect();
         }, delay);
-        this.scheduleVersionPoll();
-    }
-    scheduleVersionPoll() {
-        if (this.versionPollTimeout || this.destroyed || this.connected)
-            return;
-        this.versionPollTimeout = setTimeout(async () => {
-            this.versionPollTimeout = undefined;
-            if (this.destroyed || this.connected)
-                return;
-            if (!this.reconnectTimeout || this.socket)
-                return;
-            if (this.reconnectAttempts >= this.retryAmount)
-                return;
-            if (this.versionPollInProgress) {
-                this.scheduleVersionPoll();
-                return;
-            }
-            this.versionPollInProgress = true;
-            try {
-                const version = await this.rest.getVersion(1000, 0);
-                if (version && this.reconnectTimeout) {
-                    clearTimeout(this.reconnectTimeout);
-                    this.reconnectTimeout = undefined;
-                    this.reconnectAttempts++;
-                    this.manager.emit("debug", `Moonlink.js > Node >> ${this.identifier} responded to /version. Reconnecting immediately.`);
-                    this.connect();
-                    return;
-                }
-            }
-            catch (error) {
-                if (!this.versionPollFailureLogged) {
-                    this.versionPollFailureLogged = true;
-                    this.manager.emit("debug", `Moonlink.js > Node >> /version poll failed for ${this.identifier}. Error: ${error.message}`);
-                }
-            }
-            finally {
-                this.versionPollInProgress = false;
-            }
-            this.scheduleVersionPoll();
-        }, 1000);
     }
     resetResumeUpdateState() {
         this.resumeUpdateAttempts = 0;
@@ -285,11 +237,6 @@ class Node {
     async open() {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
-        if (this.versionPollTimeout) {
-            clearTimeout(this.versionPollTimeout);
-            this.versionPollTimeout = undefined;
-        }
-        this.versionPollInProgress = false;
         this.reconnectAttempts = 0;
         this.connected = true;
         this.setState(types_1.NodeState.CONNECTED);
@@ -333,11 +280,6 @@ class Node {
             this.connected = false;
         this.setState(types_1.NodeState.DISCONNECTED);
         this.resetResumeUpdateState();
-        if (this.versionPollTimeout) {
-            clearTimeout(this.versionPollTimeout);
-            this.versionPollTimeout = undefined;
-        }
-        this.versionPollInProgress = false;
         this.manager.emit("debug", `Moonlink.js > Node <- Disconnected from ${this.identifier}. Code: ${code}, Reason: ${reason}.`);
         this.manager.emit("nodeDisconnect", this, code, reason);
         if (this.socket) {
@@ -1133,11 +1075,6 @@ class Node {
         this.setState(types_1.NodeState.DESTROYED);
         this.cancelResumeWindow();
         this.resetResumeUpdateState();
-        if (this.versionPollTimeout) {
-            clearTimeout(this.versionPollTimeout);
-            this.versionPollTimeout = undefined;
-        }
-        this.versionPollInProgress = false;
         if (this.socket) {
             this.socket.close();
         }
