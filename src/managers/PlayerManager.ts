@@ -94,7 +94,7 @@ export class PlayerManager {
         if (!player) {
             return false;
         }
-        await player.destroy(reason);
+        await player.destroy(reason ?? "PlayerManager destroy");
         return true;
     }
 

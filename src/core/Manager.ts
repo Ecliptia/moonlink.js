@@ -150,7 +150,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
             for (const player of this.players.all) {
                 if ((!player.playing || player.paused) && now - player.lastActivityTime >= idleTimeout) {
                     this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
-                    await player.destroy();
+                    await player.destroy("Idle timeout");
                 }
             }
         }, 60000);

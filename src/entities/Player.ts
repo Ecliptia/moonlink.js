@@ -133,6 +133,8 @@ export class Player {
     }
 
     public async connect({ selfDeaf, selfMute }: { selfDeaf?: boolean; selfMute?: boolean } = {}): Promise<this> {
+        const connectStack = new Error().stack?.split("\n").slice(2, 8).join("\n");
+        this.manager.emit("debug", `Moonlink.js > Player#connect -> Connect requested for guild ${this.guildId}. Stack: ${connectStack || "unavailable"}`);
         this.set("userInitiatedConnect", true);
         if (selfDeaf !== undefined) this.set("selfDeaf", selfDeaf);
         if (selfMute !== undefined) this.set("selfMute", selfMute);
@@ -141,6 +143,8 @@ export class Player {
     }
 
     public async disconnect(): Promise<this> {
+        const disconnectStack = new Error().stack?.split("\n").slice(2, 8).join("\n");
+        this.manager.emit("debug", `Moonlink.js > Player#disconnect -> Disconnect requested for guild ${this.guildId}. Stack: ${disconnectStack || "unavailable"}`);
         this.set("userInitiatedConnect", false);
         await this.voice.disconnect();
         return this;
@@ -614,7 +618,12 @@ export class Player {
         }
         this.destroyed = true;
 
-        this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}. Reason: ${reason || "No reason provided"}`);
+        if (!reason) {
+            const stack = new Error().stack?.split("\n").slice(2, 8).join("\n");
+            this.manager.emit("debug", `Moonlink.js > Player#destroy >> Destroy called without reason for guild ${this.guildId}. Stack: ${stack || "unavailable"}`);
+        }
+        const destroyReason = reason ?? "No reason provided";
+        this.manager.emit("debug", `Moonlink.js > Player#destroy -> Destroying player for guild ${this.guildId}. Reason: ${destroyReason}`);
         
         this.playing = false;
         this.paused = false;
