@@ -687,14 +687,30 @@ export class Node {
           break;
         }
         const currentState = payload.state;
+        const lastState = player.get<{
+          connected: boolean;
+          position: number;
+          ping: number;
+          time: number;
+        }>("lastState");
 
         player.connected = currentState.connected;
         player.ping = currentState.ping;
 
         if (player.current) {
-          player.current.position = currentState.position;
-          player.current.time = currentState.time;
-          player.updateData("current.position", currentState.position);
+          const shouldPreservePosition = Boolean(
+            !currentState.connected &&
+              lastState?.connected &&
+              lastState.position > 0
+          );
+          if (!shouldPreservePosition || currentState.position > 0) {
+            player.current.position = currentState.position;
+            player.current.time = currentState.time;
+            player.updateData("current.position", currentState.position);
+          }
+          if (shouldPreservePosition) {
+            player.set("lastKnownPosition", lastState.position);
+          }
         }
 
         if (player.playing && !player.paused && currentState.connected) {
@@ -708,12 +724,6 @@ export class Node {
         )}.`;
         let shouldLog = false;
 
-        const lastState = player.get<{
-          connected: boolean;
-          position: number;
-          ping: number;
-          time: number;
-        }>("lastState");
         if (!lastState) {
           shouldLog = true;
           logMessage += ` Initial state: ${stringifyWithReplacer(
@@ -874,6 +884,7 @@ export class Node {
     player.playing = true;
     player.paused = false;
     player.updateActivity();
+    player.set("lastKnownPosition", null);
     
     if (player.current) {
         player.current.position = 0;
@@ -919,6 +930,7 @@ export class Node {
     player.playing = false;
     player.paused = false;
     player.updateActivity();
+    player.set("lastKnownPosition", null);
 
     player.set("isBackPlay", false);
     

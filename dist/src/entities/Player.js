@@ -82,8 +82,7 @@ class Player {
         throw new Error("Invalid track input. Provide a Track instance or encoded string.");
     }
     async sendPlayerUpdate(payload, noReplace) {
-        const hasNodeLinkExtras = Boolean(payload?.voice ||
-            payload?.fading ||
+        const hasNodeLinkExtras = Boolean(payload?.fading ||
             payload?.nextTrack ||
             payload?.track?.audioTrackId ||
             payload?.loudnessNormalizer !== undefined ||
@@ -543,15 +542,34 @@ class Player {
             await this.destroy("Failed to establish voice connection on restart.");
             return false;
         }
+        const voicePayload = this.voice.sessionId && this.voice.token && this.voice.endpoint
+            ? {
+                sessionId: this.voice.sessionId,
+                token: this.voice.token,
+                endpoint: this.voice.endpoint,
+                ...(this.node.isNodeLink ? { channelId: this.voiceChannelId } : {})
+            }
+            : null;
+        if (voicePayload) {
+            await this.sendPlayerUpdate({ voice: voicePayload }, true);
+        }
+        else {
+            this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice data missing for guild ${this.guildId}, skipping voice refresh.`);
+        }
         if (this.current) {
-            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${this.current.position}ms.`);
+            const lastKnownPosition = this.get("lastKnownPosition");
+            const lastState = this.get("lastState");
+            const resumePosition = Math.max(typeof lastKnownPosition === "number" ? lastKnownPosition : 0, typeof lastState?.position === "number" ? lastState.position : 0, this.current.position ?? 0);
+            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms.`);
             this.playing = true;
             this.paused = false;
-            const oldPosition = this.current.position;
             const payload = {
-                track: { encoded: this.current.encoded },
+                track: { encoded: this.current.encoded, userData: this.current.userData },
                 volume: this.volume,
             };
+            if (resumePosition > 0 && this.current.isSeekable) {
+                payload.position = resumePosition;
+            }
             if (this.audioTrackId) {
                 payload.track.audioTrackId = this.audioTrackId;
             }
@@ -563,12 +581,12 @@ class Player {
                 payload.loudnessNormalizer = this.loudnessNormalizer;
             }
             await this.sendPlayerUpdate(payload);
-            if (oldPosition > 0 && this.current.isSeekable) {
+            if (resumePosition > 0 && this.current.isSeekable && voicePayload) {
                 await (0, Util_1.delay)(2000);
-                await this.seek(oldPosition);
+                await this.seek(resumePosition);
             }
             else {
-                this.manager.emit("debug", `Moonlink.js > Player#restart >> Current track is not seekable or position is 0ms for guild ${this.guildId}, skipping seek.`);
+                this.manager.emit("debug", `Moonlink.js > Player#restart >> Seek skipped (position: ${resumePosition}ms, seekable: ${this.current.isSeekable}, voiceReady: ${Boolean(voicePayload)}) for guild ${this.guildId}.`);
             }
         }
         else if (this.queue.size > 0) {
