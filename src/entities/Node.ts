@@ -365,24 +365,35 @@ export class Node {
     });
   }
 
+  private calculateReconnectDelay(): number {
+    const maxRetries = this.retryAmount ?? 50;
+    const baseDelays = [2000, 5000, 10000, 15000, 30000, 45000, 60000, 90000, 120000, 180000];
+    
+    if (this.reconnectAttempts < baseDelays.length) {
+      return baseDelays[this.reconnectAttempts];
+    }
+    
+    const maxDelay = 300000;
+    const exponentialDelay = Math.min(
+      180000 * Math.pow(1.3, this.reconnectAttempts - baseDelays.length),
+      maxDelay
+    );
+    
+    return exponentialDelay;
+  }
+
   public reconnect(): void {
     this.setState(NodeState.CONNECTING);
     
-    let delay = Math.min(
-      this.retryDelay * Math.pow(1.5, this.reconnectAttempts),
-      300000
-    );
-
-    if (this.reconnectAttempts === 0) {
-        delay = Math.min(this.retryDelay, 1000);
-    }
+    const maxRetries = this.retryAmount ?? 50;
+    const delay = this.calculateReconnectDelay();
     
     this.manager.emit("nodeReconnecting", this, this.reconnectAttempts + 1);
     this.manager.emit(
       "debug",
       `Moonlink.js > Node >> Reconnecting to ${this.identifier} in ${
-        delay / 1000
-      }s (Attempt ${this.reconnectAttempts + 1}/${this.retryAmount}).`
+        Math.round(delay / 1000)
+      }s (Attempt ${this.reconnectAttempts + 1}/${maxRetries}).`
     );
 
     this.reconnectTimeout = setTimeout(() => {

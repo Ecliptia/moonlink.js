@@ -186,13 +186,49 @@ export class Voice extends EventEmitter<VoiceEvents> {
         if (this.player.voiceChannelId && this.player.voiceChannelId !== data.channel_id) {
             this.isMoving = true;
             this.manager.emit('playerMoved', this.player, this.player.voiceChannelId, data.channel_id);
+            
+            const oldChannelId = this.player.voiceChannelId;
             this.player.voiceChannelId = data.channel_id;
 
+            const currentTrack = this.player.current;
+            const currentPosition = currentTrack?.position ?? 0;
+            const wasPlaying = this.player.playing;
+            const wasPaused = this.player.paused;
+
             try {
-                await this.player.node.rest.destroyPlayer(this.player.guildId);
-                await this.player.restart();
+                this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Bot moved from ${oldChannelId} to ${data.channel_id}. Preserving playback for guild ${this.player.guildId}.`);
+
+                this.sessionId = null;
+                this.token = null;
+                this.endpoint = null;
+                this.lastVoiceUpdate = null;
+                this.voiceUpdateInFlight = false;
+                this.setState(VoiceConnectionState.DISCONNECTED);
+
+                await this.connect({
+                    selfDeaf: this.player.get("selfDeaf") ?? true,
+                    selfMute: this.player.get("selfMute") ?? false
+                });
+
+                if (currentTrack && wasPlaying && !wasPaused) {
+                    this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restoring playback after channel move for guild ${this.player.guildId}.`);
+                }
+
+                this.player.stuckDetectionCount = 0;
+                this.player.silentDetectionCount = 0;
+                this.player.updateActivity();
+
             } catch (e) {
-                this.manager.emit("debug", `Error during channel move restart: ${(e as Error).message}`);
+                this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Error during channel move: ${(e as Error).message}`);
+                
+                if (currentTrack) {
+                    try {
+                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Attempting player restart after failed channel move.`);
+                        await this.player.restart();
+                    } catch (restartError) {
+                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restart failed: ${(restartError as Error).message}`);
+                    }
+                }
             } finally {
                 this.isMoving = false;
             }

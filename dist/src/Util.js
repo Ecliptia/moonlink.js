@@ -335,7 +335,10 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
             throw new Error("Too many redirects");
         }
         catch (error) {
-            console.error(`Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${error.message}`);
+            const is404 = error.message.includes('status 404');
+            if (!is404) {
+                console.error(`Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${error.message}`);
+            }
             if (attempt < retries) {
                 await delay(retryDelay * Math.pow(2, attempt));
                 currentUrl = initialUrl;

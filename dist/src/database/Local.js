@@ -39,6 +39,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Local = void 0;
 const fs_1 = __importStar(require("fs"));
 const path_1 = __importDefault(require("path"));
+const os_1 = __importDefault(require("os"));
+const isDocker = () => {
+    try {
+        if (fs_1.default.existsSync('/.dockerenv'))
+            return true;
+        if (fs_1.default.existsSync('/proc/1/cgroup')) {
+            const cgroup = fs_1.default.readFileSync('/proc/1/cgroup', 'utf-8');
+            if (cgroup.includes('docker') || cgroup.includes('kubepods'))
+                return true;
+        }
+    }
+    catch { }
+    return false;
+};
+const getDefaultDataPath = () => {
+    const envPath = process.env.MOONLINK_DB_PATH;
+    if (envPath)
+        return envPath;
+    if (isDocker()) {
+        return '/data/moonlink';
+    }
+    return path_1.default.join(os_1.default.homedir(), '.moonlink', 'data');
+};
 class Local {
     store = {};
     dir;
@@ -55,10 +78,13 @@ class Local {
     async init(manager, options) {
         this.manager = manager;
         this.compactionIntervalMs = 60000;
-        this.dir = this.manager.options.database?.options?.path ?? path_1.default.resolve(__dirname, "../datastore");
+        this.dir = this.manager.options.database?.options?.path
+            ?? process.env.MOONLINK_DB_PATH
+            ?? getDefaultDataPath();
         this.snapshotPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.json`);
         this.logPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.wal`);
         await fs_1.default.promises.mkdir(this.dir, { recursive: true });
+        this.manager.emit("debug", `Moonlink.js > LocalDB >> Database initialized at: ${this.dir} (Docker: ${isDocker()})`);
         await this.loadSnapshot();
         await this.replayWAL();
         this.openWALStream();

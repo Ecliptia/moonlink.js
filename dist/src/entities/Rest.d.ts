@@ -2,13 +2,20 @@ import { type NodeLinkResponse, type ResponseWithHeaders } from "../Util";
 import type { IChapter, IFilters, ILyricsData, IMeaningResponse, INodeConnectionStatus } from "../typings/Interfaces";
 import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
+export declare class RestError extends Error {
+    statusCode: number;
+    isSessionExpired: boolean;
+    constructor(message: string, statusCode: number);
+}
 export declare class Rest {
     private readonly node;
     private readonly authHeaders;
     private readonly jsonHeaders;
     private readonly userAgentHeaders;
+    private sessionRecoveryInProgress;
     constructor(node: Node);
     get url(): string;
+    private triggerPlayerRecovery;
     getPlayers(): Promise<IRESTGetPlayers[] | null>;
     getPlayer(guildId: string): Promise<any | null>;
     updatePlayer(guildId: string, data: any, noReplace?: boolean): Promise<any | null>;

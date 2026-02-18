@@ -1,12 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Rest = void 0;
+exports.Rest = exports.RestError = void 0;
 const Util_1 = require("../Util");
+class RestError extends Error {
+    statusCode;
+    isSessionExpired;
+    constructor(message, statusCode) {
+        super(message);
+        this.name = 'RestError';
+        this.statusCode = statusCode;
+        this.isSessionExpired = statusCode === 404;
+    }
+}
+exports.RestError = RestError;
 class Rest {
     node;
     authHeaders;
     jsonHeaders;
     userAgentHeaders;
+    sessionRecoveryInProgress = false;
     constructor(node) {
         this.node = node;
         this.authHeaders = {
@@ -23,6 +35,25 @@ class Rest {
     }
     get url() {
         return `http${this.node.secure ? "s" : ""}://${this.node.host}:${this.node.port}`;
+    }
+    async triggerPlayerRecovery(player) {
+        if (player.destroyed)
+            return;
+        player.stuckDetectionCount = 0;
+        player.silentDetectionCount = 0;
+        try {
+            const recovered = await player.softRestart("Session expired (404)");
+            if (recovered) {
+                this.node.manager.emit("playerRecoverySuccess", player);
+            }
+            else {
+                await player.destroy("Session expired and recovery failed");
+            }
+        }
+        catch (e) {
+            this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${e.message}`);
+            await player.destroy("Session recovery error");
+        }
     }
     async getPlayers() {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players`, {
@@ -43,18 +74,39 @@ class Rest {
         if (noReplace) {
             params.append("noReplace", "true");
         }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
-            method: "PATCH",
-            headers: this.jsonHeaders,
-            body: data
-        });
-        return res || null;
+        try {
+            const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
+                method: "PATCH",
+                headers: this.jsonHeaders,
+                body: data
+            });
+            return res || null;
+        }
+        catch (error) {
+            const err = error;
+            if (err.message.includes('status 404')) {
+                this.node.manager.emit("debug", `Moonlink.js > Rest >> updatePlayer 404 for guild ${guildId}, triggering recovery.`);
+                const player = this.node.manager.players.get(guildId);
+                if (player && !player.destroyed) {
+                    await this.triggerPlayerRecovery(player);
+                }
+            }
+            throw error;
+        }
     }
     async destroyPlayer(guildId) {
-        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
-            method: "DELETE",
-            headers: this.authHeaders
-        });
+        try {
+            await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}`, {
+                method: "DELETE",
+                headers: this.authHeaders
+            });
+        }
+        catch (error) {
+            const err = error;
+            if (!err.message.includes('status 404')) {
+                throw error;
+            }
+        }
     }
     async loadTracks(identifier) {
         const params = new URLSearchParams();

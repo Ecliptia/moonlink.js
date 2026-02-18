@@ -1,9 +1,32 @@
 import { Manager } from "../core/Manager";
 import fs, { createWriteStream, WriteStream } from "fs";
 import path from "path";
+import os from "os";
 
 type AnyObject = Record<string, any>;
 type Operation = { op: 'set' | 'delete'; key: string; value?: unknown };
+
+const isDocker = (): boolean => {
+  try {
+    if (fs.existsSync('/.dockerenv')) return true;
+    if (fs.existsSync('/proc/1/cgroup')) {
+      const cgroup = fs.readFileSync('/proc/1/cgroup', 'utf-8');
+      if (cgroup.includes('docker') || cgroup.includes('kubepods')) return true;
+    }
+  } catch {}
+  return false;
+};
+
+const getDefaultDataPath = (): string => {
+  const envPath = process.env.MOONLINK_DB_PATH;
+  if (envPath) return envPath;
+  
+  if (isDocker()) {
+    return '/data/moonlink';
+  }
+  
+  return path.join(os.homedir(), '.moonlink', 'data');
+};
 
 export class Local {
   private store: AnyObject = {};
@@ -23,11 +46,18 @@ export class Local {
   public async init(manager: Manager, options?: any): Promise<void> {
     this.manager = manager;
     this.compactionIntervalMs = 60000;
-    this.dir = this.manager.options.database?.options?.path ?? path.resolve(__dirname, "../datastore");
+    
+    this.dir = this.manager.options.database?.options?.path 
+      ?? process.env.MOONLINK_DB_PATH 
+      ?? getDefaultDataPath();
+    
     this.snapshotPath = path.join(this.dir, `data.${this.manager.clientId}.json`);
     this.logPath = path.join(this.dir, `data.${this.manager.clientId}.wal`);
 
     await fs.promises.mkdir(this.dir, { recursive: true });
+    
+    this.manager.emit("debug", `Moonlink.js > LocalDB >> Database initialized at: ${this.dir} (Docker: ${isDocker()})`);
+    
     await this.loadSnapshot();
     await this.replayWAL();
     this.openWALStream();

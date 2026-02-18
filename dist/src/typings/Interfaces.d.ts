@@ -109,6 +109,7 @@ export interface IManagerOptionsConfig {
     deezer?: IDeezerOptions;
     playerDestruction?: IPlayerDestructionOptions;
     trackHandling?: ITrackHandlingOptions;
+    playerHealth?: IPlayerHealthOptions;
     trackPartial?: TPartialTrackProperties[];
     database?: {
         type: 'memory' | 'local';
@@ -185,6 +186,14 @@ export interface ITrackHandlingOptions {
     trackStuckThreshold?: number;
     retryFailedTracks?: boolean;
     maxRetryAttempts?: number;
+}
+export interface IPlayerHealthOptions {
+    checkInterval?: number;
+    silenceTimeout?: number;
+    maxStuckCount?: number;
+    maxSilentCount?: number;
+    autoRecover?: boolean;
+    resumeDebounce?: number;
 }
 export interface IManagerConfig {
     nodes: IManagerNodeConfig[];

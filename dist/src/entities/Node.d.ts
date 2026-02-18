@@ -168,6 +168,7 @@ export declare class Node {
     get address(): string;
     setState(state: NodeState): void;
     connect(): Promise<void>;
+    private calculateReconnectDelay;
     reconnect(): void;
     private resetResumeUpdateState;
     private cancelResumeWindow;

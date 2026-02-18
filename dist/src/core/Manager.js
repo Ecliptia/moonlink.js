@@ -89,6 +89,14 @@ class Manager extends Util_1.EventEmitter {
                 retryFailedTracks: false,
                 maxRetryAttempts: 3
             },
+            playerHealth: {
+                checkInterval: 30000,
+                silenceTimeout: 120000,
+                maxStuckCount: 3,
+                maxSilentCount: 2,
+                autoRecover: true,
+                resumeDebounce: 1000
+            },
             database: {
                 type: "local"
             },

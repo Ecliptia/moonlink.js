@@ -35,6 +35,14 @@ class Player {
     audioTrackId;
     loudnessNormalizer;
     endTime;
+    healthCheckTimer;
+    lastPosition = 0;
+    lastPositionTime = Date.now();
+    stuckDetectionCount = 0;
+    silentDetectionCount = 0;
+    resumeDebounceTimer;
+    isResumeInProgress = false;
+    lastResumeAttempt = 0;
     constructor(manager, node, config) {
         this.manager = manager;
         this.node = node;
@@ -54,6 +62,135 @@ class Player {
         this.voice = new Voice_1.Voice(this);
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
         this.updateData(undefined, config);
+        this.startHealthCheck();
+    }
+    startHealthCheck() {
+        this.stopHealthCheck();
+        const interval = this.manager.options.playerHealth?.checkInterval ?? 30000;
+        this.healthCheckTimer = setInterval(() => {
+            this.performHealthCheck();
+        }, interval);
+    }
+    stopHealthCheck() {
+        if (this.healthCheckTimer) {
+            clearInterval(this.healthCheckTimer);
+            this.healthCheckTimer = undefined;
+        }
+    }
+    async performHealthCheck() {
+        if (this.destroyed || !this.connected)
+            return;
+        const now = Date.now();
+        const idleTimeout = this.manager.options.playerDestruction?.idleTimeout ?? 300000;
+        const silenceTimeout = this.manager.options.playerHealth?.silenceTimeout ?? 120000;
+        const maxStuckCount = this.manager.options.playerHealth?.maxStuckCount ?? 3;
+        const maxSilentCount = this.manager.options.playerHealth?.maxSilentCount ?? 2;
+        if (this.playing && !this.paused && this.current) {
+            const currentPosition = this.current.position ?? 0;
+            const positionDelta = Math.abs(currentPosition - this.lastPosition);
+            const timeDelta = now - this.lastPositionTime;
+            if (positionDelta < 1000 && timeDelta > 30000 && !this.current.isStream) {
+                this.stuckDetectionCount++;
+                this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} appears stuck. Position: ${currentPosition}, Stuck count: ${this.stuckDetectionCount}/${maxStuckCount}`);
+                if (this.stuckDetectionCount >= maxStuckCount) {
+                    this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} stuck for too long, attempting recovery.`);
+                    await this.recoverFromStuck();
+                    this.stuckDetectionCount = 0;
+                    return;
+                }
+            }
+            else {
+                this.stuckDetectionCount = 0;
+            }
+            const activityDelta = now - this.lastActivityTime;
+            if (activityDelta > silenceTimeout) {
+                this.silentDetectionCount++;
+                this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} silent for ${Math.round(activityDelta / 1000)}s. Silent count: ${this.silentDetectionCount}/${maxSilentCount}`);
+                if (this.silentDetectionCount >= maxSilentCount) {
+                    this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} silent for too long, attempting soft restart.`);
+                    await this.softRestart("Silent player detected");
+                    this.silentDetectionCount = 0;
+                    return;
+                }
+            }
+            else {
+                this.silentDetectionCount = 0;
+            }
+            this.lastPosition = currentPosition;
+            this.lastPositionTime = now;
+        }
+        else {
+            this.stuckDetectionCount = 0;
+            this.silentDetectionCount = 0;
+        }
+    }
+    async recoverFromStuck() {
+        if (this.destroyed)
+            return;
+        this.manager.emit("playerRecoveryStarted", this);
+        try {
+            if (this.current && this.current.isSeekable) {
+                const seekPos = Math.max(0, (this.current.position ?? 0) + 2000);
+                this.manager.emit("debug", `Moonlink.js > Player#recoverFromStuck >> Seeking forward 2s for player ${this.guildId}.`);
+                await this.seek(seekPos);
+            }
+            else {
+                await this.softRestart("Stuck player recovery");
+            }
+            this.manager.emit("playerRecoverySuccess", this);
+        }
+        catch (error) {
+            this.manager.emit("debug", `Moonlink.js > Player#recoverFromStuck >> Recovery failed: ${error.message}`);
+            this.manager.emit("playerRecoveryFailed", this);
+        }
+    }
+    async softRestart(reason) {
+        if (this.destroyed)
+            return false;
+        this.manager.emit("debug", `Moonlink.js > Player#softRestart >> Soft restart triggered for player ${this.guildId}. Reason: ${reason}`);
+        const currentTrack = this.current;
+        const currentPosition = currentTrack?.position ?? 0;
+        const wasPlaying = this.playing;
+        const wasPaused = this.paused;
+        if (!currentTrack) {
+            this.manager.emit("debug", `Moonlink.js > Player#softRestart >> No current track, skipping soft restart for player ${this.guildId}.`);
+            return false;
+        }
+        try {
+            await this.stop();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (this.voice.sessionId && this.voice.token && this.voice.endpoint) {
+                const voicePayload = {
+                    sessionId: this.voice.sessionId,
+                    token: this.voice.token,
+                    endpoint: this.voice.endpoint
+                };
+                if (this.node.isNodeLink) {
+                    voicePayload.channelId = this.voiceChannelId;
+                }
+                await this.sendPlayerUpdate({ voice: voicePayload }, true);
+            }
+            this.queue.unshift(currentTrack);
+            await this.play({
+                track: currentTrack,
+                position: currentPosition,
+                noReplace: false
+            });
+            if (wasPaused) {
+                await this.pause();
+            }
+            this.stuckDetectionCount = 0;
+            this.silentDetectionCount = 0;
+            this.lastPosition = currentPosition;
+            this.lastPositionTime = Date.now();
+            this.updateActivity();
+            this.manager.emit("debug", `Moonlink.js > Player#softRestart >> Soft restart completed for player ${this.guildId}.`);
+            return true;
+        }
+        catch (error) {
+            this.manager.emit("debug", `Moonlink.js > Player#softRestart >> Soft restart failed: ${error.message}`);
+            return false;
+        }
     }
     updateActivity() {
         this.lastActivityTime = Date.now();
@@ -351,26 +488,43 @@ class Player {
         return this;
     }
     async resume(options) {
+        const now = Date.now();
+        const minResumeInterval = this.manager.options.playerHealth?.resumeDebounce ?? 1000;
+        if (this.isResumeInProgress) {
+            this.manager.emit("debug", `Moonlink.js > Player#resume >> Resume already in progress for guild ${this.guildId}, skipping.`);
+            return this;
+        }
+        if (now - this.lastResumeAttempt < minResumeInterval) {
+            this.manager.emit("debug", `Moonlink.js > Player#resume >> Resume debounced for guild ${this.guildId} (last attempt ${now - this.lastResumeAttempt}ms ago).`);
+            return this;
+        }
         this.updateActivity();
         if (!this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#resume >> Player is not paused for guild ${this.guildId}`);
             return this;
         }
+        this.isResumeInProgress = true;
+        this.lastResumeAttempt = now;
         this.manager.emit("debug", `Moonlink.js > Player#resume -> Sending resume request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredResume", this);
-        const promise = this.sendPlayerUpdate({ paused: false });
-        if (options?.timeout) {
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Resume timed out")), options.timeout));
-            await Promise.race([promise, timeoutPromise]);
+        try {
+            const promise = this.sendPlayerUpdate({ paused: false });
+            if (options?.timeout) {
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Resume timed out")), options.timeout));
+                await Promise.race([promise, timeoutPromise]);
+            }
+            else {
+                await promise;
+            }
+            const oldPaused = this.paused;
+            this.paused = false;
+            this.updateData("paused", this.paused);
+            this.manager.emit("debug", `Moonlink.js > Player#resume >> Player state changed: paused: ${oldPaused} -> ${this.paused}`);
+            this.manager.emit("debug", `Moonlink.js > Player#resume >> Player resumed for guild ${this.guildId}`);
         }
-        else {
-            await promise;
+        finally {
+            this.isResumeInProgress = false;
         }
-        const oldPaused = this.paused;
-        this.paused = false;
-        this.updateData("paused", this.paused);
-        this.manager.emit("debug", `Moonlink.js > Player#resume >> Player state changed: paused: ${oldPaused} -> ${this.paused}`);
-        this.manager.emit("debug", `Moonlink.js > Player#resume >> Player resumed for guild ${this.guildId}`);
         return this;
     }
     async forward(ms) {
@@ -518,6 +672,11 @@ class Player {
             return;
         }
         this.destroyed = true;
+        this.stopHealthCheck();
+        if (this.resumeDebounceTimer) {
+            clearTimeout(this.resumeDebounceTimer);
+            this.resumeDebounceTimer = undefined;
+        }
         if (!reason) {
             const stack = new Error().stack?.split("\n").slice(2, 8).join("\n");
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Destroy called without reason for guild ${this.guildId}. Stack: ${stack || "unavailable"}`);

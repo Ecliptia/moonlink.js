@@ -438,11 +438,15 @@ export async function makeRequest<T = any>(
 
       throw new Error("Too many redirects");
     } catch (error) {
-      console.error(
-        `Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${
-          (error as Error).message
-        }`
-      );
+      const is404 = (error as Error).message.includes('status 404');
+      
+      if (!is404) {
+        console.error(
+          `Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${
+            (error as Error).message
+          }`
+        );
+      }
 
       if (attempt < retries) {
         await delay(retryDelay * Math.pow(2, attempt));
