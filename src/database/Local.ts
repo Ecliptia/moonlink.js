@@ -22,7 +22,7 @@ const getDefaultDataPath = (): string => {
   if (envPath) return envPath;
   
   if (isDocker()) {
-    return '/data/moonlink';
+    return path.join(process.cwd(), '.moonlink', 'data');
   }
   
   return path.join(os.homedir(), '.moonlink', 'data');
