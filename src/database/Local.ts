@@ -21,11 +21,8 @@ const getDefaultDataPath = (): string => {
   const envPath = process.env.MOONLINK_DB_PATH;
   if (envPath) return envPath;
   
-  if (isDocker()) {
-    return path.join(process.cwd(), '.moonlink', 'data');
-  }
-  
-  return path.join(os.homedir(), '.moonlink', 'data');
+  // Default to local directory for better compatibility in containers/Pterodactyl
+  return path.join(process.cwd(), '.moonlink', 'data');
 };
 
 export class Local {
