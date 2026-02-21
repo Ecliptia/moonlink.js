@@ -136,6 +136,13 @@ type WebSocketClosedEvent = LavalinkEventBase & {
   byRemote: boolean;
 };
 
+type WorkerFailedEvent = {
+  op: "event";
+  type: "WorkerFailedEvent";
+  affectedGuilds: string[];
+  message?: string;
+};
+
 type LavalinkEventPayload =
   | TrackStartEvent
   | TrackEndEvent
@@ -158,7 +165,8 @@ type LavalinkEventPayload =
   | LyricsFoundEvent
   | LyricsLineEvent
   | LyricsNotFoundEvent
-  | WebSocketClosedEvent;
+  | WebSocketClosedEvent
+  | WorkerFailedEvent;
 
 export class Node {
   public readonly manager: Manager;
@@ -830,6 +838,11 @@ export class Node {
         player.voice.check(currentState.connected);
         break;
       case "event":
+        if ((payload as any).type === "WorkerFailedEvent") {
+          this.handleWorkerFailed(payload as WorkerFailedEvent);
+          loggedByCase = true;
+          break;
+        }
         if (!player) {
           loggedByCase = true;
           break;
@@ -925,6 +938,43 @@ export class Node {
         case "WebSocketClosedEvent":
             this.handleWebSocketClosed(player, payload);
             break;
+    }
+  }
+
+  private async handleWorkerFailed(payload: WorkerFailedEvent): Promise<void> {
+    const affectedGuilds = Array.isArray(payload.affectedGuilds) ? payload.affectedGuilds : [];
+    this.manager.emit(
+      "debug",
+      `Moonlink.js > Node#handleWorkerFailed >> WorkerFailedEvent received on ${this.identifier}. Affected guilds: ${affectedGuilds.join(", ") || "none"}. Message: ${payload.message ?? "n/a"}.`
+    );
+
+    for (const guildId of affectedGuilds) {
+      const player = this.manager.players.get(guildId);
+      if (!player || player.destroyed) continue;
+
+      if (player.get("voiceCloseRecoveryInProgress")) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWorkerFailed >> Recovery already in progress for player ${guildId}, skipping duplicate worker recovery.`);
+        continue;
+      }
+
+      player.set("voiceCloseRecoveryInProgress", true);
+      try {
+        await player.disconnect();
+        try {
+          await this.rest.destroyPlayer(guildId);
+        } catch {}
+        await new Promise(resolve => setTimeout(resolve, 750));
+        await player.connect();
+        const restarted = await player.restart();
+        if (!restarted) {
+          this.manager.emit("debug", `Moonlink.js > Node#handleWorkerFailed >> Restart returned false for player ${guildId}.`);
+        }
+      } catch (error) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWorkerFailed >> Recovery failed for player ${guildId}. Error: ${(error as Error).message}`);
+        await player.destroy("Worker failed recovery failed");
+      } finally {
+        player.set("voiceCloseRecoveryInProgress", false);
+      }
     }
   }
 
@@ -1276,11 +1326,69 @@ export class Node {
     const { code, reason, byRemote } = payload;
     
     if (player.destroyed) return;
+    if (player.get("voiceCloseRecoveryInProgress")) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice-close recovery already in progress for player ${player.guildId}, skipping event.`);
+        return;
+    }
 
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> WebSocket closed for player ${player.guildId}. Code: ${code}, Reason: "${reason}", By Remote: ${byRemote}. Payload: ${stringifyWithReplacer(payload)}.`);
 
-    if (player.voice.isMoving && code === 4014) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Ignoring WebSocket close (4014) for player ${player.guildId} due to channel move.`);
+    const isMoveCloseCode = code === 4014 || code === 4022;
+    if (isMoveCloseCode && (player.voice.isMoving || player.voice.wasRecentlyMoved())) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Ignoring WebSocket close (${code}) for player ${player.guildId} due to channel move.`);
+        return;
+    }
+
+    if (code === 4022) {
+        player.set("voiceCloseRecoveryInProgress", true);
+        try {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Handling 4022 for player ${player.guildId} with full bot-side voice recovery.`);
+            await player.disconnect();
+            try {
+                await this.rest.destroyPlayer(player.guildId);
+            } catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Failed to destroy remote player during 4022 recovery for ${player.guildId}: ${(e as Error).message}`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 750));
+            await player.connect();
+            const restarted = await player.restart();
+            if (!restarted) {
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> 4022 recovery restart returned false for player ${player.guildId}.`);
+            }
+
+            player.set("wsReconnectAttempts", 0);
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> 4022 recovery finished for player ${player.guildId}.`);
+        } catch (error) {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> 4022 recovery failed for player ${player.guildId}. Error: ${(error as Error).message}`);
+            await player.destroy("Voice close 4022 recovery failed");
+        } finally {
+            player.set("voiceCloseRecoveryInProgress", false);
+        }
+        return;
+    }
+
+    if (code === 5001 && this.isNodeLink) {
+        player.set("voiceCloseRecoveryInProgress", true);
+        try {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Handling 5001 (worker_failed) for player ${player.guildId} with bot-side recovery.`);
+            await player.disconnect();
+            try {
+                await this.rest.destroyPlayer(player.guildId);
+            } catch {}
+            await new Promise(resolve => setTimeout(resolve, 750));
+            await player.connect();
+            const restarted = await player.restart();
+            if (!restarted) {
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> 5001 recovery restart returned false for player ${player.guildId}.`);
+            }
+            player.set("wsReconnectAttempts", 0);
+        } catch (error) {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> 5001 recovery failed for player ${player.guildId}. Error: ${(error as Error).message}`);
+            await player.destroy("Worker failed (5001) recovery failed");
+        } finally {
+            player.set("voiceCloseRecoveryInProgress", false);
+        }
         return;
     }
     

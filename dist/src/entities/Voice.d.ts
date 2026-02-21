@@ -19,8 +19,13 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
     private lastConnectionStatus;
     private lastVoiceUpdate;
     private voiceUpdateInFlight;
+    private moveNonce;
+    private pendingPlaybackRestoreNonce;
+    private moveRestartInFlight;
+    private lastMoveAt;
     constructor(player: Player);
     get manager(): import("../..").Manager;
+    wasRecentlyMoved(windowMs?: number): boolean;
     private setState;
     connect(options: {
         selfDeaf: boolean;

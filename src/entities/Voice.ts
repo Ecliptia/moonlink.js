@@ -23,6 +23,10 @@ export class Voice extends EventEmitter<VoiceEvents> {
     private lastConnectionStatus: boolean = true;
     private lastVoiceUpdate: { sessionId: string; token: string; endpoint: string; channelId?: string | null } | null = null;
     private voiceUpdateInFlight: boolean = false;
+    private moveNonce: number = 0;
+    private pendingPlaybackRestoreNonce: number | null = null;
+    private moveRestartInFlight: boolean = false;
+    private lastMoveAt: number = 0;
 
     constructor(player: Player) {
         super();
@@ -34,6 +38,10 @@ export class Voice extends EventEmitter<VoiceEvents> {
 
     public get manager() {
         return this.player.manager;
+    }
+
+    public wasRecentlyMoved(windowMs: number = 8000): boolean {
+        return Date.now() - this.lastMoveAt <= windowMs;
     }
 
     private setState(state: VoiceConnectionState) {
@@ -169,6 +177,8 @@ export class Voice extends EventEmitter<VoiceEvents> {
 
     public async handleStateUpdate(data: VoiceStateUpdate): Promise<void> {
         if (!data.channel_id) {
+            this.isMoving = false;
+            this.pendingPlaybackRestoreNonce = null;
             this.emit("disconnect");
             this.setState(VoiceConnectionState.DISCONNECTED);
             return;
@@ -177,58 +187,33 @@ export class Voice extends EventEmitter<VoiceEvents> {
         if (this.state === VoiceConnectionState.DESTROYED) return;
 
         if (this.player.voiceChannelId && this.player.voiceChannelId !== data.channel_id) {
+            const moveNonce = ++this.moveNonce;
             this.isMoving = true;
+            this.lastMoveAt = Date.now();
             this.manager.emit('playerMoved', this.player, this.player.voiceChannelId, data.channel_id);
             
             const oldChannelId = this.player.voiceChannelId;
             this.player.voiceChannelId = data.channel_id;
+            this.pendingPlaybackRestoreNonce =
+                this.player.current && this.player.playing && !this.player.paused
+                    ? moveNonce
+                    : null;
 
-            const currentTrack = this.player.current;
-            const currentPosition = currentTrack?.position ?? 0;
-            const wasPlaying = this.player.playing;
-            const wasPaused = this.player.paused;
+            this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Bot moved from ${oldChannelId} to ${data.channel_id}. Preserving playback for guild ${this.player.guildId}.`);
 
-            try {
-                this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Bot moved from ${oldChannelId} to ${data.channel_id}. Preserving playback for guild ${this.player.guildId}.`);
+            this.sessionId = null;
+            this.token = null;
+            this.endpoint = null;
+            this.lastVoiceUpdate = null;
+            this.voiceUpdateInFlight = false;
+            this.setState(VoiceConnectionState.DISCONNECTED);
+            if (data.session_id) this.sessionId = data.session_id;
 
-                this.sessionId = null;
-                this.token = null;
-                this.endpoint = null;
-                this.lastVoiceUpdate = null;
-                this.voiceUpdateInFlight = false;
-                this.setState(VoiceConnectionState.DISCONNECTED);
+            this.checkCompletion();
 
-                await this.connect({
-                    selfDeaf: this.player.get("selfDeaf") ?? true,
-                    selfMute: this.player.get("selfMute") ?? false
-                });
-
-                if (currentTrack && wasPlaying && !wasPaused) {
-                    this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restoring playback after channel move for guild ${this.player.guildId}.`);
-                    const restarted = await this.player.restart();
-                    if (!restarted) {
-                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restart returned false after channel move for guild ${this.player.guildId}.`);
-                    }
-                }
-
-                this.player.stuckDetectionCount = 0;
-                this.player.silentDetectionCount = 0;
-                this.player.updateActivity();
-
-            } catch (e) {
-                this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Error during channel move: ${(e as Error).message}`);
-                
-                if (currentTrack) {
-                    try {
-                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Attempting player restart after failed channel move.`);
-                        await this.player.restart();
-                    } catch (restartError) {
-                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restart failed: ${(restartError as Error).message}`);
-                    }
-                }
-            } finally {
-                this.isMoving = false;
-            }
+            this.player.stuckDetectionCount = 0;
+            this.player.silentDetectionCount = 0;
+            this.player.updateActivity();
             return;
         }
 
@@ -280,7 +265,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
             }
         } else {
             if (this.lastConnectionStatus) {
-                this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 20s recovery timer.`);
+                this.manager.emit("debug", `Player ${this.player.guildId} connection lost. Starting 10s recovery timer.`);
                 this.lastConnectionStatus = false;
 
                 if (this.reconnectionTimer) {
@@ -290,7 +275,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
                 this.reconnectionTimer = setTimeout(() => {
                     this.reconnectionTimer = null;
                     if (!this.player.connected) {
-                        this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 20s. Attempting recovery.`);
+                        this.manager.emit("debug", `Player ${this.player.guildId} still disconnected after 10s. Attempting recovery.`);
                         this.recover();
                     }
                 }, 10000);
@@ -355,16 +340,43 @@ export class Voice extends EventEmitter<VoiceEvents> {
             }
 
             this.voiceUpdateInFlight = true;
-            this.player.updatePlayer({ voice: voicePayload }, true).then(() => {
+            this.player.updatePlayer({ voice: voicePayload }, true).then(async () => {
                 this.voiceUpdateInFlight = false;
                 this.lastVoiceUpdate = { ...voicePayload };
-                this.isMoving = false;
                 this.setState(VoiceConnectionState.CONNECTED);
                 this.emit("connect");
+
+                const restoreNonce = this.pendingPlaybackRestoreNonce;
+                if (
+                    this.isMoving &&
+                    restoreNonce !== null &&
+                    restoreNonce === this.moveNonce &&
+                    !this.moveRestartInFlight
+                ) {
+                    this.moveRestartInFlight = true;
+                    try {
+                        this.manager.emit("debug", `Moonlink.js > Voice#checkCompletion >> Restoring playback after channel move for guild ${this.player.guildId}.`);
+                        const restarted = await this.player.restart();
+                        if (!restarted) {
+                            this.manager.emit("debug", `Moonlink.js > Voice#checkCompletion >> Restart returned false after channel move for guild ${this.player.guildId}.`);
+                        }
+                    } catch (restartError) {
+                        this.manager.emit("debug", `Moonlink.js > Voice#checkCompletion >> Restart failed after channel move for guild ${this.player.guildId}. Error: ${(restartError as Error).message}`);
+                    } finally {
+                        this.moveRestartInFlight = false;
+                    }
+                }
+
+                if (restoreNonce === this.moveNonce) {
+                    this.pendingPlaybackRestoreNonce = null;
+                    this.isMoving = false;
+                }
             }).catch(e => {
                 this.voiceUpdateInFlight = false;
                 this.lastVoiceUpdate = null;
                 this.manager.emit("debug", `Failed to send voice update: ${e.message}`);
+                this.pendingPlaybackRestoreNonce = null;
+                this.isMoving = false;
                 this.emit("disconnect", e);
             });
         }
