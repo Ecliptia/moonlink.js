@@ -39,7 +39,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Local = void 0;
 const fs_1 = __importStar(require("fs"));
 const path_1 = __importDefault(require("path"));
-const os_1 = __importDefault(require("os"));
 const isDocker = () => {
     try {
         if (fs_1.default.existsSync('/.dockerenv'))
@@ -57,10 +56,7 @@ const getDefaultDataPath = () => {
     const envPath = process.env.MOONLINK_DB_PATH;
     if (envPath)
         return envPath;
-    if (isDocker()) {
-        return path_1.default.join(process.cwd(), '.moonlink', 'data');
-    }
-    return path_1.default.join(os_1.default.homedir(), '.moonlink', 'data');
+    return path_1.default.join(process.cwd(), '.moonlink', 'data');
 };
 class Local {
     store = {};
