@@ -19,7 +19,8 @@ export declare class Track {
     userData: Record<string, any>;
     retries: number;
     private isPartial;
-    constructor(data: ITrack, requester?: any, origin?: string);
+    constructor(data: ITrack | Record<string, any>, requester?: any, origin?: string);
+    private normalizeTrackData;
     private createPropertySetters;
     isPartialTrack(): boolean;
     get thumbnail(): string | null;

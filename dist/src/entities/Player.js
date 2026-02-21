@@ -294,6 +294,15 @@ class Player {
                 return false;
             }
         }
+        if (track && !(track instanceof Track_1.Track)) {
+            try {
+                track = new Track_1.Track(track, finalOptions.requester);
+            }
+            catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track object for guild ${this.guildId}. Error: ${e}`);
+                return false;
+            }
+        }
         if (track) {
             this.queue.unshift(track);
             this.manager.emit("debug", `Moonlink.js > Player#play >> Added track "${track.title}" to front of queue for guild ${this.guildId}`);

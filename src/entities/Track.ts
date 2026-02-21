@@ -23,15 +23,18 @@ export class Track {
     public retries: number = 0;
     private isPartial: boolean = false;
 
-    constructor(data: ITrack, requester?: any, origin?: string) {
+    constructor(data: ITrack | Record<string, any>, requester?: any, origin?: string) {
         const manager = Structure.getManager();
         const partialTrackOptions = manager?.options?.trackPartial;
+        const normalized = this.normalizeTrackData(data);
 
-        this.encoded = data.encoded;
-        this.requester = requester || data.userData?.requester;
+        this.encoded = normalized.encoded;
+        this.requester = requester || normalized.userData?.requester;
         this.origin = origin;
+        this.pluginInfo = normalized.pluginInfo ?? {};
+        this.userData = normalized.userData ?? {};
 
-        const trackProps = this.createPropertySetters(data.info);
+        const trackProps = this.createPropertySetters(normalized.info);
 
         if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
             this.isPartial = true;
@@ -57,6 +60,38 @@ export class Track {
                 delete this[key as keyof this];
             }
         });
+    }
+
+    private normalizeTrackData(data: ITrack | Record<string, any>): ITrack {
+        if (data && typeof data === "object" && "info" in data && data.info) {
+            const withInfo = data as ITrack;
+            return {
+                encoded: withInfo.encoded,
+                info: withInfo.info,
+                pluginInfo: withInfo.pluginInfo ?? {},
+                userData: withInfo.userData ?? {},
+            };
+        }
+
+        const flat = data as Record<string, any>;
+        return {
+            encoded: flat.encoded,
+            info: {
+                title: flat.title,
+                author: flat.author,
+                length: flat.duration ?? flat.length,
+                identifier: flat.identifier,
+                isSeekable: flat.isSeekable,
+                isStream: flat.isStream,
+                uri: flat.uri ?? null,
+                artworkUrl: flat.artworkUrl ?? null,
+                isrc: flat.isrc ?? null,
+                sourceName: flat.sourceName,
+                position: flat.position ?? 0,
+            },
+            pluginInfo: flat.pluginInfo ?? {},
+            userData: flat.userData ?? {},
+        };
     }
 
     private createPropertySetters(info: ITrackInfo): Record<string, () => void> {

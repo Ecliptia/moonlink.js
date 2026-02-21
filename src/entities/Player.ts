@@ -336,6 +336,15 @@ export class Player {
                 return false;
             }
         }
+
+        if (track && !(track instanceof Track)) {
+            try {
+                track = new Track(track as any, finalOptions.requester);
+            } catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track object for guild ${this.guildId}. Error: ${e}`);
+                return false;
+            }
+        }
         
         if (track) {
             this.queue.unshift(track);

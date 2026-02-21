@@ -25,10 +25,13 @@ class Track {
     constructor(data, requester, origin) {
         const manager = Util_1.Structure.getManager();
         const partialTrackOptions = manager?.options?.trackPartial;
-        this.encoded = data.encoded;
-        this.requester = requester || data.userData?.requester;
+        const normalized = this.normalizeTrackData(data);
+        this.encoded = normalized.encoded;
+        this.requester = requester || normalized.userData?.requester;
         this.origin = origin;
-        const trackProps = this.createPropertySetters(data.info);
+        this.pluginInfo = normalized.pluginInfo ?? {};
+        this.userData = normalized.userData ?? {};
+        const trackProps = this.createPropertySetters(normalized.info);
         if (partialTrackOptions && Array.isArray(partialTrackOptions) && partialTrackOptions.length > 0) {
             this.isPartial = true;
             trackProps.title();
@@ -52,6 +55,36 @@ class Track {
                 delete this[key];
             }
         });
+    }
+    normalizeTrackData(data) {
+        if (data && typeof data === "object" && "info" in data && data.info) {
+            const withInfo = data;
+            return {
+                encoded: withInfo.encoded,
+                info: withInfo.info,
+                pluginInfo: withInfo.pluginInfo ?? {},
+                userData: withInfo.userData ?? {},
+            };
+        }
+        const flat = data;
+        return {
+            encoded: flat.encoded,
+            info: {
+                title: flat.title,
+                author: flat.author,
+                length: flat.duration ?? flat.length,
+                identifier: flat.identifier,
+                isSeekable: flat.isSeekable,
+                isStream: flat.isStream,
+                uri: flat.uri ?? null,
+                artworkUrl: flat.artworkUrl ?? null,
+                isrc: flat.isrc ?? null,
+                sourceName: flat.sourceName,
+                position: flat.position ?? 0,
+            },
+            pluginInfo: flat.pluginInfo ?? {},
+            userData: flat.userData ?? {},
+        };
     }
     createPropertySetters(info) {
         return {
