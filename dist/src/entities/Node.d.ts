@@ -108,7 +108,13 @@ type WebSocketClosedEvent = LavalinkEventBase & {
     reason: string;
     byRemote: boolean;
 };
-type LavalinkEventPayload = TrackStartEvent | TrackEndEvent | TrackStuckEvent | TrackExceptionEvent | MixStartedEvent | MixEndedEvent | ConnectionStatusEvent | VolumeChangedEvent | FiltersChangedEvent | SeekEvent | PauseEvent | PlayerCreatedEvent | PlayerDestroyedEvent | PlayerReconnectingEvent | PlayerConnectedEvent | EternalBoxInfoEvent | EternalBoxJumpEvent | StreamMetadataEvent | LyricsFoundEvent | LyricsLineEvent | LyricsNotFoundEvent | WebSocketClosedEvent;
+type WorkerFailedEvent = {
+    op: "event";
+    type: "WorkerFailedEvent";
+    affectedGuilds: string[];
+    message?: string;
+};
+type LavalinkEventPayload = TrackStartEvent | TrackEndEvent | TrackStuckEvent | TrackExceptionEvent | MixStartedEvent | MixEndedEvent | ConnectionStatusEvent | VolumeChangedEvent | FiltersChangedEvent | SeekEvent | PauseEvent | PlayerCreatedEvent | PlayerDestroyedEvent | PlayerReconnectingEvent | PlayerConnectedEvent | EternalBoxInfoEvent | EternalBoxJumpEvent | StreamMetadataEvent | LyricsFoundEvent | LyricsLineEvent | LyricsNotFoundEvent | WebSocketClosedEvent | WorkerFailedEvent;
 export declare class Node {
     readonly manager: Manager;
     readonly uuid: string;
@@ -185,6 +191,7 @@ export declare class Node {
         data: any;
     }): Promise<void>;
     protected handleEvent(player: any, payload: LavalinkEventPayload): void;
+    private handleWorkerFailed;
     private handleTrackStart;
     private handleTrackEnd;
     private handleTrackStuck;
