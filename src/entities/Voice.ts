@@ -88,8 +88,8 @@ export class Voice extends EventEmitter<VoiceEvents> {
                     d: {
                         guild_id: this.player.guildId,
                         channel_id: this.player.voiceChannelId,
-                        self_deaf: this.player.get("selfDeaf"),
-                        self_mute: this.player.get("selfMute"),
+                        self_deaf: options.selfDeaf,
+                        self_mute: options.selfMute,
                     },
                 };
                 
@@ -133,13 +133,6 @@ export class Voice extends EventEmitter<VoiceEvents> {
         }
         this.connectPromise = null;
 
-        if (this.state === VoiceConnectionState.CONNECTING || !this.player.voiceChannelId) {
-            this.manager.emit("debug", `Moonlink.js > Voice#disconnect >> Skipping voice disconnect for guild ${this.player.guildId} (state: ${VoiceConnectionState[this.state]}, voiceChannelId: ${this.player.voiceChannelId ?? "null"}).`);
-            this.setState(VoiceConnectionState.DISCONNECTED);
-            this.emit("disconnect");
-            return Promise.resolve();
-        }
-
         if (this.state === VoiceConnectionState.DESTROYED) {
             this.setState(VoiceConnectionState.DISCONNECTED);
             return Promise.resolve();
@@ -181,7 +174,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
             return;
         }
 
-        if (this.state === VoiceConnectionState.DESTROYED || this.isMoving) return;
+        if (this.state === VoiceConnectionState.DESTROYED) return;
 
         if (this.player.voiceChannelId && this.player.voiceChannelId !== data.channel_id) {
             this.isMoving = true;
@@ -212,6 +205,10 @@ export class Voice extends EventEmitter<VoiceEvents> {
 
                 if (currentTrack && wasPlaying && !wasPaused) {
                     this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restoring playback after channel move for guild ${this.player.guildId}.`);
+                    const restarted = await this.player.restart();
+                    if (!restarted) {
+                        this.manager.emit("debug", `Moonlink.js > Voice#handleStateUpdate >> Restart returned false after channel move for guild ${this.player.guildId}.`);
+                    }
                 }
 
                 this.player.stuckDetectionCount = 0;

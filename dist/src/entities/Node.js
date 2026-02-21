@@ -441,7 +441,8 @@ class Node {
                         player.set("lastKnownPosition", lastState.position);
                     }
                 }
-                if (player.playing && !player.paused && currentState.connected) {
+                const positionAdvanced = Boolean(!lastState || currentState.position > lastState.position);
+                if (player.playing && !player.paused && currentState.connected && positionAdvanced) {
                     player.updateActivity();
                 }
                 let logMessage = `Moonlink.js > Node#handleMessage >> Player ${player.guildId} state updated. CurrentState: ${(0, Util_1.stringifyWithReplacer)(currentState)}.`;
@@ -927,7 +928,11 @@ class Node {
                 await player.connect();
                 const timeout = voiceOptions.timeout ?? 15000;
                 await new Promise(resolve => setTimeout(resolve, timeout));
-                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice reconnected for player ${player.guildId}. Lavalink should resume playback automatically if applicable.`);
+                if (player.playing && player.current) {
+                    this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Restarting player ${player.guildId} after voice reconnect.`);
+                    await player.restart();
+                }
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice reconnected for player ${player.guildId}.`);
                 player.set("wsReconnectAttempts", 0);
             }
             catch (error) {
