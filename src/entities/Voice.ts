@@ -323,11 +323,9 @@ export class Voice extends EventEmitter<VoiceEvents> {
             const voicePayload: { sessionId: string; token: string; endpoint: string; channelId?: string | null } = {
                 sessionId: this.sessionId,
                 token: this.token,
-                endpoint: this.endpoint
+                endpoint: this.endpoint,
+                channelId: this.player.voiceChannelId
             };
-            if (this.player.node.isNodeLink) {
-                voicePayload.channelId = this.player.voiceChannelId;
-            }
 
             const samePayload = this.lastVoiceUpdate
                 && this.lastVoiceUpdate.sessionId === voicePayload.sessionId

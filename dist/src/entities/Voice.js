@@ -282,11 +282,9 @@ class Voice extends Util_1.EventEmitter {
             const voicePayload = {
                 sessionId: this.sessionId,
                 token: this.token,
-                endpoint: this.endpoint
+                endpoint: this.endpoint,
+                channelId: this.player.voiceChannelId
             };
-            if (this.player.node.isNodeLink) {
-                voicePayload.channelId = this.player.voiceChannelId;
-            }
             const samePayload = this.lastVoiceUpdate
                 && this.lastVoiceUpdate.sessionId === voicePayload.sessionId
                 && this.lastVoiceUpdate.token === voicePayload.token
