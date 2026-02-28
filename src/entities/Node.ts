@@ -28,6 +28,13 @@ type TrackEndEvent = LavalinkEventBase & {
   type: "TrackEndEvent";
   track: ITrack | null;
   reason: TrackEndReason;
+  crossfade?: {
+    durationMs?: number;
+    mode?: string;
+    curve?: string;
+    transition?: string | null;
+    nextTrack?: ITrack | null;
+  };
 };
 
 type TrackStuckEvent = LavalinkEventBase & {
@@ -1018,6 +1025,7 @@ export class Node {
 
   private async handleTrackEnd(player: any, payload: TrackEndEvent): Promise<void> {
     const { reason } = payload;
+    const isCrossfadeTransition = reason === "crossfading";
     if (reason === "replaced" || reason === "gapless") {
       return;
     }
@@ -1028,13 +1036,14 @@ export class Node {
     const trackForEvent = trackData
         ? new (Structure.get("Track"))(trackData, player.current?.requester)
         : player.current;
+    if (!isCrossfadeTransition) {
+      player.playing = false;
+      player.paused = false;
+      player.updateActivity();
+      player.set("lastKnownPosition", null);
 
-    player.playing = false;
-    player.paused = false;
-    player.updateActivity();
-    player.set("lastKnownPosition", null);
-
-    player.set("isBackPlay", false);
+      player.set("isBackPlay", false);
+    }
     
     if (trackForEvent) {
         this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
@@ -1044,6 +1053,11 @@ export class Node {
 
     if (player.destroyed) {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
+      return;
+    }
+
+    if (isCrossfadeTransition) {
+      this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to crossfade for player ${player.guildId}. Skipping queue/autoplay logic.`);
       return;
     }
 

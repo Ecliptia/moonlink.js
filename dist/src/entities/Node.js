@@ -651,6 +651,7 @@ class Node {
     }
     async handleTrackEnd(player, payload) {
         const { reason } = payload;
+        const isCrossfadeTransition = reason === "crossfading";
         if (reason === "replaced" || reason === "gapless") {
             return;
         }
@@ -661,11 +662,13 @@ class Node {
         const trackForEvent = trackData
             ? new (Util_1.Structure.get("Track"))(trackData, player.current?.requester)
             : player.current;
-        player.playing = false;
-        player.paused = false;
-        player.updateActivity();
-        player.set("lastKnownPosition", null);
-        player.set("isBackPlay", false);
+        if (!isCrossfadeTransition) {
+            player.playing = false;
+            player.paused = false;
+            player.updateActivity();
+            player.set("lastKnownPosition", null);
+            player.set("isBackPlay", false);
+        }
         if (trackForEvent) {
             this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
         }
@@ -674,6 +677,10 @@ class Node {
         }
         if (player.destroyed) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
+            return;
+        }
+        if (isCrossfadeTransition) {
+            this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to crossfade for player ${player.guildId}. Skipping queue/autoplay logic.`);
             return;
         }
         if (reason === "loadFailed") {
