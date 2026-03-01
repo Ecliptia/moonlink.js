@@ -337,6 +337,7 @@ class Player {
                 userData: this.current.userData
             },
             position: finalOptions.position || this.current.position,
+            volume: this.volume
         };
         if (audioTrackId) {
             payload.track.audioTrackId = audioTrackId;
@@ -707,7 +708,7 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${e.message}`);
         }
         this.queue.clear();
-        this.manager.emit("playerDestroy", this, reason);
+        this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }

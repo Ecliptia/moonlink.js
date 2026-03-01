@@ -851,7 +851,7 @@ export class Player {
 
         this.queue.clear();
 
-        this.manager.emit("playerDestroy", this, reason);
+        this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
 
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
