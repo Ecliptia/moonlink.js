@@ -746,11 +746,11 @@ class Player {
             const lastState = this.get("lastState");
             const resumePosition = Math.max(typeof lastKnownPosition === "number" ? lastKnownPosition : 0, typeof lastState?.position === "number" ? lastState.position : 0, this.current.position ?? 0);
             this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms.`);
-            this.playing = true;
-            this.paused = false;
             const payload = {
                 track: { encoded: this.current.encoded, userData: this.current.userData },
                 volume: this.volume,
+                playing: this.playing,
+                paused: this.paused
             };
             if (resumePosition > 0 && this.current.isSeekable) {
                 payload.position = resumePosition;

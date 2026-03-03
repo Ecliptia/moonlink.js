@@ -897,12 +897,12 @@ export class Player {
                 this.current.position ?? 0
             );
             this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms.`);
-            this.playing = true;
-            this.paused = false;
 
             const payload: any = {
                 track: { encoded: this.current.encoded, userData: this.current.userData },
                 volume: this.volume,
+                playing: this.playing,
+                paused: this.paused
             };
             if (resumePosition > 0 && this.current.isSeekable) {
                 payload.position = resumePosition;
