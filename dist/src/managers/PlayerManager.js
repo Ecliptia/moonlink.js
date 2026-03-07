@@ -30,7 +30,18 @@ class PlayerManager {
         }
         const player = new (Util_1.Structure.get("Player"))(this.manager, node, options);
         this.players.set(options.guildId, player);
-        player.updateData(undefined, options);
+        player.updateData("guildId", options.guildId);
+        player.updateData("voiceChannelId", options.voiceChannelId);
+        if (options.textChannelId)
+            player.updateData("textChannelId", options.textChannelId);
+        if (options.volume)
+            player.updateData("volume", options.volume);
+        if (options.autoPlay !== undefined)
+            player.updateData("autoPlay", options.autoPlay);
+        if (options.autoLeave !== undefined)
+            player.updateData("autoLeave", options.autoLeave);
+        if (options.loop !== undefined)
+            player.updateData("loop", options.loop);
         this.manager.emit("playerCreate", player);
         this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player created. Guild: ${options.guildId}, Options: ${JSON.stringify(options)}`);
         return player;

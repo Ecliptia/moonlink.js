@@ -726,6 +726,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${e.message}`);
         }
         this.queue.clear();
+        this.previous = [];
+        this.updateData("previous", []);
         this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);

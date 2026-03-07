@@ -871,6 +871,8 @@ export class Player {
         }
 
         this.queue.clear();
+        this.previous = [];
+        this.updateData("previous", []);
 
         this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
