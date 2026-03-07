@@ -350,6 +350,9 @@ export interface IPlayerConfig {
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;
+    current?: { encoded: string; requester: any; position?: number };
+    queue?: Array<{ encoded: string; requester: any }>;
+    previous?: Array<{ encoded: string; requester: any }>;
 }
 
 export interface IRESTOptions {

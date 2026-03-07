@@ -30,6 +30,7 @@ class PlayerManager {
         }
         const player = new (Util_1.Structure.get("Player"))(this.manager, node, options);
         this.players.set(options.guildId, player);
+        player.updateData(undefined, options);
         this.manager.emit("playerCreate", player);
         this.manager.emit("debug", `Moonlink.js > PlayerManager >> Player created. Guild: ${options.guildId}, Options: ${JSON.stringify(options)}`);
         return player;

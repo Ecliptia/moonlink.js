@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
 const Util_1 = require("../Util");
 const types_1 = require("../typings/types");
-const Track_1 = require("./Track");
 const YouTubeLiveChat_1 = require("./YouTubeLiveChat");
 class Node {
     manager;
@@ -1253,6 +1252,7 @@ class Node {
             }
             this.manager.emit("debug", `Moonlink.js > Node > Attempting to resume player ${guildId} on node ${this.uuid}.`);
             const reconstructedPlayer = this.manager.players.create({
+                ...storage,
                 guildId: guildId,
                 voiceChannelId: storage.voiceChannelId,
                 textChannelId: storage.textChannelId,
@@ -1266,25 +1266,10 @@ class Node {
             reconstructedPlayer.connect();
             reconstructedPlayer.playing = playerInfo.paused === false;
             reconstructedPlayer.paused = playerInfo.paused ?? false;
-            const currentTrackInfo = storage.current;
-            if (currentTrackInfo && currentTrackInfo.encoded) {
-                reconstructedPlayer.current = new Track_1.Track((0, Util_1.decodeTrack)(currentTrackInfo.encoded), currentTrackInfo.requester);
+            if (reconstructedPlayer.current) {
                 reconstructedPlayer.current.position = playerInfo.state.position;
             }
-            else {
-                reconstructedPlayer.playing = false;
-                reconstructedPlayer.paused = true;
-                this.manager.emit("debug", `Moonlink.js > Node > No current track found for player ${guildId}.`);
-            }
-            const queueTracks = storage.queue;
-            if (queueTracks && Array.isArray(queueTracks)) {
-                for (const trackData of queueTracks) {
-                    if (trackData.encoded) {
-                        reconstructedPlayer.queue.add(new Track_1.Track((0, Util_1.decodeTrack)(trackData.encoded), trackData.requester));
-                    }
-                }
-            }
-            this.manager.emit("debug", `Moonlink.js > Player ${guildId} has been resumed on node ${this.uuid}.`);
+            this.manager.emit("debug", `Moonlink.js > Node > Player ${guildId} has been resumed on node ${this.uuid}.`);
             this.manager.emit("playerResumed", reconstructedPlayer);
             reconstructedPlayer.isResuming = false;
         }
