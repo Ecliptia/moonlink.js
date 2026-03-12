@@ -4,6 +4,7 @@ import { EventEmitter } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
+import { SearchResult } from "../structures/SearchResult";
 export declare class Manager extends EventEmitter<IManagerEvents> {
     initialized: boolean;
     readonly options: IManagerOptionsConfig;
@@ -26,7 +27,7 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     private getSpotifySource;
     private getDeezerSource;
     private resolveNativeSource;
-    search(options: ISearchQuery): Promise<any>;
+    search(options: ISearchQuery): Promise<SearchResult>;
     packetUpdate(packet: DiscordGatewayPacket): Promise<void>;
     decodeTrack(encoded: string): ITrack;
     encodeTrack(track: ITrackInfo): string;
