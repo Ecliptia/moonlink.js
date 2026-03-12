@@ -60,8 +60,24 @@ class Player {
         this.queue = new (Util_1.Structure.get("Queue"))(this);
         this.filters = new (Util_1.Structure.get("Filters"))(this);
         this.voice = new Voice_1.Voice(this);
+        if (config.current) {
+            this.current = new Track_1.Track((0, Util_1.decodeTrack)(config.current.encoded), config.current.requester);
+            if (config.current.position) {
+                this.current.position = config.current.position;
+                this.lastPosition = this.current.position;
+            }
+        }
+        if (config.queue && Array.isArray(config.queue)) {
+            for (const track of config.queue) {
+                this.queue.add(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+            }
+        }
+        if (config.previous && Array.isArray(config.previous)) {
+            for (const track of config.previous) {
+                this.previous.push(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+            }
+        }
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
-        this.updateData(undefined, config);
         this.startHealthCheck();
     }
     startHealthCheck() {
@@ -81,7 +97,6 @@ class Player {
         if (this.destroyed || !this.connected)
             return;
         const now = Date.now();
-        const idleTimeout = this.manager.options.playerDestruction?.idleTimeout ?? 300000;
         const silenceTimeout = this.manager.options.playerHealth?.silenceTimeout ?? 120000;
         const maxStuckCount = this.manager.options.playerHealth?.maxStuckCount ?? 3;
         const maxSilentCount = this.manager.options.playerHealth?.maxSilentCount ?? 2;
@@ -91,7 +106,7 @@ class Player {
             const timeDelta = now - this.lastPositionTime;
             if (positionDelta < 1000 && timeDelta > 30000 && !this.current.isStream) {
                 this.stuckDetectionCount++;
-                this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} appears stuck. Position: ${currentPosition}, Stuck count: ${this.stuckDetectionCount}/${maxStuckCount}`);
+                this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} appears stuck. Position: ${currentPosition}, Delta: ${positionDelta}, Stuck count: ${this.stuckDetectionCount}/${maxStuckCount}`);
                 if (this.stuckDetectionCount >= maxStuckCount) {
                     this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} stuck for too long, attempting recovery.`);
                     await this.recoverFromStuck();
@@ -100,6 +115,9 @@ class Player {
                 }
             }
             else {
+                if (this.stuckDetectionCount > 0) {
+                    this.manager.emit("debug", `Moonlink.js > Player#healthCheck >> Player ${this.guildId} position advanced (Delta: ${positionDelta}). Resetting stuck count.`);
+                }
                 this.stuckDetectionCount = 0;
             }
             const activityDelta = now - this.lastActivityTime;
@@ -233,7 +251,7 @@ class Player {
             if (this.node.isNodeLink && (!voicePayload.sessionId || !voicePayload.token || !voicePayload.endpoint)) {
                 throw new Error("voice payload requires sessionId, token, and endpoint.");
             }
-            if (this.node.isNodeLink && !voicePayload.channelId) {
+            if (!voicePayload.channelId && this.voiceChannelId) {
                 voicePayload.channelId = this.voiceChannelId;
             }
             finalPayload.voice = voicePayload;
@@ -337,6 +355,7 @@ class Player {
                 userData: this.current.userData
             },
             position: finalOptions.position || this.current.position,
+            volume: this.volume
         };
         if (audioTrackId) {
             payload.track.audioTrackId = audioTrackId;
@@ -707,7 +726,9 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${e.message}`);
         }
         this.queue.clear();
-        this.manager.emit("playerDestroy", this, reason);
+        this.previous = [];
+        this.updateData("previous", []);
+        this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
@@ -745,11 +766,11 @@ class Player {
             const lastState = this.get("lastState");
             const resumePosition = Math.max(typeof lastKnownPosition === "number" ? lastKnownPosition : 0, typeof lastState?.position === "number" ? lastState.position : 0, this.current.position ?? 0);
             this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms.`);
-            this.playing = true;
-            this.paused = false;
             const payload = {
                 track: { encoded: this.current.encoded, userData: this.current.userData },
                 volume: this.volume,
+                playing: this.playing,
+                paused: this.paused
             };
             if (resumePosition > 0 && this.current.isSeekable) {
                 payload.position = resumePosition;
@@ -765,13 +786,6 @@ class Player {
                 payload.loudnessNormalizer = this.loudnessNormalizer;
             }
             await this.sendPlayerUpdate(payload);
-            if (resumePosition > 0 && this.current.isSeekable && voicePayload) {
-                await (0, Util_1.delay)(2000);
-                await this.seek(resumePosition);
-            }
-            else {
-                this.manager.emit("debug", `Moonlink.js > Player#restart >> Seek skipped (position: ${resumePosition}ms, seekable: ${this.current.isSeekable}, voiceReady: ${Boolean(voicePayload)}) for guild ${this.guildId}.`);
-            }
         }
         else if (this.queue.size > 0) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);

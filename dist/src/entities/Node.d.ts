@@ -18,6 +18,13 @@ type TrackEndEvent = LavalinkEventBase & {
     type: "TrackEndEvent";
     track: ITrack | null;
     reason: TrackEndReason;
+    crossfade?: {
+        durationMs?: number;
+        mode?: string;
+        curve?: string;
+        transition?: string | null;
+        nextTrack?: ITrack | null;
+    };
 };
 type TrackStuckEvent = LavalinkEventBase & {
     type: "TrackStuckEvent";

@@ -8,6 +8,7 @@ export declare class Local {
     private compactionIntervalMs;
     private compactionTimer?;
     private manager;
+    private isCompacting;
     private walBuffer;
     private readonly walBufferMaxSize;
     private walFlushInterval?;
