@@ -1026,9 +1026,11 @@ export class Node {
   private async handleTrackEnd(player: any, payload: TrackEndEvent): Promise<void> {
     const { reason } = payload;
     const isCrossfadeTransition = reason === "crossfading";
-    if (reason === "replaced" || reason === "gapless") {
+    const isGaplessTransition = reason === "gapless";
+    if (reason === "replaced") {
       return;
     }
+  
     const trackData = payload.track ?? player.current?.toJSON?.();
     if (trackData && player.current && (!trackData.userData || Object.keys(trackData.userData).length === 0)) {
         trackData.userData = player.current.userData;
@@ -1056,8 +1058,8 @@ export class Node {
       return;
     }
 
-    if (isCrossfadeTransition) {
-      this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to crossfade for player ${player.guildId}. Skipping queue/autoplay logic.`);
+    if (isCrossfadeTransition || isGaplessTransition) {
+      this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to ${reason} for player ${player.guildId}. Skipping queue/autoplay logic.`);
       return;
     }
 
