@@ -67,6 +67,7 @@ class Local {
     compactionIntervalMs;
     compactionTimer;
     manager;
+    isCompacting = false;
     walBuffer = [];
     walBufferMaxSize = 50;
     walFlushInterval;
@@ -130,29 +131,48 @@ class Local {
     }
     async loadSnapshot() {
         try {
+            if (!fs_1.default.existsSync(this.snapshotPath)) {
+                this.store = {};
+                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8');
+                return;
+            }
             const raw = await fs_1.default.promises.readFile(this.snapshotPath, 'utf-8');
-            const wrapper = JSON.parse(raw);
-            this.store = wrapper.data || {};
+            if (!raw || raw.trim().length === 0) {
+                this.manager.emit("debug", `Moonlink.js > LocalDB >> Snapshot file is empty. Starting with empty store.`);
+                this.store = {};
+                return;
+            }
+            try {
+                const wrapper = JSON.parse(raw);
+                this.store = wrapper.data || {};
+            }
+            catch (parseErr) {
+                const corruptedPath = `${this.snapshotPath}.corrupted.${Date.now()}`;
+                await fs_1.default.promises.rename(this.snapshotPath, corruptedPath);
+                this.manager.emit("debug", `Moonlink.js > LocalDB >> Snapshot file is corrupted and has been moved to ${corruptedPath}. Error: ${parseErr.message}. Starting with empty store.`);
+                this.store = {};
+            }
         }
         catch (err) {
+            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to load snapshot: ${err.message}. Starting with empty store.`);
             this.store = {};
-            if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8');
-            }
         }
     }
     async replayWAL() {
         let walContent;
         try {
+            if (!fs_1.default.existsSync(this.logPath)) {
+                await fs_1.default.promises.writeFile(this.logPath, '');
+                return;
+            }
             walContent = await fs_1.default.promises.readFile(this.logPath, 'utf-8');
         }
         catch (err) {
-            if (err.code === 'ENOENT') {
-                await fs_1.default.promises.writeFile(this.logPath, '');
-            }
+            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to read WAL: ${err.message}`);
             return;
         }
         const lines = walContent.split('\n');
+        let entriesReplayed = 0;
         for (const line of lines) {
             if (!line)
                 continue;
@@ -165,6 +185,10 @@ class Local {
             else if (entry.op === 'delete') {
                 this.remove(entry.key, false);
             }
+            entriesReplayed++;
+        }
+        if (entriesReplayed > 0) {
+            this.manager.emit("debug", `Moonlink.js > LocalDB >> Replayed ${entriesReplayed} operations from WAL.`);
         }
     }
     openWALStream() {
@@ -267,24 +291,31 @@ class Local {
             this.walStream = undefined;
         }
         await fs_1.default.promises.writeFile(this.logPath, '');
+        await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }));
     }
     async compact() {
-        this._flushWALBuffer();
-        if (this.walStream) {
-            await new Promise(resolve => this.walStream.end(resolve));
-            this.walStream = undefined;
-        }
+        if (this.isCompacting)
+            return;
+        this.isCompacting = true;
         try {
+            this._flushWALBuffer();
+            if (this.walStream) {
+                await new Promise(resolve => this.walStream.end(resolve));
+                this.walStream = undefined;
+            }
             const wrapper = { data: this.store };
             const raw = JSON.stringify(wrapper, null, 2);
-            await fs_1.default.promises.writeFile(this.snapshotPath, raw, 'utf-8');
+            const tempPath = `${this.snapshotPath}.tmp`;
+            await fs_1.default.promises.writeFile(tempPath, raw, 'utf-8');
+            await fs_1.default.promises.rename(tempPath, this.snapshotPath);
             await fs_1.default.promises.writeFile(this.logPath, '', 'utf-8');
         }
         catch (err) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to compact database. Error: ${err.message}`);
+            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to compact database: ${err.message}`);
         }
         finally {
             this.openWALStream();
+            this.isCompacting = false;
         }
     }
     async shutdown() {
