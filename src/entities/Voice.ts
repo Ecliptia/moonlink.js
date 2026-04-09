@@ -181,6 +181,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
             this.pendingPlaybackRestoreNonce = null;
             this.emit("disconnect");
             this.setState(VoiceConnectionState.DISCONNECTED);
+            this.player.set("userInitiatedConnect", false);
             return;
         }
 

@@ -35,6 +35,7 @@ export class Player {
 
     public current: Track | null = null;
     public previous: Track[] = [];
+    public recommendations: Track[] = [];
     public historySize: number = 10;
 
     public lastActivityTime: number = Date.now();
@@ -450,7 +451,65 @@ export class Player {
 
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: playing: ${oldPlaying} -> ${this.playing}, paused: ${oldPaused} -> ${this.paused}`);
 
+
+        this.node.analyzeMusicalTaste(this).catch(() => {});
+
         return true;
+    }
+
+    public async recordFeedback(track: Track, type: "like" | "dislike" | "neutral"): Promise<void> {
+        if (!track) return;
+        const guildId = this.guildId;
+        const artist = track.author?.toLowerCase();
+        const identifier = track.identifier;
+        const duration = track.duration;
+        const artistPath = `taste.${guildId}.artists`;
+        const trackPath = `taste.${guildId}.tracks`;
+        const fatiguePath = `taste.${guildId}.fatigue`;
+        const bucket = duration < 180000 ? "short" : duration < 420000 ? "medium" : "long";
+        const bucketPath = `taste.${guildId}.durations.${bucket}`;
+        let artists = await this.manager.database.get<Record<string, number>>(artistPath) ?? {};
+        let tracks = await this.manager.database.get<Record<string, number>>(trackPath) ?? {};
+        let bW = await this.manager.database.get<number>(bucketPath) ?? 0;
+        let fatigue = await this.manager.database.get<Record<string, number>>(fatiguePath) ?? {};
+        let aW = artists[artist] ?? 0;
+        let tW = tracks[identifier] ?? 0;
+        let fW = fatigue[artist] ?? 0;
+        if (type === "like") { 
+            aW += 2; tW += 5; bW += 1; 
+            fW = Math.max(0, fW - 1);
+        } else if (type === "dislike") { 
+            aW -= 5; tW -= 15; bW -= 2; 
+            fW = Math.min(20, fW + 5);
+        } else { 
+            aW -= 1; tW -= 3; 
+            fW = Math.min(10, fW + 1);
+        }
+        artists[artist] = Math.min(25, Math.max(-25, aW));
+        tracks[identifier] = Math.min(40, Math.max(-40, tW));
+        fatigue[artist] = fW;
+        const artistKeys = Object.keys(artists);
+        if (artistKeys.length > 50) {
+            const sorted = artistKeys.sort((a, b) => Math.abs(artists[b]) - Math.abs(artists[a]));
+            const newArtists = {};
+            for (const k of sorted.slice(0, 45)) newArtists[k] = artists[k];
+            artists = newArtists;
+        }
+        const trackKeys = Object.keys(tracks);
+        if (trackKeys.length > 100) {
+            const sorted = trackKeys.sort((a, b) => Math.abs(tracks[b]) - Math.abs(tracks[a]));
+            const newTracks = {};
+            for (const k of sorted.slice(0, 90)) newTracks[k] = tracks[k];
+            tracks = newTracks;
+        }
+        await this.manager.database.set(artistPath, artists);
+        await this.manager.database.set(trackPath, tracks);
+        await this.manager.database.set(bucketPath, Math.min(15, Math.max(-15, bW)));
+        await this.manager.database.set(fatiguePath, fatigue);
+        const recentArtists = await this.manager.database.get<string[]>(`taste.${guildId}.recentArtists`) ?? [];
+        if (type === "like") recentArtists.push(artist);
+        if (recentArtists.length > 20) recentArtists.shift();
+        await this.manager.database.set(`taste.${guildId}.recentArtists`, recentArtists);
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
@@ -597,6 +656,8 @@ export class Player {
             return this;
         }
 
+        if (this.current) this.recordFeedback(this.current, "neutral").catch(() => {});
+
         this.manager.emit("debug", `Moonlink.js > Player#pause -> Sending pause request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredPause", this);
         await this.sendPlayerUpdate({ paused: true });
@@ -726,6 +787,7 @@ export class Player {
 
     public async skip(position?: number): Promise<boolean> {
         const oldTrack = this.current;
+        if (oldTrack) this.recordFeedback(oldTrack, "dislike").catch(() => {});
         if (position !== undefined) {
             this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to position ${position} in queue for guild ${this.guildId}`);
             const track = this.queue.remove(position);
@@ -736,7 +798,6 @@ export class Player {
             this.manager.emit("playerTriggeredSkip", this, oldTrack, track, position);
             return await this.play({ track: track instanceof Track ? track : new Track(track) });
         }
-
         if (!this.queue.size) {
             if (this.autoPlay) {
                 if (!this.current) {
@@ -750,7 +811,6 @@ export class Player {
             await this.stop();
             return true;
         }
-
         const nextTrack = this.queue.first;
         this.manager.emit("playerTriggeredSkip", this, oldTrack, nextTrack, 0);
         this.manager.emit("debug", `Moonlink.js > Player#skip -> Skipping to next track in queue for guild ${this.guildId}`);
@@ -897,29 +957,27 @@ export class Player {
             return false;
         }
 
-        const voicePayload = this.voice.sessionId && this.voice.token && this.voice.endpoint
-            ? {
-                sessionId: this.voice.sessionId,
-                token: this.voice.token,
-                endpoint: this.voice.endpoint,
-                ...(this.node.isNodeLink ? { channelId: this.voiceChannelId } : {})
-            }
-            : null;
-        if (voicePayload) {
-            await this.sendPlayerUpdate({ voice: voicePayload }, true);
-        } else {
-            this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice data missing for guild ${this.guildId}, skipping voice refresh.`);
-        }
-
         if (this.current) {
             const lastKnownPosition = this.get<number>("lastKnownPosition");
-            const lastState = this.get<{ position: number }>("lastState");
+            const lastState = this.get<{ position: number; connected: boolean }>("lastState");
+            
+            const currentLavalinkPos = lastState?.position ?? 0;
+            const isResumedSync = this.node.resumed && this.playing && currentLavalinkPos > 0;
+            const isAlreadySync = isResumedSync || (lastState?.connected && Math.abs(currentLavalinkPos - (this.current.position ?? 0)) < 2000);
+
+            if (isAlreadySync && this.playing) {
+                this.manager.emit("debug", `Moonlink.js > Player#restart >> Player already in sync for guild ${this.guildId}, skipping track restoration. (Resumed: ${this.node.resumed}, Sync: ${isAlreadySync})`);
+                this.manager.emit("playerResumed", this);
+                return true;
+            }
+
             const resumePosition = Math.max(
                 typeof lastKnownPosition === "number" ? lastKnownPosition : 0,
-                typeof lastState?.position === "number" ? lastState.position : 0,
+                currentLavalinkPos,
                 this.current.position ?? 0
             );
-            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms.`);
+
+            this.manager.emit("debug", `Moonlink.js > Player#restart -> Restoring current track "${this.current.title}" for guild ${this.guildId} at ${resumePosition}ms. AlreadySync: ${isAlreadySync}`);
 
             const payload: any = {
                 track: { encoded: this.current.encoded, userData: this.current.userData },
@@ -927,7 +985,8 @@ export class Player {
                 playing: this.playing,
                 paused: this.paused
             };
-            if (resumePosition > 0 && this.current.isSeekable) {
+
+            if (resumePosition > 0 && this.current.isSeekable && !isAlreadySync) {
                 payload.position = resumePosition;
             }
 

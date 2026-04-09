@@ -31,6 +31,7 @@ export declare class Player {
     isResuming: boolean;
     current: Track | null;
     previous: Track[];
+    recommendations: Track[];
     historySize: number;
     lastActivityTime: number;
     private fading?;
@@ -73,6 +74,7 @@ export declare class Player {
         noReplace?: boolean;
         audioTrackId?: string;
     } | Track): Promise<boolean>;
+    recordFeedback(track: Track, type: "like" | "dislike" | "neutral"): Promise<void>;
     addMix(track: Track | string, options?: {
         volume?: number;
         userData?: Record<string, any>;

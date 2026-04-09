@@ -43,7 +43,7 @@ export class PlayerManager {
         player.updateData("guildId", options.guildId);
         player.updateData("voiceChannelId", options.voiceChannelId);
         if (options.textChannelId) player.updateData("textChannelId", options.textChannelId);
-        if (options.volume) player.updateData("volume", options.volume);
+        if (options.volume !== undefined) player.updateData("volume", options.volume);
         if (options.autoPlay !== undefined) player.updateData("autoPlay", options.autoPlay);
         if (options.autoLeave !== undefined) player.updateData("autoLeave", options.autoLeave);
         if (options.loop !== undefined) player.updateData("loop", options.loop);

@@ -1422,9 +1422,9 @@ export class Node {
     }
 
     const voiceOptions = this.manager.options.voiceConnection;
-    if (!voiceOptions?.autoReconnect) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect is disabled for player ${player.guildId}.`);
-        await player.destroy("Auto-reconnect disabled");
+    if (!voiceOptions?.autoReconnect || !player.get("userInitiatedConnect")) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect skipped for player ${player.guildId}. (Enabled: ${voiceOptions?.autoReconnect}, UserInitiated: ${player.get("userInitiatedConnect")})`);
+        if (!player.get("userInitiatedConnect")) await player.destroy("Disconnected by user/kick");
         return;
     }
 
@@ -1445,24 +1445,21 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Reconnect scheduled in ${reconnectDelay}ms for player ${player.guildId}.`);
 
     setTimeout(async () => {
-        if (player.destroyed) {
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Player ${player.guildId} was destroyed during reconnect delay.`);
+        if (player.destroyed || !player.get("userInitiatedConnect")) {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Reconnect cancelled for player ${player.guildId}. (Destroyed or not user-initiated)`);
             return;
         }
 
         try {
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 1: Reconnecting voice for player ${player.guildId}.`);
-            await player.connect();
-            
-            const timeout = voiceOptions.timeout ?? 15000;
-            await new Promise(resolve => setTimeout(resolve, timeout));
-
             if (player.playing && player.current) {
-                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Step 2: Restarting player ${player.guildId} after voice reconnect.`);
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Attempting player restart for ${player.guildId}.`);
                 await player.restart();
+            } else {
+                this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Reconnecting voice for idle player ${player.guildId}.`);
+                await player.connect();
             }
 
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice reconnected for player ${player.guildId}.`);
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Voice recovery finished for player ${player.guildId}.`);
             player.set("wsReconnectAttempts", 0);
         } catch (error) {
             this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Reconnect attempt ${reconnectAttempts} failed for player ${player.guildId}. Error: ${error.message}.`);
@@ -1476,156 +1473,190 @@ export class Node {
     }, reconnectDelay);
   }
 
-  public async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
-    if (!previousTrack?.sourceName || !previousTrack.identifier) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No source or identifier for autoPlay in player ${player.guildId}. PreviousTrack: ${stringifyWithReplacer(previousTrack)}.`);
-        return false;
-    }
+  public async analyzeMusicalTaste(player: any): Promise<void> {
+    if (!player.current) return;
 
-    const source = previousTrack.sourceName.toLowerCase() as string;
-    const identifier = previousTrack.identifier;
-    
-    let uri: string | undefined;
-    let searchSource: string | undefined;
+    const source = (player.current.sourceName ?? "youtube").toLowerCase();
+    const identifier = player.current.identifier;
+    let uri: string | null = null;
+    let searchSource: string | null = null;
 
     switch (source) {
-        case "youtube":
-            uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
-            searchSource = "youtube";
-            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using YouTube Mix for autoPlay in player ${player.guildId}. URI: ${uri}.`);
-            break;
-
-        case "spotify":
-            if (this.isNodeLink && this.capabilities.has("source:spotify")) {
-                uri = `seed_tracks=${identifier}`;
-                searchSource = "sprec";
-                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Spotify recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
-            }
-            break;
-
-        case "deezer":
-            if (this.isNodeLink && this.capabilities.has("source:deezer")) {
-                uri = identifier;
-                searchSource = "dzrec";
-                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Deezer recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
-            }
-            break;
-
-        case "soundcloud":
-            uri = `${previousTrack.author}`;
-            searchSource = "soundcloud";
-            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using SoundCloud artist search for autoPlay in player ${player.guildId}. URI: ${uri}.`);
-            break;
-
-        case "applemusic":
-            if (this.isNodeLink && this.capabilities.has("source:applemusic")) {
-                uri = identifier;
-                searchSource = "amrec";
-                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Apple Music recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
-            }
-            break;
-    }
-
-    if (!uri || !searchSource) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No valid autoPlay source found for ${source} in player ${player.guildId}.`);
-        if (source !== "youtube") {
-            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Falling back to YouTube Mix for autoPlay in player ${player.guildId}.`);
-            const res = await this.manager.search({
-              query: `${previousTrack.title} ${previousTrack.author}`,
-            })
-
-            if (res && res.tracks && res.tracks.length > 0) {
-                const suposteousTrack = res.tracks[0];
-                uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
-                searchSource = "youtube";
-                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> YouTube Mix URI for autoPlay in player ${player.guildId}: ${uri}.`);
-            } else {
-                this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> YouTube Mix fallback failed for autoPlay in player ${player.guildId}.`);
-                return false;
-            }
+      case "youtube":
+        uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+        searchSource = "youtube";
+        break;
+      case "youtubemusic":
+        uri = `https://music.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+        searchSource = "youtubemusic";
+        break;
+      case "spotify":
+        if (this.capabilities.has("source:spotify")) {
+          uri = `seed_tracks=${identifier}`;
+          searchSource = "sprec";
         }
+        break;
+      case "deezer":
+        if (this.capabilities.has("source:deezer")) {
+          uri = identifier;
+          searchSource = "dzrec";
+        }
+        break;
+      case "soundcloud":
+        uri = `similar:${identifier}`;
+        searchSource = "soundcloud";
+        break;
+      case "applemusic":
+        if (this.capabilities.has("source:applemusic")) {
+          uri = identifier;
+          searchSource = "amrec";
+        }
+        break;
     }
 
-    if (!uri || !searchSource) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Unable to determine URI or search source for autoPlay in player ${player.guildId}.`);
-        return false;
-    }
+    if (!uri || !searchSource) return;
+
+    this.manager.emit("debug", `Moonlink.js > Brain >> Analyzing taste for ${source} in guild ${player.guildId}...`);
 
     try {
-        const res = await this.manager.search({
-            query: uri,
-            source: searchSource,
-            requester: previousTrack.requester,
-        });
+      const res = await this.manager.search({ query: uri, source: searchSource });
+      if (!res?.tracks) return;
 
-        if (!res || !res.tracks || res.tracks.length === 0 || res.loadType === "error") {
-            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No tracks found for autoPlay in player ${player.guildId}. LoadType: ${res?.loadType}.`);
-            return false;
+      const recentArtists = await this.manager.database.get<string[]>(`taste.${player.guildId}.recentArtists`) ?? [];
+      const blockedKeys = new Set<string>();
+      const getTrackKey = (t: any) => {
+        const id = t.identifier ?? t.info?.identifier;
+        const src = (t.sourceName ?? t.info?.sourceName ?? "yt").toLowerCase();
+        return `${src}:${id}`;
+      };
+
+      blockedKeys.add(getTrackKey(player.current));
+      player.previous.forEach((t: any) => blockedKeys.add(getTrackKey(t)));
+      player.queue.tracks.forEach((t: any) => blockedKeys.add(getTrackKey(t)));
+
+      const scoredTracks = [];
+      for (const t of res.tracks.slice(0, 25)) {
+        if (blockedKeys.has(getTrackKey(t))) continue;
+
+        const artist = t.author?.toLowerCase();
+        const tid = t.identifier;
+        const dur = t.duration;
+        const bucket = dur < 180000 ? "short" : dur < 420000 ? "medium" : "long";
+
+        const aAf = await this.manager.database.get<number>(`taste.${player.guildId}.artists.${artist}`) ?? 0;
+        const tAf = await this.manager.database.get<number>(`taste.${player.guildId}.tracks.${tid}`) ?? 0;
+        const bAf = await this.manager.database.get<number>(`taste.${player.guildId}.durations.${bucket}`) ?? 0;
+        const fatigue = await this.manager.database.get<number>(`taste.${player.guildId}.fatigue.${artist}`) ?? 0;
+
+        if (aAf <= -15 || tAf <= -25) continue;
+
+        let score = (aAf * 3 + tAf * 5 + bAf * 2) - (fatigue * 10);
+        const lastArtistPos = recentArtists.lastIndexOf(artist);
+        if (lastArtistPos !== -1) {
+          score -= Math.max(0, (15 - (recentArtists.length - lastArtistPos)) * 5);
+        } else {
+          score += 25;
         }
 
-        const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 10;
-        const recentHistory = Array.isArray(player.previous)
-            ? player.previous.slice(-historyLimit)
-            : [];
-        const queuedTracks = Array.isArray(player.queue?.tracks)
-            ? player.queue.tracks
-            : [];
-        const getTrackKey = (track: any): string | null => {
-            if (!track) return null;
-            const identifier = track.identifier ?? track.info?.identifier;
-            const sourceName = track.sourceName ?? track.info?.sourceName;
-            if (identifier) return `${sourceName ?? "unknown"}:${identifier}`;
-            const encoded = track.encoded;
-            if (encoded) return encoded;
-            const uri = track.uri ?? track.info?.uri;
-            if (uri) return uri;
-            const title = track.title ?? track.info?.title ?? "";
-            const author = track.author ?? track.info?.author ?? "";
-            const combined = `${title}:${author}`.trim();
-            return combined.length > 1 ? combined : null;
-        };
+        score += (Math.random() * 10);
+        scoredTracks.push({ track: t, score });
+      }
 
-        const blockedKeys = new Set<string>();
-        const addBlocked = (track: any) => {
-            const key = getTrackKey(track);
-            if (key) blockedKeys.add(key);
-        };
+      player.recommendations = scoredTracks
+        .sort((a, b) => b.score - a.score)
+        .map(d => d.track)
+        .slice(0, 50);
 
-        addBlocked(previousTrack);
-        for (const track of recentHistory) addBlocked(track);
-        for (const track of queuedTracks) addBlocked(track);
+    } catch (e) {
+      this.manager.emit("debug", `Moonlink.js > Brain >> Analysis failed for guild ${player.guildId}.`);
+    }
+  }
 
-        const seenKeys = new Set<string>();
-        const candidates = res.tracks.filter((track) => {
-            const key = getTrackKey(track);
-            if (!key) return false;
-            if (blockedKeys.has(key)) return false;
-            if (seenKeys.has(key)) return false;
-            seenKeys.add(key);
-            return true;
-        });
+  public async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
+    if (!previousTrack?.sourceName || !previousTrack.identifier) return false;
 
-        if (candidates.length === 0) {
-            this.manager.emit(
-                "debug",
-                `Moonlink.js > Node#handleAutoPlay >> AutoPlay results contained only recent/duplicate tracks for player ${player.guildId}.`
-            );
-            return false;
+    player.recordFeedback(previousTrack, "like").catch(() => { });
+
+    if (player.recommendations && player.recommendations.length > 0) {
+      const selected = player.recommendations.shift();
+      if (selected) {
+        player.queue.add(selected);
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Brain selected ranked track: "${selected.title}" by ${selected.author}`);
+        await player.play();
+        this.manager.emit("autoPlayed", player, selected, previousTrack);
+        return true;
+      }
+    }
+
+    let uri: string | null = null;
+    let searchSource: string | null = null;
+    const source = previousTrack.sourceName.toLowerCase();
+    const identifier = previousTrack.identifier;
+
+    switch (source) {
+      case "youtube":
+        uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+        searchSource = "youtube";
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using YouTube Mix for autoPlay in player ${player.guildId}. URI: ${uri}.`);
+        break;
+      case "youtubemusic":
+        uri = `https://music.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+        searchSource = "youtubemusic";
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using YouTube Music Mix for autoPlay in player ${player.guildId}. URI: ${uri}.`);
+        break;
+      case "spotify":
+        if (this.isNodeLink && this.capabilities.has("source:spotify")) {
+          uri = `seed_tracks=${identifier}`;
+          searchSource = "sprec";
+          this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Spotify recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
         }
-
-        const filteredTracks = candidates.slice(0, 10);
-        const randomTrack = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
-        
-        if (randomTrack) {
-            player.queue.add(randomTrack);
-            this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> AutoPlay track added for player ${player.guildId}: "${randomTrack.title}" by ${randomTrack.author}. Track: ${stringifyWithReplacer(randomTrack)}.`);
-            
-            await player.play();
-            this.manager.emit("autoPlayed", player, randomTrack, previousTrack);
-            return true;
+        break;
+      case "deezer":
+        if (this.isNodeLink && this.capabilities.has("source:deezer")) {
+          uri = identifier;
+          searchSource = "dzrec";
+          this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Deezer recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
         }
-    } catch (error) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> AutoPlay error for player ${player.guildId}. Error: ${error.message}.`);
+        break;
+      case "soundcloud":
+        uri = `${previousTrack.author}`;
+        searchSource = "soundcloud";
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using SoundCloud artist search for autoPlay in player ${player.guildId}. URI: ${uri}.`);
+        break;
+      case "applemusic":
+        if (this.isNodeLink && this.capabilities.has("source:applemusic")) {
+          uri = identifier;
+          searchSource = "amrec";
+          this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> Using Apple Music recommendations for autoPlay in player ${player.guildId}. URI: ${uri}.`);
+        }
+        break;
+    }
+
+    if (!uri || !searchSource) {
+      this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> No valid autoPlay source found for ${source} in player ${player.guildId}.`);
+      if (source !== "youtube") {
+        this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> Falling back to YouTube Mix for autoPlay in player ${player.guildId}.`);
+        const res = await this.manager.search({ query: `${previousTrack.title} ${previousTrack.author}` });
+        if (res?.tracks?.length > 0) {
+          uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
+          searchSource = "youtube";
+          this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay -> YouTube Mix URI for autoPlay in player ${player.guildId}: ${uri}.`);
+        } else {
+          this.manager.emit("debug", `Moonlink.js > Node#handleAutoPlay >> YouTube Mix fallback failed for autoPlay in player ${player.guildId}.`);
+          return false;
+        }
+      }
+    }
+
+    if (uri && searchSource) {
+      const res = await this.manager.search({ query: uri, source: searchSource });
+      if (res?.tracks?.length > 0) {
+        const selected = res.tracks[source === "youtube" || source === "youtubemusic" ? 1 : 0] || res.tracks[0];
+        player.queue.add(selected);
+        await player.play();
+        this.manager.emit("autoPlayed", player, selected, previousTrack);
+        return true;
+      }
     }
 
     return false;
@@ -1664,6 +1695,7 @@ export class Node {
     this.manager.emit("nodeDestroy", this.identifier);
     this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} destroyed.`);
   }
+
   private async _resumePlayers(): Promise<void> {
     if (this.recoveryInProgress) {
       this.manager.emit(
@@ -1733,7 +1765,7 @@ export class Node {
           this.manager.emit("playerResuming", reconstructedPlayer);
           reconstructedPlayer.isResuming = true;
     
-          reconstructedPlayer.connect();
+          await reconstructedPlayer.connect();
     
           reconstructedPlayer.playing = playerInfo.paused === false;
           reconstructedPlayer.paused = playerInfo.paused ?? false;

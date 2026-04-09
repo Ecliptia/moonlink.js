@@ -36,6 +36,7 @@ class Manager extends Util_1.EventEmitter {
             resume: true,
             resumeTimeout: 60000,
             customFilters: {},
+            ...config.options,
             defaultPlayer: {
                 volume: 100,
                 autoPlay: false,
@@ -43,13 +44,15 @@ class Manager extends Util_1.EventEmitter {
                 selfDeaf: true,
                 selfMute: false,
                 loop: "off",
-                historySize: 10
+                historySize: 10,
+                ...config.options?.defaultPlayer
             },
             voiceConnection: {
                 timeout: 15000,
                 maxReconnectAttempts: 3,
                 reconnectDelay: 5000,
-                autoReconnect: true
+                autoReconnect: true,
+                ...config.options?.voiceConnection
             },
             node: {
                 selectionStrategy: "leastLoad",
@@ -57,37 +60,45 @@ class Manager extends Util_1.EventEmitter {
                 retryAmount: 5,
                 avoidUnhealthyNodes: false,
                 maxCpuLoad: 80,
-                maxMemoryUsage: 90
+                maxMemoryUsage: 90,
+                ...config.options?.node
             },
             search: {
                 defaultPlatform: "youtube",
                 resultLimit: 10,
-                playlistLoadLimit: 100
+                playlistLoadLimit: 100,
+                ...config.options?.search
             },
             queue: {
                 maxSize: 1000,
                 allowDuplicates: true,
-                historyLimit: 10
+                historyLimit: 10,
+                ...config.options?.queue
             },
             sources: {
-                disabledSources: []
+                disabledSources: [],
+                ...config.options?.sources
             },
             spotify: {
-                enabled: false
+                enabled: false,
+                ...config.options?.spotify
             },
             deezer: {
-                enabled: false
+                enabled: false,
+                ...config.options?.deezer
             },
             playerDestruction: {
                 autoDestroyOnIdle: false,
-                idleTimeout: 300000
+                idleTimeout: 300000,
+                ...config.options?.playerDestruction
             },
             trackHandling: {
                 autoSkipOnError: false,
                 skipStuckTracks: false,
                 trackStuckThreshold: 10000,
                 retryFailedTracks: false,
-                maxRetryAttempts: 3
+                maxRetryAttempts: 3,
+                ...config.options?.trackHandling
             },
             playerHealth: {
                 checkInterval: 30000,
@@ -95,12 +106,13 @@ class Manager extends Util_1.EventEmitter {
                 maxStuckCount: 3,
                 maxSilentCount: 2,
                 autoRecover: true,
-                resumeDebounce: 1000
+                resumeDebounce: 1000,
+                ...config.options?.playerHealth
             },
             database: {
-                type: "local"
-            },
-            ...config.options
+                type: "local",
+                ...config.options?.database
+            }
         };
         Util_1.Structure.setManager(this);
         this.nodes = new (Util_1.Structure.get("NodeManager"))(this, config.nodes);
