@@ -37,6 +37,7 @@ export interface IManagerEvents {
     playerConnectionStatus: (player: Player, status: string | boolean | undefined, payload?: any) => void;
     playerSeek: (player: Player, position: number, payload?: any) => void;
     playerPause: (player: Player, paused: boolean, payload?: any) => void;
+    playerStop: (player: Player) => void;
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
     playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
     playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
