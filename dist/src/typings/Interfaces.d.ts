@@ -3,6 +3,7 @@ import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
+import type { LoggerOptions } from '../logging/Logger';
 export interface IManagerEvents {
     debug: (message: string) => void;
     nodeCreate: (node: Node) => void;
@@ -32,6 +33,7 @@ export interface IManagerEvents {
     playerConnectionStatus: (player: Player, status: string | boolean | undefined, payload?: any) => void;
     playerSeek: (player: Player, position: number, payload?: any) => void;
     playerPause: (player: Player, paused: boolean, payload?: any) => void;
+    playerStop: (player: Player) => void;
     playerMoved: (player: Player, oldChannel: string, newChannel: string) => void;
     playerMuteChange: (player: Player, selfMute: boolean, serverMute: boolean) => void;
     playerDeafChange: (player: Player, selfDeaf: boolean, serverDeaf: boolean) => void;
@@ -39,6 +41,7 @@ export interface IManagerEvents {
     playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
     playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
     playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
+    playerVolumeError: (player: Player, error: Error, volume: number) => void;
     playerChangedLoop: (player: Player, oldLoop: PlayerLoop, loop: PlayerLoop, oldLoopCount?: number, newLoopCount?: number) => void;
     playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
     playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
@@ -48,6 +51,7 @@ export interface IManagerEvents {
     playerRecoveryFailed: (player: Player) => void;
     playersMoved: (players: Player[], oldNode: Node, newNode: Node) => void;
     playersOrphaned: (players: Player[], deadNode: Node) => void;
+    playerNodeFailover: (player: Player, report: INodeFailoverReport) => void;
     playerTriggeredPlay: (player: Player, track: Track) => void;
     playerTriggeredPause: (player: Player) => void;
     playerTriggeredResume: (player: Player) => void;
@@ -80,6 +84,13 @@ export interface IManagerEvents {
     eternalBoxInfo: (player: Player, payload?: any) => void;
     eternalBoxJump: (player: Player, payload?: any) => void;
 }
+export interface INodeFailoverReport {
+    source: string;
+    target: string;
+    status: 'in-progress' | 'recovered' | 'failed' | 'cancelled';
+    positionMs?: number;
+    reason?: string;
+}
 export interface IManagerNodeConfig {
     host: string;
     password: string;
@@ -93,6 +104,9 @@ export interface IManagerNodeConfig {
     priority?: number;
 }
 export interface IManagerOptionsConfig {
+    logging?: LoggerOptions & {
+        banner?: boolean;
+    };
     clientName?: string;
     userAgent?: string;
     noReplace?: boolean;

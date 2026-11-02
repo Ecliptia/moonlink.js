@@ -32,10 +32,12 @@ export type ResponseWithHeaders<T> = {
 export declare function makeRequest<T = any>(initialUrl: string, options: http.RequestOptions & {
     body?: any;
     returnHeaders: true;
+    throwOnError?: boolean;
 }, timeout?: number, retries?: number, retryDelay?: number, maxRedirects?: number): Promise<ResponseWithHeaders<T> | undefined>;
 export declare function makeRequest<T = any>(initialUrl: string, options: http.RequestOptions & {
     body?: any;
     returnHeaders?: false;
+    throwOnError?: boolean;
 }, timeout?: number, retries?: number, retryDelay?: number, maxRedirects?: number): Promise<T | undefined>;
 export type StreamResponse = {
     stream: http.IncomingMessage;

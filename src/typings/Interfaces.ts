@@ -3,6 +3,7 @@ import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
+import type { LoggerOptions } from '../logging/Logger';
 
 export interface IManagerEvents {
     debug: (message: string) => void;
@@ -45,6 +46,7 @@ export interface IManagerEvents {
     playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
     playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
     playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
+    playerVolumeError: (player: Player, error: Error, volume: number) => void;
     playerChangedLoop: (player: Player, oldLoop: PlayerLoop, loop: PlayerLoop, oldLoopCount?: number, newLoopCount?: number) => void;
     playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
     playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
@@ -56,6 +58,7 @@ export interface IManagerEvents {
     // Failover Events
     playersMoved: (players: Player[], oldNode: Node, newNode: Node) => void;
     playersOrphaned: (players: Player[], deadNode: Node) => void;
+    playerNodeFailover: (player: Player, report: INodeFailoverReport) => void;
     
     // Player Triggered Events
     playerTriggeredPlay: (player: Player, track: Track) => void;
@@ -97,6 +100,14 @@ export interface IManagerEvents {
     eternalBoxJump: (player: Player, payload?: any) => void;
 }
 
+export interface INodeFailoverReport {
+    source: string;
+    target: string;
+    status: 'in-progress' | 'recovered' | 'failed' | 'cancelled';
+    positionMs?: number;
+    reason?: string;
+}
+
 export interface IManagerNodeConfig {
     host: string;
     password: string;
@@ -111,6 +122,7 @@ export interface IManagerNodeConfig {
 }
 
 export interface IManagerOptionsConfig {
+    logging?: LoggerOptions & { banner?: boolean };
     clientName?: string;
     userAgent?: string;
     noReplace?: boolean;

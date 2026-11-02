@@ -1,0 +1,19 @@
+[
+  "Connectors",
+  "DeezerSource",
+  "Filters",
+  "Manager",
+  "Node",
+  "NodeManager",
+  "Player",
+  "PlayerManager",
+  "Queue",
+  "Rest",
+  "SearchResult",
+  "SpotifySource",
+  "Track",
+  "VoiceReceiver",
+  "WebSocket",
+  "YouTubeLiveChat",
+  "version"
+]

@@ -15,6 +15,7 @@ import { Connector } from "../connectors/Connector";
 import { version } from "../..";
 import { SpotifySource } from "../sources/spotify";
 import { DeezerSource } from "../sources/deezer";
+import { Logger } from "../logging/Logger";
 
 export class Manager extends EventEmitter<IManagerEvents> {
     public initialized: boolean = false;
@@ -24,6 +25,8 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public readonly nodes: any;
     public readonly players: PlayerManager;
     public database: DatabaseManager;
+    public readonly logger?: Logger;
+    private detachLogging?: () => void;
     private idleCheckInterval?: NodeJS.Timeout;
     private spotifySource?: SpotifySource;
     private deezerSource?: DeezerSource;
@@ -134,6 +137,16 @@ export class Manager extends EventEmitter<IManagerEvents> {
 
         this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Structure.get("PlayerManager"))(this);
+        if (this.options.logging) {
+            this.logger = new Logger(this.options.logging);
+            this.detachLogging = this.logger.attachManager(this);
+            if (this.options.logging.banner) this.logger.banner();
+        }
+    }
+
+    public detachLogger(): void {
+        this.detachLogging?.();
+        this.detachLogging = undefined;
     }
 
     public use(connector: Connector, client: any): this {

@@ -240,7 +240,7 @@ export type ResponseWithHeaders<T> = {
 
 export function makeRequest<T = any>(
   initialUrl: string,
-  options: http.RequestOptions & { body?: any; returnHeaders: true },
+  options: http.RequestOptions & { body?: any; returnHeaders: true; throwOnError?: boolean },
   timeout?: number,
   retries?: number,
   retryDelay?: number,
@@ -249,7 +249,7 @@ export function makeRequest<T = any>(
 
 export function makeRequest<T = any>(
   initialUrl: string,
-  options: http.RequestOptions & { body?: any; returnHeaders?: false },
+  options: http.RequestOptions & { body?: any; returnHeaders?: false; throwOnError?: boolean },
   timeout?: number,
   retries?: number,
   retryDelay?: number,
@@ -258,7 +258,7 @@ export function makeRequest<T = any>(
 
 export async function makeRequest<T = any>(
   initialUrl: string,
-  options: http.RequestOptions & { body?: any; returnHeaders?: boolean },
+  options: http.RequestOptions & { body?: any; returnHeaders?: boolean; throwOnError?: boolean },
   timeout = 100000,
   retries = 3,
   retryDelay = 1000,
@@ -294,6 +294,7 @@ export async function makeRequest<T = any>(
               },
             };
             delete (requestOptions as { returnHeaders?: boolean }).returnHeaders;
+            delete (requestOptions as { throwOnError?: boolean }).throwOnError;
             delete requestOptions.headers["host"];
 
             const req = transport.request(requestOptions, (res) => {
@@ -438,6 +439,7 @@ export async function makeRequest<T = any>(
 
       throw new Error("Too many redirects");
     } catch (error) {
+      if (options.throwOnError && attempt >= retries) throw error;
       const is404 = (error as Error).message.includes('status 404');
       
       if (!is404) {

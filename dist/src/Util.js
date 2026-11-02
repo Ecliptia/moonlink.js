@@ -234,6 +234,7 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                         },
                     };
                     delete requestOptions.returnHeaders;
+                    delete requestOptions.throwOnError;
                     delete requestOptions.headers["host"];
                     const req = transport.request(requestOptions, (res) => {
                         const { statusCode, headers } = res;
@@ -335,6 +336,8 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
             throw new Error("Too many redirects");
         }
         catch (error) {
+            if (options.throwOnError && attempt >= retries)
+                throw error;
             const is404 = error.message.includes('status 404');
             if (!is404) {
                 console.error(`Attempt ${attempt + 1}/${retries + 1} failed for ${initialUrl}: ${error.message}`);
