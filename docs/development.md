@@ -30,3 +30,11 @@ El lock oficial es `pnpm-lock.yaml`; `packageManager` fija pnpm 10.34.5. CI inst
 | Node 24 | Incluido en matriz CI | Resultado remoto de los checks |
 
 Las plantillas del ZIP no son código operativo y no se copiaron sobre el fork. El [plan](../tasks/plan.md) conserva el orden de la migración y los pendientes.
+
+## Primera implementación
+
+La suite cubre búsquedas demoradas y fuera de orden, stop/desactivación/destroy, reproducción explícita nueva, eventos de pista antiguos/duplicados, comandos REST demorados, timeout de resume, handshake de voz, respuestas vacías, fallos de restauración, transferencia parcial y recuperación cancelada. El error HTTP 404 se reproduce con un servidor local real. El logger se verifica en procesos separados para comprobar silencio, niveles, banner, estado, failover y retirada de listeners.
+
+El diagnóstico inicial de siete fallos de autoplay se convirtió en regresiones verdes. La revisión adicional encontró y corrigió el bloqueo de voz al serializar, la confusión entre cancelación y fallo de recuperación, y el catch de 404 inalcanzable porque el transporte heredado absorbía el error. La nueva opción de propagación se limita al PATCH de player para preservar los demás contratos HTTP heredados.
+
+Los resultados locales definitivos y el resultado de CI se registran en la PR. Las pruebas usan clases reales con REST/search controlados, además del servidor HTTP local; no sustituyen las pruebas reales de Discord/Lavalink/NodeLink.

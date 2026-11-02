@@ -30,6 +30,8 @@ Esta rama es de desarrollo y la publicación está desactivada. El nombre npm he
 
 Los eventos `debug` heredados siguen disponibles. Sus mensajes técnicos pueden incluir contraseñas de nodos y tokens de voz: el responsable del bot controla el acceso a la consola y a sus archivos. No se deben reenviar automáticamente a navegadores, canales de Discord ni servicios externos.
 
+El [logger Consola Combinado](docs/logging.md) es opcional: incluye banner ASCII y paneles de estado/failover con información real. Consulta también los [cambios de reproducción, recuperación y volumen](docs/playback.md) y el [changelog](CHANGELOG.md).
+
 ## Licencia y origen
 
 Derivado de Moonlink.js, de **1Lucas1.apk y sus colaboradores**. Se conservan los avisos originales y la licencia [Open Software License 3.0](LICENSE). Los cambios de NyxLink no implican respaldo del proyecto original.
