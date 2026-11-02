@@ -1,3 +1,4 @@
+import type { StorageAdapter } from '../database/StorageAdapter';
 import { Node } from "../entities/Node";
 import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
@@ -145,6 +146,7 @@ export interface IManagerOptionsConfig {
     trackPartial?: TPartialTrackProperties[];
     database?: {
         type: 'memory' | 'local';
+        adapter?: StorageAdapter;
         options?: any;
     };
 }

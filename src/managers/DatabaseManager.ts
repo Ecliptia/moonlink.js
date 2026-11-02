@@ -1,17 +1,23 @@
 import { Manager } from "../core/Manager";
 import { Memory } from "../database/Memory";
 import { Local } from "../database/Local";
-
-type DatabaseProvider = Memory | Local;
+import type { StorageAdapter } from '../database/StorageAdapter';
 
 export class DatabaseManager {
-  public provider: DatabaseProvider;
+  public provider: StorageAdapter;
+  private tail: Promise<unknown> = Promise.resolve();
+  private closing = false;
+  private shutdownPromise?: Promise<void>;
   private manager: Manager;
   private dbConfig: { type: 'memory' | 'local'; options?: any; };
 
   constructor(manager: Manager) {
     this.manager = manager;
     this.dbConfig = this.manager.options.database || { type: 'memory' };
+    if (this.manager.options.database?.adapter) {
+      this.provider = this.manager.options.database.adapter;
+      return;
+    }
     
     switch (this.dbConfig.type) {
       case 'local':
@@ -29,30 +35,52 @@ export class DatabaseManager {
   }
 
   public async get<T>(key: string): Promise<T | undefined> {
+    await this.tail;
     return this.provider.get(key);
   }
 
-  public async set<T>(key: string, value: T): Promise<void> {
-    return this.provider.set(key, value);
+  public set<T>(key: string, value: T): Promise<void> {
+    return this.mutate(() => this.provider.set(key, value));
   }
 
-  public async remove(key: string): Promise<boolean> {
-    return this.provider.remove(key);
+  public remove(key: string): Promise<boolean> {
+    return this.mutate(() => this.provider.remove(key));
   }
 
   public async has(key: string): Promise<boolean> {
+    await this.tail;
     return this.provider.has(key);
   }
 
   public async keys(pattern?: string): Promise<string[]> {
+    await this.tail;
     return this.provider.keys(pattern);
   }
 
-  public async clear(): Promise<void> {
-    return this.provider.clear();
+  public clear(): Promise<void> {
+    return this.mutate(() => this.provider.clear());
   }
 
-  public async shutdown(): Promise<void> {
-    return this.provider.shutdown();
+  private mutate<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.closing) return Promise.reject(new Error('Database is shutting down'));
+    const result = this.tail.then(operation);
+    this.tail = result.catch(() => undefined);
+    return result;
+  }
+
+  public async flush(): Promise<void> {
+    await this.tail;
+    await this.provider.flush?.();
+  }
+
+  public shutdown(): Promise<void> {
+    if (!this.shutdownPromise) {
+      this.closing = true;
+      this.shutdownPromise = this.tail.then(async () => {
+        await this.provider.flush?.();
+        await this.provider.shutdown();
+      });
+    }
+    return this.shutdownPromise;
   }
 }
