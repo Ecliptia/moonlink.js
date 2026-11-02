@@ -74,16 +74,20 @@ export class Rest {
             this.node.backend?.recordFeature(feature, 'available');
             return result;
         } catch (error) {
-            const body = error instanceof HttpError ? error.body : undefined;
-            const message = body && typeof body === 'object' && 'message' in body ? String(body.message) : '';
-            const unavailable = error instanceof HttpError && (error.statusCode === 501 ||
-                [403, 404].includes(error.statusCode) && /requested route was not found|unknown (?:route|endpoint)|(?:endpoint|feature).*disabled/i.test(message));
-            if (unavailable) {
-                this.node.backend?.recordFeature(feature, 'unavailable');
-                throw new FeatureUnavailableError(feature, this.node.backend?.kind ?? 'unknown', error.statusCode);
-            }
-            throw error;
+            this.featureError(feature, error);
         }
+    }
+
+    private featureError(feature: string, error: unknown): never {
+        const body = error instanceof HttpError ? error.body : undefined;
+        const message = body && typeof body === 'object' && 'message' in body ? String(body.message) : '';
+        const unavailable = error instanceof HttpError && (error.statusCode === 501 ||
+            [403, 404].includes(error.statusCode) && /requested route was not found|unknown (?:route|endpoint)|(?:endpoint|feature).*disabled/i.test(message));
+        if (unavailable) {
+            this.node.backend?.recordFeature(feature, 'unavailable');
+            throw new FeatureUnavailableError(feature, this.node.backend?.kind ?? 'unknown', error.statusCode);
+        }
+        throw error;
     }
 
     public async getPlayers(): Promise<IRESTGetPlayers[] | null> {
@@ -149,14 +153,15 @@ export class Rest {
         }
     }
 
-    public async loadTracks(identifier: string, options?: { timeoutMs: number }): Promise<IRESTLoadTracks> {
+    public async loadTracks(identifier: string, options?: { timeoutMs: number; signal?: AbortSignal }): Promise<IRESTLoadTracks> {
         const params = new URLSearchParams();
         params.append("identifier", identifier);
 
         const res = await makeRequest<any>(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
             headers: this.authHeaders,
-            throwOnError: options !== undefined
+            throwOnError: options !== undefined,
+            signal: options?.signal
         }, options?.timeoutMs ?? 0, options ? 0 : 3);
 
         return res || { loadType: "empty", data: {} };
@@ -483,16 +488,15 @@ export class Rest {
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
-    public async loadStream(payload: { encodedTrack: string; volume?: number; position?: number; filters?: IFilters | Record<string, any> }): Promise<{ stream: NodeJS.ReadableStream; headers: Record<string, any> }> {
-        this.node.assertFeature("loadstream");
-
-        const res = await makeStreamRequest(`${this.url}/v4/loadstream`, {
-            method: "POST",
-            headers: this.jsonHeaders,
-            body: payload
-        });
-
-        return { stream: res.stream, headers: res.headers };
+    public async loadStream(payload: { encodedTrack: string; volume?: number; position?: number; format?: 'pcm' | 'wav'; filters?: IFilters | Record<string, any> }, options: { signal?: AbortSignal; timeoutMs?: number } = {}): Promise<{ stream: NodeJS.ReadableStream; headers: Record<string, any> }> {
+        this.node.assertFeature('loadstream');
+        try {
+            const res = await makeStreamRequest(`${this.url}/v4/loadstream`, {
+                method: 'POST', headers: this.jsonHeaders, body: payload, signal: options.signal,
+            }, options.timeoutMs ?? 100000);
+            this.node.backend?.recordFeature('loadstream', 'available');
+            return { stream: res.stream, headers: res.headers };
+        } catch (error) { this.featureError('loadstream', error); }
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */

@@ -17,12 +17,14 @@ export declare class Rest {
     get url(): string;
     private triggerPlayerRecovery;
     private featureRequest;
+    private featureError;
     getPlayers(): Promise<IRESTGetPlayers[] | null>;
     getPlayer(guildId: string): Promise<any | null>;
     updatePlayer(guildId: string, data: any, noReplace?: boolean): Promise<any | null>;
     destroyPlayer(guildId: string): Promise<void>;
     loadTracks(identifier: string, options?: {
         timeoutMs: number;
+        signal?: AbortSignal;
     }): Promise<IRESTLoadTracks>;
     decodeTrack(encodedTrack: string): Promise<ITrack | null>;
     decodeTracks(encodedTracks: string[]): Promise<ITrack[] | null>;
@@ -67,7 +69,11 @@ export declare class Rest {
         encodedTrack: string;
         volume?: number;
         position?: number;
+        format?: 'pcm' | 'wav';
         filters?: IFilters | Record<string, any>;
+    }, options?: {
+        signal?: AbortSignal;
+        timeoutMs?: number;
     }): Promise<{
         stream: NodeJS.ReadableStream;
         headers: Record<string, any>;

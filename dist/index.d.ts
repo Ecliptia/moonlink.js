@@ -1,3 +1,5 @@
+export type * from './src/typings/Interfaces';
+export { NodeState, VoiceConnectionState, LoadType } from './src/typings/types';
 export declare const version: string;
 export { Logger, ConsoleReporter, createBanner, formatEntry, formatBox, formatSystemStatus, formatFailover } from './src/logging';
 export type { LoggerOptions, NyxLogLevel, AudioNodeStatus, FailoverReport } from './src/logging';

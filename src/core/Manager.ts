@@ -1,3 +1,4 @@
+import { SearchService } from '../search/SearchService';
 import { VoicePacketHandler } from '../entities/VoicePacketHandler';
 import {
     IManagerEvents,
@@ -33,6 +34,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     private shutdownPromise?: Promise<void>;
     private shuttingDown = false;
     private readonly connectors = new Set<Connector>();
+    private readonly searches: SearchService;
 
     public get destroyed(): boolean { return this.shuttingDown; }
     private spotifySource?: SpotifySource;
@@ -140,6 +142,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
             }
         };
         
+        this.searches = new SearchService(this, query => this.resolveNativeSource(query));
         Structure.setManager(this);
 
         this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
@@ -203,6 +206,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     public shutdown(): Promise<void> {
         if (this.shutdownPromise) return this.shutdownPromise;
         this.shuttingDown = true;
+        this.searches.close();
         this.initialized = false;
         if (this.idleCheckInterval) clearInterval(this.idleCheckInterval);
         this.idleCheckInterval = undefined;
@@ -301,68 +305,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     }
 
     public async search(options: ISearchQuery): Promise<any> {
-        if (this.destroyed) throw new Error('Manager is shut down');
-        validate(options, (o) => typeof o === "object", "Search > Search options must be an object.");
-        validate(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
-
-        const nativeResult = await this.resolveNativeSource(options);
-        if (nativeResult) {
-            this.emit("debug", `Moonlink.js > Manager <- Native source result for query \"${options.query}\". LoadType: ${nativeResult.loadType}`);
-            return new (Structure.get("SearchResult"))(
-                nativeResult,
-                options.requester,
-                this.options.search?.playlistLoadLimit
-            );
-        }
-
-        const node = options.node ? this.nodes.nodes.get(options.node) : this.nodes.findNode();
-        if (!node) {
-            throw new Error("Moonlink.js > Search > No available nodes for searching.");
-        }
-
-        let identifier: string;
-        const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
-
-        if (URL_REGEX.test(options.query)) {
-            identifier = options.query;
-        } else {
-            let source: string;
-            if (options.source) {
-                if (nodeLinkSources.has(options.source) && !node.isNodeLink) {
-                    throw nodeLinkOnlyError(`search:${options.source}`);
-                }
-                source = sources[options.source] || options.source;
-            } else {
-                const defaultPlatform = this.options.search?.defaultPlatform || "youtube";
-                if (nodeLinkSources.has(defaultPlatform) && !node.isNodeLink) {
-                    throw nodeLinkOnlyError(`search:${defaultPlatform}`);
-                }
-                source = sources[defaultPlatform] || "ytsearch";
-            }
-            identifier = `${source}:${options.query}`;
-        }
-
-        const res = await node.rest.loadTracks(identifier);
-        this.emit("debug", `Moonlink.js > Manager <- Search result for query "${options.query}". LoadType: ${res.loadType}`);
-        
-        const result = new (Structure.get("SearchResult"))(res, options.requester, this.options.search?.playlistLoadLimit);
-        for (const track of result.tracks) track.backend = node.backend?.kind;
-        
-        if (result.loadType === "search") {
-            result.tracks = result.tracks.slice(0, this.options.search?.resultLimit ?? 10);
-        }
-
-        if (this.options.sources?.disabledSources && this.options.sources.disabledSources.length > 0) {
-            result.tracks = result.tracks.filter(track => {
-                const isDisabled = this.options.sources.disabledSources.includes(track.sourceName);
-                if (isDisabled) {
-                    this.emit("debug", `Moonlink.js > Manager >> Filtered out track from disabled source: ${track.sourceName} - ${track.title}`);
-                }
-                return !isDisabled;
-            });
-        }
-        
-        return result;
+        return this.searches.search(options);
     }
 
     public async packetUpdate(packet: DiscordGatewayPacket): Promise<void> {

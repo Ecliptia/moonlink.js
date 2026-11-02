@@ -266,22 +266,7 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                                     let body;
                                     try {
                                         let buffer = Buffer.concat(chunks);
-                                        const options = { maxOutputLength: 32768 };
-                                        const encoding = res.headers['content-encoding'];
-                                        if (encoding === 'gzip')
-                                            buffer = node_zlib_1.default.gunzipSync(buffer, options);
-                                        else if (encoding === 'deflate')
-                                            buffer = node_zlib_1.default.inflateSync(buffer, options);
-                                        else if (encoding === 'br')
-                                            buffer = node_zlib_1.default.brotliDecompressSync(buffer, options);
-                                        else if (encoding === 'zstd' && typeof node_zlib_1.default.zstdDecompressSync === 'function')
-                                            buffer = node_zlib_1.default.zstdDecompressSync(buffer, options);
-                                        const text = buffer.toString('utf8');
-                                        body = text;
-                                        try {
-                                            body = JSON.parse(text);
-                                        }
-                                        catch { }
+                                        body = decodeErrorBody(buffer, res.headers['content-encoding']);
                                     }
                                     catch { }
                                     reject(new HttpError_1.HttpError(statusCode, body));
@@ -393,6 +378,24 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
     }
     return undefined;
 }
+function decodeErrorBody(buffer, encoding) {
+    const options = { maxOutputLength: 32768 };
+    if (encoding === 'gzip')
+        buffer = node_zlib_1.default.gunzipSync(buffer, options);
+    else if (encoding === 'deflate')
+        buffer = node_zlib_1.default.inflateSync(buffer, options);
+    else if (encoding === 'br')
+        buffer = node_zlib_1.default.brotliDecompressSync(buffer, options);
+    else if (encoding === 'zstd' && typeof node_zlib_1.default.zstdDecompressSync === 'function')
+        buffer = node_zlib_1.default.zstdDecompressSync(buffer, options);
+    const text = buffer.toString('utf8');
+    try {
+        return JSON.parse(text);
+    }
+    catch {
+        return text;
+    }
+}
 async function makeStreamRequest(initialUrl, options, timeout = 100000) {
     return new Promise((resolve, reject) => {
         const urlObject = new node_url_1.URL(initialUrl);
@@ -408,10 +411,24 @@ async function makeStreamRequest(initialUrl, options, timeout = 100000) {
             const statusCode = res.statusCode ?? 0;
             if (statusCode < 200 || statusCode >= 300) {
                 const chunks = [];
-                res.on("data", (chunk) => chunks.push(chunk));
-                res.on("end", () => {
-                    const body = Buffer.concat(chunks).toString();
-                    reject(new Error(`Stream request failed (${statusCode}): ${body || "Unknown error"}`));
+                let size = 0;
+                res.on('data', (chunk) => {
+                    size += chunk.length;
+                    if (size > 32768) {
+                        req.destroy();
+                        reject(new HttpError_1.HttpError(statusCode));
+                    }
+                    else
+                        chunks.push(chunk);
+                });
+                res.on('error', reject);
+                res.on('end', () => {
+                    let body;
+                    try {
+                        body = decodeErrorBody(Buffer.concat(chunks), res.headers['content-encoding']);
+                    }
+                    catch { }
+                    reject(new HttpError_1.HttpError(statusCode, body));
                 });
                 return;
             }

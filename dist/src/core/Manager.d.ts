@@ -20,6 +20,7 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     private shutdownPromise?;
     private shuttingDown;
     private readonly connectors;
+    private readonly searches;
     get destroyed(): boolean;
     private spotifySource?;
     private deezerSource?;

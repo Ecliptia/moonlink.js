@@ -184,6 +184,10 @@ export interface INodeOptions {
 }
 
 export interface ISearchOptions {
+    timeoutMs?: number;
+    fallbackPlatforms?: string[];
+    cache?: { ttlMs: number; maxEntries?: number };
+    resolver?: (query: ISearchQuery, node: Node) => Promise<IRESTLoadTracks | null>;
     defaultPlatform?: "youtube" | "youtubemusic" | "soundcloud" | "local";
     resultLimit?: number;
     playlistLoadLimit?: number;
@@ -252,6 +256,7 @@ export interface IManagerConfig {
 }
 
 export interface ISearchQuery {
+    signal?: AbortSignal;
     query: string;
     source?: string;
     requester?: any;
