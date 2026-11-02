@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
+const PlayerCommandQueue_1 = require("../players/PlayerCommandQueue");
 const PlaybackGuard_1 = require("../players/PlaybackGuard");
 const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
@@ -32,6 +33,7 @@ class Player {
     recommendations = [];
     historySize = 10;
     lastActivityTime = Date.now();
+    commands = new PlayerCommandQueue_1.PlayerCommandQueue();
     fading;
     nextTrack;
     audioTrackId;
@@ -258,10 +260,17 @@ class Player {
             }
             finalPayload.voice = voicePayload;
         }
-        return this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        const response = await this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        if (response == null)
+            throw new Error("Backend did not acknowledge player update");
+        return response;
     }
     async updatePlayer(payload, noReplace) {
-        return this.sendPlayerUpdate(payload, noReplace);
+        return this.commands.enqueue(() => {
+            if (this.destroyed)
+                throw new Error("Cannot update a destroyed player");
+            return this.sendPlayerUpdate(payload, noReplace);
+        });
     }
     async connect({ selfDeaf, selfMute } = {}) {
         const connectStack = new Error().stack?.split("\n").slice(2, 8).join("\n");
@@ -282,10 +291,14 @@ class Player {
         return this;
     }
     async play(options = {}) {
+        const ticket = (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
+        return this.commands.enqueue(() => this.playNext(options, ticket));
+    }
+    async playNext(options, ticket) {
         const guard = (0, PlaybackGuard_1.playbackGuard)(this);
-        const ticket = guard.invalidate();
-        if (this.destroyed)
+        if (this.destroyed || !guard.isCurrent(ticket))
             return false;
+        this.recommendations = [];
         let finalOptions;
         if (options instanceof Track_1.Track) {
             finalOptions = { track: options };
@@ -514,6 +527,11 @@ class Player {
         return new VoiceReceiver_1.VoiceReceiver(this.node, this.guildId, options);
     }
     async pause() {
+        return this.commands.enqueue(() => this.pausePlayback());
+    }
+    async pausePlayback() {
+        if (this.destroyed)
+            return this;
         if (this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#pause >> Player is already paused for guild ${this.guildId}`);
             return this;
@@ -529,6 +547,25 @@ class Player {
         return this;
     }
     async resume(options) {
+        const pending = this.commands.enqueue(() => this.resumePlayback());
+        if (!options?.timeout)
+            return pending;
+        let timer;
+        try {
+            return await Promise.race([
+                pending,
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error("Resume timed out")), options.timeout);
+                })
+            ]);
+        }
+        finally {
+            clearTimeout(timer);
+        }
+    }
+    async resumePlayback() {
+        if (this.destroyed)
+            return this;
         const now = Date.now();
         const minResumeInterval = this.manager.options.playerHealth?.resumeDebounce ?? 1000;
         if (this.isResumeInProgress) {
@@ -549,14 +586,7 @@ class Player {
         this.manager.emit("debug", `Moonlink.js > Player#resume -> Sending resume request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredResume", this);
         try {
-            const promise = this.sendPlayerUpdate({ paused: false });
-            if (options?.timeout) {
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Resume timed out")), options.timeout));
-                await Promise.race([promise, timeoutPromise]);
-            }
-            else {
-                await promise;
-            }
+            await this.sendPlayerUpdate({ paused: false });
             const oldPaused = this.paused;
             this.paused = false;
             this.updateData("paused", this.paused);
@@ -606,6 +636,11 @@ class Player {
     }
     async stop() {
         (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
+        return this.commands.enqueue(() => this.stopPlayback());
+    }
+    async stopPlayback() {
+        if (this.destroyed)
+            return this;
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
         await this.sendPlayerUpdate({ track: { encoded: null } });
@@ -652,6 +687,11 @@ class Player {
         return await this.play();
     }
     async seek(position) {
+        return this.commands.enqueue(() => this.seekPlayback(position));
+    }
+    async seekPlayback(position) {
+        if (this.destroyed)
+            return this;
         (0, Util_1.validate)(position, (v) => typeof v === "number" && !isNaN(v) && v >= 0, "Player#seek > Position must be a valid number.");
         this.manager.emit("debug", `Moonlink.js > Player#seek -> Seeking to position ${position}ms for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredSeek", this, position);
@@ -719,6 +759,9 @@ class Player {
         (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
         this.destroyed = true;
         this.stopHealthCheck();
+        return this.commands.enqueue(() => this.destroyPlayback(reason));
+    }
+    async destroyPlayback(reason) {
         if (this.resumeDebounceTimer) {
             clearTimeout(this.resumeDebounceTimer);
             this.resumeDebounceTimer = undefined;
@@ -743,6 +786,7 @@ class Player {
         catch (e) {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${e.message}`);
         }
+        this.current = null;
         this.queue.clear();
         this.previous = [];
         this.updateData("previous", []);

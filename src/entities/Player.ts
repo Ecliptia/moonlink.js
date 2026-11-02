@@ -1,3 +1,4 @@
+import { PlayerCommandQueue } from "../players/PlayerCommandQueue";
 import { playbackGuard } from "../players/PlaybackGuard";
 import { Node } from "./Node";
 import { Queue } from "./Queue";
@@ -40,6 +41,7 @@ export class Player {
     public historySize: number = 10;
 
     public lastActivityTime: number = Date.now();
+    private readonly commands = new PlayerCommandQueue();
     private fading?: IFadingOptions;
     private nextTrack?: { encoded: string; userData?: Record<string, any> };
     private audioTrackId?: string;
@@ -300,12 +302,17 @@ export class Player {
             finalPayload.voice = voicePayload;
         }
 
-        return this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        const response = await this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        if (response == null) throw new Error("Backend did not acknowledge player update");
+        return response;
     }
 
     /** Sends a raw updatePlayer payload with NodeLink extras applied when supported. */
     public async updatePlayer(payload: Record<string, any>, noReplace?: boolean): Promise<any> {
-        return this.sendPlayerUpdate(payload, noReplace);
+        return this.commands.enqueue(() => {
+            if (this.destroyed) throw new Error("Cannot update a destroyed player");
+            return this.sendPlayerUpdate(payload, noReplace);
+        });
     }
 
     public async connect({ selfDeaf, selfMute }: { selfDeaf?: boolean; selfMute?: boolean } = {}): Promise<this> {
@@ -327,9 +334,14 @@ export class Player {
     }
 
     public async play(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track = {}): Promise<boolean> {
+        const ticket = playbackGuard(this).invalidate();
+        return this.commands.enqueue(() => this.playNext(options, ticket));
+    }
+
+    private async playNext(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track, ticket: number): Promise<boolean> {
         const guard = playbackGuard(this);
-        const ticket = guard.invalidate();
-        if (this.destroyed) return false;
+        if (this.destroyed || !guard.isCurrent(ticket)) return false;
+        this.recommendations = [];
         let finalOptions: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string };
 
         if (options instanceof Track) {
@@ -604,6 +616,11 @@ export class Player {
     }
 
     public async pause(): Promise<this> {
+        return this.commands.enqueue(() => this.pausePlayback());
+    }
+
+    private async pausePlayback(): Promise<this> {
+        if (this.destroyed) return this;
         if (this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#pause >> Player is already paused for guild ${this.guildId}`);
             return this;
@@ -623,6 +640,23 @@ export class Player {
     }
 
     public async resume(options?: { timeout?: number }): Promise<this> {
+        const pending = this.commands.enqueue(() => this.resumePlayback());
+        if (!options?.timeout) return pending;
+        let timer: NodeJS.Timeout;
+        try {
+            return await Promise.race([
+                pending,
+                new Promise<never>((_, reject) => {
+                    timer = setTimeout(() => reject(new Error("Resume timed out")), options.timeout);
+                })
+            ]);
+        } finally {
+            clearTimeout(timer!);
+        }
+    }
+
+    private async resumePlayback(): Promise<this> {
+        if (this.destroyed) return this;
         const now = Date.now();
         const minResumeInterval = this.manager.options.playerHealth?.resumeDebounce ?? 1000;
 
@@ -649,16 +683,7 @@ export class Player {
         this.manager.emit("playerTriggeredResume", this);
 
         try {
-            const promise = this.sendPlayerUpdate({ paused: false });
-
-            if (options?.timeout) {
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Resume timed out")), options.timeout)
-                );
-                await Promise.race([promise, timeoutPromise]);
-            } else {
-                await promise;
-            }
+            await this.sendPlayerUpdate({ paused: false });
 
             const oldPaused = this.paused;
             this.paused = false;
@@ -718,6 +743,11 @@ export class Player {
 
     public async stop(): Promise<this> {
         playbackGuard(this).invalidate();
+        return this.commands.enqueue(() => this.stopPlayback());
+    }
+
+    private async stopPlayback(): Promise<this> {
+        if (this.destroyed) return this;
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
 
@@ -770,6 +800,11 @@ export class Player {
     }
 
     public async seek(position: number): Promise<this> {
+        return this.commands.enqueue(() => this.seekPlayback(position));
+    }
+
+    private async seekPlayback(position: number): Promise<this> {
+        if (this.destroyed) return this;
         validate(
             position,
             (v) => typeof v === "number" && !isNaN(v) && v >= 0,
@@ -856,8 +891,11 @@ export class Player {
         }
         playbackGuard(this).invalidate();
         this.destroyed = true;
-
         this.stopHealthCheck();
+        return this.commands.enqueue(() => this.destroyPlayback(reason));
+    }
+
+    private async destroyPlayback(reason?: string): Promise<void> {
 
         if (this.resumeDebounceTimer) {
             clearTimeout(this.resumeDebounceTimer);
@@ -884,6 +922,7 @@ export class Player {
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Failed to destroy player on node: ${(e as Error).message}`);
         }
 
+        this.current = null;
         this.queue.clear();
         this.previous = [];
         this.updateData("previous", []);

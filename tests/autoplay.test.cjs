@@ -181,3 +181,27 @@ test('autoplay does not claim success when REST returns an empty acknowledgement
   assert.equal(successes.length, 0);
   assert.equal(player.queue.size, 0);
 });
+
+test('an older recommendation response cannot replace results from a newer lookup', async t => {
+  const { manager, node, player } = createPlayer(t);
+  const old = deferred();
+  const seed = createTrack('seed');
+  const latest = createTrack('latest');
+  let requests = 0;
+  manager.search = async () => ++requests === 1 ? old.promise : { tracks: [latest] };
+  const first = node.updateRecommendations(player, seed);
+  await node.updateRecommendations(player, seed);
+  old.resolve({ tracks: [createTrack('obsolete')] });
+  await first;
+  assert.deepEqual(player.recommendations, [latest]);
+});
+
+test('a late finished event for an old track cannot stop a new current track', async t => {
+  const { node, player } = createPlayer(t);
+  const old = createTrack('old');
+  const current = createTrack('current');
+  await player.play({ track: current });
+  await node.handleTrackEnd(player, { reason: 'finished', track: old.toJSON() });
+  assert.equal(player.current, current);
+  assert.equal(player.playing, true);
+});

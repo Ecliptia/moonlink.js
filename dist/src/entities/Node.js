@@ -665,6 +665,11 @@ class Node {
         const trackForEvent = trackData
             ? new (Util_1.Structure.get("Track"))(trackData, player.current?.requester)
             : player.current;
+        if (payload.track?.encoded && player.current?.encoded !== payload.track.encoded) {
+            this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
+            return;
+        }
+        const intent = (0, PlaybackGuard_1.playbackGuard)(player).ticket;
         if (!isCrossfadeTransition) {
             player.playing = false;
             player.paused = false;
@@ -682,6 +687,8 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
             return;
         }
+        if (!(0, PlaybackGuard_1.playbackGuard)(player).isCurrent(intent))
+            return;
         if (isCrossfadeTransition || isGaplessTransition) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to ${reason} for player ${player.guildId}. Skipping queue/autoplay logic.`);
             return;
@@ -707,7 +714,7 @@ class Node {
         }
         if (player.loop === "track" && player.current) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is in track loop mode. Replaying track: ${player.current.title}.`);
-            await this.rest.updatePlayer(player.guildId, {
+            await player.updatePlayer({
                 track: { encoded: player.current.encoded },
                 position: 0,
             });

@@ -34,6 +34,7 @@ export declare class Player {
     recommendations: Track[];
     historySize: number;
     lastActivityTime: number;
+    private readonly commands;
     private fading?;
     private nextTrack?;
     private audioTrackId?;
@@ -74,6 +75,7 @@ export declare class Player {
         noReplace?: boolean;
         audioTrackId?: string;
     } | Track): Promise<boolean>;
+    private playNext;
     addMix(track: Track | string, options?: {
         volume?: number;
         userData?: Record<string, any>;
@@ -104,9 +106,11 @@ export declare class Player {
     setLoudnessNormalizer(enabled: boolean): Promise<this>;
     createVoiceReceiver(options?: VoiceReceiverOptions): VoiceReceiver;
     pause(): Promise<this>;
+    private pausePlayback;
     resume(options?: {
         timeout?: number;
     }): Promise<this>;
+    private resumePlayback;
     forward(ms: number): Promise<this>;
     rewind(ms: number): Promise<this>;
     setVoiceState(state: {
@@ -118,14 +122,17 @@ export declare class Player {
     toggleDeaf(): Promise<this>;
     search(query: string, source?: string): Promise<any>;
     stop(): Promise<this>;
+    private stopPlayback;
     skip(position?: number): Promise<boolean>;
     seek(position: number): Promise<this>;
+    private seekPlayback;
     setVolume(volume: number): this;
     setLoop(loop: PlayerLoop, count?: number): this;
     setAutoPlay(autoPlay: boolean): this;
     setAutoLeave(autoLeave: boolean): this;
     shuffle(): this;
     destroy(reason?: string): Promise<void>;
+    private destroyPlayback;
     restart(): Promise<boolean>;
     transferNode(node: Node | string): Promise<boolean>;
     setVoiceChannelId(voiceChannelId: string): this;

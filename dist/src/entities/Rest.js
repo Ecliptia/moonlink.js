@@ -88,7 +88,12 @@ class Rest {
                 this.node.manager.emit("debug", `Moonlink.js > Rest >> updatePlayer 404 for guild ${guildId}, triggering recovery.`);
                 const player = this.node.manager.players.get(guildId);
                 if (player && !player.destroyed) {
-                    await this.triggerPlayerRecovery(player);
+                    if (!this.sessionRecoveryInProgress) {
+                        this.sessionRecoveryInProgress = true;
+                        void this.triggerPlayerRecovery(player)
+                            .catch(error => this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery failed: ${error.message}`))
+                            .finally(() => { this.sessionRecoveryInProgress = false; });
+                    }
                 }
             }
             throw error;
