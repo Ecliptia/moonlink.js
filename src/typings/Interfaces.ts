@@ -3,6 +3,7 @@ import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
+import type { LoggerOptions } from '../logging/Logger';
 
 export interface IManagerEvents {
     debug: (message: string) => void;
@@ -121,6 +122,7 @@ export interface IManagerNodeConfig {
 }
 
 export interface IManagerOptionsConfig {
+    logging?: LoggerOptions & { banner?: boolean };
     clientName?: string;
     userAgent?: string;
     noReplace?: boolean;

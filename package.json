@@ -1,7 +1,7 @@
 {
   "name": "moonlink.js",
   "version": "5.3.0-dev.2",
-  "description": "NyxLink \u2014 Discord audio client derived from Moonlink.js (development)",
+  "description": "NyxLink — Discord audio client derived from Moonlink.js (development)",
   "keywords": [
     "bot",
     "discord.js",
@@ -51,5 +51,8 @@
     "dist",
     "assets/nyxlink_banner.png",
     "LICENSE"
-  ]
+  ],
+  "dependencies": {
+    "consola": "3.4.2"
+  }
 }

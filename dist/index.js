@@ -1,7 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.DeezerSource = exports.SpotifySource = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.version = void 0;
+exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.DeezerSource = exports.SpotifySource = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.formatFailover = exports.formatSystemStatus = exports.formatBox = exports.formatEntry = exports.createBanner = exports.ConsoleReporter = exports.Logger = exports.version = void 0;
 exports.version = require("../package.json").version;
+var logging_1 = require("./src/logging");
+Object.defineProperty(exports, "Logger", { enumerable: true, get: function () { return logging_1.Logger; } });
+Object.defineProperty(exports, "ConsoleReporter", { enumerable: true, get: function () { return logging_1.ConsoleReporter; } });
+Object.defineProperty(exports, "createBanner", { enumerable: true, get: function () { return logging_1.createBanner; } });
+Object.defineProperty(exports, "formatEntry", { enumerable: true, get: function () { return logging_1.formatEntry; } });
+Object.defineProperty(exports, "formatBox", { enumerable: true, get: function () { return logging_1.formatBox; } });
+Object.defineProperty(exports, "formatSystemStatus", { enumerable: true, get: function () { return logging_1.formatSystemStatus; } });
+Object.defineProperty(exports, "formatFailover", { enumerable: true, get: function () { return logging_1.formatFailover; } });
 const Util_1 = require("./src/Util");
 const Manager_1 = require("./src/core/Manager");
 Object.defineProperty(exports, "Manager", { enumerable: true, get: function () { return Manager_1.Manager; } });

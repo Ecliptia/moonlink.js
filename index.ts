@@ -1,4 +1,6 @@
 export const version: string = require("../package.json").version as string;
+export { Logger, ConsoleReporter, createBanner, formatEntry, formatBox, formatSystemStatus, formatFailover } from './src/logging';
+export type { LoggerOptions, NyxLogLevel, AudioNodeStatus, FailoverReport } from './src/logging';
 import { Structure } from "./src/Util";
 import { Manager } from "./src/core/Manager";
 import { Node } from "./src/entities/Node";

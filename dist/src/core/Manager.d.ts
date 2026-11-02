@@ -4,6 +4,7 @@ import { EventEmitter } from "../Util";
 import { PlayerManager } from "../managers/PlayerManager";
 import { DatabaseManager } from "../managers/DatabaseManager";
 import { Connector } from "../connectors/Connector";
+import { Logger } from "../logging/Logger";
 export declare class Manager extends EventEmitter<IManagerEvents> {
     initialized: boolean;
     readonly options: IManagerOptionsConfig;
@@ -12,12 +13,15 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     readonly nodes: any;
     readonly players: PlayerManager;
     database: DatabaseManager;
+    readonly logger?: Logger;
+    private detachLogging?;
     private idleCheckInterval?;
     private spotifySource?;
     private deezerSource?;
     get readyNodes(): any;
     get hasReadyNodes(): any;
     constructor(config: IManagerConfig);
+    detachLogger(): void;
     use(connector: Connector, client: any): this;
     init(clientId: string): Promise<this>;
     private startIdleMonitoring;

@@ -6,6 +6,7 @@ const DatabaseManager_1 = require("../managers/DatabaseManager");
 const __1 = require("../..");
 const spotify_1 = require("../sources/spotify");
 const deezer_1 = require("../sources/deezer");
+const Logger_1 = require("../logging/Logger");
 class Manager extends Util_1.EventEmitter {
     initialized = false;
     options;
@@ -14,6 +15,8 @@ class Manager extends Util_1.EventEmitter {
     nodes;
     players;
     database;
+    logger;
+    detachLogging;
     idleCheckInterval;
     spotifySource;
     deezerSource;
@@ -117,6 +120,16 @@ class Manager extends Util_1.EventEmitter {
         Util_1.Structure.setManager(this);
         this.nodes = new (Util_1.Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Util_1.Structure.get("PlayerManager"))(this);
+        if (this.options.logging) {
+            this.logger = new Logger_1.Logger(this.options.logging);
+            this.detachLogging = this.logger.attachManager(this);
+            if (this.options.logging.banner)
+                this.logger.banner();
+        }
+    }
+    detachLogger() {
+        this.detachLogging?.();
+        this.detachLogging = undefined;
     }
     use(connector, client) {
         connector.setManager(this);

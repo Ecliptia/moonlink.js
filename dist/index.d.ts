@@ -1,4 +1,6 @@
 export declare const version: string;
+export { Logger, ConsoleReporter, createBanner, formatEntry, formatBox, formatSystemStatus, formatFailover } from './src/logging';
+export type { LoggerOptions, NyxLogLevel, AudioNodeStatus, FailoverReport } from './src/logging';
 import { Manager } from "./src/core/Manager";
 import { Node } from "./src/entities/Node";
 import { Player } from "./src/entities/Player";
