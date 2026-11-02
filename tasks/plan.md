@@ -51,3 +51,12 @@ No new runtime dependency, native voice transport, Discord bot, npm publication,
 ## Task index
 
 See [todo.md](todo.md) for acceptance criteria, dependencies, and current completion state.
+
+## Fourth implementation delivery
+
+Branch: `feat/nyxlink-stability`, stacked on the third delivery at `1152f1e`.
+
+1. Measure queue batching and lifecycle retention with a reproducible, bounded benchmark. Report measured heap/CPU/timing and environment, without inventing a production latency SLA.
+2. Add idempotent Manager.shutdown and initialization coordination. Close players, nodes, connectors/logger, idle timers and storage; reject new work after shutdown. Remove destroyed-player snapshots and release tracked WebSocket heartbeat/manual-ping resources with independent regression tests.
+3. Add a real-server endurance runner against the pinned images: ten-minute local validation and a shorter CI smoke run. Exercise repeated REST lifecycle/load/decode, paused player commands without voice, confirmed session resumes, bounded queues and teardown. Sample client/server memory, CPU, event-loop delay and latency percentiles. Longer one-hour runs remain available and are not claimed until executed.
+4. Record evidence, prerelease blockers and rollback/reproduction instructions. Keep package private, retain identity/version until a separate distribution decision, open a stacked draft PR and verify CI. Audible Discord/DAVE and real playback latency remain untested.
