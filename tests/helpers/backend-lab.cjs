@@ -63,14 +63,18 @@ async function withBackendLab(run) {
       const port = await freePort();
       const name = `nyxlink-test-${kind}-${process.pid}-${randomBytes(3).toString('hex')}`;
       const configPath = path.join(directory, kind === 'lavalink' ? 'application.yml' : 'config.js');
-      const config = kind === 'lavalink' ? `server:\n  address: 127.0.0.1\n  port: ${port}\nlavalink:\n  server:\n    password: '${password}'\n    sources:\n      youtube: false\n      soundcloud: false\n      bandcamp: false\n      twitch: false\n      vimeo: false\n      nico: false\n      http: true\n      local: true\nlogging:\n  level:\n    root: WARN\n` : `import {config} from './config.default.js';\nconfig.server.host='127.0.0.1'; config.server.port=${port}; config.server.password='${password}'; config.server.autoUpdate.enabled=false;\nconfig.cluster.enabled=false; config.logging.level='warn'; config.logging.file.enabled=false;\nfor(const source of Object.values(config.sources)) if(source && typeof source==='object') source.enabled=false;\nconfig.sources.http.enabled=true; config.sources.local.enabled=true; config.sources.local.basePath='/fixtures';\nfor(const source of Object.values(config.lyrics)) if(source && typeof source==='object') source.enabled=false;\nconfig.api.enableLoadStreamEndpoint=false; config.api.enableTrackStreamEndpoint=false;\nexport default config;\n`;
+      const config = kind === 'lavalink' ? `server:\n  address: 127.0.0.1\n  port: ${port}\nlavalink:\n  server:\n    password: '${password}'\n    sources:\n      youtube: false\n      soundcloud: false\n      bandcamp: false\n      twitch: false\n      vimeo: false\n      nico: false\n      http: true\n      local: true\nlogging:\n  level:\n    root: WARN\n` : `import {config} from './config.default.js';\nconfig.server.host='127.0.0.1'; config.server.port=${port}; config.server.password='${password}'; config.server.autoUpdate.enabled=false;\nconfig.cluster.enabled=false; config.logging.level='warn'; config.logging.file.enabled=false; config.cache.diskEnabled=false;\nfor(const source of Object.values(config.sources)) if(source && typeof source==='object') source.enabled=false;\nconfig.sources.http.enabled=true; config.sources.local.enabled=true; config.sources.local.basePath='/fixtures';\nfor(const source of Object.values(config.lyrics)) if(source && typeof source==='object') source.enabled=false;\nconfig.api.enableLoadStreamEndpoint=false; config.api.enableTrackStreamEndpoint=false;\nexport default config;\n`;
       await fs.writeFile(configPath, config, { mode: 0o600 });
       const mount = kind === 'lavalink' ? '/opt/Lavalink/application.yml' : '/app/config.js';
       // Match the owner of the mode-0600 fixture on both local and CI hosts.
       const args = ['run', '-d', '--name', name, '--user', `${process.getuid()}:${process.getgid()}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--network', 'host', '--memory', '768m', '--cpus', '1',
         '-v', `${configPath}:${mount}:ro`, '-v', `${directory}:/fixtures:ro`];
       if (kind === 'lavalink') args.push('-e', 'JAVA_TOOL_OPTIONS=-Xms64m -Xmx384m');
-      else args.push('-e', `NODELINK_SERVER_PORT=${port}`, '-e', 'NODELINK_SERVER_HOST=127.0.0.1', '-e', `NODELINK_SERVER_PASSWORD=${password}`, '-e', 'NODELINK_CLUSTER_ENABLED=false');
+      else {
+        const pluginsPath = path.join(directory, 'plugins');
+        await fs.mkdir(pluginsPath);
+        args.push('-v', `${pluginsPath}:/app/plugins:ro`, '-e', `NODELINK_SERVER_PORT=${port}`, '-e', 'NODELINK_SERVER_HOST=127.0.0.1', '-e', `NODELINK_SERVER_PASSWORD=${password}`, '-e', 'NODELINK_CLUSTER_ENABLED=false');
+      }
       args.push(images[kind].image);
       containers.push(name);
       await command(args);
