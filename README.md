@@ -11,7 +11,7 @@ Los backends objetivo son **Lavalink v4 y NodeLink**. Las pruebas locales cubren
 Requiere Node.js 22.12+ o 24 y pnpm 10.34.5.
 
 ```sh
-git clone --branch feat/nyxlink-stability https://github.com/melodiabl/NyxLink.git
+git clone --branch feat/nyxlink-validation https://github.com/melodiabl/NyxLink.git
 cd NyxLink
 corepack pnpm install --frozen-lockfile
 pnpm run typecheck
@@ -24,7 +24,11 @@ pnpm run pack:check
 
 ## Estado de distribución
 
-Esta rama es de desarrollo y la publicación está desactivada. El nombre npm heredado `moonlink.js` permanece como metadato histórico hasta elegir la identidad final de distribución; no identifica un paquete NyxLink publicado. No uses las estadísticas, versiones o instrucciones npm de Moonlink como si fueran de NyxLink.
+Esta rama es de desarrollo y la publicación está desactivada. La identidad elegida es `nyxlink@0.1.0-dev.1`, con `private: true`. Puedes generar e instalar un tarball local siguiendo la [guía de migración](docs/migration.md); no hay una publicación npm anunciada. No uses las estadísticas, versiones o instrucciones npm de Moonlink como si fueran de NyxLink.
+
+## Uso y referencia
+
+Consulta los [ejemplos JavaScript y TypeScript](examples/README.md), la [API pública](docs/api.md), la [migración desde Moonlink](docs/migration.md) y la [búsqueda/caché opcionales](docs/search.md). El [estado consolidado del plan](tasks/master-status.md) distingue entregas terminadas, decisiones sustituidas y validaciones que requieren Discord o proveedores externos.
 
 ## Logs
 

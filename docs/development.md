@@ -47,3 +47,7 @@ Los resultados locales definitivos y el resultado de CI se registran en la PR. L
 - Paquete previsto: 112 archivos, inspección correcta; sin publicación.
 - Auditoría de dependencias de producción: sin vulnerabilidades conocidas al ejecutar la comprobación.
 - Cambios enviados a [PR #1](https://github.com/melodiabl/NyxLink/pull/1), en borrador contra dev. El resultado de Node 24 depende del check remoto.
+
+## Estado consolidado posterior
+
+Los resultados anteriores registran cada entrega en su fecha. El usuario fusionó los PR #1/#3/#4/#5 en sus bases; la validación final se revisa contra dev para consolidar todas las entregas. La identidad actual es nyxlink@0.1.0-dev.1, privada. Consulta [estado del plan](../tasks/master-status.md), [preparación de release](release-readiness.md), [API](api.md) y [ejemplos](../examples/README.md) para la situación vigente.

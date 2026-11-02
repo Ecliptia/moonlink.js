@@ -60,3 +60,12 @@ Branch: `feat/nyxlink-stability`, stacked on the third delivery at `1152f1e`.
 2. Add idempotent Manager.shutdown and initialization coordination. Close players, nodes, connectors/logger, idle timers and storage; reject new work after shutdown. Remove destroyed-player snapshots and release tracked WebSocket heartbeat/manual-ping resources with independent regression tests.
 3. Add a real-server endurance runner against the pinned images: ten-minute local validation and a shorter CI smoke run. Exercise repeated REST lifecycle/load/decode, paused player commands without voice, confirmed session resumes, bounded queues and teardown. Sample client/server memory, CPU, event-loop delay and latency percentiles. Longer one-hour runs remain available and are not claimed until executed.
 4. Record evidence, prerelease blockers and rollback/reproduction instructions. Keep package private, retain identity/version until a separate distribution decision, open a stacked draft PR and verify CI. Audible Discord/DAVE and real playback latency remain untested.
+
+## Final local validation and consolidation
+
+Branch: `feat/nyxlink-validation`, starting from the user-merged fourth delivery (`8e74b49`, same runtime files as `a40a138`). PRs #1/#3/#4/#5 were merged into their respective bases, so this delivery will target dev and consolidate the complete tree for review.
+
+1. Run the existing pinned-server endurance for 3600 real seconds, preserve its unmodified test conditions and record client/server metrics and cleanup. This remains a protocol/REST test without Discord voice.
+2. Apply the user's distribution choice: npm name nyxlink (lowercase), initial own version 0.1.0-dev.1; retain private/publication protections. Validate actual packed installation for CommonJS, ESM and TypeScript consumers on supported Node versions.
+3. Close remaining developer-facing acceptance: compiled examples, migration/API documentation, explicit status of the historical backlog against superseding decisions. Implement/test any in-scope search optional contracts and NodeLink local endpoint cases that can be verified without a bot, recording remaining external provider/audio limitations precisely.
+4. Consolidate in a reviewable PR against dev with all earlier approved delivery history, full local/CI evidence and a finite remaining external checklist. No npm publication, repository-default-branch change, production Discord control or automatic merge is authorized here.

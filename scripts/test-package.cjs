@@ -29,11 +29,12 @@ async function main() {
     await fs.mkdir(consumer);
     const types = require('../node_modules/@types/node/package.json').version;
     const compiler = require('../node_modules/typescript/package.json').version;
+    const discord = require('../node_modules/discord.js/package.json').version;
     await fs.writeFile(path.join(consumer, 'package.json'), JSON.stringify({ private: true, packageManager: manifest.packageManager,
-      dependencies: { [manifest.name]: `file:${archive}` }, devDependencies: { '@types/node': types, typescript: compiler } }));
+      dependencies: { [manifest.name]: `file:${archive}` }, devDependencies: { '@types/node': types, typescript: compiler, 'discord.js': discord } }));
     const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-    run(pnpm, ['install', '--offline', '--ignore-scripts', '--no-frozen-lockfile'], consumer);
-    checks.push('install packed artifact offline');
+    run(pnpm, ['install', '--prefer-offline', '--ignore-scripts', '--no-frozen-lockfile'], consumer);
+    checks.push('install packed artifact in isolated consumer');
     const installed = path.join(consumer, 'node_modules', ...manifest.name.split('/'));
     assert.notEqual(await fs.realpath(installed), root, 'Consumer must use the packed copy');
     const actual = JSON.parse(await fs.readFile(path.join(installed, 'package.json'), 'utf8'));
@@ -67,6 +68,11 @@ async function main() {
     const tsc = path.join(consumer, 'node_modules/typescript/bin/tsc');
     run(process.execPath, [tsc, '--noEmit', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', 'consumer.cts', 'consumer.mts'], consumer);
     checks.push('TypeScript NodeNext CJS/ESM consumers without skipLibCheck');
+    for (const file of ['discordjs.ts', 'discordjs.cjs']) await fs.copyFile(path.join(root, 'examples', file), path.join(consumer, file));
+    run(process.execPath, [tsc, '--noEmit', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', 'discordjs.ts'], consumer);
+    await fs.writeFile(path.join(consumer, 'example-smoke.cjs'), `const { createMusicClient } = require('./discordjs.cjs'); const fixture = createMusicClient([{host:'127.0.0.1',port:2333,password:'fixture'}]); fixture.close().catch(error=>{console.error(error);process.exitCode=1});`);
+    const example = run(process.execPath, ['example-smoke.cjs'], consumer); assert.equal(example.stdout, ''); assert.equal(example.stderr, '');
+    checks.push('TypeScript example compile and CommonJS factory/cleanup without login');
     passed = true;
   } finally {
     const report = { timestamp: new Date().toISOString(), scope: 'packed local installation; no registry publication or Discord',

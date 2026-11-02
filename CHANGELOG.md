@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.1 — NyxLink private development
+
+- Authorized nyxlink package identity; installed tarball CommonJS/ESM/TypeScript checks and compiled JS/TS bot examples without login.
+- Optional bounded search TTL/LRU cache, configured fallback/resolver, timeout and cancellation; default cache/fallback remain disabled.
+- Streaming errors preserve bounded status/body and degrade disabled NodeLink capabilities consistently; enabled local WAV and explicit HTTP decoding limitation documented.
+- API/migration reference and consolidated status of the supplied backlog; publication stays blocked.
+
 ## Unreleased — Lifecycle and stability measurement
 
 - Add terminal, idempotent Manager.shutdown with ordered cleanup, shared initialization and aggregated failures.

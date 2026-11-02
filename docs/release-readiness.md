@@ -1,40 +1,44 @@
 # Preparación de prerelease
 
-Esta documentación prepara una revisión; **no autoriza ni ejecuta una publicación**. El paquete sigue con `private: true`, nombre heredado `moonlink.js` y versión `5.3.0-dev.2`. La identidad final y la primera versión NyxLink requieren una decisión separada. Los PR de las entregas permanecen en borrador y no se fusionan automáticamente.
+Identidad autorizada: **nyxlink@0.1.0-dev.1**. Se conserva `private: true` y el workflow de publicación bloqueado. Los PR #1/#3/#4/#5 fueron fusionados por el usuario en sus bases apiladas; la entrega final consolida el resultado mediante un PR a dev. No se anuncia una release npm.
 
 ## Evidencia disponible
 
-- Compilación TypeScript, consumidor público, instalación con lockfile congelado y allowlist del paquete.
-- Regresiones de reproducción/autoplay, selección/failover, resolución entre backends, snapshots/almacenamiento y gateway simulado.
-- Protocolo local con Lavalink 4.2.2 y NodeLink 3.10.0-dev.2026-10-20.1, fijados por digest.
-- Benchmark reproducible y cierre de recursos; ver [stability.md](stability.md) para duración, condiciones y límites del endurance.
-- Conservación del banner, créditos y licencia OSL-3.0 del fork.
+- Build, lock congelado, pruebas sin bot, tipos públicos y allowlist del tarball.
+- Instalación real del tarball: CommonJS, imports nombrados ESM, consumidores TypeScript NodeNext sin skipLibCheck y ejemplos Discord.js JS/TS sin login.
+- Regresiones de reproducción/autoplay, selección/failover, resolución entre backends, almacenamiento, gateway simulado, búsqueda/caché y cancelación HTTP.
+- Protocolo local con Lavalink 4.2.2 y NodeLink 3.10.0-dev.2026-10-20.1 fijados por digest; [extensiones locales](extensions.md).
+- Benchmark y endurance con métricas y limpieza: [estabilidad](stability.md) registra las duraciones terminadas.
+- [API](api.md), [migración](migration.md), [ejemplos](../examples/README.md), [conciliación del plan](../tasks/master-status.md), banner y OSL-3.0 conservados.
 
-## Condiciones aún abiertas
+## Condiciones externas pendientes
 
-1. Decidir nombre npm, versión de prerelease, responsables y guía de migración final. Revisar el contenido del tarball antes de retirar el bloqueo de publicación.
-2. Revisar y aprobar las entregas apiladas antes de integrarlas. Una CI correcta no equivale a una revisión humana ni a compatibilidad de audio certificada.
-3. Proporcionar un bot/canal dedicados y validar audio, permisos, movimientos, reconexiones y DAVE con las versiones concretas de backend. No utilizar bots de producción para suplir esa configuración.
-4. Probar explícitamente las extensiones habilitadas que se vayan a anunciar y la compatibilidad de plugins/codificaciones del mismo backend.
-5. Ejecutar endurance de una hora o más y medir el tráfico esperado en la infraestructura de destino. Registrar latencias, memoria, errores y condiciones, sin extrapolar el smoke de CI.
-6. Configurar el secreto `QODANA_TOKEN_1916333486` si se exige ese análisis: el workflow lo entrega como variable `QODANA_TOKEN` y actualmente está ausente. No se considera superado ni se desactiva para ocultar el fallo.
+1. Bot/canal dedicados para audio, permisos, movimientos, reconexión, DAVE y latencia play→trackStart. El usuario confirmó que no existe bot de pruebas disponible.
+2. Proveedores y pistas adecuados para letras encontradas/idiomas, capítulos reales, mixer durante reproducción y extensiones opt-in que se vayan a anunciar. La imagen NodeLink fijada además falla al decodificar el WAV HTTP de prueba; no se oculta ese límite.
+3. Revisión humana del PR consolidado e integración en dev. CI verde no sustituye audio real. La rama predeterminada del repositorio sigue bajo decisión del propietario.
+4. Secreto `QODANA_TOKEN_1916333486` para el workflow Qodana, que lo entrega como QODANA_TOKEN. Su análisis no se declara superado ni se desactiva para ocultar la ausencia.
+5. Confirmar control/titularidad del nombre npm, responsables de release y autorización explícita antes de retirar private/publicar. El nombre elegido no equivale a una reserva en npm.
+6. Dimensionar carga/audio y endurance en infraestructura de destino; el laboratorio local no promete SLA ni ausencia de fugas bajo cualquier carga.
 
-## Verificación antes de distribuir
+## Reproducir antes de distribuir
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm run typecheck
 pnpm test
 pnpm run test:types
+pnpm run test:package
+pnpm run docs:api
 pnpm run pack:check
 pnpm audit --prod --audit-level=high
 pnpm run test:backends
+pnpm run test:extensions
 pnpm run bench
 pnpm run test:endurance -- 3600
 ```
 
-`pack:check` inspecciona el paquete y no lo publica. Los comandos locales de protocolo y endurance requieren Linux y Podman/Docker; no sustituyen la validación de Discord descrita arriba.
+Los runners de servidores requieren Linux/Podman o Docker. `pack:check` y `test:package` no publican. Los ejemplos se verifican sin token ni conexiones Discord.
 
 ## Reversión
 
-Mientras las entregas estén sin fusionar, cada rama permite revisar el cambio frente a su base sin modificar `dev`. Para una prueba local, conserva el checkout/tarball anterior y el directorio de datos; cierra el manager antes de cambiar la biblioteca. Los snapshots y WAL antiguos siguen siendo legibles por la nueva versión. El WAL JSON nuevo no debe abrirse con un proveedor Local anterior a la tercera entrega: usa una copia de los datos previa a la prueba para volver atrás. No hay migraciones de datos ni publicaciones remotas automáticas en este bloque.
+Conserva checkout/tarball y copia de datos anteriores. Cierra el manager antes de sustituir la biblioteca. Se siguen leyendo snapshots/WAL antiguos; para volver a Local anterior a la tercera entrega, restaura una copia previa del almacenamiento, ya que su lector no interpreta el WAL JSON nuevo. No hay cambios de datos, despliegues ni publicaciones remotas automáticas.

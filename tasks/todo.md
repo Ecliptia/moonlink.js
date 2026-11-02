@@ -57,3 +57,10 @@
 - [x] P2: Coordinated Manager shutdown, connector cleanup, destroyed snapshot removal and bounded WebSocket ping resources.
 - [x] P3: Real-server endurance runner and ten-minute local evidence; shorter CI smoke, latency/resource metrics and cleanup checks.
 - [x] P4: Readiness/limitations documentation, public types/package verification, commits, stacked [PR #5](https://github.com/melodiabl/NyxLink/pull/5) and [CI evidence](../docs/stability.md#verificación-en-github).
+
+## Final local validation and consolidation
+
+- [ ] V1: One-hour pinned-server endurance evidence and resource/latency analysis.
+- [x] V2: Authorized nyxlink@0.1.0-dev.1 identity with publication blocked; installed tarball CJS/ESM/TS validation.
+- [x] V3: Compile bot examples, migration/API docs and explicit master-backlog status; close remaining testable local contracts.
+- [ ] V4: Consolidated PR against dev, quality/package checks and CI evidence; preserve external audio/publication blockers.
