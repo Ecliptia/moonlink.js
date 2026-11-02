@@ -28,7 +28,7 @@ class SearchService {
         });
     }
     validate(result) {
-        if (!result || typeof result !== 'object' || typeof result.loadType !== 'string')
+        if (!result || typeof result !== 'object' || !['track', 'search', 'playlist', 'empty', 'error'].includes(result.loadType))
             throw new TypeError('Invalid search response');
         const track = (value) => value && typeof value.encoded === 'string' && value.encoded.length > 0 && value.info && typeof value.info === 'object';
         if (result.loadType === 'track' && !track(result.data) ||

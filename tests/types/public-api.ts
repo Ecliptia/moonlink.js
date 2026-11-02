@@ -40,3 +40,8 @@ const isClosed: boolean = manager.destroyed;
 const connector = new Connectors.DiscordJs();
 const disposed: void = connector.dispose();
 void [shuttingDown, isClosed, disposed];
+
+const searchConfig = new Manager({ nodes: [configuredNode], options: { search: { timeoutMs: 1000, fallbackPlatforms: ['soundcloud'], cache: { ttlMs: 5000, maxEntries: 10 }, resolver: async (_query, _node) => null } } });
+const cancellable = manager.search({ query: 'local fixture', signal: AbortSignal.timeout(1000) });
+const streaming = node.rest.loadStream({ encodedTrack: track.encoded, format: 'wav' }, { signal: AbortSignal.timeout(1000), timeoutMs: 1000 });
+void [searchConfig, cancellable, streaming];

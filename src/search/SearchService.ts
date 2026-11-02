@@ -26,7 +26,7 @@ export class SearchService {
     }
 
     private validate(result: IRESTLoadTracks): void {
-        if (!result || typeof result !== 'object' || typeof result.loadType !== 'string') throw new TypeError('Invalid search response');
+        if (!result || typeof result !== 'object' || !['track', 'search', 'playlist', 'empty', 'error'].includes(result.loadType)) throw new TypeError('Invalid search response');
         const track = (value: any) => value && typeof value.encoded === 'string' && value.encoded.length > 0 && value.info && typeof value.info === 'object';
         if (result.loadType === 'track' && !track(result.data) ||
             result.loadType === 'search' && (!Array.isArray(result.data) || !result.data.every(track)) ||
