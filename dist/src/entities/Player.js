@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
+const PlaybackGuard_1 = require("../players/PlaybackGuard");
 const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
 const Track_1 = require("./Track");
@@ -281,6 +282,10 @@ class Player {
         return this;
     }
     async play(options = {}) {
+        const guard = (0, PlaybackGuard_1.playbackGuard)(this);
+        const ticket = guard.invalidate();
+        if (this.destroyed)
+            return false;
         let finalOptions;
         if (options instanceof Track_1.Track) {
             finalOptions = { track: options };
@@ -302,6 +307,8 @@ class Player {
                 return false;
             }
         }
+        if (!guard.isCurrent(ticket) || this.destroyed)
+            return false;
         let track = finalOptions.track;
         if (finalOptions.encoded) {
             try {
@@ -371,7 +378,11 @@ class Player {
         this.manager.emit("playerTriggeredPlay", this, this.current);
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
         try {
-            await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            const response = await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            if (response == null)
+                throw new Error("Backend did not acknowledge playback");
+            if (!guard.isCurrent(ticket) || this.destroyed)
+                return false;
             this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
         }
         catch (e) {
@@ -594,6 +605,7 @@ class Player {
         });
     }
     async stop() {
+        (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
         await this.sendPlayerUpdate({ track: { encoded: null } });
@@ -606,6 +618,7 @@ class Player {
         this.updateData("current", this.current);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player state changed: current: ${oldTrackTitle} -> null`);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player stopped for guild ${this.guildId}`);
+        this.manager.emit("playerStop", this);
         return this;
     }
     async skip(position) {
@@ -672,6 +685,8 @@ class Player {
         return this;
     }
     setAutoPlay(autoPlay) {
+        if (!autoPlay)
+            (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.updateData("autoPlay", this.autoPlay);
@@ -701,6 +716,7 @@ class Player {
         if (this.destroyed) {
             return;
         }
+        (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
         this.destroyed = true;
         this.stopHealthCheck();
         if (this.resumeDebounceTimer) {

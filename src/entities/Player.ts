@@ -1,3 +1,4 @@
+import { playbackGuard } from "../players/PlaybackGuard";
 import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
@@ -326,6 +327,9 @@ export class Player {
     }
 
     public async play(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track = {}): Promise<boolean> {
+        const guard = playbackGuard(this);
+        const ticket = guard.invalidate();
+        if (this.destroyed) return false;
         let finalOptions: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string };
 
         if (options instanceof Track) {
@@ -347,6 +351,8 @@ export class Player {
                 return false;
             }
         }
+
+        if (!guard.isCurrent(ticket) || this.destroyed) return false;
 
         let track = finalOptions.track;
         if (finalOptions.encoded) {
@@ -424,7 +430,9 @@ export class Player {
         this.manager.emit("debug", `Moonlink.js > Player#play -> Sending play request to node ${this.node.identifier} for guild ${this.guildId}. Payload: ${JSON.stringify(payload)}`);
 
         try {
-            await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            const response = await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            if (response == null) throw new Error("Backend did not acknowledge playback");
+            if (!guard.isCurrent(ticket) || this.destroyed) return false;
             this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
         } catch (e) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Failed to send play request for guild ${this.guildId}. Reverting state. Error: ${(e as Error).message}`);
@@ -709,6 +717,7 @@ export class Player {
     }
 
     public async stop(): Promise<this> {
+        playbackGuard(this).invalidate();
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
 
@@ -811,6 +820,7 @@ export class Player {
     }
 
     public setAutoPlay(autoPlay: boolean): this {
+        if (!autoPlay) playbackGuard(this).invalidate();
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.updateData("autoPlay", this.autoPlay);
@@ -844,6 +854,7 @@ export class Player {
         if (this.destroyed) {
             return;
         }
+        playbackGuard(this).invalidate();
         this.destroyed = true;
 
         this.stopHealthCheck();
