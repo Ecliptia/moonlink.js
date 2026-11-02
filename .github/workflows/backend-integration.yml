@@ -37,4 +37,5 @@ jobs:
         with:
           name: backend-protocol-evidence
           path: .runtime/integration/latest-report.json
+          include-hidden-files: true
           if-no-files-found: warn
