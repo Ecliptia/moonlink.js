@@ -1,6 +1,7 @@
 import { Track } from "./Track";
 import type { Manager } from "../core/Manager";
 import type { Player } from "./Player";
+import { TrackCodec } from '../tracks/TrackCodec';
 
 export class Queue {
     private player: Player;
@@ -13,7 +14,7 @@ export class Queue {
     }
 
     private _updateQueue(): void {
-        this.player.updateData('queue', this.tracks.map(t => ({ encoded: t.encoded, requester: t.requester })));
+        this.player.updateData('queue', this.tracks.map(t => TrackCodec.serialize(t)));
     }
 
     public get size(): number {

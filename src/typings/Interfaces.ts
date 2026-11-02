@@ -1,4 +1,3 @@
-import type { StorageAdapter } from '../database/StorageAdapter';
 import { Node } from "../entities/Node";
 import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
@@ -6,6 +5,9 @@ import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 import type { LoggerOptions } from '../logging/Logger';
 import type { FailoverOptions } from '../nodes/NodeFailover';
+import type { StorageAdapter } from '../database/StorageAdapter';
+import type { BackendKind } from '../backends/BackendAdapter';
+import type { TrackSnapshot } from '../tracks/TrackCodec';
 
 export interface IManagerEvents {
     debug: (message: string) => void;
@@ -344,6 +346,7 @@ export interface ITrackInfo {
 }
 
 export interface ITrack {
+    backend?: BackendKind;
     encoded: string;
     info: ITrackInfo;
     pluginInfo: Record<string, any>;
@@ -369,9 +372,9 @@ export interface IPlayerConfig {
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;
-    current?: { encoded: string; requester: any; position?: number };
-    queue?: Array<{ encoded: string; requester: any }>;
-    previous?: Array<{ encoded: string; requester: any }>;
+    current?: TrackSnapshot | { encoded: string; requester: any; position?: number };
+    queue?: Array<TrackSnapshot | { encoded: string; requester: any }>;
+    previous?: Array<TrackSnapshot | { encoded: string; requester: any }>;
 }
 
 export interface IRESTOptions {

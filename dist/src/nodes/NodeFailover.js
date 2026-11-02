@@ -21,7 +21,7 @@ class NodeFailover {
         }
         const excluded = new Set([source.identifier]);
         for (const node of player.manager.nodes.nodes.values()) {
-            if (node.backend?.kind !== source.backend?.kind)
+            if (Boolean(node.backend) !== Boolean(source.backend))
                 excluded.add(node.identifier);
         }
         const guard = (0, PlaybackGuard_1.playbackGuard)(player);

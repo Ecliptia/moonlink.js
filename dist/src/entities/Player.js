@@ -6,6 +6,8 @@ const PlaybackGuard_1 = require("../players/PlaybackGuard");
 const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
 const Track_1 = require("./Track");
+const TrackCodec_1 = require("../tracks/TrackCodec");
+const TrackResolver_1 = require("../tracks/TrackResolver");
 const VoiceReceiver_1 = require("./VoiceReceiver");
 class Player {
     manager;
@@ -67,7 +69,7 @@ class Player {
         this.filters = new (Util_1.Structure.get("Filters"))(this);
         this.voice = new Voice_1.Voice(this);
         if (config.current) {
-            this.current = new Track_1.Track((0, Util_1.decodeTrack)(config.current.encoded), config.current.requester);
+            this.current = TrackCodec_1.TrackCodec.restore(config.current);
             if (config.current.position) {
                 this.current.position = config.current.position;
                 this.lastPosition = this.current.position;
@@ -75,12 +77,12 @@ class Player {
         }
         if (config.queue && Array.isArray(config.queue)) {
             for (const track of config.queue) {
-                this.queue.add(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+                this.queue.add(TrackCodec_1.TrackCodec.restore(track));
             }
         }
         if (config.previous && Array.isArray(config.previous)) {
             for (const track of config.previous) {
-                this.previous.push(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+                this.previous.push(TrackCodec_1.TrackCodec.restore(track));
             }
         }
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
@@ -245,9 +247,11 @@ class Player {
     get(key) {
         return this.data[key];
     }
-    async updateData(path, data) {
+    updateData(path, data) {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-        await this.manager.database.set(dbPath, data);
+        const operation = this.manager.database.set(dbPath, data);
+        void operation.catch(error => this.manager.emit('debug', `NyxLink > Storage > Write failed for ${dbPath}: ${error.message}`));
+        return operation;
     }
     assertNodeLinkFeature(feature) {
         this.node.assertFeature(feature);
@@ -378,17 +382,26 @@ class Player {
             return false;
         }
         const previousTrack = this.current;
-        const nextTrack = this.queue.shift();
+        const queuedTrack = this.queue.first;
+        let nextTrack = queuedTrack;
         if (!nextTrack || !nextTrack.encoded) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}. Next track is ${JSON.stringify(nextTrack)}`);
-            if (nextTrack)
-                this.queue.unshift(nextTrack);
             return false;
         }
+        try {
+            nextTrack = await TrackResolver_1.TrackResolver.resolve(nextTrack, this.node);
+        }
+        catch (error) {
+            this.manager.emit('debug', `NyxLink > TrackResolver > ${error.message}`);
+            return false;
+        }
+        if (this.destroyed || !guard.isCurrent(ticket) || !allowed() || this.queue.first !== queuedTrack)
+            return false;
+        this.queue.shift();
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track_1.Track ? nextTrack : new Track_1.Track(nextTrack);
         this.current.position = finalOptions.position || 0;
-        this.updateData("current", { encoded: this.current.encoded, requester: this.current.requester });
+        this.updateData("current", TrackCodec_1.TrackCodec.serialize(this.current));
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
         const oldPlaying = this.playing;
         const oldPaused = this.paused;
@@ -439,7 +452,7 @@ class Player {
             if (this.previous.length > historyLimit) {
                 this.previous.shift();
             }
-            this.updateData("previous", this.previous.map(t => ({ encoded: t.encoded, requester: t.requester })));
+            this.updateData("previous", this.previous.map(t => TrackCodec_1.TrackCodec.serialize(t)));
             this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
         }
         this.set("isBackPlay", false);
@@ -955,6 +968,9 @@ class Player {
             const moved = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected)
                     return false;
+                const resolved = this.current ? await TrackResolver_1.TrackResolver.resolve(this.current, targetNode, oldNode) : null;
+                if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected)
+                    return false;
                 try {
                     await oldNode.rest.destroyPlayer(this.guildId);
                 }
@@ -963,7 +979,16 @@ class Player {
                 }
                 if (this.destroyed || !guard.isCurrent(ticket))
                     return false;
+                for (const track of [...this.queue.tracks, ...this.previous]) {
+                    track.backend ??= oldNode.backend?.kind;
+                }
+                this.updateData('queue', this.queue.tracks.map(track => TrackCodec_1.TrackCodec.serialize(track)));
+                this.updateData('previous', this.previous.map(track => TrackCodec_1.TrackCodec.serialize(track)));
                 this.node = targetNode;
+                if (resolved) {
+                    this.current = resolved;
+                    this.updateData('current', TrackCodec_1.TrackCodec.serialize(resolved));
+                }
                 this.set("lastState", undefined);
                 return true;
             });

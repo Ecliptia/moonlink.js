@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Queue = void 0;
+const TrackCodec_1 = require("../tracks/TrackCodec");
 class Queue {
     player;
     manager;
@@ -10,7 +11,7 @@ class Queue {
         this.manager = player.manager;
     }
     _updateQueue() {
-        this.player.updateData('queue', this.tracks.map(t => ({ encoded: t.encoded, requester: t.requester })));
+        this.player.updateData('queue', this.tracks.map(t => TrackCodec_1.TrackCodec.serialize(t)));
     }
     get size() {
         return this.tracks.length;

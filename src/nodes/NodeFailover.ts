@@ -23,9 +23,9 @@ export class NodeFailover {
             throw new TypeError('Failover requires maxAttempts 0..10 and retryDelayMs 0..60000');
         }
         const excluded = new Set([source.identifier]);
-        // Cross-backend track re-resolution belongs to the next delivery.
+        // Unknown/confirmed identities cannot be treated as compatible codecs.
         for (const node of player.manager.nodes.nodes.values() as Iterable<Node>) {
-            if (node.backend?.kind !== source.backend?.kind) excluded.add(node.identifier);
+            if (Boolean(node.backend) !== Boolean(source.backend)) excluded.add(node.identifier);
         }
         const guard = playbackGuard(player);
         let ticket = guard.ticket;

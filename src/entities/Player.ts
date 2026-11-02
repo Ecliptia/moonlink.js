@@ -9,6 +9,8 @@ import { IPlayerConfig, IFadingOptions, ILyricsData, IChapter, IMeaningResponse,
 import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
+import { TrackCodec } from '../tracks/TrackCodec';
+import { TrackResolver } from '../tracks/TrackResolver';
 import { VoiceReceiver, VoiceReceiverOptions } from "./VoiceReceiver";
 
 export class Player {
@@ -79,7 +81,7 @@ export class Player {
         this.voice = new Voice(this);
 
         if (config.current) {
-            this.current = new Track(decodeTrack(config.current.encoded), config.current.requester);
+            this.current = TrackCodec.restore(config.current);
             if ((config.current as any).position) {
                 this.current.position = (config.current as any).position;
                 this.lastPosition = this.current.position;
@@ -88,13 +90,13 @@ export class Player {
 
         if (config.queue && Array.isArray(config.queue)) {
             for (const track of config.queue) {
-                this.queue.add(new Track(decodeTrack(track.encoded), track.requester));
+                this.queue.add(TrackCodec.restore(track));
             }
         }
 
         if (config.previous && Array.isArray(config.previous)) {
             for (const track of config.previous) {
-                this.previous.push(new Track(decodeTrack(track.encoded), track.requester));
+                this.previous.push(TrackCodec.restore(track));
             }
         }
 
@@ -274,9 +276,12 @@ export class Player {
         return this.data[key] as T;
     }
 
-    public async updateData<T>(path?: string, data?: T): Promise<void> {
+    public updateData<T>(path?: string, data?: T): Promise<void> {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-        await this.manager.database.set(dbPath, data);
+        const operation = this.manager.database.set(dbPath, data);
+        // Background writes report failures; callers that await still receive rejection.
+        void operation.catch(error => this.manager.emit('debug', `NyxLink > Storage > Write failed for ${dbPath}: ${error.message}`));
+        return operation;
     }
 
     private assertNodeLinkFeature(feature: string): void {
@@ -421,18 +426,26 @@ export class Player {
         }
 
         const previousTrack = this.current;
-        const nextTrack = this.queue.shift();
+        const queuedTrack = this.queue.first;
+        let nextTrack = queuedTrack;
 
         if (!nextTrack || !nextTrack.encoded) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}. Next track is ${JSON.stringify(nextTrack)}`);
-            if (nextTrack) this.queue.unshift(nextTrack);
             return false;
         }
+
+        try { nextTrack = await TrackResolver.resolve(nextTrack, this.node); }
+        catch (error) {
+            this.manager.emit('debug', `NyxLink > TrackResolver > ${error.message}`);
+            return false;
+        }
+        if (this.destroyed || !guard.isCurrent(ticket) || !allowed() || this.queue.first !== queuedTrack) return false;
+        this.queue.shift();
 
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track ? nextTrack : new Track(nextTrack);
         this.current.position = finalOptions.position || 0;
-        this.updateData("current", { encoded: this.current.encoded, requester: this.current.requester });
+        this.updateData("current", TrackCodec.serialize(this.current));
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
 
         const oldPlaying = this.playing;
@@ -485,7 +498,7 @@ export class Player {
             if (this.previous.length > historyLimit) {
                 this.previous.shift();
             }
-            this.updateData("previous", this.previous.map(t => ({ encoded: t.encoded, requester: t.requester })));
+            this.updateData("previous", this.previous.map(t => TrackCodec.serialize(t)));
             this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
         }
         this.set("isBackPlay", false);
@@ -1096,13 +1109,24 @@ export class Player {
         try {
             const moved = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected) return false;
+                const resolved = this.current ? await TrackResolver.resolve(this.current, targetNode, oldNode) : null;
+                if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected) return false;
                 try {
                     await oldNode.rest.destroyPlayer(this.guildId);
                 } catch (error) {
                     this.manager.emit("debug", `NyxLink > Player#transferNode >> Old node cleanup failed: ${error.message}`);
                 }
                 if (this.destroyed || !guard.isCurrent(ticket)) return false;
+                for (const track of [...this.queue.tracks, ...this.previous]) {
+                    track.backend ??= oldNode.backend?.kind;
+                }
+                this.updateData('queue', this.queue.tracks.map(track => TrackCodec.serialize(track)));
+                this.updateData('previous', this.previous.map(track => TrackCodec.serialize(track)));
                 this.node = targetNode;
+                if (resolved) {
+                    this.current = resolved;
+                    this.updateData('current', TrackCodec.serialize(resolved));
+                }
                 // A sync acknowledgement from the old node says nothing about the target.
                 this.set("lastState", undefined);
                 return true;

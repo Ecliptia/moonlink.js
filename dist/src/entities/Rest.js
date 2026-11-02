@@ -140,13 +140,14 @@ class Rest {
             }
         }
     }
-    async loadTracks(identifier) {
+    async loadTracks(identifier, options) {
         const params = new URLSearchParams();
         params.append("identifier", identifier);
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
-            headers: this.authHeaders
-        });
+            headers: this.authHeaders,
+            throwOnError: options !== undefined
+        }, options?.timeoutMs ?? 0, options ? 0 : 3);
         return res || { loadType: "empty", data: {} };
     }
     async decodeTrack(encodedTrack) {

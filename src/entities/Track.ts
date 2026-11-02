@@ -1,6 +1,7 @@
 import { ITrack, ITrackInfo } from "../typings/Interfaces";
 import { Structure } from "../Util";
 import { TPartialTrackProperties } from "../typings/types";
+import type { BackendKind } from '../backends/BackendAdapter';
 
 export class Track {
     public readonly encoded: string;
@@ -18,6 +19,7 @@ export class Track {
     public time: number;
     public requester: any;
     public origin?: string;
+    public backend?: BackendKind;
     public pluginInfo: Record<string, any>;
     public userData: Record<string, any>;
     public retries: number = 0;
@@ -31,6 +33,7 @@ export class Track {
         this.encoded = normalized.encoded;
         this.requester = requester || normalized.userData?.requester;
         this.origin = origin;
+        if (data.backend === 'lavalink' || data.backend === 'nodelink') this.backend = data.backend;
         this.pluginInfo = normalized.pluginInfo ?? {};
         this.userData = normalized.userData ?? {};
 
@@ -161,6 +164,7 @@ export class Track {
             },
             pluginInfo: this.pluginInfo,
             userData: this.userData,
+            backend: this.backend,
         };
     }
 }

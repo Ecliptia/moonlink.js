@@ -1,4 +1,3 @@
-import type { StorageAdapter } from '../database/StorageAdapter';
 import { Node } from "../entities/Node";
 import { Player } from "../entities/Player";
 import { Track } from "../entities/Track";
@@ -6,6 +5,9 @@ import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 import type { LoggerOptions } from '../logging/Logger';
 import type { FailoverOptions } from '../nodes/NodeFailover';
+import type { StorageAdapter } from '../database/StorageAdapter';
+import type { BackendKind } from '../backends/BackendAdapter';
+import type { TrackSnapshot } from '../tracks/TrackCodec';
 export interface IManagerEvents {
     debug: (message: string) => void;
     nodeCreate: (node: Node) => void;
@@ -309,6 +311,7 @@ export interface ITrackInfo {
     position: number;
 }
 export interface ITrack {
+    backend?: BackendKind;
     encoded: string;
     info: ITrackInfo;
     pluginInfo: Record<string, any>;
@@ -332,16 +335,16 @@ export interface IPlayerConfig {
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;
-    current?: {
+    current?: TrackSnapshot | {
         encoded: string;
         requester: any;
         position?: number;
     };
-    queue?: Array<{
+    queue?: Array<TrackSnapshot | {
         encoded: string;
         requester: any;
     }>;
-    previous?: Array<{
+    previous?: Array<TrackSnapshot | {
         encoded: string;
         requester: any;
     }>;

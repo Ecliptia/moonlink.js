@@ -149,14 +149,15 @@ export class Rest {
         }
     }
 
-    public async loadTracks(identifier: string): Promise<IRESTLoadTracks> {
+    public async loadTracks(identifier: string, options?: { timeoutMs: number }): Promise<IRESTLoadTracks> {
         const params = new URLSearchParams();
         params.append("identifier", identifier);
 
         const res = await makeRequest<any>(`${this.url}/v4/loadtracks?${params}`, {
             method: "GET",
-            headers: this.authHeaders
-        });
+            headers: this.authHeaders,
+            throwOnError: options !== undefined
+        }, options?.timeoutMs ?? 0, options ? 0 : 3);
 
         return res || { loadType: "empty", data: {} };
     }

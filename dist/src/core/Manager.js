@@ -259,6 +259,8 @@ class Manager extends Util_1.EventEmitter {
         const res = await node.rest.loadTracks(identifier);
         this.emit("debug", `Moonlink.js > Manager <- Search result for query "${options.query}". LoadType: ${res.loadType}`);
         const result = new (Util_1.Structure.get("SearchResult"))(res, options.requester, this.options.search?.playlistLoadLimit);
+        for (const track of result.tracks)
+            track.backend = node.backend?.kind;
         if (result.loadType === "search") {
             result.tracks = result.tracks.slice(0, this.options.search?.resultLimit ?? 10);
         }

@@ -21,7 +21,9 @@ export declare class Rest {
     getPlayer(guildId: string): Promise<any | null>;
     updatePlayer(guildId: string, data: any, noReplace?: boolean): Promise<any | null>;
     destroyPlayer(guildId: string): Promise<void>;
-    loadTracks(identifier: string): Promise<IRESTLoadTracks>;
+    loadTracks(identifier: string, options?: {
+        timeoutMs: number;
+    }): Promise<IRESTLoadTracks>;
     decodeTrack(encodedTrack: string): Promise<ITrack | null>;
     decodeTracks(encodedTracks: string[]): Promise<ITrack[] | null>;
     getInfo(): Promise<any | null>;
