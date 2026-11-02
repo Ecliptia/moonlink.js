@@ -4,6 +4,7 @@ import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 import type { LoggerOptions } from '../logging/Logger';
+import type { FailoverOptions } from '../nodes/NodeFailover';
 
 export interface IManagerEvents {
     debug: (message: string) => void;
@@ -109,6 +110,7 @@ export interface INodeFailoverReport {
 }
 
 export interface IManagerNodeConfig {
+    readyTimeoutMs?: number;
     host: string;
     password: string;
     port: number;
@@ -165,6 +167,7 @@ export interface IVoiceConnectionOptions {
 }
 
 export interface INodeOptions {
+    failover?: FailoverOptions;
     maxStatsAgeMs?: number;
     selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;

@@ -280,9 +280,7 @@ export class Player {
     }
 
     private assertNodeLinkFeature(feature: string): void {
-        if (!this.node.isNodeLink) {
-            throw nodeLinkOnlyError(feature);
-        }
+        this.node.assertFeature(feature);
     }
 
     private resolveEncodedTrack(track: Track | string): string {
@@ -983,7 +981,7 @@ export class Player {
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
 
-    public async restart(): Promise<boolean> {
+    public async restart(options: { destroyOnFailure?: boolean; startQueued?: boolean } = {}): Promise<boolean> {
         const guard = playbackGuard(this);
         const ticket = guard.ticket;
         if (this.destroyed) return false;
@@ -1000,7 +998,7 @@ export class Player {
         } catch (error) {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${(error as Error).message}`);
             if (this.destroyed || !guard.isCurrent(ticket)) return false;
-            await this.destroy("Failed to establish voice connection on restart.");
+            if (options.destroyOnFailure !== false) await this.destroy("Failed to establish voice connection on restart.");
             return false;
         }
 
@@ -1051,14 +1049,18 @@ export class Player {
 
             const restored = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket)) return false;
+                if (!await this.restoreVoiceForRestart(ticket)) return false;
                 await this.sendPlayerUpdate(payload);
                 return !this.destroyed && guard.isCurrent(ticket);
             });
             if (!restored) return false;
 
-        } else if (this.queue.size > 0) {
+        } else if (this.queue.size > 0 && options.startQueued !== false) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
-            if (!await this.commands.enqueue(() => this.playNext({}, ticket))) return false;
+            if (!await this.commands.enqueue(async () => {
+                if (!await this.restoreVoiceForRestart(ticket)) return false;
+                return this.playNext({}, ticket);
+            }).catch(() => false)) return false;
         } else {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> No track to restore and queue is empty for guild ${this.guildId}`);
             return true;
@@ -1066,6 +1068,14 @@ export class Player {
 
         this.manager.emit("playerResumed", this);
         return true;
+    }
+
+    private async restoreVoiceForRestart(ticket: number): Promise<boolean> {
+        if (this.destroyed || !playbackGuard(this).isCurrent(ticket)) return false;
+        const { sessionId, token, endpoint } = this.voice;
+        if (!sessionId || !token || !endpoint) return false;
+        await this.sendPlayerUpdate({ voice: { sessionId, token, endpoint, channelId: this.voiceChannelId } }, true);
+        return !this.destroyed && playbackGuard(this).isCurrent(ticket);
     }
 
     public async transferNode(node: Node | string): Promise<boolean> {
@@ -1097,7 +1107,7 @@ export class Player {
                 this.set("lastState", undefined);
                 return true;
             });
-            if (!moved || !await this.restart() || this.destroyed || !guard.isCurrent(ticket)) {
+            if (!moved || !await this.restart({ destroyOnFailure: false, startQueued: false }) || this.destroyed || !guard.isCurrent(ticket)) {
                 report(guard.isCurrent(ticket) ? 'failed' : 'cancelled');
                 return false;
             }

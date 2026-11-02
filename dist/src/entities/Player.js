@@ -250,9 +250,7 @@ class Player {
         await this.manager.database.set(dbPath, data);
     }
     assertNodeLinkFeature(feature) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)(feature);
-        }
+        this.node.assertFeature(feature);
     }
     resolveEncodedTrack(track) {
         if (track instanceof Track_1.Track)
@@ -847,7 +845,7 @@ class Player {
         this.manager.players.players.delete(this.guildId);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
-    async restart() {
+    async restart(options = {}) {
         const guard = (0, PlaybackGuard_1.playbackGuard)(this);
         const ticket = guard.ticket;
         if (this.destroyed)
@@ -865,7 +863,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${error.message}`);
             if (this.destroyed || !guard.isCurrent(ticket))
                 return false;
-            await this.destroy("Failed to establish voice connection on restart.");
+            if (options.destroyOnFailure !== false)
+                await this.destroy("Failed to establish voice connection on restart.");
             return false;
         }
         if (this.destroyed || !guard.isCurrent(ticket))
@@ -905,15 +904,21 @@ class Player {
             const restored = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket))
                     return false;
+                if (!await this.restoreVoiceForRestart(ticket))
+                    return false;
                 await this.sendPlayerUpdate(payload);
                 return !this.destroyed && guard.isCurrent(ticket);
             });
             if (!restored)
                 return false;
         }
-        else if (this.queue.size > 0) {
+        else if (this.queue.size > 0 && options.startQueued !== false) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
-            if (!await this.commands.enqueue(() => this.playNext({}, ticket)))
+            if (!await this.commands.enqueue(async () => {
+                if (!await this.restoreVoiceForRestart(ticket))
+                    return false;
+                return this.playNext({}, ticket);
+            }).catch(() => false))
                 return false;
         }
         else {
@@ -922,6 +927,15 @@ class Player {
         }
         this.manager.emit("playerResumed", this);
         return true;
+    }
+    async restoreVoiceForRestart(ticket) {
+        if (this.destroyed || !(0, PlaybackGuard_1.playbackGuard)(this).isCurrent(ticket))
+            return false;
+        const { sessionId, token, endpoint } = this.voice;
+        if (!sessionId || !token || !endpoint)
+            return false;
+        await this.sendPlayerUpdate({ voice: { sessionId, token, endpoint, channelId: this.voiceChannelId } }, true);
+        return !this.destroyed && (0, PlaybackGuard_1.playbackGuard)(this).isCurrent(ticket);
     }
     async transferNode(node) {
         const targetNode = typeof node === "string" ? this.manager.nodes.nodes.get(node) : node;
@@ -953,7 +967,7 @@ class Player {
                 this.set("lastState", undefined);
                 return true;
             });
-            if (!moved || !await this.restart() || this.destroyed || !guard.isCurrent(ticket)) {
+            if (!moved || !await this.restart({ destroyOnFailure: false, startQueued: false }) || this.destroyed || !guard.isCurrent(ticket)) {
                 report(guard.isCurrent(ticket) ? 'failed' : 'cancelled');
                 return false;
             }

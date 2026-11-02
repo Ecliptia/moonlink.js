@@ -125,7 +125,7 @@ export class Logger {
     const nodes = [...manager.nodes.nodes.values()];
     this.systemStatus(nodes.map(node => ({
       name: node.identifier,
-      backend: node.isNodeLink ? 'NodeLink' : node.info ? 'Lavalink' : 'Unknown',
+      backend: node.backend?.kind === 'nodelink' ? 'NodeLink' : node.backend?.kind === 'lavalink' ? 'Lavalink' : 'Unknown',
       state: node.connected
         ? node.state === NodeState.READY ? 'ready' : 'connected'
         : NodeState[node.state]?.toLowerCase() ?? 'disconnected',

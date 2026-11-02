@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = exports.RestError = void 0;
+const HttpError_1 = require("../errors/HttpError");
+const FeatureUnavailableError_1 = require("../errors/FeatureUnavailableError");
 const Util_1 = require("../Util");
 const PlaybackGuard_1 = require("../players/PlaybackGuard");
 class RestError extends Error {
@@ -58,6 +60,25 @@ class Rest {
         catch (e) {
             this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${e.message}`);
             await player.destroy("Session recovery error");
+        }
+    }
+    async featureRequest(feature, url, options) {
+        this.node.assertFeature(feature);
+        try {
+            const result = await (0, Util_1.makeRequest)(url, { ...options, throwOnError: true }, 10000, 0);
+            this.node.backend?.recordFeature(feature, 'available');
+            return result;
+        }
+        catch (error) {
+            const body = error instanceof HttpError_1.HttpError ? error.body : undefined;
+            const message = body && typeof body === 'object' && 'message' in body ? String(body.message) : '';
+            const unavailable = error instanceof HttpError_1.HttpError && (error.statusCode === 501 ||
+                [403, 404].includes(error.statusCode) && /requested route was not found|unknown (?:route|endpoint)|(?:endpoint|feature).*disabled/i.test(message));
+            if (unavailable) {
+                this.node.backend?.recordFeature(feature, 'unavailable');
+                throw new FeatureUnavailableError_1.FeatureUnavailableError(feature, this.node.backend?.kind ?? 'unknown', error.statusCode);
+            }
+            throw error;
         }
     }
     async getPlayers() {
@@ -156,8 +177,9 @@ class Rest {
         const res = await (0, Util_1.makeRequest)(`${this.url}/v4/info`, {
             method: "GET",
             headers: this.authHeaders,
-            returnHeaders: true
-        });
+            returnHeaders: true,
+            throwOnError: true
+        }, 10000, 0);
         return res || null;
     }
     async getVersion(timeout, retries) {
@@ -206,10 +228,8 @@ class Rest {
         return res || null;
     }
     async addMixLayer(guildId, data) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("mix:add");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
+        this.node.assertFeature("mix:add");
+        const res = await this.featureRequest("mix:add", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
             method: "POST",
             headers: this.jsonHeaders,
             body: data
@@ -217,109 +237,89 @@ class Rest {
         return res || null;
     }
     async getMixLayers(guildId) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("mix:list");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
+        this.node.assertFeature("mix:list");
+        const res = await this.featureRequest("mix:list", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async updateMixLayerVolume(guildId, mixId, volume) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("mix:update");
-        }
-        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
+        this.node.assertFeature("mix:update");
+        await this.featureRequest("mix:update", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
             method: "PATCH",
             headers: this.jsonHeaders,
             body: { volume }
         });
     }
     async removeMixLayer(guildId, mixId) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("mix:remove");
-        }
-        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
+        this.node.assertFeature("mix:remove");
+        await this.featureRequest("mix:remove", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/mix/${mixId}`, {
             method: "DELETE",
             headers: this.authHeaders
         });
     }
     async loadLyrics(encodedTrack, lang) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("lyrics");
-        }
+        this.node.assertFeature("lyrics");
         const params = new URLSearchParams();
         params.append("encodedTrack", encodedTrack);
         if (lang)
             params.append("lang", lang);
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadlyrics?${params}`, {
+        const res = await this.featureRequest("lyrics", `${this.url}/v4/loadlyrics?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res ? (0, Util_1.normalizeNodeLinkResponse)(res, res.loadType) : null;
     }
     async loadChapters(encodedTrack) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("chapters");
-        }
+        this.node.assertFeature("chapters");
         const params = new URLSearchParams();
         params.append("encodedTrack", encodedTrack);
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/loadchapters?${params}`, {
+        const res = await this.featureRequest("chapters", `${this.url}/v4/loadchapters?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "chapters") : null;
     }
     async loadMeaning(encodedTrack, lang) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("meaning");
-        }
+        this.node.assertFeature("meaning");
         const params = new URLSearchParams();
         params.append("encodedTrack", encodedTrack);
         if (lang)
             params.append("lang", lang);
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/meaning?${params}`, {
+        const res = await this.featureRequest("meaning", `${this.url}/v4/meaning?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res ? (0, Util_1.normalizeNodeLinkResponse)(res, res.loadType) : null;
     }
     async getConnectionStatus() {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("connection");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/connection`, {
+        this.node.assertFeature("connection");
+        const res = await this.featureRequest("connection", `${this.url}/v4/connection`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "connection") : null;
     }
     async getMetrics() {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("metrics");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/metrics`, {
+        this.node.assertFeature("metrics");
+        const res = await this.featureRequest("metrics", `${this.url}/v4/metrics`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async getWorkers() {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("workers:get");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/workers`, {
+        this.node.assertFeature("workers:get");
+        const res = await this.featureRequest("workers:get", `${this.url}/v4/workers`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res ? (0, Util_1.normalizeNodeLinkResponse)(res, "workers") : null;
     }
     async patchWorker(payload) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("workers:patch");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/workers`, {
+        this.node.assertFeature("workers:patch");
+        const res = await this.featureRequest("workers:patch", `${this.url}/v4/workers`, {
             method: "PATCH",
             headers: this.jsonHeaders,
             body: payload
@@ -327,23 +327,19 @@ class Rest {
         return res || null;
     }
     async getYoutubeConfig(validate = false) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("youtube:config");
-        }
+        this.node.assertFeature("youtube:config");
         const params = new URLSearchParams();
         if (validate)
             params.append("validate", "true");
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/config${params.toString() ? `?${params}` : ""}`, {
+        const res = await this.featureRequest("youtube:config", `${this.url}/v4/youtube/config${params.toString() ? `?${params}` : ""}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async updateYoutubeConfig(payload) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("youtube:config");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/config`, {
+        this.node.assertFeature("youtube:config");
+        const res = await this.featureRequest("youtube:config", `${this.url}/v4/youtube/config`, {
             method: "PATCH",
             headers: this.jsonHeaders,
             body: payload
@@ -351,34 +347,28 @@ class Rest {
         return res || null;
     }
     async exchangeYoutubeOAuth(refreshToken) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("youtube:oauth");
-        }
+        this.node.assertFeature("youtube:oauth");
         const params = new URLSearchParams();
         params.append("refreshToken", refreshToken);
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/youtube/oauth?${params}`, {
+        const res = await this.featureRequest("youtube:oauth", `${this.url}/v4/youtube/oauth?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async encodeTrackRemote(track) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("encodetrack");
-        }
+        this.node.assertFeature("encodetrack");
         const params = new URLSearchParams();
         params.append("track", track);
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/encodetrack?${params}`, {
+        const res = await this.featureRequest("encodetrack", `${this.url}/v4/encodetrack?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async encodeTracksRemote(tracks) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("encodedtracks");
-        }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/encodedtracks`, {
+        this.node.assertFeature("encodedtracks");
+        const res = await this.featureRequest("encodedtracks", `${this.url}/v4/encodedtracks`, {
             method: "POST",
             headers: this.jsonHeaders,
             body: tracks
@@ -386,24 +376,20 @@ class Rest {
         return res || null;
     }
     async trackStream(encodedTrack, itag) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("trackstream");
-        }
+        this.node.assertFeature("trackstream");
         const params = new URLSearchParams();
         params.append("encodedTrack", encodedTrack);
         if (itag !== undefined && itag !== null) {
             params.append("itag", String(itag));
         }
-        const res = await (0, Util_1.makeRequest)(`${this.url}/v4/trackstream?${params}`, {
+        const res = await this.featureRequest("trackstream", `${this.url}/v4/trackstream?${params}`, {
             method: "GET",
             headers: this.authHeaders
         });
         return res || null;
     }
     async loadStream(payload) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("loadstream");
-        }
+        this.node.assertFeature("loadstream");
         const res = await (0, Util_1.makeStreamRequest)(`${this.url}/v4/loadstream`, {
             method: "POST",
             headers: this.jsonHeaders,
@@ -412,22 +398,18 @@ class Rest {
         return { stream: res.stream, headers: res.headers };
     }
     async subscribeLyrics(guildId, skipTrackSource) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("lyrics:subscribe");
-        }
+        this.node.assertFeature("lyrics:subscribe");
         const params = new URLSearchParams();
         if (skipTrackSource)
             params.append("skipTrackSource", "true");
-        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe${params.toString() ? `?${params}` : ""}`, {
+        await this.featureRequest("lyrics:subscribe", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe${params.toString() ? `?${params}` : ""}`, {
             method: "POST",
             headers: this.authHeaders
         });
     }
     async unsubscribeLyrics(guildId) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)("lyrics:unsubscribe");
-        }
-        await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe`, {
+        this.node.assertFeature("lyrics:unsubscribe");
+        await this.featureRequest("lyrics:unsubscribe", `${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}/lyrics/subscribe`, {
             method: "DELETE",
             headers: this.authHeaders
         });

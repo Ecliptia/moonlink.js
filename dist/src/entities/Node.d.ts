@@ -160,6 +160,10 @@ export declare class Node {
     isNodeLink: boolean;
     backend?: BackendAdapter;
     private backendReady;
+    private authenticationFailed;
+    private connecting;
+    private readyTimeout?;
+    private readonly readyTimeoutMs;
     url: string;
     rest: Rest;
     private lastStats?;
@@ -168,6 +172,7 @@ export declare class Node {
     constructor(manager: Manager, config: IManagerNodeConfig);
     get latency(): number;
     get health(): import("../nodes/NodeHealthMonitor").NodeHealth;
+    assertFeature(feature: string): void;
     getPenalties(): number;
     ping(): Promise<number>;
     createYouTubeLiveChat(identifier: string, options?: YouTubeLiveChatOptions): YouTubeLiveChat;

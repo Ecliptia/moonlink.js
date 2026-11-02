@@ -55,7 +55,7 @@ function createPlayer(t) {
   player.voice.sessionId = 'test-session';
   player.voice.token = 'test-voice-token';
   player.voice.endpoint = 'test.invalid';
-  t.after(() => player.stopHealthCheck());
+  t.after(async () => { player.stopHealthCheck(); await node.destroy(); });
   return { manager, node, player, requests };
 }
 

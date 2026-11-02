@@ -5,6 +5,7 @@ export declare class WebSocket extends EventEmitter {
     private socket;
     private netSocket;
     private connected;
+    private closeNotified;
     private buffer;
     private fragmentedPayload;
     private fragmentedOpCode;

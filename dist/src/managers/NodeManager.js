@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NodeManager = void 0;
+const NodeFailover_1 = require("../nodes/NodeFailover");
 const NodeSelector_1 = require("../nodes/NodeSelector");
 const NodeHealthMonitor_1 = require("../nodes/NodeHealthMonitor");
 const types_1 = require("../typings/types");
@@ -75,13 +76,13 @@ class NodeManager {
         const playersToMove = this.manager.players.filter(player => player.node.identifier === identifier);
         if (playersToMove.length > 0) {
             this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Moving ${playersToMove.length} players from ${identifier}...`);
-            const newNode = this.findNode({ exclude: [identifier] });
-            if (newNode) {
-                await Promise.all(playersToMove.map(player => player.transferNode(newNode)));
-            }
-            else {
-                this.manager.emit("debug", `Moonlink.js > NodeManager#eject: No other nodes available to receive players from ${identifier}. Players will be destroyed.`);
-                await Promise.all(playersToMove.map(player => player.destroy("Node Ejected")));
+            const results = await Promise.all(playersToMove.map(player => NodeFailover_1.NodeFailover.move(player, node)));
+            const failed = playersToMove.filter((_, index) => results[index].status === 'failed');
+            if (failed.length) {
+                this.manager.emit('playersOrphaned', failed, node);
+                if (!this.manager.options.node?.failover?.preserveOnFailure) {
+                    await Promise.all(failed.map(player => player.destroy('Node ejected: failover failed')));
+                }
             }
         }
         this.remove(identifier);

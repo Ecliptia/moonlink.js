@@ -32,7 +32,7 @@ export class NodeSelector {
                 case 'cpuLavalink': return measured(stats?.cpu?.lavalinkLoad);
                 case 'cpuSystem': return measured(stats?.cpu?.systemLoad);
                 case 'uptime': return -measured(stats?.uptime, -Infinity);
-                case 'priority': return measured(node.priority, 0);
+                case 'priority': return typeof node.priority === 'number' && Number.isFinite(node.priority) ? node.priority : 0;
                 default: return measured(stats?.players) + measured(stats?.cpu?.systemLoad) * 100;
             }
         };

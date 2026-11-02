@@ -1,6 +1,18 @@
 export declare const version: string;
 export { Logger, ConsoleReporter, createBanner, formatEntry, formatBox, formatSystemStatus, formatFailover } from './src/logging';
 export type { LoggerOptions, NyxLogLevel, AudioNodeStatus, FailoverReport } from './src/logging';
+export { BackendAdapter } from './src/backends/BackendAdapter';
+export type { BackendKind, CapabilityState } from './src/backends/BackendAdapter';
+export { BackendDetector } from './src/backends/BackendDetector';
+export { LavalinkAdapter } from './src/backends/LavalinkAdapter';
+export { NodeLinkAdapter } from './src/backends/NodeLinkAdapter';
+export { NodeSelector } from './src/nodes/NodeSelector';
+export { NodeHealthMonitor } from './src/nodes/NodeHealthMonitor';
+export { NodeFailover } from './src/nodes/NodeFailover';
+export type { NodeHealth } from './src/nodes/NodeHealthMonitor';
+export type { FailoverOptions, FailoverResult } from './src/nodes/NodeFailover';
+export { FeatureUnavailableError } from './src/errors/FeatureUnavailableError';
+export { HttpError } from './src/errors/HttpError';
 import { Manager } from "./src/core/Manager";
 import { Node } from "./src/entities/Node";
 import { Player } from "./src/entities/Player";

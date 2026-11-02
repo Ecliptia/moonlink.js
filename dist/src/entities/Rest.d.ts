@@ -16,6 +16,7 @@ export declare class Rest {
     constructor(node: Node);
     get url(): string;
     private triggerPlayerRecovery;
+    private featureRequest;
     getPlayers(): Promise<IRESTGetPlayers[] | null>;
     getPlayer(guildId: string): Promise<any | null>;
     updatePlayer(guildId: string, data: any, noReplace?: boolean): Promise<any | null>;

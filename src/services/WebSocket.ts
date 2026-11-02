@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events";
 import http from "node:http";
 import https from "node:https";
 import { URL } from "node:url";
+import { HttpError } from '../errors/HttpError';
 
 const isBun = typeof process !== "undefined" && process.versions?.bun;
 
@@ -12,6 +13,7 @@ export class WebSocket extends EventEmitter {
     private socket: any = null;
     private netSocket: any;
     private connected: boolean = false;
+    private closeNotified = false;
     private buffer: Buffer = Buffer.alloc(0);
     private fragmentedPayload: Buffer[] = [];
     private fragmentedOpCode: number | null = null;
@@ -58,6 +60,7 @@ export class WebSocket extends EventEmitter {
         this.socket = ws;
     }
 
+    // v4 upgrade/headers: https://lavalink.dev/api/websocket#opening-a-connection
     private connectNode() {
         const key = randomBytes(16).toString("base64");
         const protocol = this.url.protocol === "wss:" ? https : http;
@@ -117,7 +120,8 @@ export class WebSocket extends EventEmitter {
             }
 
             if (statusCode !== 101) {
-                this.socket?.destroy();
+                this.emit('error', { error: new HttpError(statusCode ?? 0) });
+                this.handleClose(statusCode === 401 || statusCode === 403 ? 1008 : 1006, `HTTP ${statusCode}`);
                 switch (statusCode) {
                     case 401:
                         this.emit("debug", "Authentication failed, please check your credentials.");
@@ -132,6 +136,7 @@ export class WebSocket extends EventEmitter {
         });
 
         this.socket.on("upgrade", (res, socket, head) => {
+            if (this.closeNotified) { socket.destroy(); return; }
             const expectedKey = createHash("sha1")
               .update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
               .digest("base64");
@@ -147,6 +152,7 @@ export class WebSocket extends EventEmitter {
             this.connected = true;
             this.buffer = head;
             this.emit("open");
+            if (this.closeNotified || !this.connected || !this.netSocket) return;
 
             this.startHeartbeat();
 
@@ -156,9 +162,11 @@ export class WebSocket extends EventEmitter {
                 return this.handleClose(1006, "Connection closed abruptly"); 
             });
             this.netSocket.on("error", (err: Error) => { return this.emit("error", { error: err }); });
+            this.processBuffer();
         });
 
         this.socket.on("error", (err) => {
+            if (this.closeNotified) return;
             if (this.url.protocol === "wss:" && this.url.hostname === "localhost") {
                 this.emit("debug", "Secure connection failed, trying insecure connection.");
                 this.url.protocol = "ws:";
@@ -169,9 +177,7 @@ export class WebSocket extends EventEmitter {
             this.emit("error", { error: err });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: err.message });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, err.message);
             }
         });
 
@@ -179,9 +185,7 @@ export class WebSocket extends EventEmitter {
             this.emit("error", { error: new Error("Connection timed out") });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: "Connection timed out" });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, 'Connection timed out');
             }
         });
 
@@ -378,13 +382,15 @@ export class WebSocket extends EventEmitter {
     }
 
     private handleClose(code: number, reason: string) {
-        if (!this.connected) return;
+        if (this.closeNotified) return;
+        this.closeNotified = true;
         this.connected = false;
         this.stopHeartbeat();
         this.pingTimestamps.clear();
         this.emit("close", { code, reason });
         this.netSocket?.destroy();
         this.netSocket = null;
+        this.socket?.destroy();
         this.socket = null;
     }
 
@@ -446,7 +452,10 @@ export class WebSocket extends EventEmitter {
             return;
         }
 
-        if (!this.connected || !this.netSocket) return;
+        if (!this.connected || !this.netSocket) {
+            this.handleClose(code, reason);
+            return;
+        }
 
         const reasonBuffer = Buffer.from(reason);
         const payload = Buffer.alloc(2 + reasonBuffer.length);

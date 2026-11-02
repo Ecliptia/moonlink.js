@@ -6,6 +6,7 @@ import https from "node:https";
 import zlib from "node:zlib";
 import { URL } from "node:url"; 
 import type { ITrack, ITrackInfo } from "./typings/Interfaces";
+import { HttpError } from './errors/HttpError';
 
 export const structures: Record<string, any> = {};
 
@@ -313,6 +314,33 @@ export async function makeRequest<T = any>(
               }
 
               if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+                if (options.throwOnError) {
+                  const chunks: Buffer[] = [];
+                  let size = 0;
+                  res.on('data', (chunk: Buffer) => {
+                    size += chunk.length;
+                    if (size > 32768) { req.destroy(); reject(new HttpError(statusCode)); }
+                    else chunks.push(chunk);
+                  });
+                  res.on('error', reject);
+                  res.on('end', () => {
+                    let body: unknown;
+                    try {
+                      let buffer = Buffer.concat(chunks);
+                      const options = { maxOutputLength: 32768 };
+                      const encoding = res.headers['content-encoding'];
+                      if (encoding === 'gzip') buffer = zlib.gunzipSync(buffer, options);
+                      else if (encoding === 'deflate') buffer = zlib.inflateSync(buffer, options);
+                      else if (encoding === 'br') buffer = zlib.brotliDecompressSync(buffer, options);
+                      else if (encoding === 'zstd' && typeof zlib.zstdDecompressSync === 'function') buffer = zlib.zstdDecompressSync(buffer, options);
+                      const text = buffer.toString('utf8');
+                      body = text;
+                      try { body = JSON.parse(text); } catch {}
+                    } catch { /* Retain the status if the bounded error body cannot be decoded. */ }
+                    reject(new HttpError(statusCode, body));
+                  });
+                  return;
+                }
                 req.destroy();
                 return reject(
                   new Error(`Server responded with status ${statusCode}`)

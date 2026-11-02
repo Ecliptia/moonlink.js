@@ -24,6 +24,7 @@ const node_http_1 = __importDefault(require("node:http"));
 const node_https_1 = __importDefault(require("node:https"));
 const node_zlib_1 = __importDefault(require("node:zlib"));
 const node_url_1 = require("node:url");
+const HttpError_1 = require("./errors/HttpError");
 exports.structures = {};
 class Structure {
     static manager;
@@ -248,6 +249,45 @@ async function makeRequest(initialUrl, options, timeout = 100000, retries = 3, r
                             return resolve({ _redirect: headers.location });
                         }
                         if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+                            if (options.throwOnError) {
+                                const chunks = [];
+                                let size = 0;
+                                res.on('data', (chunk) => {
+                                    size += chunk.length;
+                                    if (size > 32768) {
+                                        req.destroy();
+                                        reject(new HttpError_1.HttpError(statusCode));
+                                    }
+                                    else
+                                        chunks.push(chunk);
+                                });
+                                res.on('error', reject);
+                                res.on('end', () => {
+                                    let body;
+                                    try {
+                                        let buffer = Buffer.concat(chunks);
+                                        const options = { maxOutputLength: 32768 };
+                                        const encoding = res.headers['content-encoding'];
+                                        if (encoding === 'gzip')
+                                            buffer = node_zlib_1.default.gunzipSync(buffer, options);
+                                        else if (encoding === 'deflate')
+                                            buffer = node_zlib_1.default.inflateSync(buffer, options);
+                                        else if (encoding === 'br')
+                                            buffer = node_zlib_1.default.brotliDecompressSync(buffer, options);
+                                        else if (encoding === 'zstd' && typeof node_zlib_1.default.zstdDecompressSync === 'function')
+                                            buffer = node_zlib_1.default.zstdDecompressSync(buffer, options);
+                                        const text = buffer.toString('utf8');
+                                        body = text;
+                                        try {
+                                            body = JSON.parse(text);
+                                        }
+                                        catch { }
+                                    }
+                                    catch { }
+                                    reject(new HttpError_1.HttpError(statusCode, body));
+                                });
+                                return;
+                            }
                             req.destroy();
                             return reject(new Error(`Server responded with status ${statusCode}`));
                         }

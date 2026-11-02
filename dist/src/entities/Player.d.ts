@@ -138,7 +138,11 @@ export declare class Player {
     shuffle(): this;
     destroy(reason?: string): Promise<void>;
     private destroyPlayback;
-    restart(): Promise<boolean>;
+    restart(options?: {
+        destroyOnFailure?: boolean;
+        startQueued?: boolean;
+    }): Promise<boolean>;
+    private restoreVoiceForRestart;
     transferNode(node: Node | string): Promise<boolean>;
     setVoiceChannelId(voiceChannelId: string): this;
     setTextChannelId(textChannelId: string): this;

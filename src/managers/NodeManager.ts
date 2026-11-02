@@ -1,3 +1,4 @@
+import { NodeFailover } from "../nodes/NodeFailover";
 import { NodeSelector, type NodeSelectionOptions } from "../nodes/NodeSelector";
 import { NodeHealthMonitor } from "../nodes/NodeHealthMonitor";
 import { Manager } from "../core/Manager";
@@ -89,13 +90,13 @@ export class NodeManager {
         
         if (playersToMove.length > 0) {
             this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Moving ${playersToMove.length} players from ${identifier}...`);
-            const newNode = this.findNode({ exclude: [identifier] });
-            
-            if (newNode) {
-                await Promise.all(playersToMove.map(player => player.transferNode(newNode)));
-            } else {
-                this.manager.emit("debug", `Moonlink.js > NodeManager#eject: No other nodes available to receive players from ${identifier}. Players will be destroyed.`);
-                await Promise.all(playersToMove.map(player => player.destroy("Node Ejected")));
+            const results = await Promise.all(playersToMove.map(player => NodeFailover.move(player, node)));
+            const failed = playersToMove.filter((_, index) => results[index].status === 'failed');
+            if (failed.length) {
+                this.manager.emit('playersOrphaned', failed, node);
+                if (!this.manager.options.node?.failover?.preserveOnFailure) {
+                    await Promise.all(failed.map(player => player.destroy('Node ejected: failover failed')));
+                }
             }
         }
 
