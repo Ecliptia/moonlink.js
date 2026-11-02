@@ -1,3 +1,5 @@
+import { BackendDetector } from "../backends/BackendDetector";
+import type { BackendAdapter } from "../backends/BackendAdapter";
 import { RecommendationResolver } from "../autoplay/RecommendationResolver";
 import { AutoPlayManager } from "../autoplay/AutoPlayManager";
 import { playbackGuard } from "../players/PlaybackGuard";
@@ -214,6 +216,8 @@ export class Node {
   public info?: any;
   public version?: string;
   public isNodeLink: boolean = false;
+  public backend?: BackendAdapter;
+  private backendReady: Promise<void> = Promise.resolve();
   public url: string;
   public rest: Rest;
   private lastStats?: { players: number; playingPlayers: number };
@@ -547,63 +551,33 @@ export class Node {
   }
 
   protected async open(): Promise<void> {
+    if (this.destroyed) return;
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     this.reconnectAttempts = 0;
     this.connected = true;
     this.setState(NodeState.CONNECTED);
-    this.manager.emit(
-      "debug",
-      `Moonlink.js > Node <- Connected to ${this.identifier}.`
-    );
-
-    try {
-      const infoResult = await this.rest.getInfoWithHeaders();
-      if (infoResult) {
-        const nodeInfo = infoResult.data;
-        const headers = infoResult.headers;
-        const headerFlag = headers?.iamnodelink;
-        const headerValue = Array.isArray(headerFlag) ? headerFlag[0] : headerFlag;
-        const headerIsNodeLink =
-          typeof headerValue === "string" && headerValue.toLowerCase() === "true";
-
-        this.isNodeLink = Boolean(nodeInfo?.isNodelink) || headerIsNodeLink;
-        this.info = nodeInfo;
-        this.version = nodeInfo?.version?.semver;
-
-        if (this.isNodeLink) {
-          this.manager.emit(
-            "debug",
-            `Moonlink.js > Node >> NodeLink detected for ${this.identifier}.`
-          );
+    this.isNodeLink = false;
+    this.backend = undefined;
+    this.capabilities.clear();
+    this.info = undefined;
+    this.version = undefined;
+    const socket = this.socket;
+    this.backendReady = (async () => {
+      try {
+        const result = await this.rest.getInfoWithHeaders();
+        if (!this.connected || this.destroyed || this.socket !== socket) return;
+        if (result) {
+          this.backend = BackendDetector.detect(result.data, result.headers, this.capabilities);
+          this.isNodeLink = this.backend?.kind === 'nodelink';
+          this.info = result.data;
+          this.version = this.backend?.version;
         }
-
-        this.capabilities.clear();
-        if (Array.isArray(nodeInfo?.sourceManagers)) {
-          for (const source of nodeInfo.sourceManagers) {
-            this.capabilities.add(`source:${source}`);
-          }
-        }
-        if (Array.isArray(nodeInfo?.filters)) {
-          for (const filter of nodeInfo.filters) {
-            this.capabilities.add(`filter:${filter}`);
-          }
-        }
-
-        this.manager.emit(
-          "debug",
-          `Moonlink.js > Node >> Node ${
-            this.identifier
-          } capabilities updated: ${[...this.capabilities].join(", ")}`
-        );
+      } catch (error) {
+        this.manager.emit('debug', `NyxLink > Node >> Info unavailable for ${this.identifier}: ${error.message}`);
       }
-    } catch (error) {
-      this.manager.emit(
-        "debug",
-        `Moonlink.js > Node >> Failed to get node info for ${this.identifier}. Error: ${error.message}`
-      );
-    }
-
-    this.manager.emit("nodeConnected", this);
+      if (this.connected && !this.destroyed && this.socket === socket) this.manager.emit('nodeConnected', this);
+    })();
+    await this.backendReady;
   }
 
   protected async close(event: { code; reason: string }): Promise<void> {
@@ -696,6 +670,10 @@ export class Node {
 
     switch (payload.op) {
       case "ready":
+        if (typeof payload.sessionId !== 'string' || !payload.sessionId || typeof payload.resumed !== 'boolean') return;
+        const readySocket = this.socket;
+        await this.backendReady;
+        if (this.destroyed || !this.connected || this.socket !== readySocket) return;
         this.manager.emit(
           "debug",
           `Moonlink.js > Node >> READY payload: ${stringifyWithReplacer(

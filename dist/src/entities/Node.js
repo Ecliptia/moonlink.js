@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
+const BackendDetector_1 = require("../backends/BackendDetector");
 const RecommendationResolver_1 = require("../autoplay/RecommendationResolver");
 const AutoPlayManager_1 = require("../autoplay/AutoPlayManager");
 const PlaybackGuard_1 = require("../players/PlaybackGuard");
@@ -43,6 +44,8 @@ class Node {
     info;
     version;
     isNodeLink = false;
+    backend;
+    backendReady = Promise.resolve();
     url;
     rest;
     lastStats;
@@ -271,44 +274,38 @@ class Node {
         this.recoveryInProgress = false;
     }
     async open() {
+        if (this.destroyed)
+            return;
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.reconnectAttempts = 0;
         this.connected = true;
         this.setState(types_1.NodeState.CONNECTED);
-        this.manager.emit("debug", `Moonlink.js > Node <- Connected to ${this.identifier}.`);
-        try {
-            const infoResult = await this.rest.getInfoWithHeaders();
-            if (infoResult) {
-                const nodeInfo = infoResult.data;
-                const headers = infoResult.headers;
-                const headerFlag = headers?.iamnodelink;
-                const headerValue = Array.isArray(headerFlag) ? headerFlag[0] : headerFlag;
-                const headerIsNodeLink = typeof headerValue === "string" && headerValue.toLowerCase() === "true";
-                this.isNodeLink = Boolean(nodeInfo?.isNodelink) || headerIsNodeLink;
-                this.info = nodeInfo;
-                this.version = nodeInfo?.version?.semver;
-                if (this.isNodeLink) {
-                    this.manager.emit("debug", `Moonlink.js > Node >> NodeLink detected for ${this.identifier}.`);
+        this.isNodeLink = false;
+        this.backend = undefined;
+        this.capabilities.clear();
+        this.info = undefined;
+        this.version = undefined;
+        const socket = this.socket;
+        this.backendReady = (async () => {
+            try {
+                const result = await this.rest.getInfoWithHeaders();
+                if (!this.connected || this.destroyed || this.socket !== socket)
+                    return;
+                if (result) {
+                    this.backend = BackendDetector_1.BackendDetector.detect(result.data, result.headers, this.capabilities);
+                    this.isNodeLink = this.backend?.kind === 'nodelink';
+                    this.info = result.data;
+                    this.version = this.backend?.version;
                 }
-                this.capabilities.clear();
-                if (Array.isArray(nodeInfo?.sourceManagers)) {
-                    for (const source of nodeInfo.sourceManagers) {
-                        this.capabilities.add(`source:${source}`);
-                    }
-                }
-                if (Array.isArray(nodeInfo?.filters)) {
-                    for (const filter of nodeInfo.filters) {
-                        this.capabilities.add(`filter:${filter}`);
-                    }
-                }
-                this.manager.emit("debug", `Moonlink.js > Node >> Node ${this.identifier} capabilities updated: ${[...this.capabilities].join(", ")}`);
             }
-        }
-        catch (error) {
-            this.manager.emit("debug", `Moonlink.js > Node >> Failed to get node info for ${this.identifier}. Error: ${error.message}`);
-        }
-        this.manager.emit("nodeConnected", this);
+            catch (error) {
+                this.manager.emit('debug', `NyxLink > Node >> Info unavailable for ${this.identifier}: ${error.message}`);
+            }
+            if (this.connected && !this.destroyed && this.socket === socket)
+                this.manager.emit('nodeConnected', this);
+        })();
+        await this.backendReady;
     }
     async close(event) {
         const { code, reason } = event;
@@ -388,6 +385,12 @@ class Node {
         let loggedByCase = false;
         switch (payload.op) {
             case "ready":
+                if (typeof payload.sessionId !== 'string' || !payload.sessionId || typeof payload.resumed !== 'boolean')
+                    return;
+                const readySocket = this.socket;
+                await this.backendReady;
+                if (this.destroyed || !this.connected || this.socket !== readySocket)
+                    return;
                 this.manager.emit("debug", `Moonlink.js > Node >> READY payload: ${(0, Util_1.stringifyWithReplacer)(payload)}`);
                 this.sessionId = payload.sessionId;
                 this.resumed = payload.resumed;

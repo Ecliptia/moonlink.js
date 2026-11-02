@@ -1,3 +1,4 @@
+import type { BackendAdapter } from "../backends/BackendAdapter";
 import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData, IFilters } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
@@ -157,6 +158,8 @@ export declare class Node {
     info?: any;
     version?: string;
     isNodeLink: boolean;
+    backend?: BackendAdapter;
+    private backendReady;
     url: string;
     rest: Rest;
     private lastStats?;
