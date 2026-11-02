@@ -22,6 +22,8 @@ El código de b9cd517 pasó [validación Node 22/24](https://github.com/melodiab
 
 [Qodana](https://github.com/melodiabl/NyxLink/actions/runs/41519407478) falló porque QODANA_TOKEN está vacío; requiere el secreto QODANA_TOKEN_1916333486. No se cuenta como análisis superado.
 
+El último ajuste del laboratorio usa un intervalo de reconexión de 1000 ms: dos arranques locales nuevos consecutivos pasaron los 19 casos. La [CI previa con 25 ms](https://github.com/melodiabl/NyxLink/actions/runs/41523032642) detectó una sesión nueva de Lavalink; el fallo y el razonamiento se conservan en [calidad](quality.md), sin cambiar el runtime ni los asserts de resume.
+
 ## Límites y condiciones de release
 
 La validación técnica local no certifica audio audible ni DAVE/gateway real. Mixer durante reproducción, letras encontradas/idiomas y extensiones de terceros requieren sus fixtures/proveedores. El WAV HTTP de NodeLink revela una limitación de la imagen fijada; el WAV local sí produce audio decodificado sin Discord. La revisión humana, integración en dev, token de Qodana y titularidad/autorización de publicación siguen pendientes según [release-readiness.md](release-readiness.md).

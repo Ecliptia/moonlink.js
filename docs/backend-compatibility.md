@@ -81,3 +81,7 @@ pnpm run test:backends
 El laboratorio requiere un host Linux con Podman (predeterminado) o `NYXLINK_CONTAINER_ENGINE=docker`. Usa puertos dinámicos de loopback y nombres propios; limita cada contenedor a una CPU/768 MiB, y no utiliza los contenedores de otros proyectos. Su configuración y contraseña aleatoria son temporales; el informe JSON no contiene contraseñas ni IDs de sesión. GitHub Actions ejecuta la misma matriz de protocolo y conserva ese informe como artefacto.
 
 Fuentes primarias: [REST Lavalink v4](https://lavalink.dev/api/rest), [WebSocket y resume](https://lavalink.dev/api/websocket), [REST NodeLink](https://nodelink.js.org/docs/api/rest), [configuración NodeLink](https://nodelink.js.org/docs/config), [implementación info fijada](https://github.com/PerformanC/NodeLink/blob/804e0d6d0f1af30384e0a2d12ddbc8d79e85cf35/src/api/info.ts).
+
+## Intervalos de reconexión
+
+La integración final configura retryDelay=1000 ms dentro de una ventana de sesión de 30 s. Con 25 ms, una ejecución local y una CI recibieron sesión nueva de Lavalink en lugar de resume; el [diagnóstico](quality.md) conserva el fallo y su interpretación. Reducir el intervalo a decenas de milisegundos no garantiza reanudar antes de que el servidor registre su desconexión. El valor público predeterminado sigue siendo 30000 ms, con resumeTimeout predeterminado de 60000 ms; dimensiona ambos para permitir el reintento dentro de la ventana. Las pruebas no modifican esos defaults ni convierten una sesión nueva en éxito de resume.

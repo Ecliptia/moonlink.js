@@ -13,7 +13,10 @@ const trackResolution = [];
 for (const backend of lab.backends) {
   test(`${backend.kind}: real v4 REST, WebSocket, auth and reconnection without Discord`, async t => {
     const manager = new Manager({
-      nodes: [{ ...backend, retryAmount: 2, retryDelay: 25 }], send() {},
+      // A 25 ms reconnect can beat Lavalink's asynchronous session-pause
+      // processing on a cold JVM. Exercise configured 1 s recovery within
+      // the 30 s resume window; transport lifecycle races stay in deterministic tests.
+      nodes: [{ ...backend, retryAmount: 2, retryDelay: 1000 }], send() {},
       options: { database: { type: 'memory' }, resume: true, resumeTimeout: 30000 },
     });
     const errors = [];
@@ -75,8 +78,7 @@ for (const backend of lab.backends) {
       assert.equal(enabled.resuming, true);
       const session = node.sessionId;
       const resumed = event(manager, 'nodeReady', 15000);
-      // Simulate a network cut. Sending a close frame exercises a separate
-      // server close handshake and may reconnect before that session is paused.
+      // Simulate a network cut rather than a deliberate clean shutdown.
       node.socket.netSocket.destroy();
       const [, payload] = await resumed;
       assert.equal(payload.resumed, true);
