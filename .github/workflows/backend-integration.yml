@@ -3,9 +3,9 @@ name: Local backend protocol integration
 on:
   workflow_dispatch:
   push:
-    branches: [feat/nyxlink-backends, feat/nyxlink-track-storage]
+    branches: [feat/nyxlink-backends, feat/nyxlink-track-storage, feat/nyxlink-stability]
   pull_request:
-    branches: [dev, feat/nyxlink-foundation, feat/nyxlink-backends]
+    branches: [dev, feat/nyxlink-foundation, feat/nyxlink-backends, feat/nyxlink-track-storage]
     paths:
       - 'src/**'
       - 'tests/**'

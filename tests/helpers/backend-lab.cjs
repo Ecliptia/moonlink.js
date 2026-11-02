@@ -73,7 +73,8 @@ async function withBackendLab(run) {
       else {
         const pluginsPath = path.join(directory, 'plugins');
         await fs.mkdir(pluginsPath);
-        args.push('-v', `${pluginsPath}:/app/plugins:ro`, '-e', `NODELINK_SERVER_PORT=${port}`, '-e', 'NODELINK_SERVER_HOST=127.0.0.1', '-e', `NODELINK_SERVER_PASSWORD=${password}`, '-e', 'NODELINK_CLUSTER_ENABLED=false');
+        // Its startup updater must not replace dependencies inside a pinned image.
+        args.push('--read-only', '--tmpfs', '/tmp:rw,nosuid,size=64m', '-e', 'npm_config_offline=true', '-v', `${pluginsPath}:/app/plugins:ro`, '-e', `NODELINK_SERVER_PORT=${port}`, '-e', 'NODELINK_SERVER_HOST=127.0.0.1', '-e', `NODELINK_SERVER_PASSWORD=${password}`, '-e', 'NODELINK_CLUSTER_ENABLED=false');
       }
       args.push(images[kind].image);
       containers.push(name);

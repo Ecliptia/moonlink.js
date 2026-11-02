@@ -15,7 +15,7 @@ on:
   push:
     branches: [ "dev", "v5.2" ]
   pull_request:
-    branches: [ "dev", "v5.2", "feat/nyxlink-foundation", "feat/nyxlink-backends" ]
+    branches: [ "dev", "v5.2", "feat/nyxlink-foundation", "feat/nyxlink-backends", "feat/nyxlink-track-storage" ]
   schedule:
     - cron: '15 2 * * 0'
 
