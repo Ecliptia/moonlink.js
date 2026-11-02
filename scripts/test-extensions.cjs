@@ -49,7 +49,7 @@ async function profile(enabled) {
       await node.rest.destroyPlayer(guild); assert.equal((await node.rest.getPlayers()).length, 0); checks.push('server player cleanup');
       results.push({ enabled, backend: backend.kind, version: backend.version, image: backend.image, checks, passed: true, discordAudio: 'not-tested' });
     } catch (error) {
-      error.message = `profile=${enabled ? 'enabled' : 'disabled'}, after=${checks.at(-1) ?? 'startup'}: ${error.message}; body=${JSON.stringify(error.body)}`; throw error;
+      error.message = `profile=${enabled ? 'enabled' : 'disabled'}, after=${checks.at(-1) ?? 'startup'}: ${error.message}`; throw error;
     } finally {
       try { if (node?.connected) await node.rest.destroyPlayer(guild); } finally { await manager.shutdown(); }
     }

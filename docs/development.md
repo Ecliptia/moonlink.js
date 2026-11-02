@@ -15,11 +15,11 @@ Fecha: 2026-11-02. Base de implementación: `dev` en `f6631bb289aee180af48cb4f0f
 
 `tests/fixtures/public-exports.json` congela los exports originales. `tests/types/public-api.ts` comprueba el consumo TypeScript y las firmas existentes de play, stop, setVolume y transferNode. Las incorporaciones nuevas deben ser aditivas.
 
-El lock oficial es `pnpm-lock.yaml`; `packageManager` fija pnpm 10.34.5. CI instala con `--frozen-lockfile` y valida Node 22/24. El paquete está marcado `private` hasta elegir identidad y versión final; ambos workflows de publicación heredados se sustituyeron por validación sin publicación. No se publica npm desde este trabajo.
+El lock oficial es `pnpm-lock.yaml`; `packageManager` fija pnpm 10.34.5. CI instala con `--frozen-lockfile` y valida Node 22/24. En la primera entrega se marcó el paquete `private` hasta elegir identidad y versión final; ambos workflows de publicación heredados se sustituyeron por validación sin publicación. No se publica npm desde este trabajo.
 
 `pack:check` inspecciona el tarball previsto: solamente dist, README, LICENSE, package.json y el banner aprobado. El bot manual, pruebas, configuración y datos locales quedan fuera.
 
-## Compatibilidad pendiente
+## Compatibilidad pendiente en la primera entrega
 
 | Área | Evidencia disponible | Pendiente |
 | --- | --- | --- |

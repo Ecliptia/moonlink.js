@@ -34,7 +34,8 @@
 - [x] Node selection/health and bounded failover extraction (second delivery).
 - [x] Backend capabilities and local Lavalink v4/NodeLink protocol matrix; audible Discord audio remains pending.
 - [x] Track resolution, persistence boundaries and gateway voice handling (third delivery; real Discord audio remains pending).
-- [ ] Real audio/reconnection/long-duration performance checks and prerelease preparation.
+- [x] Local reconnection, one-hour protocol endurance, resource analysis and private prerelease preparation.
+- [ ] Audible Discord/DAVE, provider-backed extensions and external release conditions: see docs/release-readiness.md.
 
 ## Second delivery: nodes and local backend validation
 
@@ -60,7 +61,9 @@
 
 ## Final local validation and consolidation
 
-- [ ] V1: One-hour pinned-server endurance evidence and resource/latency analysis.
+- [x] V1: One-hour pinned-server endurance evidence and resource/latency analysis.
 - [x] V2: Authorized nyxlink@0.1.0-dev.1 identity with publication blocked; installed tarball CJS/ESM/TS validation.
 - [x] V3: Compile bot examples, migration/API docs and explicit master-backlog status; close remaining testable local contracts.
-- [ ] V4: Consolidated PR against dev, quality/package checks and CI evidence; preserve external audio/publication blockers.
+- [x] V4: Consolidated PR against dev, quality/package checks and CI evidence; preserve external audio/publication blockers.
+
+Final consolidation: [PR #6](https://github.com/melodiabl/NyxLink/pull/6), [validation evidence](../docs/validation.md) and [one-hour report](../docs/performance/endurance-3600.json). External conditions remain explicit above; this does not mark Discord audio or publication complete.

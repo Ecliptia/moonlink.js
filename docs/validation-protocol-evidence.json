@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-11-02T20:26:21.534Z",
+  "scope": "local backend protocol; no Discord bot or voice connection",
+  "passed": true,
+  "results": [
+    {
+      "backend": "lavalink",
+      "version": "4.2.2",
+      "image": "ghcr.io/lavalink-devs/lavalink@sha256:96be2be7ee50d35a9bd42c8c7b99e2a4b741f09123066c1ebb9e014dd7db204d",
+      "checks": [
+        "ready/info/stats",
+        "HTTP load/decode/search",
+        "player lifecycle without voice/audio",
+        "optional capability guard",
+        "session resume",
+        "new session",
+        "terminal auth failure"
+      ],
+      "discordAudio": "not-tested",
+      "passed": true
+    },
+    {
+      "backend": "nodelink",
+      "version": "3.10.0-dev.2026-10-20.1",
+      "image": "ghcr.io/performanc/nodelink@sha256:19d8f9a8951d0e13f21977aac7e5ec4dc3199526b8dcb28e9c8a2e3ac058dfe8",
+      "checks": [
+        "ready/info/stats",
+        "HTTP load/decode/search",
+        "player lifecycle without voice/audio",
+        "optional capability guard",
+        "session resume",
+        "new session",
+        "terminal auth failure"
+      ],
+      "discordAudio": "not-tested",
+      "passed": true
+    }
+  ],
+  "trackResolution": [
+    {
+      "source": "lavalink",
+      "target": "nodelink",
+      "passed": true
+    },
+    {
+      "source": "nodelink",
+      "target": "lavalink",
+      "passed": true
+    }
+  ]
+}

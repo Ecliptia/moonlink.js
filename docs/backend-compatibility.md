@@ -2,6 +2,8 @@
 
 La implementación se revisa sobre `feat/nyxlink-backends`, encima de la primera entrega. El usuario confirmó que no existe un bot de pruebas; no se conectaron bots ni se enviaron credenciales de voz de Discord.
 
+Para el estado vigente consulta [validación final](validation.md), [extensiones habilitadas/deshabilitadas](extensions.md) y [estabilidad](stability.md). La matriz siguiente conserva la evidencia del segundo bloque.
+
 La [tercera entrega](tracks-storage-voice.md) amplía esta matriz con resolución de pistas entre backends; los límites de migración descritos aquí corresponden al segundo bloque.
 
 ## Versiones reproducibles

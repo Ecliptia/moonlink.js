@@ -1,5 +1,7 @@
 # NyxLink: foundation and playback reliability
 
+The delivery sections below preserve the plan at each checkpoint. Current acceptance and superseding decisions are recorded in [master-status.md](master-status.md) and the final consolidation section.
+
 Source: the consolidated master package supplied on 2026-11-02. Its current decisions override the historical backlog. Base: `dev` at `f6631bb289aee180af48cb4f0f1671e5e075249c`. Work on `feat/nyxlink-foundation`; review through a PR to `dev`.
 
 ## First implementation delivery

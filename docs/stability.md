@@ -41,7 +41,7 @@ No se atribuye una mejora de latencia al cambio de cierre: la diferencia tempora
 pnpm run test:endurance -- 600
 # Docker, usado en GitHub:
 NYXLINK_CONTAINER_ENGINE=docker pnpm run test:endurance -- 600
-# Una hora, disponible para ampliar evidencia:
+# Una hora, con evidencia local registrada:
 pnpm run test:endurance -- 3600
 ```
 
@@ -76,3 +76,37 @@ Fuentes: [recursos activos de Node](https://nodejs.org/docs/latest-v22.x/api/pro
 [PR #5](https://github.com/melodiabl/NyxLink/pull/5), basado en la tercera entrega. El código en `8a772ee` pasó [Node 22/24](https://github.com/melodiabl/NyxLink/actions/runs/41512283255), [protocolo y resolución cruzada](https://github.com/melodiabl/NyxLink/actions/runs/41512283284), [CodeQL](https://github.com/melodiabl/NyxLink/actions/runs/41512283165) y [benchmark/endurance CI](https://github.com/melodiabl/NyxLink/actions/runs/41512283143). El smoke remoto duró aproximadamente 61 s y completó 60 ciclos y tres reanudaciones por backend; el informe quedó como artefacto.
 
 [Qodana](https://github.com/melodiabl/NyxLink/actions/runs/41512283226) vuelve a fallar por la ausencia del secreto entregado como QODANA_TOKEN. Ese análisis sigue pendiente; no se retira su check.
+
+## Ejecución local de una hora
+
+El [informe de 3600 segundos](performance/endurance-3600.json) terminó con passed=true en 3600.355 s. La prueba usa el runtime de la cuarta entrega (a40a138, mismo árbol funcional de cierre en 8e74b49), cargado antes del cambio de identidad y de la búsqueda opcional. Estos últimos cambios se verifican mediante las pruebas nuevas y el smoke CI del código final; no se atribuye a la prueba de una hora cobertura de búsqueda/caché.
+
+La carga y los límites del runner permanecieron iguales a los de diez minutos. Durante la hora también se ejecutaron compilaciones y laboratorios auxiliares en el mismo host; no fue un entorno aislado para prometer latencias.
+
+| Resultado | Lavalink | NodeLink |
+| --- | ---: | ---: |
+| Ciclos de player | 3600 | 3600 |
+| Resumes confirmados | 225 | 225 |
+| Pings manuales confirmados | 360 | 360 |
+| PATCH p95 (ms) | 9.382 | 17.410 |
+| Resume p95 (ms) | 43.773 | 46.236 |
+
+| Muestra cliente | Heap tras GC (MiB) | RSS (MiB) |
+| --- | ---: | ---: |
+| Inicio | 6.409 | 63.223 |
+| Después de 60 s | 7.204 | 69.047 |
+| Después de 1800 s | 7.895 | 78.379 |
+| Final | 8.042 | 79.113 |
+
+El heap creció 0.838 MiB desde la muestra posterior a 60 s. El runner retiene muestras y tiempos de operaciones hasta escribir el informe; estos datos y el calentamiento forman parte de la memoria observada. No se deduce ausencia de fugas ni estabilidad de producción a partir de esta sola ejecución. Event-loop delay p95: 11.272 ms; máximo: 277.348 ms (muestreo de 10 ms y GC explícito).
+
+El cierre registró cero players/nodos y ningún Timeout activo. La captura inmediata de recursos fue ["TCPSocketWrap","TCPSocketWrap"]; el worker terminó normalmente y los contenedores propios se retiraron después. La evidencia sigue limitada a protocolo/REST sin audio Discord.
+
+### Recursos de los servidores
+
+| Backend | Memoria a partir de 60 s (MiB) | Memoria final (MiB) | Máximo observado (MiB) | systemLoad final (valor bruto) |
+| --- | ---: | ---: | ---: | ---: |
+| lavalink | 32.797 | 31.975 | 45.250 | 0.09985428987743207 |
+| nodelink | 22.253 | 19.836 | 25.991 | 0.94 |
+
+Estos campos son los que informa cada servidor: no se fuerza GC en JVM/NodeLink ni se normaliza systemLoad entre sus implementaciones. La memoria oscila con la asignación y el recolector de cada runtime. CPU agregada del worker cliente: 131.676 s de usuario y 24.069 s de sistema durante la ejecución y cierre; no es CPU de los contenedores.

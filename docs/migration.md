@@ -12,7 +12,7 @@ npm pack --ignore-scripts
 pnpm add /ruta/NyxLink/nyxlink-0.1.0-dev.1.tgz
 ```
 
-Cambia `require('moonlink.js')` por `require('nyxlink')`, o el mismo specifier en tus imports TypeScript/ESM. El artefacto conserva CommonJS y permite imports nombrados en ESM; los consumidores de tipos CJS/ESM se verifican con NodeNext sin skipLibCheck. No hay una publicación npm anunciada. Requiere Node 22.12+; CI verifica Node 22 y 24. Discord.js pertenece al bot, no es una dependencia runtime de NyxLink.
+Cambia `require('moonlink.js')` por `require('nyxlink')`, o el mismo specifier en tus imports TypeScript/ESM. El artefacto conserva CommonJS y permite imports nombrados en ESM; los consumidores de tipos CJS/ESM se verifican con NodeNext sin skipLibCheck. La [evidencia del tarball](package-evidence.json) registra sus seis comprobaciones y SHA-256. No hay una publicación npm anunciada. Requiere Node 22.12+; CI verifica Node 22 y 24. Discord.js pertenece al bot, no es una dependencia runtime de NyxLink.
 
 ## Cambios de comportamiento relevantes
 

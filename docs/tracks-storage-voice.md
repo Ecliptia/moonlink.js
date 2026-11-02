@@ -69,3 +69,7 @@ Fuentes primarias: [carga de pistas Lavalink v4](https://lavalink.dev/api/rest#t
 Revisión: [PR #4](https://github.com/melodiabl/NyxLink/pull/4), con base en la segunda entrega. El código en `95fb7cb` pasó [Node 22/24](https://github.com/melodiabl/NyxLink/actions/runs/41436825491), [laboratorio real y artefacto de evidencia](https://github.com/melodiabl/NyxLink/actions/runs/41436825313) y [CodeQL](https://github.com/melodiabl/NyxLink/actions/runs/41436825369). El informe remoto registra 19/19 resultados correctos, incluyendo los tres grupos de casos.
 
 [Qodana](https://github.com/melodiabl/NyxLink/actions/runs/41436825303) no puede analizar sin `QODANA_TOKEN`, que no está configurado en los secretos del repositorio. Su check permanece visible. Esta limitación no se presenta como una comprobación superada.
+
+## Estado posterior
+
+El usuario fusionó esta entrega en su base. La [validación final](validation.md) consolida el historial hacia dev y amplía la evidencia con distribución instalada, búsqueda, extensiones locales y endurance. Los límites de audio/proveedores continúan en [preparación de release](release-readiness.md).
