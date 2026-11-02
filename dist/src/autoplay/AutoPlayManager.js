@@ -7,8 +7,9 @@ class AutoPlayManager {
         if (!previous || player.destroyed || !player.autoPlay)
             return false;
         const guard = (0, PlaybackGuard_1.playbackGuard)(player);
-        const ticket = guard.invalidate();
-        const active = () => guard.isCurrent(ticket) && player.autoPlay && !player.destroyed;
+        const ticket = guard.ticket;
+        const automaticTicket = guard.cancelAutoPlay();
+        const active = () => guard.isCurrent(ticket) && guard.isAutoCurrent(automaticTicket) && player.autoPlay && !player.destroyed;
         if (!player.recommendations.length) {
             await node.updateRecommendations(player, previous);
         }
@@ -18,10 +19,9 @@ class AutoPlayManager {
         const selected = candidates[Math.floor(Math.random() * candidates.length)];
         if (!selected)
             return false;
-        const playing = player.play({ track: selected });
-        const playTicket = guard.ticket;
+        const playing = player.playAutoPlay(selected, ticket, automaticTicket);
         const accepted = await playing;
-        if (!accepted || !guard.isCurrent(playTicket) || player.destroyed || !player.autoPlay) {
+        if (!accepted || !active()) {
             const index = player.queue.tracks.indexOf(selected);
             if (index >= 0)
                 player.queue.remove(index);

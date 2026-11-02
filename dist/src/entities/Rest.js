@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = exports.RestError = void 0;
 const Util_1 = require("../Util");
+const PlaybackGuard_1 = require("../players/PlaybackGuard");
 class RestError extends Error {
     statusCode;
     isSessionExpired;
@@ -42,7 +43,11 @@ class Rest {
         player.stuckDetectionCount = 0;
         player.silentDetectionCount = 0;
         try {
-            const recovered = await player.softRestart("Session expired (404)");
+            const recovering = player.softRestart("Session expired (404)");
+            const ticket = (0, PlaybackGuard_1.playbackGuard)(player).ticket;
+            const recovered = await recovering;
+            if (player.destroyed || !(0, PlaybackGuard_1.playbackGuard)(player).isCurrent(ticket))
+                return;
             if (recovered) {
                 this.node.manager.emit("playerRecoverySuccess", player);
             }
@@ -78,8 +83,9 @@ class Rest {
             const res = await (0, Util_1.makeRequest)(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
                 method: "PATCH",
                 headers: this.jsonHeaders,
-                body: data
-            });
+                body: data,
+                throwOnError: true
+            }, undefined, 0);
             return res || null;
         }
         catch (error) {

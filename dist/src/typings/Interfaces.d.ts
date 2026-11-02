@@ -40,6 +40,7 @@ export interface IManagerEvents {
     playerAutoPlaySet: (player: Player, autoPlay: boolean) => void;
     playerAutoLeaveSet: (player: Player, autoLeave: boolean) => void;
     playerChangedVolume: (player: Player, oldVolume: number, volume: number) => void;
+    playerVolumeError: (player: Player, error: Error, volume: number) => void;
     playerChangedLoop: (player: Player, oldLoop: PlayerLoop, loop: PlayerLoop, oldLoopCount?: number, newLoopCount?: number) => void;
     playerTextChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
     playerVoiceChannelIdSet: (player: Player, oldChannel: string, newChannel: string) => void;
@@ -49,6 +50,7 @@ export interface IManagerEvents {
     playerRecoveryFailed: (player: Player) => void;
     playersMoved: (players: Player[], oldNode: Node, newNode: Node) => void;
     playersOrphaned: (players: Player[], deadNode: Node) => void;
+    playerNodeFailover: (player: Player, report: INodeFailoverReport) => void;
     playerTriggeredPlay: (player: Player, track: Track) => void;
     playerTriggeredPause: (player: Player) => void;
     playerTriggeredResume: (player: Player) => void;
@@ -80,6 +82,13 @@ export interface IManagerEvents {
     streamMetadata: (player: Player, payload?: any) => void;
     eternalBoxInfo: (player: Player, payload?: any) => void;
     eternalBoxJump: (player: Player, payload?: any) => void;
+}
+export interface INodeFailoverReport {
+    source: string;
+    target: string;
+    status: 'in-progress' | 'recovered' | 'failed' | 'cancelled';
+    positionMs?: number;
+    reason?: string;
 }
 export interface IManagerNodeConfig {
     host: string;

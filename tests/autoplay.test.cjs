@@ -205,3 +205,46 @@ test('a late finished event for an old track cannot stop a new current track', a
   assert.equal(player.current, current);
   assert.equal(player.playing, true);
 });
+
+test('a genuine autoplay playback failure still emits queueEnd after fetching recommendations', async t => {
+  const { manager, node, player } = createPlayer(t);
+  const previous = createTrack('previous');
+  player.current = previous;
+  manager.search = async () => ({ tracks: [createTrack('recommended')] });
+  node.rest.updatePlayer = async () => { throw new Error('play failed'); };
+  const ended = [];
+  manager.on('queueEnd', (...args) => ended.push(args));
+  await node.handleTrackEnd(player, { reason: 'finished', track: previous.toJSON() });
+  assert.equal(ended.length, 1);
+  assert.equal(player.current, null);
+});
+
+test('duplicate track-end searches cannot clear or duplicate the latest autoplay attempt', async t => {
+  const { manager, node, player } = createPlayer(t);
+  const previous = createTrack('previous');
+  const latest = createTrack('latest');
+  player.current = previous;
+  const firstResponse = deferred();
+  const secondResponse = deferred();
+  let searches = 0;
+  manager.search = async () => {
+    searches++;
+    if (searches === 1) return firstResponse.promise;
+    if (searches === 2) return secondResponse.promise;
+    return { tracks: [] };
+  };
+  const ends = [];
+  const played = [];
+  manager.on('queueEnd', () => ends.push(true));
+  manager.on('autoPlayed', (_player, track) => played.push(track));
+  const first = node.handleTrackEnd(player, { reason: 'finished', track: previous.toJSON() });
+  const second = node.handleTrackEnd(player, { reason: 'finished', track: previous.toJSON() });
+  firstResponse.resolve({ tracks: [createTrack('obsolete')] });
+  await first;
+  assert.equal(ends.length, 0);
+  secondResponse.resolve({ tracks: [latest] });
+  await second;
+  assert.equal(player.current, latest);
+  assert.deepEqual(played, [latest]);
+  assert.equal(ends.length, 0);
+});

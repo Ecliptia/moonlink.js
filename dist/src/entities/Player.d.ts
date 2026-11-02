@@ -35,6 +35,8 @@ export declare class Player {
     historySize: number;
     lastActivityTime: number;
     private readonly commands;
+    private volumeRevision;
+    private optimisticVolumeRevision;
     private fading?;
     private nextTrack?;
     private audioTrackId?;
@@ -62,6 +64,7 @@ export declare class Player {
     private resolveEncodedTrack;
     private sendPlayerUpdate;
     updatePlayer(payload: Record<string, any>, noReplace?: boolean): Promise<any>;
+    updateVoice(voice: Record<string, any>): Promise<any>;
     connect({ selfDeaf, selfMute }?: {
         selfDeaf?: boolean;
         selfMute?: boolean;
@@ -75,6 +78,7 @@ export declare class Player {
         noReplace?: boolean;
         audioTrackId?: string;
     } | Track): Promise<boolean>;
+    playAutoPlay(track: Track, ticket: number, automaticTicket: number): Promise<boolean>;
     private playNext;
     addMix(track: Track | string, options?: {
         volume?: number;
@@ -127,6 +131,7 @@ export declare class Player {
     seek(position: number): Promise<this>;
     private seekPlayback;
     setVolume(volume: number): this;
+    setVolumeAsync(volume: number): Promise<this>;
     setLoop(loop: PlayerLoop, count?: number): this;
     setAutoPlay(autoPlay: boolean): this;
     setAutoLeave(autoLeave: boolean): this;

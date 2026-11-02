@@ -339,7 +339,7 @@ export class Voice extends EventEmitter<VoiceEvents> {
             }
 
             this.voiceUpdateInFlight = true;
-            this.player.updatePlayer({ voice: voicePayload }, true).then(async () => {
+            this.player.updateVoice(voicePayload).then(async () => {
                 this.voiceUpdateInFlight = false;
                 this.lastVoiceUpdate = { ...voicePayload };
                 this.setState(VoiceConnectionState.CONNECTED);

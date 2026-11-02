@@ -2,6 +2,7 @@ import { makeRequest, makeStreamRequest, normalizeNodeLinkResponse, type NodeLin
 import type { IChapter, IFilters, ILyricsData, ILyricsResponse, IMeaningResponse, INodeConnectionStatus } from "../typings/Interfaces";
 import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
+import { playbackGuard } from '../players/PlaybackGuard';
 
 export class RestError extends Error {
     public statusCode: number;
@@ -48,7 +49,10 @@ export class Rest {
         player.silentDetectionCount = 0;
         
         try {
-            const recovered = await player.softRestart("Session expired (404)");
+            const recovering = player.softRestart("Session expired (404)");
+            const ticket = playbackGuard(player).ticket;
+            const recovered = await recovering;
+            if (player.destroyed || !playbackGuard(player).isCurrent(ticket)) return;
             if (recovered) {
                 this.node.manager.emit("playerRecoverySuccess", player);
             } else {
@@ -86,8 +90,9 @@ export class Rest {
             const res = await makeRequest<any>(`${this.url}/v4/sessions/${this.node.sessionId}/players/${guildId}?${params.toString()}`, {
                 method: "PATCH",
                 headers: this.jsonHeaders,
-                body: data
-            });
+                body: data,
+                throwOnError: true
+            }, undefined, 0);
             return res || null;
         } catch (error) {
             const err = error as Error;

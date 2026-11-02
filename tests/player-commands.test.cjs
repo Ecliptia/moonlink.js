@@ -131,3 +131,32 @@ test('empty REST responses reject stop and preserve the known playing state', as
   assert.equal(player.current, current);
   assert.equal(player.playing, true);
 });
+
+test('disabling autoplay does not cancel an explicit play requested in the same tick', async t => {
+  const { player, requests } = createPlayer(t);
+  const track = createTrack('requested');
+  const pending = player.play({ track });
+  player.setAutoPlay(false);
+  assert.equal(await pending, true);
+  assert.equal(player.current, track);
+  assert.equal(requests[0].payload.track.encoded, track.encoded);
+});
+
+test('first play completes the voice handshake without deadlocking the command queue', async t => {
+  const { manager, player, requests } = createPlayer(t);
+  player.voice.sessionId = null;
+  player.voice.endpoint = null;
+  player.voice.token = null;
+  manager.options.voiceConnection.timeout = 200;
+  const requested = deferred();
+  manager.send = () => requested.resolve();
+  const track = createTrack('first');
+  const playing = player.play({ track });
+  await requested.promise;
+  await player.voice.handleStateUpdate({ channel_id: player.voiceChannelId, session_id: 'new-session' });
+  player.voice.handleServerUpdate({ token: 'new-token', endpoint: 'voice.test' });
+  assert.equal(await playing, true);
+  assert.equal(player.current, track);
+  assert.ok(requests[0].payload.voice);
+  assert.equal(requests[1].payload.track.encoded, track.encoded);
+});

@@ -319,15 +319,21 @@ class Node {
         }
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
-        const orphanedPlayers = this.manager.players.filter((p) => p.node.uuid === this.uuid);
+        let orphanedPlayers = this.manager.players.filter((p) => p.node.uuid === this.uuid);
         let moved = false;
         if (orphanedPlayers.length > 0 && this.manager.options.node?.autoMovePlayers) {
             const newNode = this.manager.nodes.findNode({ exclude: [this.identifier] });
             if (newNode) {
-                moved = true;
                 this.manager.emit("debug", `Moonlink.js > Node >> Found a new healthy node (${newNode.identifier}). Moving ${orphanedPlayers.length} players...`);
-                await Promise.all(orphanedPlayers.map(p => p.transferNode(newNode)));
-                this.manager.emit("playersMoved", orphanedPlayers, this, newNode);
+                const transfers = await Promise.allSettled(orphanedPlayers.map(p => p.transferNode(newNode)));
+                const movedPlayers = orphanedPlayers.filter((_, index) => {
+                    const transfer = transfers[index];
+                    return transfer.status === "fulfilled" && transfer.value;
+                });
+                moved = movedPlayers.length === orphanedPlayers.length;
+                if (movedPlayers.length)
+                    this.manager.emit("playersMoved", movedPlayers, this, newNode);
+                orphanedPlayers = orphanedPlayers.filter(player => !movedPlayers.includes(player) && player.node === this);
             }
             else {
                 this.manager.emit("debug", `Moonlink.js > Node >> No healthy nodes available to move players.`);
@@ -736,8 +742,13 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd -> Attempting autoPlay for player ${player.guildId}. Previous track: ${trackForEvent.title}.`);
             const autoplay = this.handleAutoPlay(player, trackForEvent);
             const ticket = (0, PlaybackGuard_1.playbackGuard)(player).ticket;
+            const automaticTicket = (0, PlaybackGuard_1.playbackGuard)(player).automaticTicket;
             const autoplayed = await autoplay;
             if (!(0, PlaybackGuard_1.playbackGuard)(player).isCurrent(ticket) && !autoplayed)
+                return;
+            if (!(0, PlaybackGuard_1.playbackGuard)(player).isAutoCurrent(automaticTicket) && !autoplayed)
+                return;
+            if (!autoplayed && player.playing && player.current?.encoded !== trackForEvent?.encoded)
                 return;
             if (autoplayed) {
                 this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd << AutoPlay was successful for player ${player.guildId}.`);
