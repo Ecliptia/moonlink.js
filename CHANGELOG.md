@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Tracks, storage and gateway voice
+
+- Destination-side URI track resolution before cross-backend migration, with lazy queue resolution and cancellation before old-player deletion.
+- Metadata-rich track snapshots, backend provenance and legacy encoded-only restoration; preserve requester, userData, position, queue and history.
+- Injectable StorageAdapter, serialized mutations and flush/shutdown barriers; local WAL recovery after clear, torn records and write errors.
+- Validated voice gateway packets, ordered/deduplicated credential updates and guards against stale acknowledgements, disconnect/destroy and reentrant listeners.
+- 135 deterministic tests and 16 real-server protocol cases, including Lavalink→NodeLink and NodeLink→Lavalink resolution without Discord voice.
+- Real Discord audio/DAVE, source-alternative matching, compatibility between different plugins of the same backend and long-duration checks remain unverified.
+
 ## Unreleased — Node and backend protocol delivery
 
 - NodeSelector/NodeHealthMonitor: healthy selection, stable strategies and safe handling of incomplete/stale statistics.

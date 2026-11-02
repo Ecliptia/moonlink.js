@@ -29,6 +29,17 @@ Branch: `feat/nyxlink-backends`, based on the first delivery at `d839c42`. PR #1
 
 The user explicitly confirmed there is no dedicated Discord test bot. Do not connect existing bots or send Discord voice credentials. Local real-server protocol checks and deterministic playback/voice contract tests must be reported separately from audible Discord playback, which remains pending.
 
+## Third implementation delivery
+
+Branch: `feat/nyxlink-track-storage`, stacked on `feat/nyxlink-backends` at `53602f5`; neither earlier draft is merged by this work.
+
+1. Define StorageAdapter and allow an injected adapter while retaining built-in memory/local configuration. Serialize mutations and provide a flush barrier. Fix local clear/WAL continuity, unsafe dotted paths and error handling with temporary-directory regressions; keep existing snapshot/WAL readable.
+2. Add TrackCodec for metadata-rich snapshots with legacy encoded-only reads. Add TrackResolver to load a track on its destination backend before migration, retain requester/userData/queue/position, and reject unresolved or cancelled migration before old-player deletion. Resolve queued tracks lazily when their backend differs. Preserve original public encode/decode signatures.
+3. Extract VoicePacketHandler validation. Coordinate gateway state/server packets in either order, deduplicate in-flight updates, ignore obsolete acknowledgements after token/session changes, disconnect or destroy, and clean up promises/listeners/timers. Backend acknowledgement is not proof of audible Discord playback.
+4. Verify unit/contract and public TypeScript consumers, local persistence reload, and pinned real-server track resolution in both directions without sending voice credentials. Document limits, commit/push and open a stacked draft PR; verify Node 22/24, backend protocol and CodeQL CI. Missing Qodana token remains an external limitation.
+
+No new runtime dependency, native voice transport, Discord bot, npm publication, or merge is part of this delivery. Existing default database configuration is retained for compatibility; custom adapters are opt-in. Local disk storage is single-process and its await contract does not claim power-loss durability.
+
 ## Constraints and verification
 
 - Only Lavalink v4 and NodeLink. Preserve OSL-3.0 and upstream credits.
