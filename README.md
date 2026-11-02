@@ -32,6 +32,20 @@ Los eventos `debug` heredados siguen disponibles. Sus mensajes técnicos pueden 
 
 El [logger Consola Combinado](docs/logging.md) es opcional: incluye banner ASCII y paneles de estado/failover con información real. Consulta también los [cambios de reproducción, recuperación y volumen](docs/playback.md) y el [changelog](CHANGELOG.md).
 
+## Nodos y compatibilidad local
+
+La segunda entrega incorpora selección/salud de nodos, failover limitado por intentos y adaptadores de capacidades. La [matriz de compatibilidad](docs/backend-compatibility.md) distingue las pruebas reales de protocolo de la reproducción audible en Discord.
+
+En Linux con Podman o Docker puedes repetir el laboratorio local sin tokens de Discord:
+
+```sh
+pnpm run test:backends
+# Con Docker:
+NYXLINK_CONTAINER_ENGINE=docker pnpm run test:backends
+```
+
+El laboratorio descarga imágenes oficiales fijadas por digest, inicia servidores en localhost y elimina sus propios contenedores al finalizar. El resto del plan continúa en [tasks/todo.md](tasks/todo.md).
+
 ## Licencia y origen
 
 Derivado de Moonlink.js, de **1Lucas1.apk y sus colaboradores**. Se conservan los avisos originales y la licencia [Open Software License 3.0](LICENSE). Los cambios de NyxLink no implican respaldo del proyecto original.

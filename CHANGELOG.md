@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Node and backend protocol delivery
+
+- NodeSelector/NodeHealthMonitor: healthy selection, stable strategies and safe handling of incomplete/stale statistics.
+- Typed backend identity/capability adapters; structured bounded HTTP errors and explicit unavailable-feature handling.
+- Bounded per-player failover across distinct candidates, preserved stopped queues and verified voice-before-track restoration.
+- WebSocket upgrade-head parsing, terminal authentication errors, bounded retries and cleanup of pending ready/resume work.
+- Functional volatile Memory storage, enabling real session resumption without disk state.
+- Real Lavalink 4.2.2 and pinned NodeLink protocol laboratory: 14 checks without Discord credentials or audio, plus 95 unit/contract tests.
+- Local/CI evidence and compatibility matrix; audible Discord playback, cross-backend track resolution and sustained-load checks remain pending.
+
 ## Unreleased — NyxLink foundation
 
 - Base de desarrollo fijada en Moonlink `dev` f6631bb, conservando API heredada, licencia y banner aprobado de NyxLink.

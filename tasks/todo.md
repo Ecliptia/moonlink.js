@@ -31,7 +31,15 @@
 - [x] Commit and push a reviewable PR against dev, without publishing npm or merging unverified backend claims: [PR #1](https://github.com/melodiabl/NyxLink/pull/1).
 
 ## Subsequent roadmap
-- [ ] Node selection/health and bounded failover extraction.
-- [ ] Backend capabilities and Lavalink v4/NodeLink integration matrix.
+- [x] Node selection/health and bounded failover extraction (second delivery).
+- [x] Backend capabilities and local Lavalink v4/NodeLink protocol matrix; audible Discord audio remains pending.
 - [ ] Track resolution, persistence boundaries and gateway voice handling.
 - [ ] Real audio/reconnection/long-duration performance checks and prerelease preparation.
+
+## Second delivery: nodes and local backend validation
+
+- [x] S1: NodeHealthMonitor and NodeSelector extraction; regressions for exclusion order, stale READY, missing/non-finite stats, strategies and player affinity. Verify node-selection tests plus the full suite.
+- [x] S2: BackendAdapter, LavalinkAdapter, NodeLinkAdapter and detector; strict boolean/header markers, version/capability snapshots, reconnect resets and safe feature errors. Verify backend contract tests and TS consumer.
+- [x] S3: Bounded NodeFailover with candidate exclusion, cancellation and concurrency control; reconnect/destroy resource cleanup. Verify recovery tests including multiple candidates and shutdown during reconnection.
+- [x] S4: Reproducible local Lavalink/NodeLink protocol harness, immutable versions and isolated HTTP media; real auth/REST/WebSocket/session tests. No Discord bot or audio connection.
+- [ ] S5: Record the evidence matrix and remaining Discord-audio limitations, run quality/package checks, commit, push and open the second PR.
