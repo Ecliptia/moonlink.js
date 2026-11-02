@@ -1,10 +1,12 @@
-import { Manager } from "../core/Manager";
+import type { Manager } from "../core/Manager";
 export declare class Memory {
-    init(manager: Manager, options?: any): Promise<void>;
-    get<T>(): Promise<T | undefined>;
-    set<T>(): Promise<void>;
-    remove(): Promise<boolean>;
-    has(): Promise<boolean>;
+    private store;
+    init(_manager: Manager, _options?: any): Promise<void>;
+    private parts;
+    get<T>(key: string): Promise<T | undefined>;
+    set<T>(key: string, value: T): Promise<void>;
+    has(key: string): Promise<boolean>;
+    remove(key: string): Promise<boolean>;
     keys(pattern?: string): Promise<string[]>;
     clear(): Promise<void>;
     shutdown(): Promise<void>;
