@@ -28,7 +28,7 @@
 ## Delivery checkpoint
 - [x] Frozen install, typecheck, full deterministic tests, build and tarball validation pass.
 - [x] Document API changes, known limitations and pending backend integration tests.
-- [ ] Commit and push a reviewable PR against dev, without publishing npm or merging unverified backend claims.
+- [x] Commit and push a reviewable PR against dev, without publishing npm or merging unverified backend claims: [PR #1](https://github.com/melodiabl/NyxLink/pull/1).
 
 ## Subsequent roadmap
 - [ ] Node selection/health and bounded failover extraction.

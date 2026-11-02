@@ -38,3 +38,12 @@ La suite cubre búsquedas demoradas y fuera de orden, stop/desactivación/destro
 El diagnóstico inicial de siete fallos de autoplay se convirtió en regresiones verdes. La revisión adicional encontró y corrigió el bloqueo de voz al serializar, la confusión entre cancelación y fallo de recuperación, y el catch de 404 inalcanzable porque el transporte heredado absorbía el error. La nueva opción de propagación se limita al PATCH de player para preservar los demás contratos HTTP heredados.
 
 Los resultados locales definitivos y el resultado de CI se registran en la PR. Las pruebas usan clases reales con REST/search controlados, además del servidor HTTP local; no sustituyen las pruebas reales de Discord/Lavalink/NodeLink.
+
+## Resultado local de la entrega
+
+- 54 pruebas automáticas: 54 correctas, cero fallidas/omitidas, en Node 22.23.2.
+- Build TypeScript, typecheck y consumidor TS: correctos.
+- Instalación con pnpm 10.34.5 y lock congelado: correcta.
+- Paquete previsto: 112 archivos, inspección correcta; sin publicación.
+- Auditoría de dependencias de producción: sin vulnerabilidades conocidas al ejecutar la comprobación.
+- Cambios enviados a [PR #1](https://github.com/melodiabl/NyxLink/pull/1), en borrador contra dev. El resultado de Node 24 depende del check remoto.
