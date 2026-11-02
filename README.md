@@ -1,4 +1,4 @@
-<img src="/assets/moonlink_banner.png" alt="Moonlink.js - v5">
+<img src="assets/nyxlink_banner.png" alt="NyxLink — A modern Lavalink &amp; NodeLink client for Discord bots" width="100%">
 <div align="center">
 <hr>
 <img src="https://img.shields.io/badge/Made_with_♥️_in-Brazil-ED186A?style=for-the-badge"><br>
