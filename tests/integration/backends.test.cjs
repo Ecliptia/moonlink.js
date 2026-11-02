@@ -2,12 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const { Manager } = require('../../dist');
+const { Manager, Track, TrackResolver } = require('../../dist');
 const { event } = require('../helpers/v4-server.cjs');
 
 const lab = JSON.parse(process.env.NYXLINK_BACKENDS_JSON || 'null');
 if (!lab) throw new Error('Run pnpm run test:backends to create the isolated server lab.');
 const evidence = [];
+const trackResolution = [];
 
 for (const backend of lab.backends) {
   test(`${backend.kind}: real v4 REST, WebSocket, auth and reconnection without Discord`, async t => {
@@ -110,8 +111,42 @@ for (const backend of lab.backends) {
   });
 }
 
+test('tracks resolve in both directions using each destination server', async t => {
+  const manager = new Manager({ nodes: lab.backends, send() {}, options: { database: { type: 'memory' }, resume: false } });
+  manager.on('nodeError', () => {});
+  t.after(async () => {
+    await Promise.all([...manager.nodes.nodes.values()].map(node => node.destroy()));
+    await manager.database.shutdown();
+  });
+  const ready = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Both backend nodes must become ready')), 15000);
+    let count = 0;
+    manager.on('nodeReady', () => { if (++count === lab.backends.length) { clearTimeout(timeout); resolve(); } });
+  });
+  await manager.init('523456789012345678'); await ready;
+  const nodes = [...manager.nodes.nodes.values()];
+  for (const source of nodes) {
+    const target = nodes.find(node => node !== source);
+    await t.test(`${source.backend.kind} -> ${target.backend.kind}`, async () => {
+      const loaded = await source.rest.loadTracks(lab.mediaUrl);
+      const original = new Track(loaded.data, { id: 'local-requester' });
+      original.backend = source.backend.kind; original.position = 125;
+      original.userData.custom = 'preserved';
+      const resolved = await TrackResolver.resolve(original, target, source);
+      const decoded = await target.rest.decodeTrack(resolved.encoded);
+      assert.equal(resolved.backend, target.backend.kind);
+      assert.equal(decoded.info.identifier, original.identifier);
+      assert.equal(resolved.position, 125);
+      assert.equal(resolved.userData.custom, 'preserved');
+      assert.equal(resolved.requester.id, 'local-requester');
+      assert.equal(original.backend, source.backend.kind);
+      trackResolution.push({ source: source.backend.kind, target: target.backend.kind, passed: true });
+    });
+  }
+});
+
 test.after(async () => {
-  const report = { timestamp: new Date().toISOString(), scope: 'local backend protocol; no Discord bot or voice connection', passed: evidence.length === lab.backends.length && evidence.every(result => result.passed), results: evidence };
+  const report = { timestamp: new Date().toISOString(), scope: 'local backend protocol; no Discord bot or voice connection', passed: evidence.length === lab.backends.length && evidence.every(result => result.passed) && trackResolution.length === 2, results: evidence, trackResolution };
   const target = path.resolve(lab.directory, '../latest-report.json');
   await fs.writeFile(target, JSON.stringify(report, null, 2) + '\n');
   console.log(`Protocol evidence: ${path.relative(process.cwd(), target)}`);
