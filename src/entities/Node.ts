@@ -16,6 +16,7 @@ import { WebSocket } from "../services/WebSocket";
 import { NodeState, TrackEndReason, VoiceState } from "../typings/types";
 import { Track } from "./Track";
 import { YouTubeLiveChat, YouTubeLiveChatOptions } from "./YouTubeLiveChat";
+import { NodeHealthMonitor } from '../nodes/NodeHealthMonitor';
 
 type LavalinkEventBase = {
   op: "event";
@@ -209,6 +210,7 @@ export class Node {
   public priority?: number;
   public socket: WebSocket;
   public stats?: INodeStats;
+  public statsReceivedAt?: number;
   public info?: any;
   public version?: string;
   public isNodeLink: boolean = false;
@@ -245,6 +247,10 @@ export class Node {
   public get latency(): number {
     if (!this.socket) return -1;
     return this.socket.latency;
+  }
+
+  public get health() {
+    return NodeHealthMonitor.inspect(this, this.manager.options.node);
   }
 
   public getPenalties(): number {
@@ -735,6 +741,7 @@ export class Node {
       case "stats":
         delete payload.op;
         this.stats = payload as INodeStats;
+        this.statsReceivedAt = Date.now();
         if (
           !this.lastStats ||
           this.stats.players !== this.lastStats.players ||

@@ -165,6 +165,7 @@ export interface IVoiceConnectionOptions {
 }
 
 export interface INodeOptions {
+    maxStatsAgeMs?: number;
     selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;
     retryAmount?: number;

@@ -146,6 +146,7 @@ export interface IVoiceConnectionOptions {
     autoReconnect?: boolean;
 }
 export interface INodeOptions {
+    maxStatsAgeMs?: number;
     selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;
     retryAmount?: number;

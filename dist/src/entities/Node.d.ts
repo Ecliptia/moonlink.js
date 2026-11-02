@@ -153,6 +153,7 @@ export declare class Node {
     priority?: number;
     socket: WebSocket;
     stats?: INodeStats;
+    statsReceivedAt?: number;
     info?: any;
     version?: string;
     isNodeLink: boolean;
@@ -163,6 +164,7 @@ export declare class Node {
     capabilities: Set<string>;
     constructor(manager: Manager, config: IManagerNodeConfig);
     get latency(): number;
+    get health(): import("../nodes/NodeHealthMonitor").NodeHealth;
     getPenalties(): number;
     ping(): Promise<number>;
     createYouTubeLiveChat(identifier: string, options?: YouTubeLiveChatOptions): YouTubeLiveChat;

@@ -3,10 +3,12 @@ const assert = require('node:assert/strict');
 const { Node, Player } = require('../dist');
 const { createPlayer, createTrack, deferred } = require('./helpers/player.cjs');
 const { Rest } = require('../dist');
+const { NodeState } = require('../dist/src/typings/types.js');
 
 function targetNode(manager) {
   const node = new Node(manager, { identifier: 'target', host: '127.0.0.2', port: 2333, password: 'test' });
   node.connected = true;
+  node.state = NodeState.READY;
   return node;
 }
 

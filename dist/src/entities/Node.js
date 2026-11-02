@@ -7,6 +7,7 @@ const PlaybackGuard_1 = require("../players/PlaybackGuard");
 const Util_1 = require("../Util");
 const types_1 = require("../typings/types");
 const YouTubeLiveChat_1 = require("./YouTubeLiveChat");
+const NodeHealthMonitor_1 = require("../nodes/NodeHealthMonitor");
 class Node {
     manager;
     uuid;
@@ -38,6 +39,7 @@ class Node {
     priority;
     socket;
     stats;
+    statsReceivedAt;
     info;
     version;
     isNodeLink = false;
@@ -67,6 +69,9 @@ class Node {
         if (!this.socket)
             return -1;
         return this.socket.latency;
+    }
+    get health() {
+        return NodeHealthMonitor_1.NodeHealthMonitor.inspect(this, this.manager.options.node);
     }
     getPenalties() {
         if (!this.stats)
@@ -416,6 +421,7 @@ class Node {
             case "stats":
                 delete payload.op;
                 this.stats = payload;
+                this.statsReceivedAt = Date.now();
                 if (!this.lastStats ||
                     this.stats.players !== this.lastStats.players ||
                     this.stats.playingPlayers !== this.lastStats.playingPlayers) {
