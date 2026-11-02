@@ -952,6 +952,7 @@ export class Player {
         }
         playbackGuard(this).invalidate();
         this.destroyed = true;
+        this.voice.destroy();
         this.stopHealthCheck();
         return this.commands.enqueue(() => this.destroyPlayback(reason));
     }

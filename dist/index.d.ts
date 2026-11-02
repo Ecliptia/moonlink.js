@@ -19,6 +19,7 @@ export { Local } from './src/database/Local';
 export { TrackCodec } from './src/tracks/TrackCodec';
 export type { TrackSnapshot } from './src/tracks/TrackCodec';
 export { TrackResolver, TrackResolutionError } from './src/tracks/TrackResolver';
+export { VoicePacketHandler } from './src/entities/VoicePacketHandler';
 import { Manager } from "./src/core/Manager";
 import { Node } from "./src/entities/Node";
 import { Player } from "./src/entities/Player";

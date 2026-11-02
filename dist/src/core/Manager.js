@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Manager = void 0;
+const VoicePacketHandler_1 = require("../entities/VoicePacketHandler");
 const Util_1 = require("../Util");
 const DatabaseManager_1 = require("../managers/DatabaseManager");
 const __1 = require("../..");
@@ -276,26 +277,7 @@ class Manager extends Util_1.EventEmitter {
         return result;
     }
     async packetUpdate(packet) {
-        if (!this.initialized || !packet.t || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
-            return;
-        const voicePacket = packet;
-        const player = this.players.get(voicePacket.d.guild_id);
-        if (!player) {
-            this.emit("debug", `Moonlink.js > Manager <- Received packet for non-existent player. GuildId: ${voicePacket.d.guild_id}, Packet Type: ${voicePacket.t}`);
-            return;
-        }
-        switch (voicePacket.t) {
-            case "VOICE_STATE_UPDATE":
-                if (voicePacket.d.user_id !== this.clientId)
-                    return;
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
-                player.voice.handleStateUpdate(voicePacket.d);
-                break;
-            case "VOICE_SERVER_UPDATE":
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
-                player.voice.handleServerUpdate(voicePacket.d);
-                break;
-        }
+        await VoicePacketHandler_1.VoicePacketHandler.handle(this, packet);
     }
     decodeTrack(encoded) {
         (0, Util_1.validate)(encoded, (v) => typeof v === "string", "Manager#decodeTrack > Encoded string must be a string.");

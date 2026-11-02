@@ -1,4 +1,4 @@
-import { Manager, Player, Node, Track, Queue, Rest, Filters, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, VoiceReceiver, YouTubeLiveChat, SpotifySource, DeezerSource, Logger, NodeSelector, NodeHealthMonitor, NodeFailover, BackendDetector, HttpError, FeatureUnavailableError, type FailoverResult, version } from '../../dist';
+import { Manager, Player, Node, Track, Queue, Rest, Filters, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, VoiceReceiver, YouTubeLiveChat, SpotifySource, DeezerSource, Logger, NodeSelector, NodeHealthMonitor, NodeFailover, BackendDetector, HttpError, FeatureUnavailableError, type FailoverResult, type StorageAdapter, type TrackSnapshot, TrackCodec, TrackResolver, TrackResolutionError, VoicePacketHandler, Memory, Local, version } from '../../dist';
 
 declare const manager: Manager;
 declare const player: Player;
@@ -24,3 +24,13 @@ const backend = BackendDetector.detect({ version: { semver: '4.2.2' } });
 const configuredNode: Parameters<NodeManager['add']>[0] = { host: 'localhost', port: 2333, password: 'test', secure: false, retryAmount: 0, readyTimeoutMs: 10000 };
 void [health, selected, failover, backend, HttpError, FeatureUnavailableError, configuredNode];
 void [asyncVolume, detach, playing, stopping, volume, autoplay, transfer, search, queue, Rest, Filters, SearchResult, NodeManager, PlayerManager, WebSocket, Connectors, VoiceReceiver, YouTubeLiveChat, SpotifySource, DeezerSource, Logger, version];
+
+const snapshot: TrackSnapshot = TrackCodec.serialize(track);
+const restored: Track = TrackCodec.restore(snapshot);
+const resolved: Promise<Track> = TrackResolver.resolve(track, node);
+const adapter: StorageAdapter = new Memory();
+const local: StorageAdapter = new Local();
+const configured = new Manager({ nodes: [configuredNode], options: { database: { type: 'memory', adapter } } });
+const flushed: Promise<void> = manager.database.flush();
+const packet: Promise<void> = VoicePacketHandler.handle(manager, {});
+void [snapshot, restored, resolved, local, configured, flushed, packet, TrackResolutionError];

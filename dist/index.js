@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.DeezerSource = exports.SpotifySource = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.TrackResolutionError = exports.TrackResolver = exports.TrackCodec = exports.Local = exports.Memory = exports.HttpError = exports.FeatureUnavailableError = exports.NodeFailover = exports.NodeHealthMonitor = exports.NodeSelector = exports.NodeLinkAdapter = exports.LavalinkAdapter = exports.BackendDetector = exports.BackendAdapter = exports.formatFailover = exports.formatSystemStatus = exports.formatBox = exports.formatEntry = exports.createBanner = exports.ConsoleReporter = exports.Logger = exports.version = void 0;
+exports.Connectors = exports.WebSocket = exports.PlayerManager = exports.NodeManager = exports.SearchResult = exports.DeezerSource = exports.SpotifySource = exports.YouTubeLiveChat = exports.VoiceReceiver = exports.Track = exports.Filters = exports.Rest = exports.Queue = exports.Player = exports.Node = exports.Manager = exports.VoicePacketHandler = exports.TrackResolutionError = exports.TrackResolver = exports.TrackCodec = exports.Local = exports.Memory = exports.HttpError = exports.FeatureUnavailableError = exports.NodeFailover = exports.NodeHealthMonitor = exports.NodeSelector = exports.NodeLinkAdapter = exports.LavalinkAdapter = exports.BackendDetector = exports.BackendAdapter = exports.formatFailover = exports.formatSystemStatus = exports.formatBox = exports.formatEntry = exports.createBanner = exports.ConsoleReporter = exports.Logger = exports.version = void 0;
 exports.version = require("../package.json").version;
 var logging_1 = require("./src/logging");
 Object.defineProperty(exports, "Logger", { enumerable: true, get: function () { return logging_1.Logger; } });
@@ -37,6 +37,8 @@ Object.defineProperty(exports, "TrackCodec", { enumerable: true, get: function (
 var TrackResolver_1 = require("./src/tracks/TrackResolver");
 Object.defineProperty(exports, "TrackResolver", { enumerable: true, get: function () { return TrackResolver_1.TrackResolver; } });
 Object.defineProperty(exports, "TrackResolutionError", { enumerable: true, get: function () { return TrackResolver_1.TrackResolutionError; } });
+var VoicePacketHandler_1 = require("./src/entities/VoicePacketHandler");
+Object.defineProperty(exports, "VoicePacketHandler", { enumerable: true, get: function () { return VoicePacketHandler_1.VoicePacketHandler; } });
 const Util_1 = require("./src/Util");
 const Manager_1 = require("./src/core/Manager");
 Object.defineProperty(exports, "Manager", { enumerable: true, get: function () { return Manager_1.Manager; } });

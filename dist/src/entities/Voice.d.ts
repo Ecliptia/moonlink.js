@@ -23,15 +23,27 @@ export declare class Voice extends EventEmitter<VoiceEvents> {
     private pendingPlaybackRestoreNonce;
     private moveRestartInFlight;
     private lastMoveAt;
+    private generation;
+    private acceptingPackets;
+    private inFlight?;
+    private awaitingServer;
+    private serverBeforeState?;
+    private movePlaybackTicket?;
+    private disconnectPromise?;
+    private disconnectTimeout;
+    private finishDisconnect?;
     constructor(player: Player);
     get manager(): import("../..").Manager;
     wasRecentlyMoved(windowMs?: number): boolean;
     private setState;
+    private isDestroyed;
+    private invalidateCredentials;
     connect(options: {
         selfDeaf: boolean;
         selfMute: boolean;
     }): Promise<void>;
     disconnect(): Promise<void>;
+    private disconnectWithReason;
     handleStateUpdate(data: VoiceStateUpdate): Promise<void>;
     handleServerUpdate(data: VoiceServerUpdate): void;
     check(connected: boolean): void;

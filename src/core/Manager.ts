@@ -1,3 +1,4 @@
+import { VoicePacketHandler } from '../entities/VoicePacketHandler';
 import {
     IManagerEvents,
     IManagerConfig,
@@ -311,26 +312,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     }
 
     public async packetUpdate(packet: DiscordGatewayPacket): Promise<void> {
-        if (!this.initialized || !packet.t || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
-
-        const voicePacket = packet as DiscordVoicePacket;
-        const player = this.players.get(voicePacket.d.guild_id);
-        if (!player) {
-            this.emit("debug", `Moonlink.js > Manager <- Received packet for non-existent player. GuildId: ${voicePacket.d.guild_id}, Packet Type: ${voicePacket.t}`);
-            return;
-        }
-
-        switch (voicePacket.t) {
-            case "VOICE_STATE_UPDATE":
-                if (voicePacket.d.user_id !== this.clientId) return;
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_STATE_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
-                player.voice.handleStateUpdate(voicePacket.d);
-                break;
-            case "VOICE_SERVER_UPDATE":
-                this.emit("debug", `Moonlink.js > Manager <- Received VOICE_SERVER_UPDATE. Guild: ${voicePacket.d.guild_id}, Data: ${JSON.stringify(voicePacket.d)}`);
-                player.voice.handleServerUpdate(voicePacket.d);
-                break;
-        }
+        await VoicePacketHandler.handle(this, packet);
     }
 
     public decodeTrack(encoded: string): ITrack {
