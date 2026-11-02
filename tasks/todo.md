@@ -55,5 +55,5 @@
 
 - [x] P1: Reproducible queue/resource baseline and cleanup regressions.
 - [x] P2: Coordinated Manager shutdown, connector cleanup, destroyed snapshot removal and bounded WebSocket ping resources.
-- [ ] P3: Real-server endurance runner and ten-minute local evidence; shorter CI smoke, latency/resource metrics and cleanup checks.
-- [ ] P4: Readiness/limitations documentation, public types/package verification, commits, stacked PR and CI evidence.
+- [x] P3: Real-server endurance runner and ten-minute local evidence; shorter CI smoke, latency/resource metrics and cleanup checks.
+- [x] P4: Readiness/limitations documentation, public types/package verification, commits, stacked [PR #5](https://github.com/melodiabl/NyxLink/pull/5) and [CI evidence](../docs/stability.md#verificación-en-github).

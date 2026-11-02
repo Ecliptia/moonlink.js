@@ -51,10 +51,28 @@ Cada segundo se crea un player REST pausado, se añade una cola local de 16 pist
 
 El informe separa el proceso cliente de las estadísticas de los servidores: heap después de GC, RSS, CPU agregada del worker (incluye arranque/cierre), event-loop delay y percentiles de operaciones. RSS puede incluir asignaciones nativas/fragmentación; diez minutos no demuestran estabilidad durante horas. Se exige ausencia de errores, reanudaciones confirmadas, ciclos completados y cierre de players/nodos/timers; los recursos de proceso restantes se informan por tipo. El runner tiene watchdog de duración más 90 segundos, para que una operación bloqueada no mantenga el laboratorio indefinidamente.
 
-La ejecución local de diez minutos está en curso; su evidencia se incorporará al terminar. GitHub ejecuta un smoke de 60 segundos y permite elegir otra duración mediante workflow_dispatch. Los informes se guardan como artefactos, sin contraseñas ni IDs de sesión/guild.
+La [ejecución local de 600 segundos](performance/endurance-600.json) terminó correctamente en 600.998 s:
+
+| Resultado | Lavalink | NodeLink |
+| --- | ---: | ---: |
+| Ciclos de player completados | 601 | 601 |
+| Resume confirmado tras pérdida TCP | 37 | 37 |
+| Pings manuales confirmados | 61 | 61 |
+| PATCH p95 | 9.706 ms | 14.600 ms |
+| Resume p95 | 35.608 ms | 36.183 ms |
+
+El cliente pasó de 6,718,392 a 8,175,488 bytes de heap después de GC; la muestra posterior a 60 s era 7,539,256 bytes. El RSS inicial/final fue 67,006,464/79,241,216 bytes. Estos valores muestran el cambio observado y no prueban ausencia de crecimiento a largo plazo. El event-loop delay p95 fue 11.182 ms y el máximo 279.183 ms, con resolución de muestreo de 10 ms y GC explícito durante la prueba.
+
+El cierre registró cero players/nodos y ningún Timeout activo. La captura inmediata todavía enumera dos TCPSocketWrap; después el worker terminó normalmente y los dos contenedores fueron retirados. No se presenta esa captura como cero recursos de todo el proceso. GitHub ejecuta un smoke de 60 segundos y permite elegir otra duración mediante workflow_dispatch. Los informes se guardan como artefactos, sin contraseñas ni IDs de sesión/guild.
 
 ## Lo que sigue pendiente
 
 Estos tests no certifican audio audible, DAVE, gateway real, letras/mixer/recepción de voz ni latencia play→trackStart. Tampoco sustituyen una prueba de más de una hora en la infraestructura de destino. La preparación de publicación se detalla en [release-readiness.md](release-readiness.md).
 
 Fuentes: [recursos activos de Node](https://nodejs.org/docs/latest-v22.x/api/process.html#processgetactiveresourcesinfo), [memoria del proceso](https://nodejs.org/docs/latest-v22.x/api/process.html#processmemoryusage), [event-loop delay](https://nodejs.org/api/perf_hooks.html#perf_hooksmonitoreventloopdelayoptions), [Ping/Pong RFC6455](https://www.rfc-editor.org/rfc/rfc6455#section-5.5.2), [resume Lavalink](https://lavalink.dev/api/rest#update-session).
+
+## Verificación en GitHub
+
+[PR #5](https://github.com/melodiabl/NyxLink/pull/5), basado en la tercera entrega. El código en `8a772ee` pasó [Node 22/24](https://github.com/melodiabl/NyxLink/actions/runs/41512283255), [protocolo y resolución cruzada](https://github.com/melodiabl/NyxLink/actions/runs/41512283284), [CodeQL](https://github.com/melodiabl/NyxLink/actions/runs/41512283165) y [benchmark/endurance CI](https://github.com/melodiabl/NyxLink/actions/runs/41512283143). El smoke remoto duró aproximadamente 61 s y completó 60 ciclos y tres reanudaciones por backend; el informe quedó como artefacto.
+
+[Qodana](https://github.com/melodiabl/NyxLink/actions/runs/41512283226) vuelve a fallar por la ausencia del secreto entregado como QODANA_TOKEN. Ese análisis sigue pendiente; no se retira su check.
