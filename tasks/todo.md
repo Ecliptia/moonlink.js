@@ -49,4 +49,4 @@
 - [x] T1: StorageAdapter injection/flush ordering; local reload, clear, safe-path and failure regressions.
 - [x] T2: TrackCodec snapshots and TrackResolver; migration/queue cancellation tests and metadata preservation.
 - [x] T3: VoicePacketHandler and race-safe voice handshake; malformed/foreign packets, event order, duplicate credentials, disconnect/destroy and listener cleanup regressions.
-- [ ] T4: Real pinned-server track resolution, documentation, public types/package checks, commits, stacked PR and CI evidence.
+- [x] T4: Real pinned-server track resolution, documentation, public types/package checks, commits, stacked [PR #4](https://github.com/melodiabl/NyxLink/pull/4) and [CI evidence](../docs/tracks-storage-voice.md#verificación-en-github).

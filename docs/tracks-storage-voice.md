@@ -63,3 +63,9 @@ Las pruebas deterministas cubren cancelación de resolución, conservación de c
 Se siguen manteniendo pendientes audio audible, DAVE/gateway real, extensiones de audio habilitadas, pruebas sostenidas y preparación de una versión publicable. La [evidencia saneada](track-protocol-evidence.json) registra 16 casos de protocolo; el runner cuenta además tres grupos, para un total de 19 resultados. La evidencia del laboratorio se añade a `trackResolution` en el informe JSON del workflow. Repite las comprobaciones con `pnpm test`, `pnpm run test:types`, `pnpm run pack:check` y `pnpm run test:backends`.
 
 Fuentes primarias: [carga de pistas Lavalink v4](https://lavalink.dev/api/rest#track-loading), [eventos de voz Discord](https://docs.discord.com/developers/topics/voice-connections#retrieving-voice-server-information), [WAL/snapshot con fs de Node 22](https://nodejs.org/docs/latest-v22.x/api/fs.html), [duración HTTP NodeLink en el commit fijado](https://github.com/PerformanC/NodeLink/blob/804e0d6d0f1af30384e0a2d12ddbc8d79e85cf35/src/sources/http.ts#L403).
+
+## Verificación en GitHub
+
+Revisión: [PR #4](https://github.com/melodiabl/NyxLink/pull/4), con base en la segunda entrega. El código en `95fb7cb` pasó [Node 22/24](https://github.com/melodiabl/NyxLink/actions/runs/41436825491), [laboratorio real y artefacto de evidencia](https://github.com/melodiabl/NyxLink/actions/runs/41436825313) y [CodeQL](https://github.com/melodiabl/NyxLink/actions/runs/41436825369). El informe remoto registra 19/19 resultados correctos, incluyendo los tres grupos de casos.
+
+[Qodana](https://github.com/melodiabl/NyxLink/actions/runs/41436825303) no puede analizar sin `QODANA_TOKEN`, que no está configurado en los secretos del repositorio. Su check permanece visible. Esta limitación no se presenta como una comprobación superada.
