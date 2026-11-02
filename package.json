@@ -1,7 +1,7 @@
 {
   "name": "moonlink.js",
   "version": "5.3.0-dev.2",
-  "description": "NyxLink — Discord audio client derived from Moonlink.js (development)",
+  "description": "NyxLink \u2014 Discord audio client derived from Moonlink.js (development)",
   "keywords": [
     "bot",
     "discord.js",
@@ -22,7 +22,8 @@
     "test:bot": "node test-bot/index.js",
     "typecheck": "tsc --noEmit",
     "test:types": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module commonjs --moduleResolution node tests/types/public-api.ts",
-    "pack:check": "node scripts/check-package.cjs"
+    "pack:check": "node scripts/check-package.cjs",
+    "test:backends": "pnpm run build && node scripts/test-backends.cjs"
   },
   "homepage": "https://github.com/melodiabl/NyxLink#readme",
   "bugs": {

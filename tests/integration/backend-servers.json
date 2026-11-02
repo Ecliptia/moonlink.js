@@ -1,0 +1,10 @@
+{
+  "lavalink": {
+    "image": "ghcr.io/lavalink-devs/lavalink@sha256:96be2be7ee50d35a9bd42c8c7b99e2a4b741f09123066c1ebb9e014dd7db204d",
+    "version": "4.2.2"
+  },
+  "nodelink": {
+    "image": "ghcr.io/performanc/nodelink@sha256:19d8f9a8951d0e13f21977aac7e5ec4dc3199526b8dcb28e9c8a2e3ac058dfe8",
+    "commit": "804e0d6d0f1af30384e0a2d12ddbc8d79e85cf35"
+  }
+}

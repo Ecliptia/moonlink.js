@@ -4,7 +4,7 @@ on:
   push:
     branches: [dev, v5.2, 'feat/nyxlink-*']
   pull_request:
-    branches: [dev, v5.2]
+    branches: [dev, v5.2, feat/nyxlink-foundation]
   workflow_dispatch:
 
 permissions:
