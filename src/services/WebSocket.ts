@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events";
 import http from "node:http";
 import https from "node:https";
 import { URL } from "node:url";
+import { HttpError } from '../errors/HttpError';
 
 const isBun = typeof process !== "undefined" && process.versions?.bun;
 
@@ -12,6 +13,7 @@ export class WebSocket extends EventEmitter {
     private socket: any = null;
     private netSocket: any;
     private connected: boolean = false;
+    private closeNotified = false;
     private buffer: Buffer = Buffer.alloc(0);
     private fragmentedPayload: Buffer[] = [];
     private fragmentedOpCode: number | null = null;
@@ -20,8 +22,11 @@ export class WebSocket extends EventEmitter {
     private readonly MAX_REDIRECTS = 5;
 
     private pingInterval: NodeJS.Timeout | null = null;
+    private heartbeatTimeout?: NodeJS.Timeout;
+    private heartbeatKey?: string;
+    private pingSequence = 0;
+    private readonly pendingPings = new Map<string, { timeout: NodeJS.Timeout; resolve: (latency: number) => void; reject: (error: Error) => void }>();
     private readonly PING_INTERVAL = 30000;
-    private pongReceived: boolean = true;
     private readonly PONG_TIMEOUT = 5000;
     private pingTimestamps: Map<string, number> = new Map();
     public latency: number = 0;
@@ -58,6 +63,7 @@ export class WebSocket extends EventEmitter {
         this.socket = ws;
     }
 
+    // v4 upgrade/headers: https://lavalink.dev/api/websocket#opening-a-connection
     private connectNode() {
         const key = randomBytes(16).toString("base64");
         const protocol = this.url.protocol === "wss:" ? https : http;
@@ -117,7 +123,8 @@ export class WebSocket extends EventEmitter {
             }
 
             if (statusCode !== 101) {
-                this.socket?.destroy();
+                this.emit('error', { error: new HttpError(statusCode ?? 0) });
+                this.handleClose(statusCode === 401 || statusCode === 403 ? 1008 : 1006, `HTTP ${statusCode}`);
                 switch (statusCode) {
                     case 401:
                         this.emit("debug", "Authentication failed, please check your credentials.");
@@ -132,6 +139,7 @@ export class WebSocket extends EventEmitter {
         });
 
         this.socket.on("upgrade", (res, socket, head) => {
+            if (this.closeNotified) { socket.destroy(); return; }
             const expectedKey = createHash("sha1")
               .update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
               .digest("base64");
@@ -147,6 +155,7 @@ export class WebSocket extends EventEmitter {
             this.connected = true;
             this.buffer = head;
             this.emit("open");
+            if (this.closeNotified || !this.connected || !this.netSocket) return;
 
             this.startHeartbeat();
 
@@ -156,9 +165,11 @@ export class WebSocket extends EventEmitter {
                 return this.handleClose(1006, "Connection closed abruptly"); 
             });
             this.netSocket.on("error", (err: Error) => { return this.emit("error", { error: err }); });
+            this.processBuffer();
         });
 
         this.socket.on("error", (err) => {
+            if (this.closeNotified) return;
             if (this.url.protocol === "wss:" && this.url.hostname === "localhost") {
                 this.emit("debug", "Secure connection failed, trying insecure connection.");
                 this.url.protocol = "ws:";
@@ -169,9 +180,7 @@ export class WebSocket extends EventEmitter {
             this.emit("error", { error: err });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: err.message });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, err.message);
             }
         });
 
@@ -179,91 +188,74 @@ export class WebSocket extends EventEmitter {
             this.emit("error", { error: new Error("Connection timed out") });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: "Connection timed out" });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, 'Connection timed out');
             }
         });
 
         this.socket.end();
     }
 
+    private nextPingPayload(): Buffer {
+        let payload: Buffer;
+        do { payload = Buffer.from(`nyx:${++this.pingSequence}`); }
+        while (this.pingTimestamps.has(payload.toString('hex')));
+        return payload;
+    }
+
     private startHeartbeat() {
         this.stopHeartbeat();
-        
         this.pingInterval = setInterval(() => {
-            if (!this.connected || !this.netSocket) {
-                this.stopHeartbeat();
-                return;
-            }
-
-            if (!this.pongReceived) {
-                this.emit("error", { error: new Error("Pong timeout") });
-                this.close(1006, "Pong timeout");
-                return;
-            }
-
-            this.pongReceived = false;
-            
-            const timestamp = Date.now().toString();
-            const payload = Buffer.from(timestamp);
-            this.pingTimestamps.set(timestamp, Date.now());
-            
-            this.sendFrame(0x9, payload);
-            
-            setTimeout(() => {
-                if (!this.pongReceived && this.connected) {
-                    this.emit("error", { error: new Error("No pong received") });
-                    this.close(1006, "No pong received");
+            if (!this.connected || !this.netSocket) { this.stopHeartbeat(); return; }
+            const payload = this.nextPingPayload();
+            this.heartbeatKey = payload.toString('hex');
+            this.pingTimestamps.set(this.heartbeatKey, Date.now());
+            this.heartbeatTimeout = setTimeout(() => {
+                this.heartbeatTimeout = undefined;
+                if (this.connected) {
+                    this.emit('error', { error: new Error('No pong received') });
+                    this.close(1000, 'Pong timeout');
                 }
             }, this.PONG_TIMEOUT);
+            try { this.sendFrame(0x9, payload); }
+            catch (error) {
+                this.emit('error', { error });
+                this.close(1000, 'Heartbeat write failed');
+            }
         }, this.PING_INTERVAL);
     }
 
     private stopHeartbeat() {
-        if (this.pingInterval) {
-            clearInterval(this.pingInterval);
-            this.pingInterval = null;
-        }
+        if (this.pingInterval) clearInterval(this.pingInterval);
+        this.pingInterval = null;
+        if (this.heartbeatTimeout) clearTimeout(this.heartbeatTimeout);
+        this.heartbeatTimeout = undefined;
+        if (this.heartbeatKey) this.pingTimestamps.delete(this.heartbeatKey);
+        this.heartbeatKey = undefined;
     }
 
+    /** RFC6455 5.5.2/5.5.3: only the pong echoing this payload acknowledges this ping. */
     public ping(data?: string | Buffer): Promise<number> {
+        if (isBun) return Promise.reject(new Error('Manual ping not supported in Bun mode'));
+        if (!this.connected || !this.netSocket) return Promise.reject(new Error('WebSocket is not connected'));
+        const payload = data === undefined ? this.nextPingPayload() : Buffer.isBuffer(data) ? data : Buffer.from(data);
+        const key = payload.toString('hex');
+        if (payload.length > 125) return Promise.reject(new RangeError('Ping payload must be at most 125 bytes'));
+        if (this.pingTimestamps.has(key)) return Promise.reject(new Error('A ping with this payload is already pending'));
         return new Promise((resolve, reject) => {
-            if (isBun) {
-                reject(new Error("Manual ping not supported in Bun mode"));
-                return;
-            }
-
-            if (!this.connected || !this.netSocket) {
-                reject(new Error("WebSocket is not connected"));
-                return;
-            }
-
-            const timestamp = Date.now().toString();
-            const payload = data ? 
-                (Buffer.isBuffer(data) ? data : Buffer.from(data)) : 
-                Buffer.from(timestamp);
-            
-            const useTimestamp = !data;
-            if (useTimestamp) {
-                this.pingTimestamps.set(timestamp, Date.now());
-            }
-
+            this.pingTimestamps.set(key, Date.now());
             const timeout = setTimeout(() => {
-                if (useTimestamp) {
-                    this.pingTimestamps.delete(timestamp);
-                }
-                this.off("pong", pongListener);
-                reject(new Error("Pong timeout"));
+                this.pingTimestamps.delete(key);
+                this.pendingPings.delete(key);
+                reject(new Error('Pong timeout'));
             }, this.PONG_TIMEOUT);
-
-            const pongListener = (latency?: number) => {
+            this.pendingPings.set(key, { timeout, resolve, reject });
+            try { this.sendFrame(0x9, payload); }
+            catch (error) {
                 clearTimeout(timeout);
-                resolve(latency || 0);
-            };
-
-            this.once("pong", pongListener);
-            this.sendFrame(0x9, payload);
+                this.pendingPings.delete(key);
+                this.pingTimestamps.delete(key);
+                reject(error);
+            }
         });
     }
 
@@ -348,28 +340,27 @@ export class WebSocket extends EventEmitter {
                 this.emit("ping", payload);
                 break;
 
-            case 0xa:
-                this.pongReceived = true;
-                
-                if (payload.length > 0) {
-                    try {
-                        const timestamp = payload.toString("utf8");
-                        const sentAt = this.pingTimestamps.get(timestamp);
-                        
-                        if (sentAt) {
-                            this.latency = Date.now() - sentAt;
-                            this.pingTimestamps.delete(timestamp);
-                            this.emit("pong", this.latency);
-                            return;
-                        }
-                    } catch (error) {
-                        const message = error instanceof Error ? error.message : String(error);
-                        this.emit("error", { error: new Error(`Failed to parse pong payload: ${message}`) });
+            case 0xa: {
+                const key = payload.toString('hex');
+                const sentAt = this.pingTimestamps.get(key);
+                if (sentAt !== undefined) {
+                    this.latency = Date.now() - sentAt;
+                    this.pingTimestamps.delete(key);
+                    if (this.heartbeatKey === key) {
+                        if (this.heartbeatTimeout) clearTimeout(this.heartbeatTimeout);
+                        this.heartbeatTimeout = undefined;
+                        this.heartbeatKey = undefined;
                     }
-                }
-                
-                this.emit("pong");
+                    const pending = this.pendingPings.get(key);
+                    if (pending) {
+                        clearTimeout(pending.timeout);
+                        this.pendingPings.delete(key);
+                        pending.resolve(this.latency);
+                    }
+                    this.emit('pong', this.latency);
+                } else this.emit('pong');
                 break;
+            }
 
             default:
                 this.emit("error", { error: new Error(`Unsupported opcode: ${opcode}`) });
@@ -378,13 +369,23 @@ export class WebSocket extends EventEmitter {
     }
 
     private handleClose(code: number, reason: string) {
-        if (!this.connected) return;
+        if (this.closeNotified) return;
+        this.closeNotified = true;
         this.connected = false;
         this.stopHeartbeat();
         this.pingTimestamps.clear();
+        for (const pending of this.pendingPings.values()) {
+            clearTimeout(pending.timeout);
+            pending.reject(new Error('WebSocket closed before pong'));
+        }
+        this.pendingPings.clear();
+        this.buffer = Buffer.alloc(0);
+        this.fragmentedPayload = [];
+        this.fragmentedOpCode = null;
         this.emit("close", { code, reason });
         this.netSocket?.destroy();
         this.netSocket = null;
+        this.socket?.destroy();
         this.socket = null;
     }
 
@@ -446,15 +447,20 @@ export class WebSocket extends EventEmitter {
             return;
         }
 
-        if (!this.connected || !this.netSocket) return;
+        if (!this.connected || !this.netSocket) {
+            this.handleClose(code, reason);
+            return;
+        }
 
         const reasonBuffer = Buffer.from(reason);
         const payload = Buffer.alloc(2 + reasonBuffer.length);
         payload.writeUInt16BE(code, 0);
         reasonBuffer.copy(payload, 2);
 
-        this.sendFrame(0x8, payload);
-        this.handleClose(code, reason);
+        // Transport failure must never skip local teardown.
+        try { this.sendFrame(0x8, payload); }
+        catch { /* The broken transport is destroyed below. */ }
+        finally { this.handleClose(code, reason); }
     }
 
     public get readyState(): number {

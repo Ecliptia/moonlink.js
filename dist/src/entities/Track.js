@@ -18,6 +18,7 @@ class Track {
     time;
     requester;
     origin;
+    backend;
     pluginInfo;
     userData;
     retries = 0;
@@ -29,6 +30,8 @@ class Track {
         this.encoded = normalized.encoded;
         this.requester = requester || normalized.userData?.requester;
         this.origin = origin;
+        if (data.backend === 'lavalink' || data.backend === 'nodelink')
+            this.backend = data.backend;
         this.pluginInfo = normalized.pluginInfo ?? {};
         this.userData = normalized.userData ?? {};
         const trackProps = this.createPropertySetters(normalized.info);
@@ -149,6 +152,7 @@ class Track {
             },
             pluginInfo: this.pluginInfo,
             userData: this.userData,
+            backend: this.backend,
         };
     }
 }

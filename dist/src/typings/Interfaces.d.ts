@@ -4,6 +4,10 @@ import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 import type { LoggerOptions } from '../logging/Logger';
+import type { FailoverOptions } from '../nodes/NodeFailover';
+import type { StorageAdapter } from '../database/StorageAdapter';
+import type { BackendKind } from '../backends/BackendAdapter';
+import type { TrackSnapshot } from '../tracks/TrackCodec';
 export interface IManagerEvents {
     debug: (message: string) => void;
     nodeCreate: (node: Node) => void;
@@ -92,6 +96,7 @@ export interface INodeFailoverReport {
     reason?: string;
 }
 export interface IManagerNodeConfig {
+    readyTimeoutMs?: number;
     host: string;
     password: string;
     port: number;
@@ -127,6 +132,7 @@ export interface IManagerOptionsConfig {
     trackPartial?: TPartialTrackProperties[];
     database?: {
         type: 'memory' | 'local';
+        adapter?: StorageAdapter;
         options?: any;
     };
 }
@@ -146,6 +152,8 @@ export interface IVoiceConnectionOptions {
     autoReconnect?: boolean;
 }
 export interface INodeOptions {
+    failover?: FailoverOptions;
+    maxStatsAgeMs?: number;
     selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;
     retryAmount?: number;
@@ -156,6 +164,13 @@ export interface INodeOptions {
     autoRebalance?: boolean;
 }
 export interface ISearchOptions {
+    timeoutMs?: number;
+    fallbackPlatforms?: string[];
+    cache?: {
+        ttlMs: number;
+        maxEntries?: number;
+    };
+    resolver?: (query: ISearchQuery, node: Node) => Promise<IRESTLoadTracks | null>;
     defaultPlatform?: "youtube" | "youtubemusic" | "soundcloud" | "local";
     resultLimit?: number;
     playlistLoadLimit?: number;
@@ -215,6 +230,7 @@ export interface IManagerConfig {
     send?: (guildId: string, payload: any) => void;
 }
 export interface ISearchQuery {
+    signal?: AbortSignal;
     query: string;
     source?: string;
     requester?: any;
@@ -303,6 +319,7 @@ export interface ITrackInfo {
     position: number;
 }
 export interface ITrack {
+    backend?: BackendKind;
     encoded: string;
     info: ITrackInfo;
     pluginInfo: Record<string, any>;
@@ -326,16 +343,16 @@ export interface IPlayerConfig {
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;
-    current?: {
+    current?: TrackSnapshot | {
         encoded: string;
         requester: any;
         position?: number;
     };
-    queue?: Array<{
+    queue?: Array<TrackSnapshot | {
         encoded: string;
         requester: any;
     }>;
-    previous?: Array<{
+    previous?: Array<TrackSnapshot | {
         encoded: string;
         requester: any;
     }>;

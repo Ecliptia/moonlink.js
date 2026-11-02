@@ -1,9 +1,10 @@
 import { Manager } from "../core/Manager";
-import { Memory } from "../database/Memory";
-import { Local } from "../database/Local";
-type DatabaseProvider = Memory | Local;
+import type { StorageAdapter } from '../database/StorageAdapter';
 export declare class DatabaseManager {
-    provider: DatabaseProvider;
+    provider: StorageAdapter;
+    private tail;
+    private closing;
+    private shutdownPromise?;
     private manager;
     private dbConfig;
     constructor(manager: Manager);
@@ -14,6 +15,7 @@ export declare class DatabaseManager {
     has(key: string): Promise<boolean>;
     keys(pattern?: string): Promise<string[]>;
     clear(): Promise<void>;
+    private mutate;
+    flush(): Promise<void>;
     shutdown(): Promise<void>;
 }
-export {};

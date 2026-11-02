@@ -1,4 +1,5 @@
 import { ITrack } from "../typings/Interfaces";
+import type { BackendKind } from '../backends/BackendAdapter';
 export declare class Track {
     readonly encoded: string;
     title: string;
@@ -15,6 +16,7 @@ export declare class Track {
     time: number;
     requester: any;
     origin?: string;
+    backend?: BackendKind;
     pluginInfo: Record<string, any>;
     userData: Record<string, any>;
     retries: number;

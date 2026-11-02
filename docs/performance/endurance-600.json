@@ -1,0 +1,1183 @@
+{
+  "timestamp": "2026-11-02T19:45:57.802Z",
+  "scope": "local backend endurance; no Discord voice or audible playback",
+  "durationSeconds": 600,
+  "elapsedSeconds": 600.9979631049999,
+  "passed": true,
+  "environment": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC Processor (with IBPB)"
+  },
+  "backends": [
+    {
+      "backend": "lavalink",
+      "version": "4.2.2",
+      "image": "ghcr.io/lavalink-devs/lavalink@sha256:96be2be7ee50d35a9bd42c8c7b99e2a4b741f09123066c1ebb9e014dd7db204d",
+      "cycles": 601,
+      "resumes": 37,
+      "pings": 61
+    },
+    {
+      "backend": "nodelink",
+      "version": "3.10.0-dev.2026-10-20.1",
+      "image": "ghcr.io/performanc/nodelink@sha256:19d8f9a8951d0e13f21977aac7e5ec4dc3199526b8dcb28e9c8a2e3ac058dfe8",
+      "cycles": 601,
+      "resumes": 37,
+      "pings": 61
+    }
+  ],
+  "cpuMicros": {
+    "user": 21526103,
+    "system": 3919824
+  },
+  "samples": [
+    {
+      "elapsedSeconds": 0.007080465000000004,
+      "heapUsedBytes": 6718392,
+      "rssBytes": 67006464,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": null,
+          "memoryUsedBytes": null
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": null,
+          "memoryUsedBytes": null
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 1.083266476,
+      "heapUsedBytes": 7024032,
+      "rssBytes": 67661824,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0,
+          "memoryUsedBytes": 30877216
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.66,
+          "memoryUsedBytes": 25535872
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 10.143785581,
+      "heapUsedBytes": 7229920,
+      "rssBytes": 66973696,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0,
+          "memoryUsedBytes": 37913696
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.56,
+          "memoryUsedBytes": 24516560
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 20.142706648,
+      "heapUsedBytes": 7409440,
+      "rssBytes": 70774784,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0,
+          "memoryUsedBytes": 41309616
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.62,
+          "memoryUsedBytes": 27748432
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 30.131627052,
+      "heapUsedBytes": 7403352,
+      "rssBytes": 71168000,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0,
+          "memoryUsedBytes": 43888512
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.53,
+          "memoryUsedBytes": 24334536
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 40.133873796,
+      "heapUsedBytes": 7454696,
+      "rssBytes": 71430144,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08959139784946236,
+          "memoryUsedBytes": 46851640
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.52,
+          "memoryUsedBytes": 24257456
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 50.123855035,
+      "heapUsedBytes": 7574176,
+      "rssBytes": 72478720,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08959139784946236,
+          "memoryUsedBytes": 31908224
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.44,
+          "memoryUsedBytes": 24496504
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 60.125517511,
+      "heapUsedBytes": 7539256,
+      "rssBytes": 72478720,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08959139784946236,
+          "memoryUsedBytes": 34461136
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.37,
+          "memoryUsedBytes": 23344680
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 70.129512819,
+      "heapUsedBytes": 7652288,
+      "rssBytes": 73658368,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08959139784946236,
+          "memoryUsedBytes": 37043688
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.31,
+          "memoryUsedBytes": 24026728
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 80.126476902,
+      "heapUsedBytes": 7666680,
+      "rssBytes": 73523200,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.0838489708296502,
+          "memoryUsedBytes": 39703368
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.26,
+          "memoryUsedBytes": 24820800
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 90.12811002,
+      "heapUsedBytes": 7694096,
+      "rssBytes": 74309632,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.0838489708296502,
+          "memoryUsedBytes": 42014128
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.3,
+          "memoryUsedBytes": 25080472
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 100.114324157,
+      "heapUsedBytes": 7723328,
+      "rssBytes": 74440704,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.0838489708296502,
+          "memoryUsedBytes": 44816256
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.25,
+          "memoryUsedBytes": 18976432
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 110.126718273,
+      "heapUsedBytes": 7723296,
+      "rssBytes": 75096064,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.0838489708296502,
+          "memoryUsedBytes": 46966824
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.21,
+          "memoryUsedBytes": 19674144
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 120.115147118,
+      "heapUsedBytes": 7706432,
+      "rssBytes": 75358208,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.12507885771964503,
+          "memoryUsedBytes": 32382008
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.71,
+          "memoryUsedBytes": 19790408
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 130.133176538,
+      "heapUsedBytes": 7768088,
+      "rssBytes": 75358208,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.12507885771964503,
+          "memoryUsedBytes": 35103104
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.77,
+          "memoryUsedBytes": 20350768
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 140.111681654,
+      "heapUsedBytes": 7732440,
+      "rssBytes": 75489280,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.12507885771964503,
+          "memoryUsedBytes": 37330600
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.65,
+          "memoryUsedBytes": 21310104
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 150.111701015,
+      "heapUsedBytes": 7757480,
+      "rssBytes": 75485184,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.12507885771964503,
+          "memoryUsedBytes": 39877880
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.87,
+          "memoryUsedBytes": 19496080
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 160.11506653700002,
+      "heapUsedBytes": 7799216,
+      "rssBytes": 75874304,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10653937140925988,
+          "memoryUsedBytes": 42760936
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.73,
+          "memoryUsedBytes": 19992056
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 170.107794253,
+      "heapUsedBytes": 7825352,
+      "rssBytes": 76005376,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10653937140925988,
+          "memoryUsedBytes": 45085896
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.7,
+          "memoryUsedBytes": 20447424
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 180.100545954,
+      "heapUsedBytes": 7807536,
+      "rssBytes": 76001280,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10653937140925988,
+          "memoryUsedBytes": 29819752
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.59,
+          "memoryUsedBytes": 20485824
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 190.139603481,
+      "heapUsedBytes": 7888288,
+      "rssBytes": 75997184,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10653937140925988,
+          "memoryUsedBytes": 32134080
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.88,
+          "memoryUsedBytes": 20778992
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 200.15579851599998,
+      "heapUsedBytes": 7864872,
+      "rssBytes": 76128256,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08375152869733901,
+          "memoryUsedBytes": 34796400
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.3,
+          "memoryUsedBytes": 21229712
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 210.093482756,
+      "heapUsedBytes": 7842856,
+      "rssBytes": 76259328,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08375152869733901,
+          "memoryUsedBytes": 37384920
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.4,
+          "memoryUsedBytes": 21673112
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 220.089011723,
+      "heapUsedBytes": 7849960,
+      "rssBytes": 75997184,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08375152869733901,
+          "memoryUsedBytes": 39594568
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.48,
+          "memoryUsedBytes": 19070448
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 230.09871801399999,
+      "heapUsedBytes": 7871024,
+      "rssBytes": 76128256,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08375152869733901,
+          "memoryUsedBytes": 42191032
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 2.05,
+          "memoryUsedBytes": 19567560
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 240.079874308,
+      "heapUsedBytes": 7884304,
+      "rssBytes": 76390400,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09844690433099036,
+          "memoryUsedBytes": 45067416
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 2.04,
+          "memoryUsedBytes": 19978752
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 250.106575163,
+      "heapUsedBytes": 7879768,
+      "rssBytes": 76259328,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09844690433099036,
+          "memoryUsedBytes": 47308552
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 2.12,
+          "memoryUsedBytes": 20601784
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 260.084803874,
+      "heapUsedBytes": 7897400,
+      "rssBytes": 76259328,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09844690433099036,
+          "memoryUsedBytes": 32035672
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.79,
+          "memoryUsedBytes": 20898112
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 270.11951405,
+      "heapUsedBytes": 8070432,
+      "rssBytes": 77307904,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09844690433099036,
+          "memoryUsedBytes": 34362976
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.6,
+          "memoryUsedBytes": 18733040
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 280.06797762900004,
+      "heapUsedBytes": 8081856,
+      "rssBytes": 77307904,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09824441501858101,
+          "memoryUsedBytes": 37079856
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.5,
+          "memoryUsedBytes": 19586288
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 290.06504398100003,
+      "heapUsedBytes": 8005584,
+      "rssBytes": 77438976,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09824441501858101,
+          "memoryUsedBytes": 39511528
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.35,
+          "memoryUsedBytes": 19975512
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 300.072957608,
+      "heapUsedBytes": 8002952,
+      "rssBytes": 77438976,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09824441501858101,
+          "memoryUsedBytes": 41891240
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.3,
+          "memoryUsedBytes": 20424512
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 310.079407967,
+      "heapUsedBytes": 8004600,
+      "rssBytes": 77570048,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09824441501858101,
+          "memoryUsedBytes": 44320696
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.26,
+          "memoryUsedBytes": 20654408
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 320.073027375,
+      "heapUsedBytes": 7996376,
+      "rssBytes": 77570048,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09686393525543753,
+          "memoryUsedBytes": 47102968
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.22,
+          "memoryUsedBytes": 20873504
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 330.068255377,
+      "heapUsedBytes": 7996696,
+      "rssBytes": 77565952,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09686393525543753,
+          "memoryUsedBytes": 31541720
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.11,
+          "memoryUsedBytes": 21562392
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 340.070534157,
+      "heapUsedBytes": 8045968,
+      "rssBytes": 77434880,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09686393525543753,
+          "memoryUsedBytes": 34241112
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.94,
+          "memoryUsedBytes": 18679176
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 350.141835307,
+      "heapUsedBytes": 8054976,
+      "rssBytes": 77430784,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09010173683323028,
+          "memoryUsedBytes": 36655056
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.87,
+          "memoryUsedBytes": 19500384
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 360.05289794600003,
+      "heapUsedBytes": 8105296,
+      "rssBytes": 77430784,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09010173683323028,
+          "memoryUsedBytes": 39226632
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.89,
+          "memoryUsedBytes": 19969520
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 370.076368979,
+      "heapUsedBytes": 8055496,
+      "rssBytes": 77430784,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09010173683323028,
+          "memoryUsedBytes": 41668504
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.5,
+          "memoryUsedBytes": 20194360
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 380.06083198400006,
+      "heapUsedBytes": 8054728,
+      "rssBytes": 77426688,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09010173683323028,
+          "memoryUsedBytes": 43913952
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.35,
+          "memoryUsedBytes": 20222488
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 390.05250033,
+      "heapUsedBytes": 8040824,
+      "rssBytes": 77426688,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09460769846958135,
+          "memoryUsedBytes": 46510816
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.38,
+          "memoryUsedBytes": 18842904
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 400.06267412100004,
+      "heapUsedBytes": 8042056,
+      "rssBytes": 77557760,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09460769846958135,
+          "memoryUsedBytes": 31246192
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.25,
+          "memoryUsedBytes": 19230368
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 410.084937023,
+      "heapUsedBytes": 8019408,
+      "rssBytes": 77688832,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09460769846958135,
+          "memoryUsedBytes": 33483016
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.06,
+          "memoryUsedBytes": 19400160
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 420.05843477700006,
+      "heapUsedBytes": 8050024,
+      "rssBytes": 77688832,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09460769846958135,
+          "memoryUsedBytes": 36175720
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.97,
+          "memoryUsedBytes": 20437200
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 430.089824113,
+      "heapUsedBytes": 8080856,
+      "rssBytes": 77557760,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10597002357696195,
+          "memoryUsedBytes": 38575576
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.9,
+          "memoryUsedBytes": 20404280
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 440.056990583,
+      "heapUsedBytes": 8112744,
+      "rssBytes": 78213120,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10597002357696195,
+          "memoryUsedBytes": 41075360
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.83,
+          "memoryUsedBytes": 20650376
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 450.048264824,
+      "heapUsedBytes": 8040688,
+      "rssBytes": 78213120,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10597002357696195,
+          "memoryUsedBytes": 43586136
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.7,
+          "memoryUsedBytes": 21470168
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 460.053752524,
+      "heapUsedBytes": 8069520,
+      "rssBytes": 78344192,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.10597002357696195,
+          "memoryUsedBytes": 45778520
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 1.04,
+          "memoryUsedBytes": 21618856
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 470.04805710600004,
+      "heapUsedBytes": 8047520,
+      "rssBytes": 78213120,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09861642625846335,
+          "memoryUsedBytes": 30497224
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.95,
+          "memoryUsedBytes": 19488992
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 480.037960863,
+      "heapUsedBytes": 8057936,
+      "rssBytes": 78213120,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09861642625846335,
+          "memoryUsedBytes": 33159128
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.8,
+          "memoryUsedBytes": 19860384
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 490.045504189,
+      "heapUsedBytes": 8068888,
+      "rssBytes": 77946880,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09861642625846335,
+          "memoryUsedBytes": 35365088
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.68,
+          "memoryUsedBytes": 19872624
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 500.02999709,
+      "heapUsedBytes": 8086888,
+      "rssBytes": 78077952,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09861642625846335,
+          "memoryUsedBytes": 37691144
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.73,
+          "memoryUsedBytes": 20716784
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 510.143134593,
+      "heapUsedBytes": 8114024,
+      "rssBytes": 78077952,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08722911845150431,
+          "memoryUsedBytes": 40173816
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.62,
+          "memoryUsedBytes": 18801440
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 520.029191032,
+      "heapUsedBytes": 8163984,
+      "rssBytes": 79126528,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08722911845150431,
+          "memoryUsedBytes": 42619032
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.6,
+          "memoryUsedBytes": 19028872
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 530.023307843,
+      "heapUsedBytes": 8086496,
+      "rssBytes": 79257600,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08722911845150431,
+          "memoryUsedBytes": 45124720
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.58,
+          "memoryUsedBytes": 19459328
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 540.046557411,
+      "heapUsedBytes": 8097504,
+      "rssBytes": 79388672,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.08722911845150431,
+          "memoryUsedBytes": 29641264
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.49,
+          "memoryUsedBytes": 20291536
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 550.0679543250001,
+      "heapUsedBytes": 8058360,
+      "rssBytes": 79388672,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.11829889188379754,
+          "memoryUsedBytes": 32472592
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.74,
+          "memoryUsedBytes": 20516240
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 560.0453301360001,
+      "heapUsedBytes": 8104504,
+      "rssBytes": 79519744,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.11829889188379754,
+          "memoryUsedBytes": 34865848
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.62,
+          "memoryUsedBytes": 20723648
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 570.0506361800001,
+      "heapUsedBytes": 8078544,
+      "rssBytes": 79519744,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.11829889188379754,
+          "memoryUsedBytes": 37056928
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.61,
+          "memoryUsedBytes": 19134440
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 580.034369065,
+      "heapUsedBytes": 8088992,
+      "rssBytes": 79384576,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.11829889188379754,
+          "memoryUsedBytes": 39492472
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.51,
+          "memoryUsedBytes": 19411624
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 590.081228856,
+      "heapUsedBytes": 8140896,
+      "rssBytes": 79245312,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09857612267250822,
+          "memoryUsedBytes": 41962952
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.67,
+          "memoryUsedBytes": 19628072
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 600.054552544,
+      "heapUsedBytes": 8177040,
+      "rssBytes": 79241216,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09857612267250822,
+          "memoryUsedBytes": 44420920
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.57,
+          "memoryUsedBytes": 20316664
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 600.994541201,
+      "heapUsedBytes": 8175488,
+      "rssBytes": 79241216,
+      "nodes": [
+        {
+          "backend": "lavalink",
+          "cpuSystemLoad": 0.09857612267250822,
+          "memoryUsedBytes": 44420920
+        },
+        {
+          "backend": "nodelink",
+          "cpuSystemLoad": 0.57,
+          "memoryUsedBytes": 20316664
+        }
+      ]
+    }
+  ],
+  "eventLoopDelay": {
+    "p50Ms": 10.231807,
+    "p95Ms": 11.182079,
+    "maxMs": 279.183359
+  },
+  "operations": {
+    "lavalink.ready": {
+      "count": 1,
+      "p50Ms": 190.19830599999997,
+      "p95Ms": 190.19830599999997,
+      "maxMs": 190.19830599999997
+    },
+    "nodelink.ready": {
+      "count": 1,
+      "p50Ms": 28.5343969999999,
+      "p95Ms": 28.5343969999999,
+      "maxMs": 28.5343969999999
+    },
+    "nodelink.patch": {
+      "count": 601,
+      "p50Ms": 6.217570999986492,
+      "p95Ms": 14.599778999981936,
+      "maxMs": 244.36831699999993
+    },
+    "nodelink.load": {
+      "count": 61,
+      "p50Ms": 7.426824999973178,
+      "p95Ms": 10.359028000035323,
+      "maxMs": 13.770556000003126
+    },
+    "nodelink.ping": {
+      "count": 61,
+      "p50Ms": 0.6637890000129119,
+      "p95Ms": 1.467066999990493,
+      "maxMs": 2.0110679999925196
+    },
+    "lavalink.patch": {
+      "count": 601,
+      "p50Ms": 4.549647999985609,
+      "p95Ms": 9.705756999999721,
+      "maxMs": 524.119124
+    },
+    "lavalink.load": {
+      "count": 61,
+      "p50Ms": 7.625,
+      "p95Ms": 14.11076700000558,
+      "maxMs": 21.618263999989722
+    },
+    "lavalink.ping": {
+      "count": 61,
+      "p50Ms": 1.0443589999922551,
+      "p95Ms": 2.0569720000203233,
+      "maxMs": 18.711910999999873
+    },
+    "lavalink.resume": {
+      "count": 37,
+      "p50Ms": 30.16447099999641,
+      "p95Ms": 35.60793900000135,
+      "maxMs": 38.746578999998746
+    },
+    "nodelink.resume": {
+      "count": 37,
+      "p50Ms": 29.14229799999157,
+      "p95Ms": 36.1828110000024,
+      "maxMs": 44.96904599999834
+    }
+  },
+  "cleanup": {
+    "players": 0,
+    "nodes": 0,
+    "activeResources": [
+      "TCPSocketWrap",
+      "TCPSocketWrap"
+    ]
+  }
+}

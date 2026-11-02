@@ -4,7 +4,7 @@ on:
   push:
     branches: [dev, v5.2, 'feat/nyxlink-*']
   pull_request:
-    branches: [dev, v5.2]
+    branches: [dev, v5.2, feat/nyxlink-foundation, feat/nyxlink-backends, feat/nyxlink-track-storage]
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
-      - run: pnpm test
+      - run: pnpm run test:coverage
       - run: pnpm run test:types
+      - run: pnpm run test:package
+      - run: node scripts/generate-api.cjs --check
       - run: pnpm run pack:check
       - run: pnpm audit --prod --audit-level=high

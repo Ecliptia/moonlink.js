@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-11-02T20:25:16.385Z",
+  "scope": "packed local installation; no registry publication or Discord",
+  "node": "v22.23.2",
+  "package": "nyxlink",
+  "version": "0.1.0-dev.1",
+  "passed": true,
+  "checks": [
+    "install packed artifact in isolated consumer",
+    "identity, runtime dependencies and license bytes",
+    "CommonJS public exports, metadata and silent lifecycle",
+    "ESM named imports and lifecycle",
+    "TypeScript NodeNext CJS/ESM consumers without skipLibCheck",
+    "TypeScript example compile and CommonJS factory/cleanup without login"
+  ],
+  "sha256": "3239e9cf11d4368033dd53c1e825ba9fcb179e481e11ace5fe4926ab1d57421a"
+}

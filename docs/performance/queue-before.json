@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-11-02T11:52:32.956Z",
+  "scope": "synthetic queue persistence; no network, audio or production SLA",
+  "environment": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC Processor (with IBPB)"
+  },
+  "cpuMicros": {
+    "user": 1470158,
+    "system": 188074
+  },
+  "samples": [
+    {
+      "mode": "single",
+      "count": 500,
+      "syncMs": 181.419168,
+      "totalMs": 183.91833300000002,
+      "allocatedHeapBytes": 29767296,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "batch",
+      "count": 500,
+      "syncMs": 0.7609969999999748,
+      "totalMs": 0.872052999999994,
+      "allocatedHeapBytes": 211744,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "single",
+      "count": 500,
+      "syncMs": 119.41838999999999,
+      "totalMs": 121.44223900000003,
+      "allocatedHeapBytes": 29194032,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "batch",
+      "count": 500,
+      "syncMs": 0.7949699999999211,
+      "totalMs": 0.9059469999999692,
+      "allocatedHeapBytes": 211584,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "single",
+      "count": 500,
+      "syncMs": 103.65764200000001,
+      "totalMs": 105.65715599999999,
+      "allocatedHeapBytes": 29187000,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "batch",
+      "count": 500,
+      "syncMs": 0.5626379999999926,
+      "totalMs": 0.8537800000000288,
+      "allocatedHeapBytes": 211712,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "single",
+      "count": 500,
+      "syncMs": 99.04363699999999,
+      "totalMs": 101.41058599999997,
+      "allocatedHeapBytes": 29243176,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "batch",
+      "count": 500,
+      "syncMs": 0.6702089999999998,
+      "totalMs": 0.7911640000000943,
+      "allocatedHeapBytes": 208384,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "single",
+      "count": 500,
+      "syncMs": 106.62025100000005,
+      "totalMs": 108.30523900000003,
+      "allocatedHeapBytes": 29186224,
+      "retainedPlayerKeys": 4
+    },
+    {
+      "mode": "batch",
+      "count": 500,
+      "syncMs": 0.6511020000000372,
+      "totalMs": 0.7397170000001552,
+      "allocatedHeapBytes": 208392,
+      "retainedPlayerKeys": 4
+    }
+  ],
+  "passed": false
+}

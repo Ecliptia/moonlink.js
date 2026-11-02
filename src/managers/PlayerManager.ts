@@ -17,6 +17,7 @@ export class PlayerManager {
     }
 
     public create(options: IPlayerConfig): Player {
+        if (this.manager.destroyed) throw new Error('Manager is shut down');
         validate(options.guildId, (v) => typeof v === "string" && /^\d{17,20}$/.test(v), "IPlayerConfig#guildId must be a valid Discord Snowflake string.");
         validate(options.voiceChannelId, (v) => typeof v === "string" && /^\d{17,20}$/.test(v), "IPlayerConfig#voiceChannelId must be a valid Discord Snowflake string.");
         if (options.textChannelId) {

@@ -6,6 +6,8 @@ const PlaybackGuard_1 = require("../players/PlaybackGuard");
 const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
 const Track_1 = require("./Track");
+const TrackCodec_1 = require("../tracks/TrackCodec");
+const TrackResolver_1 = require("../tracks/TrackResolver");
 const VoiceReceiver_1 = require("./VoiceReceiver");
 class Player {
     manager;
@@ -34,6 +36,7 @@ class Player {
     historySize = 10;
     lastActivityTime = Date.now();
     commands = new PlayerCommandQueue_1.PlayerCommandQueue();
+    destructionPromise;
     volumeRevision = 0;
     optimisticVolumeRevision = 0;
     fading;
@@ -67,7 +70,7 @@ class Player {
         this.filters = new (Util_1.Structure.get("Filters"))(this);
         this.voice = new Voice_1.Voice(this);
         if (config.current) {
-            this.current = new Track_1.Track((0, Util_1.decodeTrack)(config.current.encoded), config.current.requester);
+            this.current = TrackCodec_1.TrackCodec.restore(config.current);
             if (config.current.position) {
                 this.current.position = config.current.position;
                 this.lastPosition = this.current.position;
@@ -75,12 +78,12 @@ class Player {
         }
         if (config.queue && Array.isArray(config.queue)) {
             for (const track of config.queue) {
-                this.queue.add(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+                this.queue.add(TrackCodec_1.TrackCodec.restore(track));
             }
         }
         if (config.previous && Array.isArray(config.previous)) {
             for (const track of config.previous) {
-                this.previous.push(new Track_1.Track((0, Util_1.decodeTrack)(track.encoded), track.requester));
+                this.previous.push(TrackCodec_1.TrackCodec.restore(track));
             }
         }
         this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
@@ -245,14 +248,14 @@ class Player {
     get(key) {
         return this.data[key];
     }
-    async updateData(path, data) {
+    updateData(path, data) {
         const dbPath = `players.${this.guildId}${path ? `.${path}` : ''}`;
-        await this.manager.database.set(dbPath, data);
+        const operation = this.manager.database.set(dbPath, data);
+        void operation.catch(error => this.manager.emit('debug', `NyxLink > Storage > Write failed for ${dbPath}: ${error.message}`));
+        return operation;
     }
     assertNodeLinkFeature(feature) {
-        if (!this.node.isNodeLink) {
-            throw (0, Util_1.nodeLinkOnlyError)(feature);
-        }
+        this.node.assertFeature(feature);
     }
     resolveEncodedTrack(track) {
         if (track instanceof Track_1.Track)
@@ -380,17 +383,26 @@ class Player {
             return false;
         }
         const previousTrack = this.current;
-        const nextTrack = this.queue.shift();
+        const queuedTrack = this.queue.first;
+        let nextTrack = queuedTrack;
         if (!nextTrack || !nextTrack.encoded) {
             this.manager.emit("debug", `Moonlink.js > Player#play >> Invalid track data for guild ${this.guildId}. Next track is ${JSON.stringify(nextTrack)}`);
-            if (nextTrack)
-                this.queue.unshift(nextTrack);
             return false;
         }
+        try {
+            nextTrack = await TrackResolver_1.TrackResolver.resolve(nextTrack, this.node);
+        }
+        catch (error) {
+            this.manager.emit('debug', `NyxLink > TrackResolver > ${error.message}`);
+            return false;
+        }
+        if (this.destroyed || !guard.isCurrent(ticket) || !allowed() || this.queue.first !== queuedTrack)
+            return false;
+        this.queue.shift();
         const oldTrackTitle = this.current?.title ?? "null";
         this.current = nextTrack instanceof Track_1.Track ? nextTrack : new Track_1.Track(nextTrack);
         this.current.position = finalOptions.position || 0;
-        this.updateData("current", { encoded: this.current.encoded, requester: this.current.requester });
+        this.updateData("current", TrackCodec_1.TrackCodec.serialize(this.current));
         this.manager.emit("debug", `Moonlink.js > Player#play >> Player state changed: current track: ${oldTrackTitle} -> ${this.current.title}`);
         const oldPlaying = this.playing;
         const oldPaused = this.paused;
@@ -441,7 +453,7 @@ class Player {
             if (this.previous.length > historyLimit) {
                 this.previous.shift();
             }
-            this.updateData("previous", this.previous.map(t => ({ encoded: t.encoded, requester: t.requester })));
+            this.updateData("previous", this.previous.map(t => TrackCodec_1.TrackCodec.serialize(t)));
             this.manager.emit("debug", `Moonlink.js > Player#play << Added track "${previousTrack.title}" to history for guild ${this.guildId}. History size: ${this.previous.length}`);
         }
         this.set("isBackPlay", false);
@@ -806,13 +818,17 @@ class Player {
         return this;
     }
     async destroy(reason) {
+        if (this.destructionPromise)
+            return this.destructionPromise;
         if (this.destroyed) {
             return;
         }
         (0, PlaybackGuard_1.playbackGuard)(this).invalidate();
         this.destroyed = true;
+        this.destructionPromise = this.commands.enqueue(() => this.destroyPlayback(reason));
+        this.voice.destroy();
         this.stopHealthCheck();
-        return this.commands.enqueue(() => this.destroyPlayback(reason));
+        return this.destructionPromise;
     }
     async destroyPlayback(reason) {
         if (this.resumeDebounceTimer) {
@@ -843,11 +859,12 @@ class Player {
         this.queue.clear();
         this.previous = [];
         this.updateData("previous", []);
-        this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
+        await this.manager.database.remove(`players.${this.guildId}`);
+        this.manager.emit('playerDestroyed', this, reason);
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }
-    async restart() {
+    async restart(options = {}) {
         const guard = (0, PlaybackGuard_1.playbackGuard)(this);
         const ticket = guard.ticket;
         if (this.destroyed)
@@ -865,7 +882,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${error.message}`);
             if (this.destroyed || !guard.isCurrent(ticket))
                 return false;
-            await this.destroy("Failed to establish voice connection on restart.");
+            if (options.destroyOnFailure !== false)
+                await this.destroy("Failed to establish voice connection on restart.");
             return false;
         }
         if (this.destroyed || !guard.isCurrent(ticket))
@@ -905,15 +923,21 @@ class Player {
             const restored = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket))
                     return false;
+                if (!await this.restoreVoiceForRestart(ticket))
+                    return false;
                 await this.sendPlayerUpdate(payload);
                 return !this.destroyed && guard.isCurrent(ticket);
             });
             if (!restored)
                 return false;
         }
-        else if (this.queue.size > 0) {
+        else if (this.queue.size > 0 && options.startQueued !== false) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
-            if (!await this.commands.enqueue(() => this.playNext({}, ticket)))
+            if (!await this.commands.enqueue(async () => {
+                if (!await this.restoreVoiceForRestart(ticket))
+                    return false;
+                return this.playNext({}, ticket);
+            }).catch(() => false))
                 return false;
         }
         else {
@@ -922,6 +946,15 @@ class Player {
         }
         this.manager.emit("playerResumed", this);
         return true;
+    }
+    async restoreVoiceForRestart(ticket) {
+        if (this.destroyed || !(0, PlaybackGuard_1.playbackGuard)(this).isCurrent(ticket))
+            return false;
+        const { sessionId, token, endpoint } = this.voice;
+        if (!sessionId || !token || !endpoint)
+            return false;
+        await this.sendPlayerUpdate({ voice: { sessionId, token, endpoint, channelId: this.voiceChannelId } }, true);
+        return !this.destroyed && (0, PlaybackGuard_1.playbackGuard)(this).isCurrent(ticket);
     }
     async transferNode(node) {
         const targetNode = typeof node === "string" ? this.manager.nodes.nodes.get(node) : node;
@@ -941,6 +974,9 @@ class Player {
             const moved = await this.commands.enqueue(async () => {
                 if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected)
                     return false;
+                const resolved = this.current ? await TrackResolver_1.TrackResolver.resolve(this.current, targetNode, oldNode) : null;
+                if (this.destroyed || !guard.isCurrent(ticket) || !targetNode.connected)
+                    return false;
                 try {
                     await oldNode.rest.destroyPlayer(this.guildId);
                 }
@@ -949,11 +985,20 @@ class Player {
                 }
                 if (this.destroyed || !guard.isCurrent(ticket))
                     return false;
+                for (const track of [...this.queue.tracks, ...this.previous]) {
+                    track.backend ??= oldNode.backend?.kind;
+                }
+                this.updateData('queue', this.queue.tracks.map(track => TrackCodec_1.TrackCodec.serialize(track)));
+                this.updateData('previous', this.previous.map(track => TrackCodec_1.TrackCodec.serialize(track)));
                 this.node = targetNode;
+                if (resolved) {
+                    this.current = resolved;
+                    this.updateData('current', TrackCodec_1.TrackCodec.serialize(resolved));
+                }
                 this.set("lastState", undefined);
                 return true;
             });
-            if (!moved || !await this.restart() || this.destroyed || !guard.isCurrent(ticket)) {
+            if (!moved || !await this.restart({ destroyOnFailure: false, startQueued: false }) || this.destroyed || !guard.isCurrent(ticket)) {
                 report(guard.isCurrent(ticket) ? 'failed' : 'cancelled');
                 return false;
             }

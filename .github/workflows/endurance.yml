@@ -1,0 +1,50 @@
+name: Local backend endurance
+
+on:
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: 'Duration in seconds (10..7200, no Discord voice)'
+        default: '600'
+        required: true
+  push:
+    branches: [feat/nyxlink-stability]
+  pull_request:
+    branches: [dev, feat/nyxlink-track-storage]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/endurance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  endurance:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && 130 || 10 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run bench
+      - run: pnpm run test:endurance -- "$ENDURANCE_SECONDS"
+        env:
+          NYXLINK_CONTAINER_ENGINE: docker
+          ENDURANCE_SECONDS: ${{ inputs.seconds || '60' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stability-evidence
+          path: |
+            .runtime/integration/endurance-report.json
+            .runtime/benchmark/latest.json
+          include-hidden-files: true
+          if-no-files-found: warn

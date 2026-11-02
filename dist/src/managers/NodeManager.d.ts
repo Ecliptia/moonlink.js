@@ -1,3 +1,4 @@
+import { type NodeSelectionOptions } from "../nodes/NodeSelector";
 import { Manager } from "../core/Manager";
 import { IManagerNodeConfig } from "../typings/Interfaces";
 export declare class NodeManager {
@@ -14,9 +15,7 @@ export declare class NodeManager {
     get hasReady(): boolean;
     get leastUsedNode(): any | undefined;
     get stats(): Record<string, any>;
-    findNode(options?: {
-        exclude?: string[];
-    }): any | undefined;
+    findNode(options?: NodeSelectionOptions): any | undefined;
     eject(identifier: string): Promise<boolean>;
     private _validateConfig;
 }

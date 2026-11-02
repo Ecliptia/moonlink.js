@@ -4,6 +4,10 @@ import { Track } from "../entities/Track";
 import { Filters } from "../entities/Filters";
 import { NodeState, PlayerLoop, TrackEndReason, NodeSortStrategy, TPartialTrackProperties } from "./types";
 import type { LoggerOptions } from '../logging/Logger';
+import type { FailoverOptions } from '../nodes/NodeFailover';
+import type { StorageAdapter } from '../database/StorageAdapter';
+import type { BackendKind } from '../backends/BackendAdapter';
+import type { TrackSnapshot } from '../tracks/TrackCodec';
 
 export interface IManagerEvents {
     debug: (message: string) => void;
@@ -109,6 +113,7 @@ export interface INodeFailoverReport {
 }
 
 export interface IManagerNodeConfig {
+    readyTimeoutMs?: number;
     host: string;
     password: string;
     port: number;
@@ -143,6 +148,7 @@ export interface IManagerOptionsConfig {
     trackPartial?: TPartialTrackProperties[];
     database?: {
         type: 'memory' | 'local';
+        adapter?: StorageAdapter;
         options?: any;
     };
 }
@@ -165,6 +171,8 @@ export interface IVoiceConnectionOptions {
 }
 
 export interface INodeOptions {
+    failover?: FailoverOptions;
+    maxStatsAgeMs?: number;
     selectionStrategy?: NodeSortStrategy;
     retryDelay?: number;
     retryAmount?: number;
@@ -176,6 +184,10 @@ export interface INodeOptions {
 }
 
 export interface ISearchOptions {
+    timeoutMs?: number;
+    fallbackPlatforms?: string[];
+    cache?: { ttlMs: number; maxEntries?: number };
+    resolver?: (query: ISearchQuery, node: Node) => Promise<IRESTLoadTracks | null>;
     defaultPlatform?: "youtube" | "youtubemusic" | "soundcloud" | "local";
     resultLimit?: number;
     playlistLoadLimit?: number;
@@ -244,6 +256,7 @@ export interface IManagerConfig {
 }
 
 export interface ISearchQuery {
+    signal?: AbortSignal;
     query: string;
     source?: string;
     requester?: any;
@@ -338,6 +351,7 @@ export interface ITrackInfo {
 }
 
 export interface ITrack {
+    backend?: BackendKind;
     encoded: string;
     info: ITrackInfo;
     pluginInfo: Record<string, any>;
@@ -363,9 +377,9 @@ export interface IPlayerConfig {
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;
-    current?: { encoded: string; requester: any; position?: number };
-    queue?: Array<{ encoded: string; requester: any }>;
-    previous?: Array<{ encoded: string; requester: any }>;
+    current?: TrackSnapshot | { encoded: string; requester: any; position?: number };
+    queue?: Array<TrackSnapshot | { encoded: string; requester: any }>;
+    previous?: Array<TrackSnapshot | { encoded: string; requester: any }>;
 }
 
 export interface IRESTOptions {

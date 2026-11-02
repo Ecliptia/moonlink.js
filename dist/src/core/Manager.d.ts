@@ -16,6 +16,12 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     readonly logger?: Logger;
     private detachLogging?;
     private idleCheckInterval?;
+    private initializationPromise?;
+    private shutdownPromise?;
+    private shuttingDown;
+    private readonly connectors;
+    private readonly searches;
+    get destroyed(): boolean;
     private spotifySource?;
     private deezerSource?;
     get readyNodes(): any;
@@ -24,6 +30,7 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     detachLogger(): void;
     use(connector: Connector, client: any): this;
     init(clientId: string): Promise<this>;
+    shutdown(): Promise<void>;
     private startIdleMonitoring;
     private isSpotifyEnabled;
     private isDeezerEnabled;

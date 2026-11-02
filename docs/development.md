@@ -15,11 +15,11 @@ Fecha: 2026-11-02. Base de implementación: `dev` en `f6631bb289aee180af48cb4f0f
 
 `tests/fixtures/public-exports.json` congela los exports originales. `tests/types/public-api.ts` comprueba el consumo TypeScript y las firmas existentes de play, stop, setVolume y transferNode. Las incorporaciones nuevas deben ser aditivas.
 
-El lock oficial es `pnpm-lock.yaml`; `packageManager` fija pnpm 10.34.5. CI instala con `--frozen-lockfile` y valida Node 22/24. El paquete está marcado `private` hasta elegir identidad y versión final; ambos workflows de publicación heredados se sustituyeron por validación sin publicación. No se publica npm desde este trabajo.
+El lock oficial es `pnpm-lock.yaml`; `packageManager` fija pnpm 10.34.5. CI instala con `--frozen-lockfile` y valida Node 22/24. En la primera entrega se marcó el paquete `private` hasta elegir identidad y versión final; ambos workflows de publicación heredados se sustituyeron por validación sin publicación. No se publica npm desde este trabajo.
 
 `pack:check` inspecciona el tarball previsto: solamente dist, README, LICENSE, package.json y el banner aprobado. El bot manual, pruebas, configuración y datos locales quedan fuera.
 
-## Compatibilidad pendiente
+## Compatibilidad pendiente en la primera entrega
 
 | Área | Evidencia disponible | Pendiente |
 | --- | --- | --- |
@@ -47,3 +47,7 @@ Los resultados locales definitivos y el resultado de CI se registran en la PR. L
 - Paquete previsto: 112 archivos, inspección correcta; sin publicación.
 - Auditoría de dependencias de producción: sin vulnerabilidades conocidas al ejecutar la comprobación.
 - Cambios enviados a [PR #1](https://github.com/melodiabl/NyxLink/pull/1), en borrador contra dev. El resultado de Node 24 depende del check remoto.
+
+## Estado consolidado posterior
+
+Los resultados anteriores registran cada entrega en su fecha. El usuario fusionó los PR #1/#3/#4/#5 en sus bases; la validación final se revisa contra dev para consolidar todas las entregas. La identidad actual es nyxlink@0.1.0-dev.1, privada. Consulta [estado del plan](../tasks/master-status.md), [preparación de release](release-readiness.md), [API](api.md) y [ejemplos](../examples/README.md) para la situación vigente.

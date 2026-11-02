@@ -1,3 +1,4 @@
+import type { BackendAdapter } from "../backends/BackendAdapter";
 import { IManagerNodeConfig, INodeStats, ITrack, ILyricsData, IFilters } from "../typings/Interfaces";
 import type { Manager } from "../core/Manager";
 import { Rest } from "./Rest";
@@ -153,9 +154,16 @@ export declare class Node {
     priority?: number;
     socket: WebSocket;
     stats?: INodeStats;
+    statsReceivedAt?: number;
     info?: any;
     version?: string;
     isNodeLink: boolean;
+    backend?: BackendAdapter;
+    private backendReady;
+    private authenticationFailed;
+    private connecting;
+    private readyTimeout?;
+    private readonly readyTimeoutMs;
     url: string;
     rest: Rest;
     private lastStats?;
@@ -163,6 +171,8 @@ export declare class Node {
     capabilities: Set<string>;
     constructor(manager: Manager, config: IManagerNodeConfig);
     get latency(): number;
+    get health(): import("../nodes/NodeHealthMonitor").NodeHealth;
+    assertFeature(feature: string): void;
     getPenalties(): number;
     ping(): Promise<number>;
     createYouTubeLiveChat(identifier: string, options?: YouTubeLiveChatOptions): YouTubeLiveChat;

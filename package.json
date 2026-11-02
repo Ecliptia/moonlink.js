@@ -1,15 +1,15 @@
 {
-  "name": "moonlink.js",
-  "version": "5.3.0-dev.2",
-  "description": "NyxLink — Discord audio client derived from Moonlink.js (development)",
+  "name": "nyxlink",
+  "version": "0.1.0-dev.1",
+  "description": "NyxLink — Lavalink v4 and NodeLink client for Discord bots (development)",
   "keywords": [
-    "bot",
-    "discord.js",
-    "moonlink",
-    "discord",
-    "easy",
+    "nyxlink",
     "lavalink",
-    "music"
+    "nodelink",
+    "discord",
+    "music",
+    "audio",
+    "bot"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,13 +22,20 @@
     "test:bot": "node test-bot/index.js",
     "typecheck": "tsc --noEmit",
     "test:types": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module commonjs --moduleResolution node tests/types/public-api.ts",
-    "pack:check": "node scripts/check-package.cjs"
+    "pack:check": "node scripts/check-package.cjs",
+    "test:backends": "pnpm run build && node scripts/test-backends.cjs",
+    "bench": "pnpm run build && node --expose-gc --max-old-space-size=512 scripts/benchmark.cjs",
+    "test:endurance": "pnpm run build && node scripts/endurance.cjs",
+    "test:package": "pnpm run build && node scripts/test-package.cjs",
+    "test:extensions": "pnpm run build && node scripts/test-extensions.cjs",
+    "docs:api": "pnpm run build && node scripts/generate-api.cjs",
+    "test:coverage": "pnpm run build && node --test --experimental-test-coverage --test-coverage-exclude='tests/**' tests/*.test.cjs"
   },
   "homepage": "https://github.com/melodiabl/NyxLink#readme",
   "bugs": {
     "url": "https://github.com/melodiabl/NyxLink/issues"
   },
-  "license": "Open Software License 3.0",
+  "license": "OSL-3.0",
   "contributors": [
     "1Lucas1.apk"
   ],
@@ -37,7 +44,7 @@
     "url": "https://github.com/melodiabl/NyxLink.git"
   },
   "engines": {
-    "node": ">=22.x.x"
+    "node": ">=22.12.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

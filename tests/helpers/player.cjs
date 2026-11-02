@@ -1,5 +1,6 @@
 const { Manager, Node, Player, Track } = require('../../dist/index.js');
 const { DatabaseManager } = require('../../dist/src/managers/DatabaseManager.js');
+const { NodeState } = require('../../dist/src/typings/types.js');
 
 function deferred() {
   let resolve;
@@ -35,6 +36,7 @@ function createPlayer(t) {
   manager.database = new DatabaseManager(manager);
   const node = new Node(manager, config);
   node.connected = true;
+  node.state = NodeState.READY;
   manager.nodes.nodes.set(node.identifier, node);
   const requests = [];
   node.rest.updatePlayer = async (guildId, payload) => {
@@ -53,7 +55,7 @@ function createPlayer(t) {
   player.voice.sessionId = 'test-session';
   player.voice.token = 'test-voice-token';
   player.voice.endpoint = 'test.invalid';
-  t.after(() => player.stopHealthCheck());
+  t.after(async () => { player.stopHealthCheck(); await node.destroy(); });
   return { manager, node, player, requests };
 }
 

@@ -1,3 +1,6 @@
+import { NodeFailover } from "../nodes/NodeFailover";
+import { NodeSelector, type NodeSelectionOptions } from "../nodes/NodeSelector";
+import { NodeHealthMonitor } from "../nodes/NodeHealthMonitor";
 import { Manager } from "../core/Manager";
 import { IManagerNodeConfig } from "../typings/Interfaces";
 import { NodeSortStrategy, NodeState } from "../typings/types";
@@ -15,15 +18,18 @@ export class NodeManager {
 
     public init(): void {
         for (const config of this.nodeConfigs) {
+            if (this.manager.destroyed) return;
             this.add(config);
         }
         
         for (const node of this.nodes.values()) {
+            if (this.manager.destroyed) return;
             node.connect();
         }
     }
 
     public add(config: IManagerNodeConfig): void {
+        if (this.manager.destroyed) throw new Error('Manager is shut down');
         this._validateConfig(config);
         const identifier = config.identifier || `${config.host}:${config.port}`;
         if (this.nodes.has(identifier)) {
@@ -43,7 +49,7 @@ export class NodeManager {
     }
 
     public get onlineNodes(): any[] {
-        return [...this.nodes.values()].filter((node) => { return node.connected; });
+        return [...this.nodes.values()].filter(node => NodeHealthMonitor.available(node));
     }
 
     public get hasOnlineNodes(): boolean {
@@ -51,7 +57,7 @@ export class NodeManager {
     }
 
     public get ready(): any[] {
-        return [...this.nodes.values()].filter((node) => node.state === NodeState.READY);
+        return this.onlineNodes.filter(node => node.state === NodeState.READY);
     }
 
     public get hasReady(): boolean {
@@ -72,103 +78,8 @@ export class NodeManager {
         return nodeStats;
     }
 
-    public findNode(options?: { exclude?: string[] }): any | undefined {
-        const nodeOptions = this.manager.options.node;
-        const sortBy = nodeOptions?.selectionStrategy ?? "penalty";
-
-        let nodes = this.ready.length ? this.ready : this.onlineNodes;
-        if (options?.exclude) {
-            nodes = nodes.filter(node => !options.exclude.includes(node.identifier));
-        }
-
-        if (!nodes.length) {
-            this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: No online nodes available.`);
-            return undefined;
-        }
-
-        if (nodeOptions?.avoidUnhealthyNodes) {
-            const healthyNodes = nodes.filter(node => {
-                if (!node.stats) return true;
-                const cpuLoad = node.stats.cpu.systemLoad * 100;
-                const memoryUsage = (node.stats.memory.used / node.stats.memory.allocated) * 100;
-                
-                const isHealthy = cpuLoad < (nodeOptions.maxCpuLoad ?? 80) && memoryUsage < (nodeOptions.maxMemoryUsage ?? 90);
-                if (!isHealthy) {
-                    this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: Node ${node.identifier} is unhealthy. CPU: ${cpuLoad.toFixed(2)}%, Memory: ${memoryUsage.toFixed(2)}%`);
-                }
-                return isHealthy;
-            });
-
-            if (healthyNodes.length) {
-                nodes = healthyNodes;
-            } else {
-                this.manager.emit("debug", `Moonlink.js > NodeManager#findNode: No healthy nodes available, falling back to all online nodes.`);
-            }
-        }
-
-        if (nodes.length <= 1) {
-            return nodes[0];
-        }
-
-        type NodeScore = {
-            node: any;
-            players: number;
-            playingPlayers: number;
-            memory: number;
-            cpuLavalink: number;
-            cpuSystem: number;
-            uptime: number;
-            priority: number;
-            penalty: number;
-        };
-
-        const scoredNodes: NodeScore[] = nodes.map((node) => {
-            const players = node.stats?.players ?? 0;
-            const cpuSystem = node.stats?.cpu?.systemLoad ?? 0;
-            return {
-                node,
-                players,
-                playingPlayers: node.stats?.playingPlayers ?? 0,
-                memory: node.stats?.memory?.used ?? 0,
-                cpuLavalink: node.stats?.cpu?.lavalinkLoad ?? 0,
-                cpuSystem,
-                uptime: node.stats?.uptime ?? 0,
-                priority: node.priority ?? 0,
-                penalty: players + (cpuSystem * 100),
-            };
-        });
-
-        if (sortBy === "random") {
-            return scoredNodes[Math.floor(Math.random() * scoredNodes.length)].node;
-        }
-
-        const pickLowest = (key: keyof Omit<NodeScore, "node">) =>
-            scoredNodes.reduce((best, current) => (current[key] < best[key] ? current : best)).node;
-
-        const pickHighest = (key: keyof Omit<NodeScore, "node">) =>
-            scoredNodes.reduce((best, current) => (current[key] > best[key] ? current : best)).node;
-
-        switch (sortBy) {
-            case "leastPlayers":
-            case "players":
-                return pickLowest("players");
-            case "playingPlayers":
-                return pickLowest("playingPlayers");
-            case "memory":
-                return pickLowest("memory");
-            case "cpuLavalink":
-                return pickLowest("cpuLavalink");
-            case "cpuSystem":
-                return pickLowest("cpuSystem");
-            case "uptime":
-                return pickHighest("uptime");
-            case "priority":
-                return pickLowest("priority");
-            case "leastLoad":
-            case "penalty":
-            default:
-                return pickLowest("penalty");
-        }
+    public findNode(options: NodeSelectionOptions = {}): any | undefined {
+        return NodeSelector.select(this.nodes.values(), this.manager.options.node, options);
     }
 
     public async eject(identifier: string): Promise<boolean> {
@@ -182,13 +93,13 @@ export class NodeManager {
         
         if (playersToMove.length > 0) {
             this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Moving ${playersToMove.length} players from ${identifier}...`);
-            const newNode = this.findNode({ exclude: [identifier] });
-            
-            if (newNode) {
-                await Promise.all(playersToMove.map(player => player.transferNode(newNode)));
-            } else {
-                this.manager.emit("debug", `Moonlink.js > NodeManager#eject: No other nodes available to receive players from ${identifier}. Players will be destroyed.`);
-                await Promise.all(playersToMove.map(player => player.destroy("Node Ejected")));
+            const results = await Promise.all(playersToMove.map(player => NodeFailover.move(player, node)));
+            const failed = playersToMove.filter((_, index) => results[index].status === 'failed');
+            if (failed.length) {
+                this.manager.emit('playersOrphaned', failed, node);
+                if (!this.manager.options.node?.failover?.preserveOnFailure) {
+                    await Promise.all(failed.map(player => player.destroy('Node ejected: failover failed')));
+                }
             }
         }
 

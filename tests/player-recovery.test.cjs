@@ -3,10 +3,12 @@ const assert = require('node:assert/strict');
 const { Node, Player } = require('../dist');
 const { createPlayer, createTrack, deferred } = require('./helpers/player.cjs');
 const { Rest } = require('../dist');
+const { NodeState } = require('../dist/src/typings/types.js');
 
 function targetNode(manager) {
   const node = new Node(manager, { identifier: 'target', host: '127.0.0.2', port: 2333, password: 'test' });
   node.connected = true;
+  node.state = NodeState.READY;
   return node;
 }
 
@@ -47,10 +49,12 @@ test('a successful transfer restores track position, pause and volume without du
   assert.equal(await player.transferNode(target), true);
   assert.equal(player.node, target);
   assert.deepEqual(player.queue.tracks, [queued]);
-  assert.equal(updates[0].track.encoded, player.current.encoded);
-  assert.equal(updates[0].position, 45000);
-  assert.equal(updates[0].paused, true);
-  assert.equal(updates[0].volume, 60);
+  assert.ok(updates[0].voice);
+  const playback = updates.find(update => update.track);
+  assert.equal(playback.track.encoded, player.current.encoded);
+  assert.equal(playback.position, 45000);
+  assert.equal(playback.paused, true);
+  assert.equal(playback.volume, 60);
 });
 
 test('stuck recovery emits failed rather than success when softRestart returns false', async t => {
@@ -106,7 +110,7 @@ test('partial node failover reports only moved players and cleans up only failur
   failed.destroy = async () => { destroyed.push(failed); };
   const moved = [];
   manager.on('playersMoved', players => moved.push(...players));
-  node.destroyed = true;
+  node.reconnectAttempts = node.retryAmount;
   await node.close({ code: 1006, reason: 'test' });
   assert.deepEqual(moved, [player]);
   assert.deepEqual(destroyed, [failed]);
