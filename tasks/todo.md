@@ -42,4 +42,4 @@
 - [x] S2: BackendAdapter, LavalinkAdapter, NodeLinkAdapter and detector; strict boolean/header markers, version/capability snapshots, reconnect resets and safe feature errors. Verify backend contract tests and TS consumer.
 - [x] S3: Bounded NodeFailover with candidate exclusion, cancellation and concurrency control; reconnect/destroy resource cleanup. Verify recovery tests including multiple candidates and shutdown during reconnection.
 - [x] S4: Reproducible local Lavalink/NodeLink protocol harness, immutable versions and isolated HTTP media; real auth/REST/WebSocket/session tests. No Discord bot or audio connection.
-- [ ] S5: Record the evidence matrix and remaining Discord-audio limitations, run quality/package checks, commit, push and open the second PR.
+- [x] S5: Record the evidence matrix and remaining Discord-audio limitations, run quality/package checks, commit, push and open the second PR: [PR #3](https://github.com/melodiabl/NyxLink/pull/3).
