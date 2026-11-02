@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-11-02T20:22:58.924Z",
+  "scope": "local NodeLink extensions; no Discord voice",
+  "passed": true,
+  "results": [
+    {
+      "enabled": true,
+      "backend": "nodelink",
+      "version": "3.10.0-dev.2026-10-20.1",
+      "image": "ghcr.io/performanc/nodelink@sha256:19d8f9a8951d0e13f21977aac7e5ec4dc3199526b8dcb28e9c8a2e3ac058dfe8",
+      "checks": [
+        "HTTP extension auth rejection",
+        "enabled stream URL and observed capability",
+        "HTTP WAV decoding limitation preserved as explicit server error",
+        "enabled decoded WAV bytes without Discord",
+        "mix list and explicit missing-active-playback/layer errors",
+        "lyrics without enabled providers and HTTP chapters empty",
+        "server player cleanup"
+      ],
+      "passed": true,
+      "discordAudio": "not-tested"
+    },
+    {
+      "enabled": false,
+      "backend": "nodelink",
+      "version": "3.10.0-dev.2026-10-20.1",
+      "image": "ghcr.io/performanc/nodelink@sha256:19d8f9a8951d0e13f21977aac7e5ec4dc3199526b8dcb28e9c8a2e3ac058dfe8",
+      "checks": [
+        "HTTP extension auth rejection",
+        "disabled stream/mix typed errors and capability degradation",
+        "server player cleanup"
+      ],
+      "passed": true,
+      "discordAudio": "not-tested"
+    }
+  ]
+}

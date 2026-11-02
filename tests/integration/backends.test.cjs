@@ -75,7 +75,9 @@ for (const backend of lab.backends) {
       assert.equal(enabled.resuming, true);
       const session = node.sessionId;
       const resumed = event(manager, 'nodeReady', 15000);
-      node.socket.close(1000, 'Local protocol resume check');
+      // Simulate a network cut. Sending a close frame exercises a separate
+      // server close handshake and may reconnect before that session is paused.
+      node.socket.netSocket.destroy();
       const [, payload] = await resumed;
       assert.equal(payload.resumed, true);
       assert.equal(node.sessionId, session);
