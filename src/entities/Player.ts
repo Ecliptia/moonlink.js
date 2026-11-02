@@ -44,6 +44,7 @@ export class Player {
 
     public lastActivityTime: number = Date.now();
     private readonly commands = new PlayerCommandQueue();
+    private destructionPromise?: Promise<void>;
     private volumeRevision = 0;
     private optimisticVolumeRevision = 0;
     private fading?: IFadingOptions;
@@ -947,14 +948,16 @@ export class Player {
     }
 
     public async destroy(reason?: string): Promise<void> {
+        if (this.destructionPromise) return this.destructionPromise;
         if (this.destroyed) {
             return;
         }
         playbackGuard(this).invalidate();
         this.destroyed = true;
+        this.destructionPromise = this.commands.enqueue(() => this.destroyPlayback(reason));
         this.voice.destroy();
         this.stopHealthCheck();
-        return this.commands.enqueue(() => this.destroyPlayback(reason));
+        return this.destructionPromise;
     }
 
     private async destroyPlayback(reason?: string): Promise<void> {
@@ -989,8 +992,9 @@ export class Player {
         this.previous = [];
         this.updateData("previous", []);
 
-        this.manager.emit("playerDestroyed", this, reason);
         this.manager.players.players.delete(this.guildId);
+        await this.manager.database.remove(`players.${this.guildId}`);
+        this.manager.emit('playerDestroyed', this, reason);
 
         this.manager.emit("debug", `Moonlink.js > Player#destroy >> Player destroyed for guild ${this.guildId}.`);
     }

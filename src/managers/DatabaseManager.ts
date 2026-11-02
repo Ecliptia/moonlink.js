@@ -77,8 +77,11 @@ export class DatabaseManager {
     if (!this.shutdownPromise) {
       this.closing = true;
       this.shutdownPromise = this.tail.then(async () => {
-        await this.provider.flush?.();
-        await this.provider.shutdown();
+        const errors: unknown[] = [];
+        try { await this.provider.flush?.(); } catch (error) { errors.push(error); }
+        try { await this.provider.shutdown(); } catch (error) { errors.push(error); }
+        if (errors.length === 1) throw errors[0];
+        if (errors.length) throw new AggregateError(errors, 'Storage shutdown failed');
       });
     }
     return this.shutdownPromise;

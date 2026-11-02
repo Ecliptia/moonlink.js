@@ -18,15 +18,18 @@ export class NodeManager {
 
     public init(): void {
         for (const config of this.nodeConfigs) {
+            if (this.manager.destroyed) return;
             this.add(config);
         }
         
         for (const node of this.nodes.values()) {
+            if (this.manager.destroyed) return;
             node.connect();
         }
     }
 
     public add(config: IManagerNodeConfig): void {
+        if (this.manager.destroyed) throw new Error('Manager is shut down');
         this._validateConfig(config);
         const identifier = config.identifier || `${config.host}:${config.port}`;
         if (this.nodes.has(identifier)) {

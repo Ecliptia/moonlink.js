@@ -5,6 +5,16 @@ const Connector_1 = require("./Connector");
 const Util_1 = require("../Util");
 class DiscordJs extends Connector_1.Connector {
     client;
+    readyHandler = () => {
+        if (!this.client || this.manager.destroyed)
+            return;
+        void this.manager.init(this.client.user.id).catch(error => this.manager.emit('debug', `NyxLink > DiscordJs > Initialization failed: ${error.message}`));
+    };
+    rawHandler = (packet) => {
+        if (!this.client || this.manager.destroyed)
+            return;
+        void this.manager.packetUpdate(packet).catch(error => this.manager.emit('debug', `NyxLink > DiscordJs > Packet failed: ${error.message}`));
+    };
     constructor() {
         super();
     }
@@ -12,15 +22,16 @@ class DiscordJs extends Connector_1.Connector {
         if (!client) {
             throw new Error("DiscordJs connector requires a client instance.");
         }
+        this.dispose();
         this.client = client;
-        this.manager.emit("debug", `Moonlink.js > DiscordJsConnector#listen >> Attaching listeners to client...`);
-        this.client.once("clientReady", () => {
-            this.manager.emit("debug", `Moonlink.js > DiscordJsConnector#ready >> Client is ready, initializing manager with user ID ${this.client.user.id}`);
-            this.manager.init(this.client.user.id);
-        });
-        this.client.on("raw", (packet) => {
-            this.manager.packetUpdate(packet);
-        });
+        this.manager.emit('debug', 'Moonlink.js > DiscordJsConnector#listen >> Attaching listeners to client...');
+        this.client.once('clientReady', this.readyHandler);
+        this.client.on('raw', this.rawHandler);
+    }
+    dispose() {
+        this.client?.removeListener('clientReady', this.readyHandler);
+        this.client?.removeListener('raw', this.rawHandler);
+        this.client = undefined;
     }
     send(guildId, payload) {
         this.manager.emit("debug", `Moonlink.js > DiscordJsConnector#send -> Sending payload to guild ${guildId}. Payload: ${(0, Util_1.stringifyWithReplacer)(payload)}`);

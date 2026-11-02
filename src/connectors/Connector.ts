@@ -7,6 +7,8 @@ export abstract class Connector {
         this.manager = manager;
     }
 
+    public dispose?(): void | Promise<void>;
+
     public abstract listen(client: any): void;
     public abstract send(guildId: string, payload: any): void;
 }
