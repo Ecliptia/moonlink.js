@@ -1,40 +1,32 @@
-name: Publish Approved Pull Requests
+name: Validate NyxLink
+
 on:
-  pull_request_review:
-    types: [submitted]
+  push:
+    branches: [dev, v5.2, 'feat/nyxlink-*']
+  pull_request:
+    branches: [dev, v5.2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  check:
-    # First, trigger a permissions check on the user approving the pull request.
-    if: github.event.review.state == 'approved'
+  validate:
     runs-on: ubuntu-latest
-    outputs:
-      has-permissions: ${{ steps.checkPermissions.outputs.require-result }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
     steps:
-      - name: Check permissions
-        id: checkPermissions
-        uses: actions-cool/check-user-permission@v2
-        with:
-          # In this example, the approver must have the write access
-          # to the repository to trigger the package preview.
-          require: "write"
-
-  publish:
-    needs: check
-    # Publish the preview package only if the permissions check passed.
-    if: needs.check.outputs.has-permissions == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - run: corepack enable
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - run: pnpx pkg-pr-new publish
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm test
+      - run: pnpm run test:types
+      - run: pnpm run pack:check
+      - run: pnpm audit --prod --audit-level=high

@@ -1,65 +1,35 @@
 <img src="assets/nyxlink_banner.png" alt="NyxLink — A modern Lavalink &amp; NodeLink client for Discord bots" width="100%">
-<div align="center">
-<hr>
-<img src="https://img.shields.io/badge/Made_with_♥️_in-Brazil-ED186A?style=for-the-badge"><br>
-<a href="https://discord.gg/q8HzGuHuDY">
-  <img src="https://img.shields.io/discord/990369410344701964?color=333&label=Support&logo=discord&style=for-the-badge" alt="Discord">
-</a>
-<a href="https://www.npmjs.com/package/moonlink.js">
-  <img alt="NPM Downloads" src="https://img.shields.io/npm/dm/moonlink.js?style=for-the-badge&logo=npm&color=333">
-</a>
-<a href="https://www.npmjs.com/package/moonlink.js">
-  <img alt="NPM Version" src="https://img.shields.io/npm/v/moonlink.js?style=for-the-badge&logo=npm&color=333">
-</a>
-<br>
-<a href="https://github.com/Ecliptia/moonlink.js">
-  <img alt="GitHub forks" src="https://img.shields.io/github/forks/Ecliptia/moonlink.js?style=for-the-badge&logo=github&color=333">
-</a>
-<a href="https://github.com/Ecliptia/moonlink.js">
-  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Ecliptia/moonlink.js?style=for-the-badge&logo=github&color=333">
-</a>
-<a href="https://github.com/sponsors/1lucas1apk">
-  <img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/1lucas1apk?style=for-the-badge&logo=github&color=333">
-</a>
-<br>
-<h3>Moonlink.js v5 — Does the leaf even fall? 🍃🌙</h3>
-</div>
-<hr>
 
-## Table of Contents
+# NyxLink
 
-- [Documentation](#documentation)
-- [License](#license)
-- [Installation](#installation)
-- [Support](#support)
-- [Acknowledgements](#acknowledgements)
+Cliente de audio para bots de Discord derivado de [Moonlink.js](https://github.com/Ecliptia/moonlink.js). El desarrollo parte de Moonlink `dev` 5.3.0-dev.2 y conserva su API pública cuando es posible.
 
-## Documentation
+Los backends objetivo son **Lavalink v4 y NodeLink**. La validación de audio real, reconexión y compatibilidad por versión sigue pendiente; consulta el [estado de desarrollo](docs/development.md) y el [plan de trabajo](tasks/todo.md).
 
-The full Moonlink.js documentation offers guides, tutorials, and detailed examples.  
-- Learn how to create a music bot: [Creating a Music Bot](https://moonlink.js.org/getting-started/creating-a-music-bot)  
-- Discover projects that use Moonlink.js: [Used By](https://moonlink.js.org/#used-by)
+## Desarrollo
 
-For more details, please visit the [Official Documentation](https://moonlink.js.org).
+Requiere Node.js 22.12+ o 24 y pnpm 10.34.5.
 
-## License
-
-This project is licensed under the [Open Software License ("OSL") v. 3.0](LICENSE) – see the [LICENSE](LICENSE) file for details.
-
-## Installation
-
-```bash
-npm install moonlink.js
-yarn add moonlink.js
-pnpm install moonlink.js
-bun install moonlink.js
+```sh
+git clone --branch feat/nyxlink-foundation https://github.com/melodiabl/NyxLink.git
+cd NyxLink
+corepack pnpm install --frozen-lockfile
+pnpm run typecheck
+pnpm test
+pnpm run test:types
+pnpm run pack:check
 ```
 
-## Support
+`pnpm test` compila y ejecuta pruebas automáticas sin tokens ni conexiones a Discord. `pnpm run test:bot` ejecuta el bot manual y requiere su propia configuración de pruebas.
 
-Join our Discord server: [Moonlink.js - Imagine a Music Bot](https://discord.com/invite/xQq2A8vku3) for support, questions, and community discussions.
+## Estado de distribución
 
-## Acknowledgements
+Esta rama es de desarrollo y la publicación está desactivada. El nombre npm heredado `moonlink.js` permanece como metadato histórico hasta elegir la identidad final de distribución; no identifica un paquete NyxLink publicado. No uses las estadísticas, versiones o instrucciones npm de Moonlink como si fueran de NyxLink.
 
-Thank you to everyone who contributed to the development of Moonlink.js, whether by reporting bugs, installing the package, or helping the community.  
-Have a great day! :)
+## Logs
+
+Los eventos `debug` heredados siguen disponibles. Sus mensajes técnicos pueden incluir contraseñas de nodos y tokens de voz: el responsable del bot controla el acceso a la consola y a sus archivos. No se deben reenviar automáticamente a navegadores, canales de Discord ni servicios externos.
+
+## Licencia y origen
+
+Derivado de Moonlink.js, de **1Lucas1.apk y sus colaboradores**. Se conservan los avisos originales y la licencia [Open Software License 3.0](LICENSE). Los cambios de NyxLink no implican respaldo del proyecto original.
