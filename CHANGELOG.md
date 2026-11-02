@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Lifecycle and stability measurement
+
+- Add terminal, idempotent Manager.shutdown with ordered cleanup, shared initialization and aggregated failures.
+- Dispose owned connector/logger callbacks and idle timers; remove destroyed-player snapshots after pending writes.
+- Correlate WebSocket ping payloads and clear pending ping/heartbeat resources even when transport writes fail.
+- 152 deterministic tests, including lifecycle/error cleanup and correlated ping resource regressions.
+- Reproducible queue batching benchmark, real-backend endurance runner and short CI smoke; keep explicit limits on performance/audio claims.
+- Local 600-second endurance passed: 601 player cycles, 37 confirmed resumes and 61 pings per backend; Node 22/24, protocol, CodeQL and 60-second CI smoke passed.
+- Prerelease readiness documentation without changing package identity, version or publication protection.
+
 ## Unreleased — Tracks, storage and gateway voice
 
 - Destination-side URI track resolution before cross-backend migration, with lazy queue resolution and cancellation before old-player deletion.

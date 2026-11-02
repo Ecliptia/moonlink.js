@@ -35,6 +35,7 @@ export declare class Player {
     historySize: number;
     lastActivityTime: number;
     private readonly commands;
+    private destructionPromise?;
     private volumeRevision;
     private optimisticVolumeRevision;
     private fading?;

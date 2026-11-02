@@ -50,3 +50,10 @@
 - [x] T2: TrackCodec snapshots and TrackResolver; migration/queue cancellation tests and metadata preservation.
 - [x] T3: VoicePacketHandler and race-safe voice handshake; malformed/foreign packets, event order, duplicate credentials, disconnect/destroy and listener cleanup regressions.
 - [x] T4: Real pinned-server track resolution, documentation, public types/package checks, commits, stacked [PR #4](https://github.com/melodiabl/NyxLink/pull/4) and [CI evidence](../docs/tracks-storage-voice.md#verificación-en-github).
+
+## Fourth delivery: stability and measurement
+
+- [x] P1: Reproducible queue/resource baseline and cleanup regressions.
+- [x] P2: Coordinated Manager shutdown, connector cleanup, destroyed snapshot removal and bounded WebSocket ping resources.
+- [x] P3: Real-server endurance runner and ten-minute local evidence; shorter CI smoke, latency/resource metrics and cleanup checks.
+- [x] P4: Readiness/limitations documentation, public types/package verification, commits, stacked [PR #5](https://github.com/melodiabl/NyxLink/pull/5) and [CI evidence](../docs/stability.md#verificación-en-github).

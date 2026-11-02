@@ -19,6 +19,11 @@ class Manager extends Util_1.EventEmitter {
     logger;
     detachLogging;
     idleCheckInterval;
+    initializationPromise;
+    shutdownPromise;
+    shuttingDown = false;
+    connectors = new Set();
+    get destroyed() { return this.shuttingDown; }
     spotifySource;
     deezerSource;
     get readyNodes() {
@@ -133,35 +138,112 @@ class Manager extends Util_1.EventEmitter {
         this.detachLogging = undefined;
     }
     use(connector, client) {
+        if (this.destroyed)
+            throw new Error('Manager is shut down');
         connector.setManager(this);
         if (!this.send)
             this.send = connector.send.bind(connector);
+        this.connectors.add(connector);
         connector.listen(client);
         return this;
     }
     async init(clientId) {
+        if (this.destroyed)
+            throw new Error('Manager is shut down');
         if (this.initialized)
             return this;
-        (0, Util_1.validate)(clientId, (id) => typeof id === "string" && /^\d{17,20}$/.test(id), "init requires a valid clientId (a string of 17-20 digits).");
+        if (this.initializationPromise)
+            return this.initializationPromise;
+        (0, Util_1.validate)(clientId, (id) => typeof id === 'string' && /^\d{17,20}$/.test(id), 'init requires a valid clientId (a string of 17-20 digits).');
         this.clientId = clientId;
-        this.database = new DatabaseManager_1.DatabaseManager(this);
-        await this.database.initialize();
-        this.nodes.init();
-        if (this.options.playerDestruction?.autoDestroyOnIdle) {
-            this.startIdleMonitoring();
-        }
-        this.initialized = true;
-        this.emit("debug", `Moonlink.js > Manager >> Initialized. ClientId: ${this.clientId}`);
-        return this;
+        const starting = Promise.resolve().then(async () => {
+            this.database = new DatabaseManager_1.DatabaseManager(this);
+            try {
+                await this.database.initialize();
+                if (this.destroyed)
+                    return this;
+                this.nodes.init();
+                if (this.destroyed)
+                    return this;
+                if (this.options.playerDestruction?.autoDestroyOnIdle)
+                    this.startIdleMonitoring();
+                this.initialized = true;
+                this.emit('debug', `Moonlink.js > Manager >> Initialized. ClientId: ${this.clientId}`);
+                return this;
+            }
+            catch (error) {
+                this.initialized = false;
+                if (this.idleCheckInterval)
+                    clearInterval(this.idleCheckInterval);
+                this.idleCheckInterval = undefined;
+                const cleanup = await Promise.allSettled([...this.nodes.nodes.values()].map(node => Promise.resolve().then(() => node.destroy())));
+                this.nodes.nodes.clear();
+                cleanup.push(await this.database.shutdown().then(() => ({ status: 'fulfilled', value: undefined }), reason => ({ status: 'rejected', reason })));
+                const errors = cleanup.filter(result => result.status === 'rejected').map(result => result.reason);
+                if (errors.length)
+                    throw new AggregateError([error, ...errors], `Initialization failed: ${error.message}`);
+                throw error;
+            }
+        });
+        this.initializationPromise = starting;
+        void starting.catch(() => { if (this.initializationPromise === starting)
+            this.initializationPromise = undefined; });
+        return starting;
+    }
+    shutdown() {
+        if (this.shutdownPromise)
+            return this.shutdownPromise;
+        this.shuttingDown = true;
+        this.initialized = false;
+        if (this.idleCheckInterval)
+            clearInterval(this.idleCheckInterval);
+        this.idleCheckInterval = undefined;
+        this.shutdownPromise = Promise.resolve().then(async () => {
+            const errors = [];
+            const attempt = async (operation) => {
+                try {
+                    await operation();
+                }
+                catch (error) {
+                    errors.push(error);
+                }
+            };
+            if (this.initializationPromise)
+                await attempt(() => this.initializationPromise);
+            await Promise.all(this.players.all.map(player => attempt(() => player.destroy('Manager shutdown'))));
+            this.players.players.clear();
+            await Promise.all([...this.nodes.nodes.values()].map(node => attempt(() => node.destroy())));
+            this.nodes.nodes.clear();
+            for (const connector of this.connectors)
+                await attempt(() => connector.dispose?.());
+            this.connectors.clear();
+            await attempt(() => this.detachLogger());
+            if (this.database)
+                await attempt(() => this.database.shutdown());
+            if (Util_1.Structure.getManager() === this)
+                Util_1.Structure.setManager(undefined);
+            if (errors.length)
+                throw new AggregateError(errors, 'Manager shutdown encountered cleanup failures');
+        });
+        return this.shutdownPromise;
     }
     startIdleMonitoring() {
         const idleTimeout = this.options.playerDestruction?.idleTimeout ?? 300000;
         this.idleCheckInterval = setInterval(async () => {
+            if (this.destroyed)
+                return;
             const now = Date.now();
             for (const player of this.players.all) {
+                if (this.destroyed)
+                    return;
                 if ((!player.playing || player.paused) && now - player.lastActivityTime >= idleTimeout) {
                     this.emit("debug", `Moonlink.js > Manager >> Player ${player.guildId} has been idle for ${idleTimeout}ms. Auto-destroying...`);
-                    await player.destroy("Idle timeout");
+                    try {
+                        await player.destroy('Idle timeout');
+                    }
+                    catch (error) {
+                        this.emit('debug', `NyxLink > Manager > Idle cleanup failed: ${error.message}`);
+                    }
                 }
             }
         }, 60000);
@@ -224,6 +306,8 @@ class Manager extends Util_1.EventEmitter {
         return null;
     }
     async search(options) {
+        if (this.destroyed)
+            throw new Error('Manager is shut down');
         (0, Util_1.validate)(options, (o) => typeof o === "object", "Search > Search options must be an object.");
         (0, Util_1.validate)(options.query, (q) => typeof q === "string" && q.length > 0, "Search > 'query' must be a non-empty string.");
         const nativeResult = await this.resolveNativeSource(options);

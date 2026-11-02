@@ -11,7 +11,7 @@ Los backends objetivo son **Lavalink v4 y NodeLink**. Las pruebas locales cubren
 Requiere Node.js 22.12+ o 24 y pnpm 10.34.5.
 
 ```sh
-git clone --branch feat/nyxlink-track-storage https://github.com/melodiabl/NyxLink.git
+git clone --branch feat/nyxlink-stability https://github.com/melodiabl/NyxLink.git
 cd NyxLink
 corepack pnpm install --frozen-lockfile
 pnpm run typecheck
@@ -49,6 +49,10 @@ El laboratorio descarga imágenes oficiales fijadas por digest, inicia servidore
 ## Pistas, almacenamiento y voz
 
 La [tercera entrega](docs/tracks-storage-voice.md) añade resolución de pistas en el backend de destino, snapshots con metadatos, un contrato StorageAdapter y coordinación del gateway de voz con protección frente a respuestas obsoletas. Las firmas heredadas se conservan y las pruebas no conectan bots de Discord.
+
+## Estabilidad y cierre
+
+La [cuarta entrega](docs/stability.md) añade `await manager.shutdown()`, limpieza de snapshots/pings y mediciones reproducibles con `pnpm run bench` y `pnpm run test:endurance -- 600`. La [preparación de prerelease](docs/release-readiness.md) enumera las verificaciones pendientes; la publicación sigue bloqueada.
 
 ## Licencia y origen
 

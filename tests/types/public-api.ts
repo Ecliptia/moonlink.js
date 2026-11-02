@@ -34,3 +34,9 @@ const configured = new Manager({ nodes: [configuredNode], options: { database: {
 const flushed: Promise<void> = manager.database.flush();
 const packet: Promise<void> = VoicePacketHandler.handle(manager, {});
 void [snapshot, restored, resolved, local, configured, flushed, packet, TrackResolutionError];
+
+const shuttingDown: Promise<void> = manager.shutdown();
+const isClosed: boolean = manager.destroyed;
+const connector = new Connectors.DiscordJs();
+const disposed: void = connector.dispose();
+void [shuttingDown, isClosed, disposed];
