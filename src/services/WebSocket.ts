@@ -92,6 +92,7 @@ export class WebSocket extends EventEmitter {
         this.socket = protocol.request(options);
 
         this.socket.on("response", (res: http.IncomingMessage) => {
+            if (this.closeNotified) { res.destroy(); return; }
             const { statusCode, headers } = res;
 
             if (statusCode === 301 || statusCode === 302 || statusCode === 307 || statusCode === 308) {
@@ -121,7 +122,7 @@ export class WebSocket extends EventEmitter {
             }
 
             if (statusCode !== 101) {
-                this.socket?.destroy();
+                this.handleClose(statusCode === 401 || statusCode === 403 ? 1008 : 1006, `HTTP ${statusCode}`);
                 switch (statusCode) {
                     case 401:
                         this.emit("debug", "Authentication failed, please check your credentials.");
@@ -165,6 +166,7 @@ export class WebSocket extends EventEmitter {
         });
 
         this.socket.on("error", (err) => {
+            if (this.closeNotified) return;
             if (this.url.protocol === "wss:" && this.url.hostname === "localhost") {
                 this.emit("debug", "Secure connection failed, trying insecure connection.");
                 this.url.protocol = "ws:";
@@ -175,19 +177,16 @@ export class WebSocket extends EventEmitter {
             this.emit("error", { error: err });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: err.message });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, err.message);
             }
         });
 
         this.socket.on("timeout", () => {
+            if (this.closeNotified) return;
             this.emit("error", { error: new Error("Connection timed out") });
             if (!this.connected) {
                 this.redirectCount = 0;
-                this.emit("close", { code: 1006, reason: "Connection timed out" });
-                this.socket?.destroy();
-                this.socket = null;
+                this.handleClose(1006, "Connection timed out");
             }
         });
 
