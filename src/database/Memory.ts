@@ -2,11 +2,11 @@ import type { Manager } from "../core/Manager";
 
 /** Volatile dotted-key storage, scoped to one Manager and never written to disk. */
 export class Memory {
-  private store: Record<string, any> = Object.create(null);
+  protected store: Record<string, any> = Object.create(null);
 
   public async init(_manager: Manager, _options?: any): Promise<void> {}
 
-  private parts(key: string): string[] {
+  protected parts(key: string): string[] {
     const parts = key.split('.');
     if (parts.some(part => !part || ['__proto__', 'prototype', 'constructor'].includes(part))) {
       throw new TypeError('Invalid memory storage path');

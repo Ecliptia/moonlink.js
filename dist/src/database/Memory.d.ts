@@ -1,8 +1,8 @@
 import type { Manager } from "../core/Manager";
 export declare class Memory {
-    private store;
+    protected store: Record<string, any>;
     init(_manager: Manager, _options?: any): Promise<void>;
-    private parts;
+    protected parts(key: string): string[];
     get<T>(key: string): Promise<T | undefined>;
     set<T>(key: string, value: T): Promise<void>;
     has(key: string): Promise<boolean>;

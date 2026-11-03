@@ -1,333 +1,133 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Local = void 0;
-const fs_1 = __importStar(require("fs"));
-const path_1 = __importDefault(require("path"));
-const isDocker = () => {
-    try {
-        if (fs_1.default.existsSync('/.dockerenv'))
-            return true;
-        if (fs_1.default.existsSync('/proc/1/cgroup')) {
-            const cgroup = fs_1.default.readFileSync('/proc/1/cgroup', 'utf-8');
-            if (cgroup.includes('docker') || cgroup.includes('kubepods'))
-                return true;
-        }
-    }
-    catch { }
-    return false;
-};
-const getDefaultDataPath = () => {
-    const envPath = process.env.MOONLINK_DB_PATH;
-    if (envPath)
-        return envPath;
-    return path_1.default.join(process.cwd(), '.moonlink', 'data');
-};
-class Local {
-    store = {};
-    dir;
+const node_fs_1 = require("node:fs");
+const node_path_1 = __importDefault(require("node:path"));
+const Memory_1 = require("./Memory");
+class Local extends Memory_1.Memory {
     snapshotPath;
     logPath;
-    walStream;
-    compactionIntervalMs;
+    tail = Promise.resolve();
+    closing = false;
+    shutdownPromise;
     compactionTimer;
-    manager;
-    isCompacting = false;
-    walBuffer = [];
-    walBufferMaxSize = 50;
-    walFlushInterval;
-    walFlushIntervalMs = 500;
     async init(manager, options) {
-        this.manager = manager;
-        this.compactionIntervalMs = 60000;
-        this.dir = this.manager.options.database?.options?.path
-            ?? process.env.MOONLINK_DB_PATH
-            ?? getDefaultDataPath();
-        this.snapshotPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.json`);
-        this.logPath = path_1.default.join(this.dir, `data.${this.manager.clientId}.wal`);
-        await fs_1.default.promises.mkdir(this.dir, { recursive: true });
-        this.manager.emit("debug", `Moonlink.js > LocalDB >> Database initialized at: ${this.dir} (Docker: ${isDocker()})`);
-        await this.loadSnapshot();
-        await this.replayWAL();
-        this.openWALStream();
-        this.compactionTimer = setInterval(() => this.compact(), this.compactionIntervalMs);
-        this.walFlushInterval = setInterval(() => this._flushWALBuffer(), this.walFlushIntervalMs);
-    }
-    _serializeEntry(entry) {
-        const opCode = entry.op === 'set' ? 's' : 'd';
-        if (entry.op === 'set') {
-            const valueStr = JSON.stringify(entry.value);
-            return `${opCode}|${entry.key}|${valueStr}\n`;
-        }
-        return `${opCode}|${entry.key}\n`;
-    }
-    _deserializeEntry(line) {
-        const parts = line.split('|');
-        if (parts.length < 2)
-            return null;
-        const opCode = parts[0];
-        const key = parts[1];
-        if (opCode === 's') {
-            try {
-                const value = JSON.parse(parts.slice(2).join('|'));
-                return { op: 'set', key, value };
-            }
-            catch (e) {
-                return null;
-            }
-        }
-        else if (opCode === 'd') {
-            return { op: 'delete', key };
-        }
-        return null;
-    }
-    _flushWALBuffer() {
-        if (!this.walStream || this.walBuffer.length === 0) {
-            return;
-        }
+        if (!/^[\w-]+$/.test(manager.clientId))
+            throw new TypeError('Invalid local database client ID');
+        const directory = options?.path ?? manager.options.database?.options?.path
+            ?? process.env.MOONLINK_DB_PATH ?? node_path_1.default.join(process.cwd(), '.moonlink', 'data');
+        this.snapshotPath = node_path_1.default.join(directory, `data.${manager.clientId}.json`);
+        this.logPath = node_path_1.default.join(directory, `data.${manager.clientId}.wal`);
+        await node_fs_1.promises.mkdir(directory, { recursive: true });
         try {
-            const dataToWrite = this.walBuffer.map(entry => this._serializeEntry(entry)).join('');
-            this.walStream.write(dataToWrite);
-            this.walBuffer = [];
+            const snapshot = JSON.parse(await node_fs_1.promises.readFile(this.snapshotPath, 'utf8'));
+            if (!snapshot.data || typeof snapshot.data !== 'object' || Array.isArray(snapshot.data))
+                throw new TypeError('Invalid snapshot');
+            this.store = snapshot.data;
         }
         catch (error) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to flush WAL buffer. Error: ${error.message}`);
+            if (error.code !== 'ENOENT') {
+                await node_fs_1.promises.rename(this.snapshotPath, `${this.snapshotPath}.corrupted.${Date.now()}`);
+                manager.emit('debug', `Moonlink.js > LocalDB >> Invalid snapshot preserved; replaying WAL: ${error.message}`);
+            }
+            this.store = Object.create(null);
         }
-    }
-    async loadSnapshot() {
+        let wal = '';
         try {
-            if (!fs_1.default.existsSync(this.snapshotPath)) {
-                this.store = {};
-                await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }), 'utf-8');
-                return;
-            }
-            const raw = await fs_1.default.promises.readFile(this.snapshotPath, 'utf-8');
-            if (!raw || raw.trim().length === 0) {
-                this.manager.emit("debug", `Moonlink.js > LocalDB >> Snapshot file is empty. Starting with empty store.`);
-                this.store = {};
-                return;
-            }
-            try {
-                const wrapper = JSON.parse(raw);
-                this.store = wrapper.data || {};
-            }
-            catch (parseErr) {
-                const corruptedPath = `${this.snapshotPath}.corrupted.${Date.now()}`;
-                await fs_1.default.promises.rename(this.snapshotPath, corruptedPath);
-                this.manager.emit("debug", `Moonlink.js > LocalDB >> Snapshot file is corrupted and has been moved to ${corruptedPath}. Error: ${parseErr.message}. Starting with empty store.`);
-                this.store = {};
-            }
+            wal = await node_fs_1.promises.readFile(this.logPath, 'utf8');
         }
-        catch (err) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to load snapshot: ${err.message}. Starting with empty store.`);
-            this.store = {};
+        catch (error) {
+            if (error.code !== 'ENOENT')
+                throw error;
         }
-    }
-    async replayWAL() {
-        let walContent;
-        try {
-            if (!fs_1.default.existsSync(this.logPath)) {
-                await fs_1.default.promises.writeFile(this.logPath, '');
-                return;
-            }
-            walContent = await fs_1.default.promises.readFile(this.logPath, 'utf-8');
-        }
-        catch (err) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to read WAL: ${err.message}`);
-            return;
-        }
-        const lines = walContent.split('\n');
-        let entriesReplayed = 0;
-        for (const line of lines) {
+        for (const line of wal.split('\n')) {
             if (!line)
                 continue;
-            const entry = this._deserializeEntry(line);
-            if (!entry)
-                continue;
-            if (entry.op === 'set') {
-                this.set(entry.key, entry.value, false);
-            }
-            else if (entry.op === 'delete') {
-                this.remove(entry.key, false);
-            }
-            entriesReplayed++;
-        }
-        if (entriesReplayed > 0) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Replayed ${entriesReplayed} operations from WAL.`);
-        }
-    }
-    openWALStream() {
-        try {
-            this.walStream = (0, fs_1.createWriteStream)(this.logPath, { flags: 'a' });
-        }
-        catch (err) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to open WAL stream. Error: ${err.message}`);
-        }
-    }
-    appendLog(op, key, value) {
-        const entry = { op, key, value };
-        this.walBuffer.push(entry);
-        if (this.walBuffer.length >= this.walBufferMaxSize) {
-            this._flushWALBuffer();
-        }
-    }
-    async set(key, value, log = true) {
-        if (!key)
-            return;
-        const keys = key.split('.');
-        let current = this.store;
-        for (let i = 0; i < keys.length - 1; i++) {
-            const keyPart = keys[i];
-            if (typeof current[keyPart] !== 'object' || current[keyPart] === null) {
-                current[keyPart] = {};
-            }
-            current = current[keyPart];
-        }
-        const lastKey = keys[keys.length - 1];
-        current[lastKey] = value;
-        if (log) {
-            this.appendLog('set', key, value);
-        }
-    }
-    async get(key) {
-        if (!key)
-            return undefined;
-        const parts = key.split('.');
-        let value = this.store;
-        for (const part of parts) {
-            if (typeof value !== 'object' || value === null) {
-                return undefined;
-            }
-            value = value[part];
-        }
-        return value;
-    }
-    async has(key) {
-        return (await this.get(key)) !== undefined;
-    }
-    async remove(key, log = true) {
-        if (!key)
-            return false;
-        const keys = key.split('.');
-        let obj = this.store;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (typeof obj[keys[i]] !== 'object' || obj[keys[i]] === null) {
-                return false;
-            }
-            obj = obj[keys[i]];
-        }
-        const lastKey = keys[keys.length - 1];
-        const existed = obj && Object.prototype.hasOwnProperty.call(obj, lastKey);
-        if (existed) {
-            delete obj[lastKey];
-            if (log) {
-                this.appendLog('delete', key);
-            }
-        }
-        return existed;
-    }
-    async keys(pattern) {
-        const allKeys = [];
-        const recurse = (obj, prefix) => {
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    const newPrefix = prefix ? `${prefix}.${key}` : key;
-                    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                        recurse(obj[key], newPrefix);
-                    }
-                    else {
-                        allKeys.push(newPrefix);
-                    }
+            let entry;
+            try {
+                if (line.startsWith('{'))
+                    entry = JSON.parse(line);
+                else {
+                    const [op, key, ...value] = line.split('|');
+                    if (op !== 's' && op !== 'd')
+                        continue;
+                    entry = { op: op === 's' ? 'set' : 'delete', key, value: op === 's' ? JSON.parse(value.join('|')) : undefined };
                 }
+                if (entry.op === 'clear')
+                    await super.clear();
+                else if (entry.op === 'set' && typeof entry.key === 'string')
+                    await super.set(entry.key, entry.value);
+                else if (entry.op === 'delete' && typeof entry.key === 'string')
+                    await super.remove(entry.key);
             }
-        };
-        recurse(this.store, '');
-        if (pattern && pattern !== '*') {
-            const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-            return allKeys.filter(key => regex.test(key));
+            catch {
+                manager.emit('debug', 'Moonlink.js > LocalDB >> Ignoring malformed or unsafe WAL entry');
+            }
         }
-        return allKeys;
+        await node_fs_1.promises.appendFile(this.logPath, wal && !wal.endsWith('\n') ? '\n' : '', { mode: 0o600 });
+        this.compactionTimer = setInterval(() => {
+            void this.enqueue(() => this.compact()).catch(error => manager.emit('debug', `Moonlink.js > LocalDB >> Compaction failed: ${error.message}`));
+        }, 60000);
+        this.compactionTimer.unref();
     }
-    async clear() {
-        this.store = {};
-        this.walBuffer = [];
-        if (this.walStream) {
-            await new Promise(resolve => this.walStream.end(resolve));
-            this.walStream = undefined;
-        }
-        await fs_1.default.promises.writeFile(this.logPath, '');
-        await fs_1.default.promises.writeFile(this.snapshotPath, JSON.stringify({ data: {} }));
+    enqueue(operation) {
+        if (this.closing)
+            return Promise.reject(new Error('Local database is shutting down'));
+        const result = this.tail.then(operation);
+        this.tail = result.catch(() => undefined);
+        return result;
     }
+    set(key, value, log = true) {
+        return this.enqueue(async () => {
+            if (!key)
+                return;
+            this.parts(key);
+            const entry = JSON.stringify({ op: value === undefined ? 'delete' : 'set', key, value });
+            if (log)
+                await node_fs_1.promises.appendFile(this.logPath, `${entry}\n`);
+            await super.set(key, JSON.parse(entry).value);
+        });
+    }
+    remove(key, log = true) {
+        return this.enqueue(async () => {
+            if (!key)
+                return false;
+            this.parts(key);
+            if (await super.get(key) === undefined)
+                return false;
+            if (log)
+                await node_fs_1.promises.appendFile(this.logPath, `${JSON.stringify({ op: 'delete', key })}\n`);
+            return super.remove(key);
+        });
+    }
+    clear() {
+        return this.enqueue(async () => {
+            await node_fs_1.promises.appendFile(this.logPath, `${JSON.stringify({ op: 'clear' })}\n`);
+            await super.clear();
+            await this.compact();
+        });
+    }
+    async get(key) { await this.tail; return super.get(key); }
+    async keys(pattern) { await this.tail; return super.keys(pattern); }
+    async has(key) { return await this.get(key) !== undefined; }
+    async flush() { await this.tail; }
     async compact() {
-        if (this.isCompacting)
-            return;
-        this.isCompacting = true;
-        try {
-            this._flushWALBuffer();
-            if (this.walStream) {
-                await new Promise(resolve => this.walStream.end(resolve));
-                this.walStream = undefined;
-            }
-            const wrapper = { data: this.store };
-            const raw = JSON.stringify(wrapper, null, 2);
-            const tempPath = `${this.snapshotPath}.tmp`;
-            await fs_1.default.promises.writeFile(tempPath, raw, 'utf-8');
-            await fs_1.default.promises.rename(tempPath, this.snapshotPath);
-            await fs_1.default.promises.writeFile(this.logPath, '', 'utf-8');
-        }
-        catch (err) {
-            this.manager.emit("debug", `Moonlink.js > LocalDB >> Failed to compact database: ${err.message}`);
-        }
-        finally {
-            this.openWALStream();
-            this.isCompacting = false;
-        }
+        const temporary = `${this.snapshotPath}.tmp`;
+        await node_fs_1.promises.writeFile(temporary, JSON.stringify({ data: this.store }), { mode: 0o600 });
+        await node_fs_1.promises.rename(temporary, this.snapshotPath);
+        await node_fs_1.promises.writeFile(this.logPath, '', { mode: 0o600 });
     }
-    async shutdown() {
-        if (this.compactionTimer)
-            clearInterval(this.compactionTimer);
-        if (this.walFlushInterval)
-            clearInterval(this.walFlushInterval);
-        await this.compact();
-        if (this.walStream) {
-            await new Promise(resolve => this.walStream.end(resolve));
-            this.walStream = undefined;
+    shutdown() {
+        if (!this.shutdownPromise) {
+            this.closing = true;
+            if (this.compactionTimer)
+                clearInterval(this.compactionTimer);
+            this.shutdownPromise = this.tail.then(() => this.compact());
         }
+        return this.shutdownPromise;
     }
 }
 exports.Local = Local;
