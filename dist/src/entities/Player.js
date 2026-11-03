@@ -5,6 +5,7 @@ const Util_1 = require("../Util");
 const Voice_1 = require("./Voice");
 const Track_1 = require("./Track");
 const VoiceReceiver_1 = require("./VoiceReceiver");
+const AutoplayState_1 = require("../structures/AutoplayState");
 class Player {
     manager;
     node;
@@ -281,6 +282,7 @@ class Player {
         return this;
     }
     async play(options = {}) {
+        (0, AutoplayState_1.invalidateAutoplay)(this);
         let finalOptions;
         if (options instanceof Track_1.Track) {
             finalOptions = { track: options };
@@ -594,6 +596,7 @@ class Player {
         });
     }
     async stop() {
+        (0, AutoplayState_1.invalidateAutoplay)(this);
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
         await this.sendPlayerUpdate({ track: { encoded: null } });
@@ -606,6 +609,7 @@ class Player {
         this.updateData("current", this.current);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player state changed: current: ${oldTrackTitle} -> null`);
         this.manager.emit("debug", `Moonlink.js > Player#stop >> Player stopped for guild ${this.guildId}`);
+        this.manager.emit("playerStop", this);
         return this;
     }
     async skip(position) {
@@ -672,6 +676,8 @@ class Player {
         return this;
     }
     setAutoPlay(autoPlay) {
+        if (!autoPlay)
+            (0, AutoplayState_1.invalidateAutoplay)(this);
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.updateData("autoPlay", this.autoPlay);
@@ -701,6 +707,7 @@ class Player {
         if (this.destroyed) {
             return;
         }
+        (0, AutoplayState_1.invalidateAutoplay)(this);
         this.destroyed = true;
         this.stopHealthCheck();
         if (this.resumeDebounceTimer) {

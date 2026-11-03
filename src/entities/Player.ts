@@ -8,6 +8,7 @@ import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
 import { VoiceReceiver, VoiceReceiverOptions } from "./VoiceReceiver";
+import { invalidateAutoplay } from "../structures/AutoplayState";
 
 export class Player {
     public readonly manager: Manager;
@@ -326,6 +327,7 @@ export class Player {
     }
 
     public async play(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track = {}): Promise<boolean> {
+        invalidateAutoplay(this);
         let finalOptions: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string };
 
         if (options instanceof Track) {
@@ -709,6 +711,7 @@ export class Player {
     }
 
     public async stop(): Promise<this> {
+        invalidateAutoplay(this);
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
 
@@ -811,6 +814,7 @@ export class Player {
     }
 
     public setAutoPlay(autoPlay: boolean): this {
+        if (!autoPlay) invalidateAutoplay(this);
         this.autoPlay = autoPlay;
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.updateData("autoPlay", this.autoPlay);
@@ -844,6 +848,7 @@ export class Player {
         if (this.destroyed) {
             return;
         }
+        invalidateAutoplay(this);
         this.destroyed = true;
 
         this.stopHealthCheck();
