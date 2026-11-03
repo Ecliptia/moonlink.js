@@ -5,14 +5,18 @@ export declare class WebSocket extends EventEmitter {
     private socket;
     private netSocket;
     private connected;
+    private closeNotified;
     private buffer;
     private fragmentedPayload;
     private fragmentedOpCode;
     private redirectCount;
     private readonly MAX_REDIRECTS;
     private pingInterval;
+    private heartbeatTimeout?;
+    private heartbeatKey?;
+    private pingSequence;
+    private readonly pendingPings;
     private readonly PING_INTERVAL;
-    private pongReceived;
     private readonly PONG_TIMEOUT;
     private pingTimestamps;
     latency: number;
@@ -21,6 +25,7 @@ export declare class WebSocket extends EventEmitter {
     });
     private connectBun;
     private connectNode;
+    private nextPingPayload;
     private startHeartbeat;
     private stopHeartbeat;
     ping(data?: string | Buffer): Promise<number>;
