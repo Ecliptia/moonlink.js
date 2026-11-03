@@ -2,13 +2,14 @@ import { Node } from "./Node";
 import { Queue } from "./Queue";
 import { Manager } from "../core/Manager";
 import { Structure, validate, decodeTrack, delay, nodeLinkOnlyError, type NodeLinkResponse } from "../Util";
-import { PlayerLoop, VoiceState } from "../typings/types";
+import { PlayerLoop, VoiceState, VoiceConnectionState } from "../typings/types";
 import { IPlayerConfig, IFadingOptions, ILyricsData, IChapter, IMeaningResponse, IFilters } from "../typings/Interfaces";
 import { Filters } from "./Filters";
 import { Voice } from "./Voice";
 import { Track } from "./Track";
 import { VoiceReceiver, VoiceReceiverOptions } from "./VoiceReceiver";
-import { invalidateAutoplay } from "../structures/AutoplayState";
+import { getAutoplayGeneration, invalidateAutoplay, getPlaybackGeneration, invalidatePlayback } from "../structures/AutoplayState";
+import { PlayerCommandQueue } from "../structures/PlayerCommandQueue";
 
 export class Player {
     public readonly manager: Manager;
@@ -40,6 +41,7 @@ export class Player {
     public historySize: number = 10;
 
     public lastActivityTime: number = Date.now();
+    private readonly commands = new PlayerCommandQueue();
     private fading?: IFadingOptions;
     private nextTrack?: { encoded: string; userData?: Record<string, any> };
     private audioTrackId?: string;
@@ -170,6 +172,7 @@ export class Player {
 
     private async recoverFromStuck(): Promise<void> {
         if (this.destroyed) return;
+        let generation = getPlaybackGeneration(this);
 
         this.manager.emit("playerRecoveryStarted", this);
 
@@ -179,10 +182,14 @@ export class Player {
                 this.manager.emit("debug", `Moonlink.js > Player#recoverFromStuck >> Seeking forward 2s for player ${this.guildId}.`);
                 await this.seek(seekPos);
             } else {
-                await this.softRestart("Stuck player recovery");
+                const recovering = this.softRestart("Stuck player recovery");
+                generation = getPlaybackGeneration(this);
+                if (!await recovering) throw new Error("Soft restart did not restore playback");
             }
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return;
             this.manager.emit("playerRecoverySuccess", this);
         } catch (error) {
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return;
             this.manager.emit("debug", `Moonlink.js > Player#recoverFromStuck >> Recovery failed: ${(error as Error).message}`);
             this.manager.emit("playerRecoveryFailed", this);
         }
@@ -204,9 +211,13 @@ export class Player {
         }
 
         try {
-            await this.stop();
+            const stopping = this.stop();
+            const generation = getPlaybackGeneration(this);
+            await stopping;
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
 
             await new Promise(resolve => setTimeout(resolve, 500));
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
 
             if (this.voice.sessionId && this.voice.token && this.voice.endpoint) {
                 const voicePayload: any = {
@@ -217,19 +228,22 @@ export class Player {
                 if (this.node.isNodeLink) {
                     voicePayload.channelId = this.voiceChannelId;
                 }
-                await this.sendPlayerUpdate({ voice: voicePayload }, true);
+                await this.updatePlayer({ voice: voicePayload }, true);
             }
 
-            this.queue.unshift(currentTrack);
-            await this.play({
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
+            const restored = await this.commands.enqueue(() => this.playNext({
                 track: currentTrack,
                 position: currentPosition,
                 noReplace: false
-            });
+            }, generation));
+            if (!restored) return false;
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
 
             if (wasPaused) {
                 await this.pause();
             }
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
 
             this.stuckDetectionCount = 0;
             this.silentDetectionCount = 0;
@@ -300,12 +314,20 @@ export class Player {
             finalPayload.voice = voicePayload;
         }
 
-        return this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        const response = await this.node.rest.updatePlayer(this.guildId, finalPayload, noReplace);
+        if (response == null) throw new Error("Backend did not acknowledge player update");
+        return response;
     }
 
     /** Sends a raw updatePlayer payload with NodeLink extras applied when supported. */
     public async updatePlayer(payload: Record<string, any>, noReplace?: boolean): Promise<any> {
-        return this.sendPlayerUpdate(payload, noReplace);
+        if (this.destroyed) throw new Error("Cannot update a destroyed player");
+        // Voice credentials complete connect(), which queued playback may be awaiting.
+        if (payload.voice && Object.keys(payload).length === 1) return this.sendPlayerUpdate(payload, noReplace);
+        return this.commands.enqueue(() => {
+            if (this.destroyed) throw new Error("Cannot update a destroyed player");
+            return this.sendPlayerUpdate(payload, noReplace);
+        });
     }
 
     public async connect({ selfDeaf, selfMute }: { selfDeaf?: boolean; selfMute?: boolean } = {}): Promise<this> {
@@ -327,7 +349,18 @@ export class Player {
     }
 
     public async play(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track = {}): Promise<boolean> {
-        invalidateAutoplay(this);
+        const generation = invalidatePlayback(this);
+        return this.commands.enqueue(() => this.playNext(options, generation));
+    }
+
+    /** @internal Automatic playback retains the intent that resolved its recommendation. */
+    public async playAutoPlay(track: Track, generation: number, autoplayGeneration: number): Promise<boolean> {
+        return this.commands.enqueue(() => this.playNext({ track }, generation,
+            () => this.autoPlay && getAutoplayGeneration(this) === autoplayGeneration));
+    }
+
+    private async playNext(options: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string } | Track, generation: number, allowed = () => true): Promise<boolean> {
+        if (this.destroyed || getPlaybackGeneration(this) !== generation || !allowed()) return false;
         let finalOptions: { track?: Track; encoded?: string, requester?: any, position?: number, noReplace?: boolean, audioTrackId?: string };
 
         if (options instanceof Track) {
@@ -350,6 +383,7 @@ export class Player {
             }
         }
 
+        if (this.destroyed || getPlaybackGeneration(this) !== generation || !allowed()) return false;
         let track = finalOptions.track;
         if (finalOptions.encoded) {
             try {
@@ -427,8 +461,10 @@ export class Player {
 
         try {
             await this.sendPlayerUpdate(payload, finalOptions.noReplace ?? this.manager.options.noReplace);
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
             this.manager.emit("debug", `Moonlink.js > Player#play >> Successfully sent play request for track "${this.current.title}" for guild ${this.guildId}`);
         } catch (e) {
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
             this.manager.emit("debug", `Moonlink.js > Player#play >> CRITICAL: Failed to send play request for guild ${this.guildId}. Reverting state. Error: ${(e as Error).message}`);
             this.playing = oldPlaying;
             this.paused = oldPaused;
@@ -598,6 +634,11 @@ export class Player {
     }
 
     public async pause(): Promise<this> {
+        return this.commands.enqueue(() => this.pausePlayback());
+    }
+
+    private async pausePlayback(): Promise<this> {
+        if (this.destroyed) return this;
         if (this.paused) {
             this.manager.emit("debug", `Moonlink.js > Player#pause >> Player is already paused for guild ${this.guildId}`);
             return this;
@@ -617,6 +658,23 @@ export class Player {
     }
 
     public async resume(options?: { timeout?: number }): Promise<this> {
+        const pending = this.commands.enqueue(() => this.resumePlayback());
+        if (!options?.timeout) return pending;
+        let timer: NodeJS.Timeout;
+        try {
+            return await Promise.race([
+                pending,
+                new Promise<never>((_, reject) => {
+                    timer = setTimeout(() => reject(new Error("Resume timed out")), options.timeout);
+                })
+            ]);
+        } finally {
+            clearTimeout(timer!);
+        }
+    }
+
+    private async resumePlayback(): Promise<this> {
+        if (this.destroyed) return this;
         const now = Date.now();
         const minResumeInterval = this.manager.options.playerHealth?.resumeDebounce ?? 1000;
 
@@ -645,14 +703,7 @@ export class Player {
         try {
             const promise = this.sendPlayerUpdate({ paused: false });
 
-            if (options?.timeout) {
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Resume timed out")), options.timeout)
-                );
-                await Promise.race([promise, timeoutPromise]);
-            } else {
-                await promise;
-            }
+            await promise;
 
             const oldPaused = this.paused;
             this.paused = false;
@@ -711,7 +762,12 @@ export class Player {
     }
 
     public async stop(): Promise<this> {
-        invalidateAutoplay(this);
+        invalidatePlayback(this);
+        return this.commands.enqueue(() => this.stopPlayback());
+    }
+
+    private async stopPlayback(): Promise<this> {
+        if (this.destroyed) return this;
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
 
@@ -764,6 +820,11 @@ export class Player {
     }
 
     public async seek(position: number): Promise<this> {
+        return this.commands.enqueue(() => this.seekPlayback(position));
+    }
+
+    private async seekPlayback(position: number): Promise<this> {
+        if (this.destroyed) return this;
         validate(
             position,
             (v) => typeof v === "number" && !isNaN(v) && v >= 0,
@@ -793,7 +854,9 @@ export class Player {
         this.manager.emit("playerChangedVolume", this, oldVolume, volume);
 
         this.manager.emit("debug", `Moonlink.js > Player#setVolume -> Changing volume from ${oldVolume} to ${volume} for guild ${this.guildId}`);
-        this.sendPlayerUpdate({ volume });
+        void this.updatePlayer({ volume }).catch(error => {
+            this.manager.emit("debug", `Moonlink.js > Player#setVolume >> Volume update failed for guild ${this.guildId}: ${error.message}`);
+        });
         this.updateData("volume", this.volume);
         this.manager.emit("debug", `Moonlink.js > Player#setVolume >> Volume updated for guild ${this.guildId}`);
 
@@ -848,8 +911,12 @@ export class Player {
         if (this.destroyed) {
             return;
         }
-        invalidateAutoplay(this);
+        invalidatePlayback(this);
         this.destroyed = true;
+        // Release playNext() if it is awaiting credentials before queuing teardown.
+        if (this.voice.state === VoiceConnectionState.CONNECTING) {
+            this.voice.emit("disconnect", new Error("Player destroyed during voice connection"));
+        }
 
         this.stopHealthCheck();
 
@@ -858,6 +925,10 @@ export class Player {
             this.resumeDebounceTimer = undefined;
         }
 
+        await this.commands.enqueue(() => this.destroyPlayback(reason));
+    }
+
+    private async destroyPlayback(reason?: string): Promise<void> {
         if (!reason) {
             const stack = new Error().stack?.split("\n").slice(2, 8).join("\n");
             this.manager.emit("debug", `Moonlink.js > Player#destroy >> Destroy called without reason for guild ${this.guildId}. Stack: ${stack || "unavailable"}`);
@@ -889,6 +960,8 @@ export class Player {
     }
 
     public async restart(): Promise<boolean> {
+        if (this.destroyed) return false;
+        const generation = getPlaybackGeneration(this);
         this.manager.emit("debug", `Moonlink.js > Player#restart -> Restarting player for guild ${this.guildId}`);
         this.manager.emit("playerResuming", this);
 
@@ -901,10 +974,12 @@ export class Player {
             await this.connect();
         } catch (error) {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> Voice connection failed for guild ${this.guildId}. Error: ${(error as Error).message}`);
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
             await this.destroy("Failed to establish voice connection on restart.");
             return false;
         }
 
+        if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
         if (this.current) {
             const lastKnownPosition = this.get<number>("lastKnownPosition");
             const lastState = this.get<{ position: number; connected: boolean }>("lastState");
@@ -948,11 +1023,16 @@ export class Player {
                 payload.loudnessNormalizer = this.loudnessNormalizer;
             }
 
-            await this.sendPlayerUpdate(payload);
+            const restored = await this.commands.enqueue(async () => {
+                if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
+                await this.sendPlayerUpdate(payload);
+                return !this.destroyed && getPlaybackGeneration(this) === generation;
+            });
+            if (!restored) return false;
 
         } else if (this.queue.size > 0) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
-            await this.play();
+            if (!await this.commands.enqueue(() => this.playNext({}, generation))) return false;
         } else {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> No track to restore and queue is empty for guild ${this.guildId}`);
             return true;
@@ -963,25 +1043,30 @@ export class Player {
     }
 
     public async transferNode(node: Node | string): Promise<boolean> {
-        const targetNode = typeof node === "string" ? this.manager.nodes.get(node) : node;
+        const targetNode = typeof node === "string" ? this.manager.nodes.nodes.get(node) : node;
 
-        if (!targetNode || !targetNode.connected || targetNode.identifier === this.node.identifier) {
+        if (this.destroyed || !targetNode || !targetNode.connected || targetNode.identifier === this.node.identifier) {
             this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Invalid target node for guild ${this.guildId}`);
             return false;
         }
 
         const oldNode = this.node;
+        const generation = invalidatePlayback(this);
         this.manager.emit("debug", `Moonlink.js > Player#transferNode -> Transferring player ${this.guildId} from ${oldNode.identifier} to ${targetNode.identifier}`);
 
-        try {
-            await oldNode.rest.destroyPlayer(this.guildId);
-        } catch (e) {
-            this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Failed to destroy player on old node: ${e.message}`);
-        }
-
-        this.node = targetNode;
-
-        await this.restart();
+        const moved = await this.commands.enqueue(async () => {
+            if (this.destroyed || getPlaybackGeneration(this) !== generation || !targetNode.connected) return false;
+            try {
+                await oldNode.rest.destroyPlayer(this.guildId);
+            } catch (e) {
+                this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Failed to destroy player on old node: ${e.message}`);
+            }
+            if (this.destroyed || getPlaybackGeneration(this) !== generation) return false;
+            this.node = targetNode;
+            this.set("lastState", undefined);
+            return true;
+        });
+        if (!moved || !await this.restart() || this.destroyed || getPlaybackGeneration(this) !== generation) return false;
 
         this.manager.emit("playerSwitchedNode", this, oldNode, targetNode);
         this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Successfully transferred player ${this.guildId} to ${targetNode.identifier}`);

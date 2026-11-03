@@ -13,7 +13,7 @@ import { WebSocket } from "../services/WebSocket";
 import { NodeState, TrackEndReason, VoiceState } from "../typings/types";
 import { Track } from "./Track";
 import { YouTubeLiveChat, YouTubeLiveChatOptions } from "./YouTubeLiveChat";
-import { getAutoplayGeneration } from "../structures/AutoplayState";
+import { getAutoplayGeneration, getPlaybackGeneration, invalidateAutoplay } from "../structures/AutoplayState";
 
 type LavalinkEventBase = {
   op: "event";
@@ -1039,6 +1039,11 @@ export class Node {
     const trackForEvent = trackData
         ? new (Structure.get("Track"))(trackData, player.current?.requester)
         : player.current;
+    if (payload.track?.encoded && player.current?.encoded !== payload.track.encoded) {
+      this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
+      return;
+    }
+    const generation = getPlaybackGeneration(player);
     if (!isCrossfadeTransition) {
       player.playing = false;
       player.paused = false;
@@ -1058,6 +1063,7 @@ export class Node {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
       return;
     }
+    if (getPlaybackGeneration(player) !== generation) return;
 
     if (isCrossfadeTransition || isGaplessTransition) {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to ${reason} for player ${player.guildId}. Skipping queue/autoplay logic.`);
@@ -1088,7 +1094,7 @@ export class Node {
 
     if (player.loop === "track" && player.current) {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is in track loop mode. Replaying track: ${player.current.title}.`);
-      await this.rest.updatePlayer(player.guildId, {
+      await player.updatePlayer({
         track: { encoded: player.current.encoded },
         position: 0,
       });
@@ -1111,8 +1117,9 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Queue is empty for player ${player.guildId}. Proceeding to autoplay check.`);
     if (player.autoPlay && trackForEvent) {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd -> Attempting autoPlay for player ${player.guildId}. Previous track: ${trackForEvent.title}.`);
+        const autoplay = this.handleAutoPlay(player, trackForEvent);
         const generation = getAutoplayGeneration(player);
-        const autoplayed = await this.handleAutoPlay(player, trackForEvent);
+        const autoplayed = await autoplay;
         
         if (autoplayed) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd << AutoPlay was successful for player ${player.guildId}.`);
@@ -1584,7 +1591,8 @@ export class Node {
 
   public async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
     if (!previousTrack || player.destroyed || !player.autoPlay) return false;
-    const generation = getAutoplayGeneration(player);
+    const generation = invalidateAutoplay(player);
+    const playbackGeneration = getPlaybackGeneration(player);
 
     if (!player.recommendations || player.recommendations.length === 0) {
       await this.updateRecommendations(player, previousTrack);
@@ -1596,8 +1604,12 @@ export class Node {
       const selected = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
 
       if (selected) {
-        player.queue.add(selected);
-        await player.play();
+        const playing = player.playAutoPlay(selected, playbackGeneration, generation);
+        if (!await playing || player.destroyed || !player.autoPlay || getPlaybackGeneration(player) !== playbackGeneration || getAutoplayGeneration(player) !== generation) {
+          const index = player.queue.tracks.indexOf(selected);
+          if (index >= 0) player.queue.remove(index);
+          return false;
+        }
         this.manager.emit("autoPlayed", player, selected, previousTrack);
         player.recommendations = player.recommendations.filter(t => t.encoded !== selected.encoded);
         return true;

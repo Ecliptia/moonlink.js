@@ -13,6 +13,7 @@ export declare class Rest {
     private readonly jsonHeaders;
     private readonly userAgentHeaders;
     private sessionRecoveryInProgress;
+    private readonly recoveringPlayers;
     constructor(node: Node);
     get url(): string;
     private triggerPlayerRecovery;
