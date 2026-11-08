@@ -53,6 +53,8 @@ export type PlayerOptions = {
     textChannelId?: string;
     selfDeaf?: boolean;
     selfMute?: boolean;
+    autoPlay?: boolean;
+    autoSyncNextTrack?: boolean;
 };
 export type VoiceState = {
     sessionId: string;

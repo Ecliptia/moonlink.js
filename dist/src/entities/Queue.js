@@ -11,6 +11,9 @@ class Queue {
     }
     _updateQueue() {
         this.player.updateData('queue', this.tracks.map(t => ({ encoded: t.encoded, requester: t.requester })));
+        if (this.player.autoSyncNextTrack) {
+            this.player.syncNextTrack().catch(() => { });
+        }
     }
     get size() {
         return this.tracks.length;

@@ -1026,6 +1026,43 @@ export class Node {
     }
 
     const trackForEvent = new (Structure.get("Track"))(trackData, player.current?.requester);
+
+    // If NodeLink transitioned to nextTrack autonomously via gapless or crossfading:
+    if (payload.track && player.current && player.current.encoded !== payload.track.encoded) {
+      const previousTrack = player.current;
+      if (!player.get("isBackPlay")) {
+        player.previous.push(previousTrack);
+        const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 10;
+        if (player.previous.length > historyLimit) {
+          player.previous.shift();
+        }
+        player.updateData("previous", player.previous.map((t: any) => ({ encoded: t.encoded, requester: t.requester })));
+      }
+      player.set("isBackPlay", false);
+
+      if (player.queue?.first && player.queue.first.encoded === payload.track.encoded) {
+        player.queue.shift();
+      } else if (Array.isArray(player.recommendations) && player.recommendations[0]?.encoded === payload.track.encoded) {
+        const autoTrack = player.recommendations.shift();
+        this.manager.emit("autoPlayed", player, autoTrack, previousTrack);
+      }
+
+      player.current = trackForEvent;
+      player.updateData("current", { encoded: player.current.encoded, requester: player.current.requester });
+
+      if (player.nextTrack?.encoded === player.current.encoded) {
+        player.nextTrack = undefined;
+        player.set("__nodelink_next_track_encoded", null);
+      }
+
+      if (player.autoSyncNextTrack) {
+        player.syncNextTrack().catch(() => {});
+      }
+      if (player.autoPlay) {
+        this.updateRecommendations(player, player.current).catch(() => {});
+      }
+    }
+
     this.manager.emit("trackStart", player, trackForEvent);
   }
 
@@ -1049,7 +1086,7 @@ export class Node {
       return;
     }
     const generation = getPlaybackGeneration(player);
-    if (!isCrossfadeTransition) {
+    if (!isCrossfadeTransition && !isGaplessTransition) {
       player.playing = false;
       player.paused = false;
       player.updateActivity();
@@ -1603,6 +1640,9 @@ export class Node {
       });
 
       player.recommendations = candidates;
+      if (player.autoSyncNextTrack && player.queue.isEmpty) {
+        player.syncNextTrack().catch(() => {});
+      }
     } catch (error) {
       this.manager.emit("debug", `Moonlink.js > Node#updateRecommendations >> Error fetching recommendations: ${error.message}`);
     }

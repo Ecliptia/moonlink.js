@@ -43,7 +43,8 @@ export class Player {
     public lastActivityTime: number = Date.now();
     private readonly commands = new PlayerCommandQueue();
     private fading?: IFadingOptions;
-    private nextTrack?: { encoded: string; userData?: Record<string, any> };
+    public nextTrack?: { encoded: string; userData?: Record<string, any> };
+    public autoSyncNextTrack: boolean = false;
     private audioTrackId?: string;
     private loudnessNormalizer?: boolean;
     private endTime?: number;
@@ -67,6 +68,7 @@ export class Player {
         this.set("selfDeaf", config.selfDeaf ?? this.manager.options.defaultPlayer?.selfDeaf ?? true);
         this.set("selfMute", config.selfMute ?? this.manager.options.defaultPlayer?.selfMute ?? false);
         this.autoPlay = config.autoPlay ?? this.manager.options.defaultPlayer?.autoPlay ?? false;
+        this.autoSyncNextTrack = config.autoSyncNextTrack ?? this.manager.options.defaultPlayer?.autoSyncNextTrack ?? false;
         this.autoLeave = config.autoLeave ?? this.manager.options.defaultPlayer?.autoLeave ?? false;
         this.loop = config.loop ?? this.manager.options.defaultPlayer?.loop ?? "off";
         this.loopCount = config.loopCount;
@@ -96,7 +98,7 @@ export class Player {
             }
         }
 
-        this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}`);
+        this.manager.emit("debug", `Moonlink.js > Player#constructor >> Player created for guild ${this.guildId} on node ${this.node.identifier} | autoPlay: ${this.autoPlay}, autoLeave: ${this.autoLeave}, loop: ${this.loop}, autoSyncNextTrack: ${this.autoSyncNextTrack}`);
 
         this.startHealthCheck();
     }
@@ -283,10 +285,33 @@ export class Player {
         }
     }
 
-    private resolveEncodedTrack(track: Track | string): string {
-        if (track instanceof Track) return track.encoded;
+    private resolveEncodedTrack(track: Track | { encoded?: string } | string): string {
         if (typeof track === "string" && track.length > 0) return track;
+        if (track && typeof (track as any).encoded === "string" && (track as any).encoded.length > 0) return (track as any).encoded;
         throw new Error("Invalid track input. Provide a Track instance or encoded string.");
+    }
+
+    public getEncodedTrack(track: any): string | null {
+        if (!track) return null;
+        if (typeof track === "string" && track.length > 0) return track;
+        if (typeof track.encoded === "string" && track.encoded.length > 0) return track.encoded;
+        return null;
+    }
+
+    public getNextTrackCandidate(): Track | null {
+        if (this.loop === "track" && this.current) {
+            return this.current;
+        }
+        if (this.queue && this.queue.first) {
+            return this.queue.first;
+        }
+        if (this.loop === "queue" && this.current) {
+            return this.current;
+        }
+        if (this.autoPlay && Array.isArray(this.recommendations) && this.recommendations.length > 0) {
+            return this.recommendations[0];
+        }
+        return null;
     }
 
     private async sendPlayerUpdate(payload: Record<string, any>, noReplace?: boolean): Promise<any> {
@@ -457,6 +482,22 @@ export class Player {
             payload.track.audioTrackId = audioTrackId;
         }
 
+        if (this.nextTrack?.encoded === this.current.encoded) {
+            this.nextTrack = undefined;
+            this.set("__nodelink_next_track_encoded", null);
+        }
+
+        if (this.autoSyncNextTrack && !this.nextTrack && this.node?.isNodeLink) {
+            const nextTarget = this.getNextTrackCandidate();
+            if (nextTarget) {
+                const encoded = this.getEncodedTrack(nextTarget);
+                if (encoded) {
+                    this.nextTrack = { encoded, userData: (nextTarget as any)?.userData };
+                    this.set("__nodelink_next_track_encoded", encoded);
+                }
+            }
+        }
+
         if (this.fading) payload.fading = this.fading;
         if (this.nextTrack) payload.nextTrack = this.nextTrack;
         if (this.loudnessNormalizer !== undefined) {
@@ -498,6 +539,10 @@ export class Player {
 
 
         this.node.updateRecommendations(this).catch(() => {});
+
+        if (this.autoSyncNextTrack) {
+            this.syncNextTrack().catch(() => {});
+        }
 
         return true;
     }
@@ -603,10 +648,12 @@ export class Player {
     }
 
     /** NodeLink-only feature. See https://github.com/PerformanC/NodeLink */
-    public async setNextTrack(track: Track | string, userData?: Record<string, any>): Promise<this> {
+    public async setNextTrack(track: Track | { encoded?: string } | string, userData?: Record<string, any>): Promise<this> {
         this.assertNodeLinkFeature("nextTrack");
         const encoded = this.resolveEncodedTrack(track);
-        this.nextTrack = { encoded, userData };
+        const finalUserData = userData ?? (track as any)?.userData;
+        this.nextTrack = { encoded, userData: finalUserData };
+        this.set("__nodelink_next_track_encoded", encoded);
         await this.sendPlayerUpdate({ nextTrack: this.nextTrack });
         return this;
     }
@@ -615,7 +662,102 @@ export class Player {
     public async clearNextTrack(): Promise<this> {
         this.assertNodeLinkFeature("nextTrack");
         this.nextTrack = undefined;
+        this.set("__nodelink_next_track_encoded", null);
         await this.sendPlayerUpdate({ nextTrack: null });
+        return this;
+    }
+
+    /** NodeLink-only feature. Sets autoSyncNextTrack and triggers synchronization. */
+    public setAutoSyncNextTrack(enabled: boolean): this {
+        this.syncNextTrack(enabled).catch(() => {});
+        return this;
+    }
+
+    /**
+     * Synchronizes NodeLink's nextTrack with the upcoming track from queue or recommendations.
+     * When enable is true, enables autoSyncNextTrack and performs an immediate sync.
+     * When enable is false, disables autoSyncNextTrack and clears nextTrack from NodeLink.
+     * If called with no arguments, syncs immediately if connected to a NodeLink node.
+     */
+    public async syncNextTrack(enable?: boolean): Promise<this> {
+        if (typeof enable === "boolean") {
+            this.autoSyncNextTrack = enable;
+            if (!enable) {
+                const cacheKey = "__nodelink_next_track_encoded";
+                if (this.nextTrack || this.get(cacheKey)) {
+                    if (this.node?.isNodeLink) {
+                        await this.clearNextTrack().catch(() => {});
+                    } else {
+                        this.nextTrack = undefined;
+                    }
+                    this.set(cacheKey, null);
+                }
+                return this;
+            }
+        }
+
+        if (this.destroyed) return this;
+
+        if (!this.node || !this.node.isNodeLink) {
+            this.manager.emit("debug", `Moonlink.js > Player#syncNextTrack >> Node is not NodeLink for guild ${this.guildId}; skipping sync.`);
+            return this;
+        }
+
+        const cacheKey = "__nodelink_next_track_encoded";
+        const cachedEncoded = this.get<string | null>(cacheKey) || null;
+        const activeNextEncoded = this.getEncodedTrack(this.nextTrack) || cachedEncoded;
+
+        try {
+            if (!this.current) {
+                if (activeNextEncoded) {
+                    await this.clearNextTrack();
+                    this.set(cacheKey, null);
+                    this.manager.emit(
+                        "debug",
+                        `Moonlink.js > Player#syncNextTrack >> Cleared nextTrack for guild ${this.guildId} (no current track).`
+                    );
+                }
+                return this;
+            }
+
+            if (this.queue.isEmpty && this.autoPlay && (!this.recommendations || this.recommendations.length === 0)) {
+                this.node.updateRecommendations(this).catch(() => {});
+            }
+
+            const nextCandidate = this.getNextTrackCandidate();
+            const nextEncoded = this.getEncodedTrack(nextCandidate);
+
+            if (nextCandidate && nextEncoded) {
+                if (activeNextEncoded === nextEncoded) {
+                    this.manager.emit(
+                        "debug",
+                        `Moonlink.js > Player#syncNextTrack >> nextTrack already synced for guild ${this.guildId}; skipping PATCH.`
+                    );
+                    return this;
+                }
+
+                await this.setNextTrack(nextCandidate, (nextCandidate as any)?.userData);
+                this.set(cacheKey, nextEncoded);
+                this.manager.emit(
+                    "debug",
+                    `Moonlink.js > Player#syncNextTrack >> Synced nextTrack (${(nextCandidate as any)?.title ?? nextEncoded}) for guild ${this.guildId}.`
+                );
+                return this;
+            }
+
+            if (activeNextEncoded) {
+                await this.clearNextTrack();
+                this.set(cacheKey, null);
+                this.manager.emit(
+                    "debug",
+                    `Moonlink.js > Player#syncNextTrack >> Cleared nextTrack for guild ${this.guildId} (queue empty and no recommendations).`
+                );
+            }
+        } catch (error) {
+            const message = error && (error as Error).message ? (error as Error).message : String(error);
+            this.manager.emit("debug", `Moonlink.js > Player#syncNextTrack >> Failed for guild ${this.guildId}: ${message}`);
+        }
+
         return this;
     }
 
@@ -778,7 +920,17 @@ export class Player {
         this.manager.emit("debug", `Moonlink.js > Player#stop -> Sending stop request to node ${this.node.identifier} for guild ${this.guildId}`);
         this.manager.emit("playerTriggeredStop", this);
 
-        await this.sendPlayerUpdate({ track: { encoded: null } });
+        const stopPayload: Record<string, any> = { track: { encoded: null } };
+        const cacheKey = "__nodelink_next_track_encoded";
+        if (this.nextTrack || this.get(cacheKey)) {
+            this.nextTrack = undefined;
+            this.set(cacheKey, null);
+            if (this.node?.isNodeLink) {
+                stopPayload.nextTrack = null;
+            }
+        }
+
+        await this.sendPlayerUpdate(stopPayload);
 
         const oldPlaying = this.playing;
         this.playing = false;
@@ -880,6 +1032,9 @@ export class Player {
         this.updateData("loopCount", this.loopCount);
 
         this.manager.emit("debug", `Moonlink.js > Player#setLoop >> Loop mode changed from "${oldLoop}" to "${loop}"${count ? ` (count: ${count})` : ""} for guild ${this.guildId}`);
+        if (this.autoSyncNextTrack) {
+            this.syncNextTrack().catch(() => {});
+        }
         return this;
     }
 
@@ -889,6 +1044,9 @@ export class Player {
         this.manager.emit("playerAutoPlaySet", this, autoPlay);
         this.updateData("autoPlay", this.autoPlay);
         this.manager.emit("debug", `Moonlink.js > Player#setAutoPlay >> AutoPlay set to ${autoPlay} for guild ${this.guildId}`);
+        if (this.autoSyncNextTrack && this.queue.isEmpty) {
+            this.syncNextTrack().catch(() => {});
+        }
         return this;
     }
 

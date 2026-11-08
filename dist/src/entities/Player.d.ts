@@ -36,7 +36,11 @@ export declare class Player {
     lastActivityTime: number;
     private readonly commands;
     private fading?;
-    private nextTrack?;
+    nextTrack?: {
+        encoded: string;
+        userData?: Record<string, any>;
+    };
+    autoSyncNextTrack: boolean;
     private audioTrackId?;
     private loudnessNormalizer?;
     private endTime?;
@@ -60,6 +64,8 @@ export declare class Player {
     updateData<T>(path?: string, data?: T): Promise<void>;
     private assertNodeLinkFeature;
     private resolveEncodedTrack;
+    getEncodedTrack(track: any): string | null;
+    getNextTrackCandidate(): Track | null;
     private sendPlayerUpdate;
     updatePlayer(payload: Record<string, any>, noReplace?: boolean): Promise<any>;
     connect({ selfDeaf, selfMute }?: {
@@ -101,8 +107,12 @@ export declare class Player {
     getDirectStream(itag?: number | null): Promise<any | null>;
     setFading(fading: IFadingOptions): Promise<this>;
     clearFading(): Promise<this>;
-    setNextTrack(track: Track | string, userData?: Record<string, any>): Promise<this>;
+    setNextTrack(track: Track | {
+        encoded?: string;
+    } | string, userData?: Record<string, any>): Promise<this>;
     clearNextTrack(): Promise<this>;
+    setAutoSyncNextTrack(enabled: boolean): this;
+    syncNextTrack(enable?: boolean): Promise<this>;
     setAudioTrackId(audioTrackId?: string): this;
     setLoudnessNormalizer(enabled: boolean): Promise<this>;
     createVoiceReceiver(options?: VoiceReceiverOptions): VoiceReceiver;

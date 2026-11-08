@@ -120,6 +120,7 @@ export interface IManagerOptionsConfig {
 export interface IDefaultPlayerOptions {
     volume?: number;
     autoPlay?: boolean;
+    autoSyncNextTrack?: boolean;
     autoLeave?: boolean;
     selfDeaf?: boolean;
     selfMute?: boolean;
@@ -310,6 +311,7 @@ export interface IPlayerConfig {
     selfDeaf?: boolean;
     selfMute?: boolean;
     autoPlay?: boolean;
+    autoSyncNextTrack?: boolean;
     autoLeave?: boolean;
     loop?: "off" | "track" | "queue";
     loopCount?: number;

@@ -55,6 +55,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
             defaultPlayer: {
                 volume: 100,
                 autoPlay: false,
+                autoSyncNextTrack: false,
                 autoLeave: false,
                 selfDeaf: true,
                 selfMute: false,

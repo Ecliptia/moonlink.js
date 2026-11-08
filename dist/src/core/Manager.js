@@ -40,6 +40,7 @@ class Manager extends Util_1.EventEmitter {
             defaultPlayer: {
                 volume: 100,
                 autoPlay: false,
+                autoSyncNextTrack: false,
                 autoLeave: false,
                 selfDeaf: true,
                 selfMute: false,
