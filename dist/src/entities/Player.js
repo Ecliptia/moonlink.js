@@ -153,8 +153,8 @@ class Player {
                 this.manager.emit("debug", `Moonlink.js > Player#recoverFromStuck >> Seeking forward 2s for player ${this.guildId}.`);
                 await this.seek(seekPos);
             }
-            else {
-                await this.softRestart("Stuck player recovery");
+            else if (!await this.softRestart("Stuck player recovery")) {
+                throw new Error("Soft restart did not restore playback");
             }
             this.manager.emit("playerRecoverySuccess", this);
         }
@@ -189,12 +189,13 @@ class Player {
                 }
                 await this.sendPlayerUpdate({ voice: voicePayload }, true);
             }
-            this.queue.unshift(currentTrack);
-            await this.play({
+            const restored = await this.play({
                 track: currentTrack,
                 position: currentPosition,
                 noReplace: false
             });
+            if (!restored)
+                return false;
             if (wasPaused) {
                 await this.pause();
             }
@@ -786,7 +787,8 @@ class Player {
         }
         else if (this.queue.size > 0) {
             this.manager.emit("debug", `Moonlink.js > Player#restart -> No current track, playing first from queue for guild ${this.guildId}`);
-            await this.play();
+            if (!await this.play())
+                return false;
         }
         else {
             this.manager.emit("debug", `Moonlink.js > Player#restart >> No track to restore and queue is empty for guild ${this.guildId}`);
@@ -810,7 +812,8 @@ class Player {
             this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Failed to destroy player on old node: ${e.message}`);
         }
         this.node = targetNode;
-        await this.restart();
+        if (!await this.restart())
+            return false;
         this.manager.emit("playerSwitchedNode", this, oldNode, targetNode);
         this.manager.emit("debug", `Moonlink.js > Player#transferNode >> Successfully transferred player ${this.guildId} to ${targetNode.identifier}`);
         return true;

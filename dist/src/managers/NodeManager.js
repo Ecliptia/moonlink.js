@@ -147,7 +147,12 @@ class NodeManager {
             this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Moving ${playersToMove.length} players from ${identifier}...`);
             const newNode = this.findNode({ exclude: [identifier] });
             if (newNode) {
-                await Promise.all(playersToMove.map(player => player.transferNode(newNode)));
+                const transfers = await Promise.allSettled(playersToMove.map(player => player.transferNode(newNode)));
+                const failed = transfers.some((result, index) => result.status !== "fulfilled" || result.value !== true || playersToMove[index].node !== newNode || playersToMove[index].destroyed);
+                if (failed) {
+                    this.manager.emit("debug", `Moonlink.js > NodeManager#eject: Some players failed to move from ${identifier}. Keeping the source node configured.`);
+                    return false;
+                }
             }
             else {
                 this.manager.emit("debug", `Moonlink.js > NodeManager#eject: No other nodes available to receive players from ${identifier}. Players will be destroyed.`);
