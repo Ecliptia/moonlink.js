@@ -261,7 +261,22 @@ class Manager extends Util_1.EventEmitter {
         return result;
     }
     async packetUpdate(packet) {
-        if (!this.initialized || !packet.t || !["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
+        if (!this.initialized || !packet.t)
+            return;
+        if (packet.t === "CHANNEL_DELETE") {
+            const data = packet.d;
+            const guildId = data?.guild_id;
+            const channelId = data?.id;
+            if (guildId && channelId) {
+                const player = this.players.get(guildId);
+                if (player && player.voiceChannelId === channelId) {
+                    this.emit("debug", `Moonlink.js > Manager > Voice channel ${channelId} deleted for guild ${guildId}. Destroying player.`);
+                    await player.destroy("Channel deleted");
+                }
+            }
+            return;
+        }
+        if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         const voicePacket = packet;
         const player = this.players.get(voicePacket.d.guild_id);

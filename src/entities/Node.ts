@@ -1437,10 +1437,24 @@ export class Node {
         return;
     }
 
+    if (code === 4014) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Bot disconnected/kicked from voice channel (code 4014) for player ${player.guildId}.`);
+        this.manager.emit("socketClosed", player, code, reason, byRemote, payload);
+        player.voice.cancelReconnection();
+        player.voiceChannelId = null;
+        player.connected = false;
+        player.playing = false;
+        player.paused = false;
+        player.set("userInitiatedConnect", false);
+        this.manager.emit("playerDisconnected", player);
+        await player.destroy("Disconnected/kicked from voice channel (4014)");
+        return;
+    }
+
     const voiceOptions = this.manager.options.voiceConnection;
-    if (!voiceOptions?.autoReconnect || !player.get("userInitiatedConnect")) {
-        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect skipped for player ${player.guildId}. (Enabled: ${voiceOptions?.autoReconnect}, UserInitiated: ${player.get("userInitiatedConnect")})`);
-        if (!player.get("userInitiatedConnect")) await player.destroy("Disconnected by user/kick");
+    if (!voiceOptions?.autoReconnect || !player.get("userInitiatedConnect") || !player.voiceChannelId) {
+        this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Auto-reconnect skipped for player ${player.guildId}. (Enabled: ${voiceOptions?.autoReconnect}, UserInitiated: ${player.get("userInitiatedConnect")}, Channel: ${player.voiceChannelId})`);
+        if (!player.get("userInitiatedConnect") || !player.voiceChannelId) await player.destroy("Disconnected by user/kick");
         return;
     }
 
@@ -1461,8 +1475,8 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed -> Reconnect scheduled in ${reconnectDelay}ms for player ${player.guildId}.`);
 
     setTimeout(async () => {
-        if (player.destroyed || !player.get("userInitiatedConnect")) {
-            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Reconnect cancelled for player ${player.guildId}. (Destroyed or not user-initiated)`);
+        if (player.destroyed || !player.get("userInitiatedConnect") || !player.voiceChannelId) {
+            this.manager.emit("debug", `Moonlink.js > Node#handleWebSocketClosed >> Reconnect cancelled for player ${player.guildId}. (Destroyed, missing channel, or not user-initiated)`);
             return;
         }
 

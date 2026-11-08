@@ -299,6 +299,10 @@ class Player {
         });
     }
     async connect({ selfDeaf, selfMute } = {}) {
+        if (!this.voiceChannelId) {
+            this.manager.emit("debug", `Moonlink.js > Player#connect >> Cannot connect player without a voiceChannelId for guild ${this.guildId}`);
+            return this;
+        }
         const connectStack = new Error().stack?.split("\n").slice(2, 8).join("\n");
         this.manager.emit("debug", `Moonlink.js > Player#connect -> Connect requested for guild ${this.guildId}. Stack: ${connectStack || "unavailable"}`);
         this.set("userInitiatedConnect", true);
@@ -313,6 +317,9 @@ class Player {
         const disconnectStack = new Error().stack?.split("\n").slice(2, 8).join("\n");
         this.manager.emit("debug", `Moonlink.js > Player#disconnect -> Disconnect requested for guild ${this.guildId}. Stack: ${disconnectStack || "unavailable"}`);
         this.set("userInitiatedConnect", false);
+        this.voice.cancelReconnection();
+        this.voiceChannelId = null;
+        this.connected = false;
         await this.voice.disconnect();
         return this;
     }
