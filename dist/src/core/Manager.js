@@ -17,6 +17,7 @@ class Manager extends Util_1.EventEmitter {
     idleCheckInterval;
     spotifySource;
     deezerSource;
+    recommendationsCache = new Map();
     get readyNodes() {
         return this.nodes.ready;
     }
@@ -45,7 +46,7 @@ class Manager extends Util_1.EventEmitter {
                 selfDeaf: true,
                 selfMute: false,
                 loop: "off",
-                historySize: 10,
+                historySize: 25,
                 ...config.options?.defaultPlayer
             },
             voiceConnection: {
@@ -73,8 +74,14 @@ class Manager extends Util_1.EventEmitter {
             queue: {
                 maxSize: 1000,
                 allowDuplicates: true,
-                historyLimit: 10,
+                historyLimit: 25,
                 ...config.options?.queue
+            },
+            recommendations: {
+                cacheTTL: 1800000,
+                cacheMaxSize: 200,
+                minThreshold: 3,
+                ...config.options?.recommendations
             },
             sources: {
                 disabledSources: [],
@@ -118,6 +125,29 @@ class Manager extends Util_1.EventEmitter {
         Util_1.Structure.setManager(this);
         this.nodes = new (Util_1.Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Util_1.Structure.get("PlayerManager"))(this);
+    }
+    getRecommendationCache(key, ttl = 1800000) {
+        const item = this.recommendationsCache.get(key);
+        if (!item)
+            return null;
+        if (Date.now() - item.timestamp > ttl) {
+            this.recommendationsCache.delete(key);
+            return null;
+        }
+        return item.tracks;
+    }
+    setRecommendationCache(key, tracks, maxCacheSize = 200) {
+        if (!tracks || tracks.length === 0)
+            return;
+        if (this.recommendationsCache.size >= maxCacheSize) {
+            const oldestKey = this.recommendationsCache.keys().next().value;
+            if (oldestKey)
+                this.recommendationsCache.delete(oldestKey);
+        }
+        this.recommendationsCache.set(key, { tracks, timestamp: Date.now() });
+    }
+    clearRecommendationCache() {
+        this.recommendationsCache.clear();
     }
     use(connector, client) {
         connector.setManager(this);

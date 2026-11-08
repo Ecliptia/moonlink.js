@@ -1032,7 +1032,7 @@ export class Node {
       const previousTrack = player.current;
       if (!player.get("isBackPlay")) {
         player.previous.push(previousTrack);
-        const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 10;
+        const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 25;
         if (player.previous.length > historyLimit) {
           player.previous.shift();
         }
@@ -1042,9 +1042,17 @@ export class Node {
 
       if (player.queue?.first && player.queue.first.encoded === payload.track.encoded) {
         player.queue.shift();
-      } else if (Array.isArray(player.recommendations) && player.recommendations[0]?.encoded === payload.track.encoded) {
-        const autoTrack = player.recommendations.shift();
-        this.manager.emit("autoPlayed", player, autoTrack, previousTrack);
+      } else if (Array.isArray(player.recommendations)) {
+        const recIndex = player.recommendations.findIndex((t: any) => t.encoded === payload.track.encoded);
+        if (recIndex >= 0) {
+          const autoTrack = player.recommendations.splice(recIndex, 1)[0];
+          this.manager.emit("autoPlayed", player, autoTrack, previousTrack);
+
+          const minThreshold = this.manager.options.recommendations?.minThreshold ?? 3;
+          if (player.recommendations.length <= minThreshold) {
+            this.updateRecommendations(player, trackForEvent, true).catch(() => {});
+          }
+        }
       }
 
       player.current = trackForEvent;
@@ -1540,111 +1548,132 @@ export class Node {
     }, reconnectDelay);
   }
 
-  public async updateRecommendations(player: any, track = player.current): Promise<void> {
+  public async updateRecommendations(player: any, track = player.current, append: boolean = false): Promise<void> {
     if (!track || !track.sourceName || !track.identifier) return;
     const generation = getAutoplayGeneration(player);
 
-    let uri: string | null = null;
-    let searchSource: string | null = null;
-    const source = track.sourceName.toLowerCase();
-    const identifier = track.identifier;
+    const cacheKey = `${(track.sourceName || "unknown").toLowerCase()}:${track.identifier}`;
+    const cacheTTL = this.manager.options.recommendations?.cacheTTL ?? 1800000;
+    const cacheMaxSize = this.manager.options.recommendations?.cacheMaxSize ?? 200;
 
-    switch (source) {
-      case "youtube":
-        uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
-        searchSource = "youtube";
-        break;
-      case "youtubemusic":
-        uri = `https://music.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
-        searchSource = "youtubemusic";
-        break;
-      case "spotify":
-        if (this.isNodeLink && this.capabilities.has("source:spotify")) {
-          uri = `seed_tracks=${identifier}`;
-          searchSource = "sprec";
-        }
-        break;
-      case "deezer":
-        if (this.isNodeLink && this.capabilities.has("source:deezer")) {
-          uri = identifier;
-          searchSource = "dzrec";
-        }
-        break;
-      case "soundcloud":
-        uri = `${track.author}`;
-        searchSource = "soundcloud";
-        break;
-      case "applemusic":
-        if (this.isNodeLink && this.capabilities.has("source:applemusic")) {
-          uri = identifier;
-          searchSource = "amrec";
-        }
-        break;
-    }
+    let resTracks: any[] | null = this.manager.getRecommendationCache(cacheKey, cacheTTL);
 
-    if (!uri || !searchSource) {
-      if (source !== "youtube") {
-        const res = await this.manager.search({ query: `${track.title} ${track.author}` });
-        if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
-        if (res?.tracks?.length > 0) {
-          uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
+    if (!resTracks) {
+      let uri: string | null = null;
+      let searchSource: string | null = null;
+      const source = track.sourceName.toLowerCase();
+      const identifier = track.identifier;
+
+      switch (source) {
+        case "youtube":
+          uri = `https://www.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
           searchSource = "youtube";
+          break;
+        case "youtubemusic":
+          uri = `https://music.youtube.com/watch?v=${identifier}&list=RD${identifier}`;
+          searchSource = "youtubemusic";
+          break;
+        case "spotify":
+          if (this.isNodeLink && this.capabilities.has("source:spotify")) {
+            uri = `seed_tracks=${identifier}`;
+            searchSource = "sprec";
+          }
+          break;
+        case "deezer":
+          if (this.isNodeLink && this.capabilities.has("source:deezer")) {
+            uri = identifier;
+            searchSource = "dzrec";
+          }
+          break;
+        case "soundcloud":
+          uri = `${track.author}`;
+          searchSource = "soundcloud";
+          break;
+        case "applemusic":
+          if (this.isNodeLink && this.capabilities.has("source:applemusic")) {
+            uri = identifier;
+            searchSource = "amrec";
+          }
+          break;
+      }
+
+      if (!uri || !searchSource) {
+        if (source !== "youtube") {
+          const res = await this.manager.search({ query: `${track.title} ${track.author}` });
+          if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
+          if (res?.tracks?.length > 0) {
+            uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
+            searchSource = "youtube";
+          } else {
+            return;
+          }
         } else {
           return;
         }
-      } else {
+      }
+
+      try {
+        const res = await this.manager.search({
+          query: uri,
+          source: searchSource,
+          requester: track.requester,
+        });
+        if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
+
+        if (!res || !res.tracks || res.tracks.length === 0 || res.loadType === "error") {
+          return;
+        }
+
+        resTracks = res.tracks;
+        this.manager.setRecommendationCache(cacheKey, resTracks, cacheMaxSize);
+      } catch (error) {
+        this.manager.emit("debug", `Moonlink.js > Node#updateRecommendations >> Error fetching recommendations: ${error.message}`);
         return;
       }
     }
 
-    try {
-      const res = await this.manager.search({
-        query: uri,
-        source: searchSource,
-        requester: track.requester,
-      });
-      if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
+    const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 25;
+    const recentHistory = Array.isArray(player.previous) ? player.previous.slice(-historyLimit) : [];
+    const queuedTracks = Array.isArray(player.queue?.tracks) ? player.queue.tracks : [];
+    const existingRecs = append && Array.isArray(player.recommendations) ? player.recommendations : [];
 
-      if (!res || !res.tracks || res.tracks.length === 0 || res.loadType === "error") {
-        return;
-      }
+    const getTrackKey = (t: any): string | null => {
+      if (!t) return null;
+      const id = t.identifier ?? t.info?.identifier;
+      const src = (t.sourceName ?? t.info?.sourceName ?? "unknown").toLowerCase();
+      if (id) return `${src}:${id}`;
+      return t.encoded || null;
+    };
 
-      const historyLimit = this.manager.options.queue?.historyLimit ?? player.historySize ?? 10;
-      const recentHistory = Array.isArray(player.previous) ? player.previous.slice(-historyLimit) : [];
-      const queuedTracks = Array.isArray(player.queue?.tracks) ? player.queue.tracks : [];
+    const blockedKeys = new Set<string>();
+    const addBlocked = (t: any) => {
+      const key = getTrackKey(t);
+      if (key) blockedKeys.add(key);
+    };
 
-      const getTrackKey = (t: any): string | null => {
-        if (!t) return null;
-        const id = t.identifier ?? t.info?.identifier;
-        const src = (t.sourceName ?? t.info?.sourceName ?? "unknown").toLowerCase();
-        if (id) return `${src}:${id}`;
-        return t.encoded || null;
-      };
+    addBlocked(track);
+    if (player.current) addBlocked(player.current);
+    recentHistory.forEach(addBlocked);
+    queuedTracks.forEach(addBlocked);
+    existingRecs.forEach(addBlocked);
 
-      const blockedKeys = new Set<string>();
-      const addBlocked = (t: any) => {
-        const key = getTrackKey(t);
-        if (key) blockedKeys.add(key);
-      };
+    const seenKeys = new Set<string>();
+    const candidates = resTracks.filter((t: any) => {
+      const key = getTrackKey(t);
+      if (!key || blockedKeys.has(key) || seenKeys.has(key)) return false;
+      seenKeys.add(key);
+      return true;
+    });
 
-      addBlocked(track);
-      recentHistory.forEach(addBlocked);
-      queuedTracks.forEach(addBlocked);
-
-      const seenKeys = new Set<string>();
-      const candidates = res.tracks.filter((t: any) => {
-        const key = getTrackKey(t);
-        if (!key || blockedKeys.has(key) || seenKeys.has(key)) return false;
-        seenKeys.add(key);
-        return true;
-      });
-
+    if (append && Array.isArray(player.recommendations)) {
+      player.recommendations = [...player.recommendations, ...candidates];
+      this.manager.emit("debug", `Moonlink.js > Node#updateRecommendations >> Appended ${candidates.length} new recommendations for guild ${player.guildId}. Total: ${player.recommendations.length}`);
+    } else {
       player.recommendations = candidates;
-      if (player.autoSyncNextTrack && player.queue.isEmpty) {
-        player.syncNextTrack().catch(() => {});
-      }
-    } catch (error) {
-      this.manager.emit("debug", `Moonlink.js > Node#updateRecommendations >> Error fetching recommendations: ${error.message}`);
+    }
+
+    if (player.autoSyncNextTrack && player.queue.isEmpty) {
+      player.syncNextTrack().catch(() => {});
     }
   }
 
@@ -1659,8 +1688,15 @@ export class Node {
     if (getAutoplayGeneration(player) !== generation || player.destroyed || !player.autoPlay) return false;
 
     if (player.recommendations && player.recommendations.length > 0) {
-      const filteredTracks = player.recommendations.slice(0, 10);
-      const selected = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
+      // Prioritize the track already primed in nextTrack for seamless zero-delay transition
+      let selected: any = null;
+      const primedEncoded = player.nextTrack?.encoded || player.get("__nodelink_next_track_encoded");
+      if (primedEncoded) {
+        selected = player.recommendations.find((t: any) => t.encoded === primedEncoded);
+      }
+      if (!selected) {
+        selected = player.recommendations[0];
+      }
 
       if (selected) {
         const playing = player.playAutoPlay(selected, playbackGeneration, generation);
@@ -1670,7 +1706,14 @@ export class Node {
           return false;
         }
         this.manager.emit("autoPlayed", player, selected, previousTrack);
-        player.recommendations = player.recommendations.filter(t => t.encoded !== selected.encoded);
+        player.recommendations = player.recommendations.filter((t: any) => t.encoded !== selected.encoded);
+
+        // Auto-refill recommendations if running low
+        const minThreshold = this.manager.options.recommendations?.minThreshold ?? 3;
+        if (player.recommendations.length <= minThreshold) {
+          this.updateRecommendations(player, selected, true).catch(() => {});
+        }
+
         return true;
       }
     }

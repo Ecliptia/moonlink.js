@@ -32,7 +32,7 @@ class Player {
     current = null;
     previous = [];
     recommendations = [];
-    historySize = 10;
+    historySize = 25;
     lastActivityTime = Date.now();
     commands = new PlayerCommandQueue_1.PlayerCommandQueue();
     fading;
@@ -63,7 +63,7 @@ class Player {
         this.autoLeave = config.autoLeave ?? this.manager.options.defaultPlayer?.autoLeave ?? false;
         this.loop = config.loop ?? this.manager.options.defaultPlayer?.loop ?? "off";
         this.loopCount = config.loopCount;
-        this.historySize = this.manager.options.defaultPlayer?.historySize ?? 10;
+        this.historySize = this.manager.options.defaultPlayer?.historySize ?? 25;
         this.queue = new (Util_1.Structure.get("Queue"))(this);
         this.filters = new (Util_1.Structure.get("Filters"))(this);
         this.voice = new Voice_1.Voice(this);

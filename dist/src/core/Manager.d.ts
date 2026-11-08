@@ -15,9 +15,13 @@ export declare class Manager extends EventEmitter<IManagerEvents> {
     private idleCheckInterval?;
     private spotifySource?;
     private deezerSource?;
+    private recommendationsCache;
     get readyNodes(): any;
     get hasReadyNodes(): any;
     constructor(config: IManagerConfig);
+    getRecommendationCache(key: string, ttl?: number): any[] | null;
+    setRecommendationCache(key: string, tracks: any[], maxCacheSize?: number): void;
+    clearRecommendationCache(): void;
     use(connector: Connector, client: any): this;
     init(clientId: string): Promise<this>;
     private startIdleMonitoring;

@@ -38,7 +38,7 @@ export class Player {
     public current: Track | null = null;
     public previous: Track[] = [];
     public recommendations: Track[] = [];
-    public historySize: number = 10;
+    public historySize: number = 25;
 
     public lastActivityTime: number = Date.now();
     private readonly commands = new PlayerCommandQueue();
@@ -72,7 +72,7 @@ export class Player {
         this.autoLeave = config.autoLeave ?? this.manager.options.defaultPlayer?.autoLeave ?? false;
         this.loop = config.loop ?? this.manager.options.defaultPlayer?.loop ?? "off";
         this.loopCount = config.loopCount;
-        this.historySize = this.manager.options.defaultPlayer?.historySize ?? 10;
+        this.historySize = this.manager.options.defaultPlayer?.historySize ?? 25;
 
         this.queue = new (Structure.get("Queue"))(this);
         this.filters = new (Structure.get("Filters"))(this);

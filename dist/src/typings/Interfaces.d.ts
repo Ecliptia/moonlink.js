@@ -116,6 +116,12 @@ export interface IManagerOptionsConfig {
         type: 'memory' | 'local';
         options?: any;
     };
+    recommendations?: IRecommendationsOptions;
+}
+export interface IRecommendationsOptions {
+    cacheTTL?: number;
+    cacheMaxSize?: number;
+    minThreshold?: number;
 }
 export interface IDefaultPlayerOptions {
     volume?: number;

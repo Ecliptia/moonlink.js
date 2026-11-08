@@ -221,7 +221,7 @@ export declare class Node {
     private handleLyricsLine;
     private handleLyricsNotFound;
     private handleWebSocketClosed;
-    updateRecommendations(player: any, track?: any): Promise<void>;
+    updateRecommendations(player: any, track?: any, append?: boolean): Promise<void>;
     handleAutoPlay(player: any, previousTrack: any): Promise<boolean>;
     private handleQueueEnd;
     protected error({ error }: {

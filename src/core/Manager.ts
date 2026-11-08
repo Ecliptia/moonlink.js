@@ -27,6 +27,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
     private idleCheckInterval?: NodeJS.Timeout;
     private spotifySource?: SpotifySource;
     private deezerSource?: DeezerSource;
+    private recommendationsCache = new Map<string, { tracks: any[]; timestamp: number }>();
 
     public get readyNodes() {
         return this.nodes.ready;
@@ -60,7 +61,7 @@ export class Manager extends EventEmitter<IManagerEvents> {
                 selfDeaf: true,
                 selfMute: false,
                 loop: "off",
-                historySize: 10,
+                historySize: 25,
                 ...config.options?.defaultPlayer
             },
             voiceConnection: {
@@ -88,8 +89,14 @@ export class Manager extends EventEmitter<IManagerEvents> {
             queue: {
                 maxSize: 1000,
                 allowDuplicates: true,
-                historyLimit: 10,
+                historyLimit: 25,
                 ...config.options?.queue
+            },
+            recommendations: {
+                cacheTTL: 1800000,
+                cacheMaxSize: 200,
+                minThreshold: 3,
+                ...config.options?.recommendations
             },
             sources: {
                 disabledSources: [],
@@ -135,6 +142,29 @@ export class Manager extends EventEmitter<IManagerEvents> {
 
         this.nodes = new (Structure.get("NodeManager"))(this, config.nodes);
         this.players = new (Structure.get("PlayerManager"))(this);
+    }
+
+    public getRecommendationCache(key: string, ttl: number = 1800000): any[] | null {
+        const item = this.recommendationsCache.get(key);
+        if (!item) return null;
+        if (Date.now() - item.timestamp > ttl) {
+            this.recommendationsCache.delete(key);
+            return null;
+        }
+        return item.tracks;
+    }
+
+    public setRecommendationCache(key: string, tracks: any[], maxCacheSize: number = 200): void {
+        if (!tracks || tracks.length === 0) return;
+        if (this.recommendationsCache.size >= maxCacheSize) {
+            const oldestKey = this.recommendationsCache.keys().next().value;
+            if (oldestKey) this.recommendationsCache.delete(oldestKey);
+        }
+        this.recommendationsCache.set(key, { tracks, timestamp: Date.now() });
+    }
+
+    public clearRecommendationCache(): void {
+        this.recommendationsCache.clear();
     }
 
     public use(connector: Connector, client: any): this {
