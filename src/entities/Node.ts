@@ -13,6 +13,7 @@ import { WebSocket } from "../services/WebSocket";
 import { NodeState, TrackEndReason, VoiceState } from "../typings/types";
 import { Track } from "./Track";
 import { YouTubeLiveChat, YouTubeLiveChatOptions } from "./YouTubeLiveChat";
+import { getAutoplayGeneration, getPlaybackGeneration, invalidateAutoplay } from "../structures/AutoplayState";
 
 type LavalinkEventBase = {
   op: "event";
@@ -1043,6 +1044,11 @@ export class Node {
     const trackForEvent = trackData
         ? new (Structure.get("Track"))(trackData, player.current?.requester)
         : player.current;
+    if (payload.track?.encoded && player.current?.encoded !== payload.track.encoded) {
+      this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
+      return;
+    }
+    const generation = getPlaybackGeneration(player);
     if (!isCrossfadeTransition) {
       player.playing = false;
       player.paused = false;
@@ -1062,6 +1068,7 @@ export class Node {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
       return;
     }
+    if (getPlaybackGeneration(player) !== generation) return;
 
     if (isCrossfadeTransition || isGaplessTransition) {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to ${reason} for player ${player.guildId}. Skipping queue/autoplay logic.`);
@@ -1092,7 +1099,7 @@ export class Node {
 
     if (player.loop === "track" && player.current) {
       this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is in track loop mode. Replaying track: ${player.current.title}.`);
-      await this.rest.updatePlayer(player.guildId, {
+      await player.updatePlayer({
         track: { encoded: player.current.encoded },
         position: 0,
       });
@@ -1115,12 +1122,16 @@ export class Node {
     this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Queue is empty for player ${player.guildId}. Proceeding to autoplay check.`);
     if (player.autoPlay && trackForEvent) {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd -> Attempting autoPlay for player ${player.guildId}. Previous track: ${trackForEvent.title}.`);
-        const autoplayed = await this.handleAutoPlay(player, trackForEvent);
+        const autoplay = this.handleAutoPlay(player, trackForEvent);
+        const generation = getAutoplayGeneration(player);
+        const autoplayed = await autoplay;
         
         if (autoplayed) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd << AutoPlay was successful for player ${player.guildId}.`);
             return;
         }
+        // A cancelled lookup must not clear newer playback or trigger autoLeave.
+        if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
         
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> AutoPlay failed for player ${player.guildId}.`);
     } else if (player.autoPlay) {
@@ -1478,9 +1489,9 @@ export class Node {
     }, reconnectDelay);
   }
 
-  public async updateRecommendations(player: any): Promise<void> {
-    const track = player.current;
+  public async updateRecommendations(player: any, track = player.current): Promise<void> {
     if (!track || !track.sourceName || !track.identifier) return;
+    const generation = getAutoplayGeneration(player);
 
     let uri: string | null = null;
     let searchSource: string | null = null;
@@ -1523,6 +1534,7 @@ export class Node {
     if (!uri || !searchSource) {
       if (source !== "youtube") {
         const res = await this.manager.search({ query: `${track.title} ${track.author}` });
+        if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
         if (res?.tracks?.length > 0) {
           uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
           searchSource = "youtube";
@@ -1540,6 +1552,7 @@ export class Node {
         source: searchSource,
         requester: track.requester,
       });
+      if (getAutoplayGeneration(player) !== generation || player.destroyed) return;
 
       if (!res || !res.tracks || res.tracks.length === 0 || res.loadType === "error") {
         return;
@@ -1582,24 +1595,26 @@ export class Node {
   }
 
   public async handleAutoPlay(player: any, previousTrack: any): Promise<boolean> {
-    if (!previousTrack) return false;
+    if (!previousTrack || player.destroyed || !player.autoPlay) return false;
+    const generation = invalidateAutoplay(player);
+    const playbackGeneration = getPlaybackGeneration(player);
 
     if (!player.recommendations || player.recommendations.length === 0) {
-      // If recommendations are empty, try one last fetch using previousTrack
-      // We temporarily set player.current to previousTrack for the fetcher
-      const originalCurrent = player.current;
-      player.current = previousTrack;
-      await this.updateRecommendations(player);
-      player.current = originalCurrent;
+      await this.updateRecommendations(player, previousTrack);
     }
+    if (getAutoplayGeneration(player) !== generation || player.destroyed || !player.autoPlay) return false;
 
     if (player.recommendations && player.recommendations.length > 0) {
       const filteredTracks = player.recommendations.slice(0, 10);
       const selected = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
 
       if (selected) {
-        player.queue.add(selected);
-        await player.play();
+        const playing = player.playAutoPlay(selected, playbackGeneration, generation);
+        if (!await playing || player.destroyed || !player.autoPlay || getPlaybackGeneration(player) !== playbackGeneration || getAutoplayGeneration(player) !== generation) {
+          const index = player.queue.tracks.indexOf(selected);
+          if (index >= 0) player.queue.remove(index);
+          return false;
+        }
         this.manager.emit("autoPlayed", player, selected, previousTrack);
         player.recommendations = player.recommendations.filter(t => t.encoded !== selected.encoded);
         return true;

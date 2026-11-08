@@ -2,6 +2,7 @@ import { makeRequest, makeStreamRequest, normalizeNodeLinkResponse, type NodeLin
 import type { IChapter, IFilters, ILyricsData, ILyricsResponse, IMeaningResponse, INodeConnectionStatus } from "../typings/Interfaces";
 import { Node } from "./Node";
 import { IRESTLoadTracks, IRESTGetLyrics, IRESTGetPlayers, ITrack, INodeStats, IRoutePlannerStatus } from "../typings/Interfaces";
+import { getPlaybackGeneration } from "../structures/AutoplayState";
 
 export class RestError extends Error {
     public statusCode: number;
@@ -21,6 +22,7 @@ export class Rest {
     private readonly jsonHeaders: Record<string, string>;
     private readonly userAgentHeaders: Record<string, string>;
     private sessionRecoveryInProgress: boolean = false;
+    private readonly recoveringPlayers = new WeakSet<object>();
 
     constructor(node: Node) {
         this.node = node;
@@ -42,21 +44,29 @@ export class Rest {
     }
 
     private async triggerPlayerRecovery(player: any): Promise<void> {
-        if (player.destroyed) return;
+        if (player.destroyed || this.recoveringPlayers.has(player)) return;
+        this.recoveringPlayers.add(player);
+        let generation = getPlaybackGeneration(player);
         
         player.stuckDetectionCount = 0;
         player.silentDetectionCount = 0;
         
         try {
-            const recovered = await player.softRestart("Session expired (404)");
+            const recovering = player.softRestart("Session expired (404)");
+            generation = getPlaybackGeneration(player);
+            const recovered = await recovering;
+            if (player.destroyed || getPlaybackGeneration(player) !== generation) return;
             if (recovered) {
                 this.node.manager.emit("playerRecoverySuccess", player);
             } else {
                 await player.destroy("Session expired and recovery failed");
             }
         } catch (e) {
+            if (player.destroyed || getPlaybackGeneration(player) !== generation) return;
             this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${(e as Error).message}`);
             await player.destroy("Session recovery error");
+        } finally {
+            this.recoveringPlayers.delete(player);
         }
     }
 
@@ -96,7 +106,10 @@ export class Rest {
                 
                 const player = this.node.manager.players.get(guildId);
                 if (player && !player.destroyed) {
-                    await this.triggerPlayerRecovery(player);
+                    // Recovery may enqueue commands behind this failed request.
+                    void this.triggerPlayerRecovery(player).catch(recoveryError => {
+                        this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${(recoveryError as Error).message}`);
+                    });
                 }
             }
             throw error;

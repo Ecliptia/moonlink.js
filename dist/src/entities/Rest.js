@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = exports.RestError = void 0;
 const Util_1 = require("../Util");
+const AutoplayState_1 = require("../structures/AutoplayState");
 class RestError extends Error {
     statusCode;
     isSessionExpired;
@@ -19,6 +20,7 @@ class Rest {
     jsonHeaders;
     userAgentHeaders;
     sessionRecoveryInProgress = false;
+    recoveringPlayers = new WeakSet();
     constructor(node) {
         this.node = node;
         this.authHeaders = {
@@ -37,12 +39,18 @@ class Rest {
         return `http${this.node.secure ? "s" : ""}://${this.node.host}:${this.node.port}`;
     }
     async triggerPlayerRecovery(player) {
-        if (player.destroyed)
+        if (player.destroyed || this.recoveringPlayers.has(player))
             return;
+        this.recoveringPlayers.add(player);
+        let generation = (0, AutoplayState_1.getPlaybackGeneration)(player);
         player.stuckDetectionCount = 0;
         player.silentDetectionCount = 0;
         try {
-            const recovered = await player.softRestart("Session expired (404)");
+            const recovering = player.softRestart("Session expired (404)");
+            generation = (0, AutoplayState_1.getPlaybackGeneration)(player);
+            const recovered = await recovering;
+            if (player.destroyed || (0, AutoplayState_1.getPlaybackGeneration)(player) !== generation)
+                return;
             if (recovered) {
                 this.node.manager.emit("playerRecoverySuccess", player);
             }
@@ -51,8 +59,13 @@ class Rest {
             }
         }
         catch (e) {
+            if (player.destroyed || (0, AutoplayState_1.getPlaybackGeneration)(player) !== generation)
+                return;
             this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${e.message}`);
             await player.destroy("Session recovery error");
+        }
+        finally {
+            this.recoveringPlayers.delete(player);
         }
     }
     async getPlayers() {
@@ -88,7 +101,9 @@ class Rest {
                 this.node.manager.emit("debug", `Moonlink.js > Rest >> updatePlayer 404 for guild ${guildId}, triggering recovery.`);
                 const player = this.node.manager.players.get(guildId);
                 if (player && !player.destroyed) {
-                    await this.triggerPlayerRecovery(player);
+                    void this.triggerPlayerRecovery(player).catch(recoveryError => {
+                        this.node.manager.emit("debug", `Moonlink.js > Rest >> Recovery error: ${recoveryError.message}`);
+                    });
                 }
             }
             throw error;

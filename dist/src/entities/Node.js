@@ -4,6 +4,7 @@ exports.Node = void 0;
 const Util_1 = require("../Util");
 const types_1 = require("../typings/types");
 const YouTubeLiveChat_1 = require("./YouTubeLiveChat");
+const AutoplayState_1 = require("../structures/AutoplayState");
 class Node {
     manager;
     uuid;
@@ -668,6 +669,11 @@ class Node {
         const trackForEvent = trackData
             ? new (Util_1.Structure.get("Track"))(trackData, player.current?.requester)
             : player.current;
+        if (payload.track?.encoded && player.current?.encoded !== payload.track.encoded) {
+            this.manager.emit("trackEnd", player, trackForEvent, reason, payload);
+            return;
+        }
+        const generation = (0, AutoplayState_1.getPlaybackGeneration)(player);
         if (!isCrossfadeTransition) {
             player.playing = false;
             player.paused = false;
@@ -685,6 +691,8 @@ class Node {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is destroyed, skipping end handling.`);
             return;
         }
+        if ((0, AutoplayState_1.getPlaybackGeneration)(player) !== generation)
+            return;
         if (isCrossfadeTransition || isGaplessTransition) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Track ended due to ${reason} for player ${player.guildId}. Skipping queue/autoplay logic.`);
             return;
@@ -710,7 +718,7 @@ class Node {
         }
         if (player.loop === "track" && player.current) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Player ${player.guildId} is in track loop mode. Replaying track: ${player.current.title}.`);
-            await this.rest.updatePlayer(player.guildId, {
+            await player.updatePlayer({
                 track: { encoded: player.current.encoded },
                 position: 0,
             });
@@ -730,11 +738,15 @@ class Node {
         this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> Queue is empty for player ${player.guildId}. Proceeding to autoplay check.`);
         if (player.autoPlay && trackForEvent) {
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd -> Attempting autoPlay for player ${player.guildId}. Previous track: ${trackForEvent.title}.`);
-            const autoplayed = await this.handleAutoPlay(player, trackForEvent);
+            const autoplay = this.handleAutoPlay(player, trackForEvent);
+            const generation = (0, AutoplayState_1.getAutoplayGeneration)(player);
+            const autoplayed = await autoplay;
             if (autoplayed) {
                 this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd << AutoPlay was successful for player ${player.guildId}.`);
                 return;
             }
+            if ((0, AutoplayState_1.getAutoplayGeneration)(player) !== generation || player.destroyed)
+                return;
             this.manager.emit("debug", `Moonlink.js > Node#handleTrackEnd >> AutoPlay failed for player ${player.guildId}.`);
         }
         else if (player.autoPlay) {
@@ -1058,10 +1070,10 @@ class Node {
             }
         }, reconnectDelay);
     }
-    async updateRecommendations(player) {
-        const track = player.current;
+    async updateRecommendations(player, track = player.current) {
         if (!track || !track.sourceName || !track.identifier)
             return;
+        const generation = (0, AutoplayState_1.getAutoplayGeneration)(player);
         let uri = null;
         let searchSource = null;
         const source = track.sourceName.toLowerCase();
@@ -1101,6 +1113,8 @@ class Node {
         if (!uri || !searchSource) {
             if (source !== "youtube") {
                 const res = await this.manager.search({ query: `${track.title} ${track.author}` });
+                if ((0, AutoplayState_1.getAutoplayGeneration)(player) !== generation || player.destroyed)
+                    return;
                 if (res?.tracks?.length > 0) {
                     uri = `https://www.youtube.com/watch?v=${res.tracks[0].identifier}&list=RD${res.tracks[0].identifier}`;
                     searchSource = "youtube";
@@ -1119,6 +1133,8 @@ class Node {
                 source: searchSource,
                 requester: track.requester,
             });
+            if ((0, AutoplayState_1.getAutoplayGeneration)(player) !== generation || player.destroyed)
+                return;
             if (!res || !res.tracks || res.tracks.length === 0 || res.loadType === "error") {
                 return;
             }
@@ -1158,20 +1174,26 @@ class Node {
         }
     }
     async handleAutoPlay(player, previousTrack) {
-        if (!previousTrack)
+        if (!previousTrack || player.destroyed || !player.autoPlay)
             return false;
+        const generation = (0, AutoplayState_1.invalidateAutoplay)(player);
+        const playbackGeneration = (0, AutoplayState_1.getPlaybackGeneration)(player);
         if (!player.recommendations || player.recommendations.length === 0) {
-            const originalCurrent = player.current;
-            player.current = previousTrack;
-            await this.updateRecommendations(player);
-            player.current = originalCurrent;
+            await this.updateRecommendations(player, previousTrack);
         }
+        if ((0, AutoplayState_1.getAutoplayGeneration)(player) !== generation || player.destroyed || !player.autoPlay)
+            return false;
         if (player.recommendations && player.recommendations.length > 0) {
             const filteredTracks = player.recommendations.slice(0, 10);
             const selected = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
             if (selected) {
-                player.queue.add(selected);
-                await player.play();
+                const playing = player.playAutoPlay(selected, playbackGeneration, generation);
+                if (!await playing || player.destroyed || !player.autoPlay || (0, AutoplayState_1.getPlaybackGeneration)(player) !== playbackGeneration || (0, AutoplayState_1.getAutoplayGeneration)(player) !== generation) {
+                    const index = player.queue.tracks.indexOf(selected);
+                    if (index >= 0)
+                        player.queue.remove(index);
+                    return false;
+                }
                 this.manager.emit("autoPlayed", player, selected, previousTrack);
                 player.recommendations = player.recommendations.filter(t => t.encoded !== selected.encoded);
                 return true;
